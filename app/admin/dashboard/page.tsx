@@ -1,10 +1,12 @@
 ﻿"use client";
 
 import { CAT_STRIPE } from "@/features/products/data/products";
+import { AdminTable, type Column } from "@/shared/components/AdminTable";
 import { KpiCard } from "@/shared/components/KpiCard";
 import { StatusBadge } from "@/shared/components/StatusBadge";
 import { A } from "@/shared/lib/admin-classes";
 import { ORDER_STATUS, fmt, fmtDate, orderTotal } from "@/shared/lib/admin-constants";
+import type { Order } from "@/shared/types/admin-mock.types";
 import { CATEGORY_PIE, ORDERS_DAILY, PIE_COLORS, SALES_DATA, SPARK } from "@/shared/lib/admin-data";
 import { cn } from "@/shared/lib/utils";
 import { useAdminStore } from "@/shared/stores/admin.store";
@@ -54,6 +56,14 @@ function ChartTooltip({ active, payload, label, prefix = "$", suffix = "K" }: { 
     </div>
   );
 }
+
+const recentOrderColumns: Column<Order>[] = [
+  { header: "Pedido",  className: A.monoGold,                     render: (o) => o.id },
+  { header: "Cliente", render: (o) => <div className={A.rowName}>{o.customer}</div> },
+  { header: "Fecha",   className: `${A.mono} text-[13px]`,        render: (o) => fmtDate(o.date) },
+  { header: "Total",   className: A.valGold,                      render: (o) => `$${fmt(orderTotal(o))}` },
+  { header: "Estado",  render: (o) => <StatusBadge config={ORDER_STATUS[o.status]} variant="filled" /> },
+];
 
 export default function DashboardPage() {
   const products    = useAdminStore((s) => s.products);
@@ -197,22 +207,12 @@ export default function DashboardPage() {
           </div>
           <Link href="/admin/orders" className="font-display text-[14px] font-bold no-underline tracking-[1px] text-muted">Ver todos →</Link>
         </div>
-        <table className="w-full border-collapse">
-          <thead>
-            <tr>{["Pedido", "Cliente", "Fecha", "Total", "Estado"].map((h) => <th key={h} className={A.th}>{h}</th>)}</tr>
-          </thead>
-          <tbody>
-            {orders.slice(0, 5).map((o) => (
-              <tr key={o.id}>
-                <td className={cn(A.td, A.monoGold)}>{o.id}</td>
-                <td className={A.td}><div className={A.rowName}>{o.customer}</div></td>
-                <td className={cn(A.td, A.mono, "text-[13px]")}>{fmtDate(o.date)}</td>
-                <td className={cn(A.td, A.valGold)}>${fmt(orderTotal(o))}</td>
-                <td className={A.td}><StatusBadge config={ORDER_STATUS[o.status]} variant="filled" /></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <AdminTable
+          columns={recentOrderColumns}
+          data={orders.slice(0, 5)}
+          keyExtractor={(o) => o.id}
+          noWrapper
+        />
       </div>
     </div>
   );
