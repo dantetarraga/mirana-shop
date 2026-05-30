@@ -81,7 +81,7 @@ export function ProductsModule() {
           <FormField label="Badge (opcional)"><input placeholder="NUEVO, BESTSELLER..." value={editing.badge || ""} onChange={e => setEditing({ ...editing, badge: e.target.value || null })} style={formInp} /></FormField>
           <FormField label="Descripción"><textarea rows={3} value={editing.desc} onChange={e => setEditing({ ...editing, desc: e.target.value })} style={{ ...formInp, resize: "vertical" }} /></FormField>
           <div style={{ display: "flex", gap: 10 }}>
-            <Button variant="accent" size="md" full onClick={() => { onSave(editing); setEditing(null); }}>Guardar</Button>
+            <Button variant="accent" size="md" full onClick={() => { saveProduct(editing); setEditing(null); }}>Guardar</Button>
             <Button variant="outline" size="md" full onClick={() => setEditing(null)}>Cancelar</Button>
           </div>
         </AdminDrawer>
