@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useStore } from "@/lib/store-context";
 import { Button } from "@/components/ui/Button";
+import { X, LayoutGrid } from "lucide-react";
 
 export function AuthModal() {
   const { authOpen, authMode, closeAuth, authenticate, openAuth } = useStore();
@@ -46,7 +47,7 @@ export function AuthModal() {
           size="md"
           onClick={closeAuth}
           style={{ position: "absolute", top: 14, right: 14 }}
-        >×</Button>
+        ><X size={16} /></Button>
 
         <div style={{ display: "flex", border: "1px solid var(--bd)", marginBottom: 28 }}>
           {(["login", "register"] as const).map((m) => (
@@ -114,7 +115,7 @@ export function AuthModal() {
           </Button>
           {/* Botón demo admin para facilitar pruebas */}
           <Button variant="outline" size="md" onClick={() => authenticate({ name: "Admin Mirana", email: "admin@mirana.com" })} style={{ flex: 1 }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="9" /><rect x="14" y="3" width="7" height="5" /><rect x="14" y="12" width="7" height="9" /><rect x="3" y="16" width="7" height="5" /></svg>
+            <LayoutGrid size={14} />
             Demo Admin
           </Button>
         </div>

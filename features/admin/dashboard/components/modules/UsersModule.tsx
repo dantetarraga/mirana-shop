@@ -6,6 +6,7 @@ import { USERS_DATA } from "@/features/admin/dashboard/lib/admin-data";
 import { USER_STATUS, fmt } from "@/features/admin/dashboard/lib/admin-constants";
 import { S } from "@/features/admin/dashboard/lib/admin-styles";
 import { Button } from "@/components/ui/Button";
+import { Search } from "lucide-react";
 
 export function UsersModule() {
   const [q, setQ] = useState("");
@@ -20,7 +21,7 @@ export function UsersModule() {
     <div style={{ padding: "28px 32px 48px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18, flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 9, background: "var(--card)", border: "1px solid var(--bd)", padding: "0 14px", height: 42, flex: 1, minWidth: 200, maxWidth: 340 }}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: "var(--mt)" }}><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
+          <Search size={13} style={{ color: "var(--mt)" }} />
           <input placeholder="Buscar usuario..." value={q} onChange={e => setQ(e.target.value)} style={{ background: "none", border: "none", outline: "none", color: "var(--text)", fontFamily: "var(--font-sans)", fontSize: 14, width: "100%" }} />
         </div>
         <div style={{ display: "flex", gap: 6 }}>

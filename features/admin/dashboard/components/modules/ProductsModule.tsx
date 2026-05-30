@@ -6,6 +6,7 @@ import { AdminDrawer } from "@/features/admin/dashboard/components/AdminDrawer";
 import { StockBadge } from "@/features/admin/dashboard/components/StockBadge";
 import { S, formInp, FormField } from "@/features/admin/dashboard/lib/admin-styles";
 import { Button } from "@/components/ui/Button";
+import { Search, Pencil, X } from "lucide-react";
 
 export function ProductsModule({ products, onSave, onDelete }: { products: Product[]; onSave: (p: Product) => void; onDelete: (id: number) => void }) {
   const [editing, setEditing] = useState<Product | null>(null);
@@ -18,7 +19,7 @@ export function ProductsModule({ products, onSave, onDelete }: { products: Produ
     <div style={{ padding: "28px 32px 48px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18, flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 9, background: "var(--card)", border: "1px solid var(--bd)", padding: "0 14px", height: 42, flex: 1, minWidth: 200, maxWidth: 340 }}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: "var(--mt)" }}><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
+          <Search size={13} style={{ color: "var(--mt)" }} />
           <input placeholder="Buscar producto o SKU..." value={q} onChange={e => setQ(e.target.value)} style={{ background: "none", border: "none", outline: "none", color: "var(--text)", fontFamily: "var(--font-sans)", fontSize: 14, width: "100%" }} />
         </div>
         <div style={{ display: "flex", gap: 6 }}>
@@ -49,8 +50,8 @@ export function ProductsModule({ products, onSave, onDelete }: { products: Produ
                 <td style={S.td}><StockBadge s={p.stock} /></td>
                 <td style={S.td}>
                   <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-                    <Button variant="icon" size="sm" onClick={() => setEditing(p)}>✎</Button>
-                    <Button variant="icon" size="sm" destructive onClick={() => { if (confirm("¿Eliminar?")) onDelete(p.id); }}>×</Button>
+                    <Button variant="icon" size="sm" onClick={() => setEditing(p)}><Pencil size={14} /></Button>
+                    <Button variant="icon" size="sm" destructive onClick={() => { if (confirm("¿Eliminar?")) onDelete(p.id); }}><X size={14} /></Button>
                   </div>
                 </td>
               </tr>

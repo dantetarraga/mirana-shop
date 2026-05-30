@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useStore } from "@/lib/store-context";
 import { CAT_STRIPE } from "@/shared/data/products";
 import { Button } from "@/components/ui/Button";
+import { X, Minus, Plus } from "lucide-react";
 
 export function CartDrawer() {
   const { cart, cartOpen, setCartOpen, updateQty, removeItem } = useStore();
@@ -38,7 +39,7 @@ export function CartDrawer() {
           <div style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 900, textTransform: "uppercase", letterSpacing: 1 }}>
             Carrito <span style={{ color: "var(--gold)" }}>({cart.length})</span>
           </div>
-          <Button variant="icon" size="md" onClick={() => setCartOpen(false)}>×</Button>
+          <Button variant="icon" size="md" onClick={() => setCartOpen(false)}><X size={16} /></Button>
         </div>
 
         {/* Items */}
@@ -63,12 +64,12 @@ export function CartDrawer() {
                   ${item.product.price.toFixed(2)}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
-                  <Button variant="icon" size="sm" onClick={() => updateQty(item.product.id, -1)}>−</Button>
+                  <Button variant="icon" size="sm" onClick={() => updateQty(item.product.id, -1)}><Minus size={14} /></Button>
                   <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, minWidth: 24, textAlign: "center" }}>{item.qty}</span>
-                  <Button variant="icon" size="sm" onClick={() => updateQty(item.product.id, 1)}>+</Button>
+                  <Button variant="icon" size="sm" onClick={() => updateQty(item.product.id, 1)}><Plus size={14} /></Button>
                 </div>
               </div>
-              <Button variant="icon" size="sm" destructive onClick={() => removeItem(item.product.id)} style={{ alignSelf: "flex-start" }}>×</Button>
+              <Button variant="icon" size="sm" destructive onClick={() => removeItem(item.product.id)} style={{ alignSelf: "flex-start" }}><X size={14} /></Button>
             </div>
           ))}
         </div>

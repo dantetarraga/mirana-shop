@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import Link from "next/link";
-import { useStore } from "@/lib/store-context";
 import { Button } from "@/components/ui/Button";
-import { Search, ShoppingBag, LayoutGrid } from "lucide-react";
+import { useStore } from "@/lib/store-context";
+import { LayoutGrid, LogOut, Search, ShoppingBag } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 
 export function Navbar() {
   const { cartCount, setCartOpen, user, openAuth, logout } = useStore();
@@ -165,10 +165,7 @@ export function Navbar() {
                     borderTop: "1px solid var(--bd)", fontWeight: 600,
                   }}
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="3" y="3" width="7" height="9" /><rect x="14" y="3" width="7" height="5" />
-                    <rect x="14" y="12" width="7" height="9" /><rect x="3" y="16" width="7" height="5" />
-                  </svg>
+                  <LayoutGrid size={14} />
                   Panel Admin
                 </Link>
               )}
@@ -178,12 +175,9 @@ export function Navbar() {
                 size="sm"
                 full
                 onClick={() => { logout(); setMenuOpen(false); }}
-                className="justify-start px-[18px] border-t border-[var(--bd)]"
+                className="justify-start px-4.5 border-t border-[var(--bd)]"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                  <polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
-                </svg>
+                <LogOut size={14} />
                 Cerrar sesión
               </Button>
             </div>

@@ -5,6 +5,7 @@ import { CAT_STRIPE, type Product } from "@/shared/data/products";
 import { StockBadge } from "@/features/admin/dashboard/components/StockBadge";
 import { S } from "@/features/admin/dashboard/lib/admin-styles";
 import { Button } from "@/components/ui/Button";
+import { Minus, Plus } from "lucide-react";
 
 export function InventoryModule({ products, onSave }: { products: Product[]; onSave: (p: Product) => void }) {
   const [filter, setFilter] = useState("todos");
@@ -41,9 +42,9 @@ export function InventoryModule({ products, onSave }: { products: Product[]; onS
                 <td style={{ ...S.td, fontFamily: "var(--font-display)", fontWeight: 800, color: "var(--gold)", fontSize: 16 }}>${(p.stock * p.price).toFixed(2)}</td>
                 <td style={S.td}>
                   <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                    <Button variant="icon" size="sm" onClick={() => onSave({ ...p, stock: Math.max(0, p.stock - 1) })}>−</Button>
+                    <Button variant="icon" size="sm" onClick={() => onSave({ ...p, stock: Math.max(0, p.stock - 1) })}><Minus size={14} /></Button>
                     <input type="number" value={p.stock} min="0" onChange={e => onSave({ ...p, stock: Math.max(0, parseInt(e.target.value) || 0) })} style={{ width: 58, textAlign: "center", background: "var(--surf)", border: "1px solid var(--bd)", color: "var(--text)", padding: 6, fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 15 }} />
-                    <Button variant="icon" size="sm" onClick={() => onSave({ ...p, stock: p.stock + 1 })}>+</Button>
+                    <Button variant="icon" size="sm" onClick={() => onSave({ ...p, stock: p.stock + 1 })}><Plus size={14} /></Button>
                     <Button variant="ghost" size="sm" onClick={() => onSave({ ...p, stock: p.stock + 50 })} style={{ marginLeft: 8 }}>+50</Button>
                   </div>
                 </td>

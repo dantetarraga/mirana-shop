@@ -1,5 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/Button";
+import { X } from "lucide-react";
 
 export function AdminDrawer({ title, sub, onClose, children }: { title: string; sub?: string; onClose: () => void; children: React.ReactNode }) {
   return (
@@ -10,7 +11,7 @@ export function AdminDrawer({ title, sub, onClose, children }: { title: string; 
             {sub && <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--gold)", marginBottom: 5 }}>{sub}</div>}
             <div style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 900, letterSpacing: "-.5px" }}>{title}</div>
           </div>
-          <Button variant="icon" size="md" onClick={onClose}>×</Button>
+          <Button variant="icon" size="md" onClick={onClose}><X size={16} /></Button>
         </div>
         <div style={{ padding: "24px 28px 40px", display: "flex", flexDirection: "column", gap: 18 }}>{children}</div>
       </div>

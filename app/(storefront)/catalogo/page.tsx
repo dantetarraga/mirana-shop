@@ -5,6 +5,7 @@ import { useState, useMemo, Suspense } from "react";
 import { ProductCard } from "@/components/shared/ProductCard";
 import { PRODUCTS, type ProductCategory } from "@/shared/data/products";
 import { Button } from "@/components/ui/Button";
+import { Search } from "lucide-react";
 
 const FILTERS: { key: "all" | ProductCategory; label: string }[] = [
   { key: "all",      label: "Todos" },
@@ -46,9 +47,7 @@ function CatalogContent() {
           <Button key={key} variant="tab" size="sm" active={filter === key} onClick={() => setFilter(key)}>{label}</Button>
         ))}
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, background: "var(--surf)", border: "1px solid var(--bd)", padding: "0 14px", height: 40 }} className="search-wrap">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: "var(--mt)", flexShrink: 0 }}>
-            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-          </svg>
+          <Search size={13} style={{ color: "var(--mt)", flexShrink: 0 }} />
           <input
             placeholder="Buscar..."
             value={search}

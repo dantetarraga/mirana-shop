@@ -6,6 +6,7 @@ import { type Product } from "@/shared/data/products";
 import { ORDERS_DATA, USERS_DATA } from "@/features/admin/dashboard/lib/admin-data";
 import { type Module } from "@/features/admin/dashboard/lib/admin-constants";
 import { Button } from "@/components/ui/Button";
+import { ArrowLeft, Bell, Calendar, LayoutDashboard, ShoppingCart, Package, Archive, Image, Users } from "lucide-react";
 import { DashboardModule } from "./modules/DashboardModule";
 import { OrdersModule } from "./modules/OrdersModule";
 import { ProductsModule } from "./modules/ProductsModule";
@@ -15,14 +16,14 @@ import { UsersModule } from "./modules/UsersModule";
 
 const NAV_ITEMS = [
   { section: "Principal" },
-  { k: "dashboard" as Module, label: "Resumen",    d: "M3 3h7v9H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 16h7v5H3z" },
-  { k: "orders"    as Module, label: "Pedidos",    d: "M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z M3 6h18 M16 10a4 4 0 01-8 0" },
+  { k: "dashboard" as Module, label: "Resumen",    icon: LayoutDashboard },
+  { k: "orders"    as Module, label: "Pedidos",    icon: ShoppingCart },
   { section: "Catálogo" },
-  { k: "products"  as Module, label: "Productos",  d: "M20 7L12 3 4 7l8 4 8-4z m-16 0l8 4v10l-8-4V7z m16 0l-8 4v10l8-4V7z" },
-  { k: "inventory" as Module, label: "Inventario", d: "M21 8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" },
-  { k: "banners"   as Module, label: "Banners",    d: "M2 4h20v16H2z M2 9h20" },
+  { k: "products"  as Module, label: "Productos",  icon: Package },
+  { k: "inventory" as Module, label: "Inventario", icon: Archive },
+  { k: "banners"   as Module, label: "Banners",    icon: Image },
   { section: "Clientes" },
-  { k: "users"     as Module, label: "Usuarios",   d: "M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2 M9 7a4 4 0 108 0 4 4 0 00-8 0 M22 21v-2a4 4 0 00-3-3.87" },
+  { k: "users"     as Module, label: "Usuarios",   icon: Users },
 ];
 
 const TITLES: Record<Module, [string, string]> = {
@@ -62,9 +63,7 @@ export default function AdminDashboard() {
           ) : "k" in n ? (
             <Button key={n.k} variant="ghost" size="sm" full active={page === n.k} onClick={() => setPage(n.k!)} className="justify-start gap-[12px] px-[12px] relative">
               {page === n.k && <span style={{ position: "absolute", left: 0, top: 8, bottom: 8, width: 3, background: "var(--gold)" }} />}
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" style={{ width: 17, height: 17, flexShrink: 0 }}>
-                {(n.d || "").split(/(?=[MLHVCSQTAZmlhvcsqtaz])/).filter(Boolean).map((seg, j) => <path key={j} d={seg} />)}
-              </svg>
+              {"icon" in n && n.icon && <n.icon size={17} style={{ flexShrink: 0 }} />}
               {n.label}
               {counts[n.k!] != null && (
                 <span style={{ marginLeft: "auto", fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 12, background: page === n.k ? "var(--gold)" : "var(--card-h)", padding: "1px 8px", color: page === n.k ? "#000" : "var(--mt)" }}>
@@ -76,7 +75,7 @@ export default function AdminDashboard() {
         </nav>
         <div style={{ padding: 12, borderTop: "1px solid var(--bd)" }}>
           <a href="/" style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", color: "var(--mt)", fontSize: 14, textDecoration: "none", fontFamily: "var(--font-sans)" }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" style={{ width: 17, height: 17 }}><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></svg>
+            <ArrowLeft size={17} />
             Volver a la tienda
           </a>
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px" }}>
@@ -99,11 +98,11 @@ export default function AdminDashboard() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ fontSize: 12, color: "var(--mt)", border: "1px solid var(--bd)", padding: "8px 14px", display: "flex", alignItems: "center", gap: 8 }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
+              <Calendar size={13} />
               May 2026
             </div>
             <Button variant="icon" size="md" style={{ position: "relative" }}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
+              <Bell size={17} />
               <span style={{ position: "absolute", top: 8, right: 9, width: 6, height: 6, background: "var(--gold)", borderRadius: "50%" }} />
             </Button>
           </div>

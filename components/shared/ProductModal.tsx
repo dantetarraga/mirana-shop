@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useStore } from "@/lib/store-context";
 import { CAT_LABELS, CAT_STRIPE } from "@/shared/data/products";
 import { Button } from "@/components/ui/Button";
+import { X, Minus, Plus } from "lucide-react";
 
 function Stars({ r }: { r: number }) {
   return (
@@ -52,7 +53,7 @@ export function ProductModal() {
             size="md"
             onClick={closeProductModal}
             style={{ position: "absolute", top: 16, right: 16, zIndex: 10 }}
-          >×</Button>
+          ><X size={16} /></Button>
           {p.badge && (
             <div style={{
               position: "absolute", top: 16, left: 0,
@@ -94,9 +95,9 @@ export function ProductModal() {
           <div>
             <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--mt)", marginBottom: 10 }}>Cantidad</div>
             <div style={{ display: "flex", alignItems: "center", border: "1px solid var(--bd)", width: "fit-content" }}>
-              <Button variant="icon" size="md" onClick={() => setQty((q) => Math.max(1, q - 1))}>−</Button>
+              <Button variant="icon" size="md" onClick={() => setQty((q) => Math.max(1, q - 1))}><Minus size={14} /></Button>
               <div style={{ width: 52, textAlign: "center", fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 800, borderLeft: "1px solid var(--bd)", borderRight: "1px solid var(--bd)", display: "flex", alignItems: "center", justifyContent: "center", height: 42 }}>{qty}</div>
-              <Button variant="icon" size="md" onClick={() => setQty((q) => q + 1)}>+</Button>
+              <Button variant="icon" size="md" onClick={() => setQty((q) => q + 1)}><Plus size={14} /></Button>
             </div>
           </div>
 
