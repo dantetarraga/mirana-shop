@@ -3,6 +3,7 @@
 import { CAT_STRIPE } from "@/features/products/data/products";
 import { AdminTable, type Column } from "@/shared/components/AdminTable";
 import { KpiCard } from "@/shared/components/KpiCard";
+import { PanelHeader } from "@/shared/components/PanelHeader";
 import { StatusBadge } from "@/shared/components/StatusBadge";
 import { A } from "@/shared/lib/admin-classes";
 import { ORDER_STATUS, fmt, fmtDate, orderTotal } from "@/shared/lib/admin-constants";
@@ -93,16 +94,10 @@ export default function DashboardPage() {
       {/* Área + Donut */}
       <div className="grid grid-cols-[1.55fr_1fr] gap-4 mb-4">
         <div className={A.panel}>
-          <div className="flex justify-between items-start mb-5">
-            <div>
-              <div className={A.label}>Ingresos</div>
-              <div className={A.title}>Ventas últimos 12 meses</div>
-            </div>
-            <div className="font-display text-[22px] font-black text-right">
-              $667.9K
-              <span className="block text-[10px] font-medium tracking-[1px] uppercase text-muted">total anual</span>
-            </div>
-          </div>
+          <PanelHeader
+            label="Ingresos" title="Ventas últimos 12 meses" mb="mb-5"
+            side={<div className="font-display text-[22px] font-black text-right">$667.9K<span className="block text-[10px] font-medium tracking-[1px] uppercase text-muted">total anual</span></div>}
+          />
           <ResponsiveContainer width="100%" height={260}>
             <AreaChart data={SALES_DATA} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
               <defs>
@@ -121,10 +116,7 @@ export default function DashboardPage() {
         </div>
 
         <div className={A.panel}>
-          <div className="mb-5">
-            <div className={A.label}>Distribución</div>
-            <div className={A.title}>Ventas por categoría</div>
-          </div>
+          <PanelHeader label="Distribución" title="Ventas por categoría" mb="mb-5" />
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie data={CATEGORY_PIE} cx="50%" cy="50%" innerRadius={55} outerRadius={90} dataKey="value" strokeWidth={0}>
@@ -148,16 +140,10 @@ export default function DashboardPage() {
       {/* Barras + Top productos */}
       <div className="grid grid-cols-[1.55fr_1fr] gap-4 mb-4">
         <div className={A.panel}>
-          <div className="flex justify-between items-start mb-5">
-            <div>
-              <div className={A.label}>Rendimiento</div>
-              <div className={A.title}>Pedidos últimos 14 días</div>
-            </div>
-            <div className="font-display text-[22px] font-black text-right">
-              +18%
-              <span className="block text-[10px] font-medium tracking-[1px] uppercase text-muted">vs anterior</span>
-            </div>
-          </div>
+          <PanelHeader
+            label="Rendimiento" title="Pedidos últimos 14 días" mb="mb-5"
+            side={<div className="font-display text-[22px] font-black text-right">+18%<span className="block text-[10px] font-medium tracking-[1px] uppercase text-muted">vs anterior</span></div>}
+          />
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={ORDERS_DAILY} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(80,150,255,.1)" vertical={false} />
@@ -170,13 +156,10 @@ export default function DashboardPage() {
         </div>
 
         <div className={A.panel}>
-          <div className="flex justify-between items-start mb-4.5">
-            <div>
-              <div className={A.label}>Más vendidos</div>
-              <div className={A.title}>Top productos</div>
-            </div>
-            <Link href="/admin/products" className="font-display text-[14px] font-bold no-underline tracking-[1px] text-muted">Ver todos →</Link>
-          </div>
+          <PanelHeader
+            label="Más vendidos" title="Top productos"
+            side={<Link href="/admin/products" className="font-display text-[14px] font-bold no-underline tracking-[1px] text-muted">Ver todos →</Link>}
+          />
           <div className="flex flex-col gap-3.5">
             {topProducts.map((p, i) => (
               <div key={p.id} className="flex items-center gap-3.5">
@@ -200,13 +183,10 @@ export default function DashboardPage() {
 
       {/* Últimos pedidos */}
       <div className={A.panel}>
-        <div className="flex justify-between items-start mb-4.5">
-          <div>
-            <div className={A.label}>Actividad reciente</div>
-            <div className={A.title}>Últimos pedidos</div>
-          </div>
-          <Link href="/admin/orders" className="font-display text-[14px] font-bold no-underline tracking-[1px] text-muted">Ver todos →</Link>
-        </div>
+        <PanelHeader
+          label="Actividad reciente" title="Últimos pedidos"
+          side={<Link href="/admin/orders" className="font-display text-[14px] font-bold no-underline tracking-[1px] text-muted">Ver todos →</Link>}
+        />
         <AdminTable
           columns={recentOrderColumns}
           data={orders.slice(0, 5)}

@@ -8,7 +8,8 @@ import { A } from "@/shared/lib/admin-classes";
 import { BANNER_STATUS } from "@/shared/lib/admin-constants";
 import { useAdminStore } from "@/shared/stores/admin.store";
 import type { Banner } from "@/shared/types/admin-mock.types";
-import { ArrowRight, Plus } from "lucide-react";
+import { PanelHeader } from "@/shared/components/PanelHeader";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 
 export default function BannersPage() {
@@ -19,18 +20,16 @@ export default function BannersPage() {
 
   return (
     <div className="px-8 pt-7 pb-12">
-      <div className="flex items-center justify-between mb-4.5">
-        <div>
-          <div className={A.label}>Marketing</div>
-          <div className={A.title}>{banners.filter((b) => b.status === "activo").length} banners activos</div>
-        </div>
-        <Button
-          variant="accent" size="md"
-          onClick={() => setEditing({ id: 0, title: "", subtitle: "", cta: "", position: "Hero principal", status: "programado", clicks: 0 })}
-        >
-          <Plus className="mr-2" /> Nuevo banner
-        </Button>
-      </div>
+      <PanelHeader
+        label="Marketing"
+        title={`${banners.filter((b) => b.status === "activo").length} banners activos`}
+        align="center"
+        side={
+          <Button variant="accent" size="md" onClick={() => setEditing({ id: 0, title: "", subtitle: "", cta: "", position: "Hero principal", status: "programado", clicks: 0 })}>
+            <Plus className="mr-2" /> Nuevo banner
+          </Button>
+        }
+      />
 
       <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(320px,1fr))]">
         {banners.map((b) => (

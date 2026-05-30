@@ -1,4 +1,4 @@
-import React from "react";
+import { A } from "@/shared/lib/admin-classes";
 
 interface FormFieldProps {
   label:    string;
@@ -8,9 +8,7 @@ interface FormFieldProps {
 export function FormField({ label, children }: FormFieldProps) {
   return (
     <div>
-      <label className="adm-section-label block mb-1.5">
-        {label}
-      </label>
+      <label className={`${A.label} block`}>{label}</label>
       {children}
     </div>
   );

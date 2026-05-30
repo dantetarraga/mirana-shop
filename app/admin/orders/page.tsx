@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { cn } from "@/shared/lib/utils";
 import { AdminDrawer } from "@/shared/components/AdminDrawer";
 import { AdminTable, type Column } from "@/shared/components/AdminTable";
+import { DrawerSection } from "@/shared/components/DrawerSection";
 import { FilterBar } from "@/shared/components/FilterBar";
 import { KpiCard } from "@/shared/components/KpiCard";
 import { StatusBadge } from "@/shared/components/StatusBadge";
@@ -78,13 +79,11 @@ export default function OrdersPage() {
 
       {detail && (
         <AdminDrawer title={detail.id} sub="Detalle de pedido" onClose={() => setDetail(null)}>
-          <div>
-            <div className={cn(A.label, "mb-2.5")}>Cliente</div>
+          <DrawerSection title="Cliente" divider={false}>
             <div className="font-display text-[22px] font-black uppercase">{detail.customer}</div>
             <div className="text-[13px] text-muted">{detail.email} · {detail.city}</div>
-          </div>
-          <div className="pt-4.5 border-t border-[var(--bd)]">
-            <div className={cn(A.label, "mb-2.5")}>Artículos</div>
+          </DrawerSection>
+          <DrawerSection title="Artículos">
             {detail.items.map((it, i) => (
               <div key={i} className="flex justify-between py-2">
                 <span className="text-[14px]">{it.qty}× {it.name}</span>
@@ -95,9 +94,8 @@ export default function OrdersPage() {
               <span className="text-[12px] tracking-[1px] uppercase text-muted">Total</span>
               <span className="font-display font-black text-[26px] text-[var(--gold)]">${fmt(orderTotal(detail))}</span>
             </div>
-          </div>
-          <div className="pt-4.5 border-t border-[var(--bd)]">
-            <div className={cn(A.label, "mb-2.5")}>Cambiar estado</div>
+          </DrawerSection>
+          <DrawerSection title="Cambiar estado">
             <div className="flex flex-wrap gap-2">
               {Object.entries(ORDER_STATUS).map(([k, v]) => (
                 <Button key={k} variant="outline" size="sm"
@@ -108,7 +106,7 @@ export default function OrdersPage() {
                 </Button>
               ))}
             </div>
-          </div>
+          </DrawerSection>
         </AdminDrawer>
       )}
     </div>

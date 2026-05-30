@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { cn } from "@/shared/lib/utils";
 import { AdminDrawer } from "@/shared/components/AdminDrawer";
 import { AdminTable, type Column } from "@/shared/components/AdminTable";
+import { DrawerSection } from "@/shared/components/DrawerSection";
 import { FilterBar } from "@/shared/components/FilterBar";
 import { StatusBadge } from "@/shared/components/StatusBadge";
 import { A } from "@/shared/lib/admin-classes";
@@ -68,8 +69,7 @@ export default function UsersPage() {
               </div>
             ))}
           </div>
-          <div className="pt-4.5 border-t border-[var(--bd)]">
-            <div className={cn(A.label, "mb-2.5")}>Información</div>
+          <DrawerSection title="Información">
             {([
               ["Email",         detail.email],
               ["Segmento",      USER_STATUS[detail.status].label],
@@ -80,7 +80,7 @@ export default function UsersPage() {
                 <span className={l === "Segmento" ? cn("font-bold", USER_STATUS[detail.status].textCls) : "text-text"}>{v}</span>
               </div>
             ))}
-          </div>
+          </DrawerSection>
         </AdminDrawer>
       )}
     </div>
