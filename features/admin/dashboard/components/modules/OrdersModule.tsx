@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { AdminDrawer } from "@/features/admin/dashboard/components/AdminDrawer";
-import { ORDERS_DATA } from "@/features/admin/dashboard/lib/admin-data";
 import { type Order, ORDER_STATUS, fmt, orderTotal, fmtDate } from "@/features/admin/dashboard/lib/admin-constants";
 import { S } from "@/features/admin/dashboard/lib/admin-styles";
 import { Button } from "@/components/ui/Button";
+import { useAdminStore } from "@/stores/admin.store";
 
-export function OrdersModule({ orders, onStatus }: { orders: typeof ORDERS_DATA; onStatus: (id: string, st: string) => void }) {
+export function OrdersModule() {
+  const orders = useAdminStore((s) => s.orders);
+  const setOrderStatus = useAdminStore((s) => s.setOrderStatus);
   const [filter, setFilter] = useState("todos");
   const [detail, setDetail] = useState<Order | null>(null);
   const counts = {
@@ -87,7 +89,7 @@ export function OrdersModule({ orders, onStatus }: { orders: typeof ORDERS_DATA;
                   key={k}
                   variant="outline"
                   size="sm"
-                  onClick={() => { onStatus(detail.id, k); setDetail({ ...detail, status: k }); }}
+                  onClick={() => { setOrderStatus(detail.id, k); setDetail({ ...detail, status: k }); }}
                   style={{
                     border: `1px solid ${detail.status === k ? v.color : "var(--bd)"}`,
                     background: detail.status === k ? v.bg : "none",

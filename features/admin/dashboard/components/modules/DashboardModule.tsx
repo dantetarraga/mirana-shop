@@ -1,16 +1,18 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import {
   AreaChart, Area, BarChart, Bar,
   PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { CAT_STRIPE, type Product } from "@/shared/data/products";
-import { ORDERS_DATA, SALES_DATA, ORDERS_DAILY, CATEGORY_PIE, PIE_COLORS, SPARK } from "@/features/admin/dashboard/lib/admin-data";
-import { type Module, ORDER_STATUS, fmt, orderTotal, fmtDate } from "@/features/admin/dashboard/lib/admin-constants";
+import { CAT_STRIPE } from "@/shared/data/products";
+import { SALES_DATA, ORDERS_DAILY, CATEGORY_PIE, PIE_COLORS, SPARK } from "@/features/admin/dashboard/lib/admin-data";
+import { ORDER_STATUS, fmt, orderTotal, fmtDate } from "@/features/admin/dashboard/lib/admin-constants";
 import { S } from "@/features/admin/dashboard/lib/admin-styles";
 import { Button } from "@/components/ui/Button";
+import { useAdminStore } from "@/stores/admin.store";
 
 // ── SPARKLINE (SVG — ligero para KPIs) ────────────────────────────────────────
 function Sparkline({ data, color = "#58aaff", w = 120, h = 36 }: { data: number[]; color?: string; w?: number; h?: number }) {
@@ -48,7 +50,10 @@ function ChartTooltip({ active, payload, label, prefix = "$", suffix = "K" }: { 
   );
 }
 
-export function DashboardModule({ products, orders, onGoto }: { products: Product[]; orders: typeof ORDERS_DATA; onGoto: (m: Module) => void }) {
+export function DashboardModule() {
+  const router = useRouter();
+  const products = useAdminStore((s) => s.products);
+  const orders = useAdminStore((s) => s.orders);
   const topProducts = [...products].sort((a, b) => b.stock - a.stock).slice(0, 5);
   const maxStock = Math.max(...topProducts.map((p) => p.stock));
 
@@ -158,7 +163,7 @@ export function DashboardModule({ products, orders, onGoto }: { products: Produc
               <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--gold)", marginBottom: 5 }}>Más vendidos</div>
               <div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 900, textTransform: "uppercase" }}>Top productos</div>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => onGoto("products")}>Ver todos →</Button>
+            <Button variant="ghost" size="sm" onClick={() => router.push("/admin/products")}>Ver todos →</Button>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {topProducts.map((p, i) => (
@@ -187,7 +192,7 @@ export function DashboardModule({ products, orders, onGoto }: { products: Produc
             <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--gold)", marginBottom: 5 }}>Actividad reciente</div>
             <div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 900, textTransform: "uppercase" }}>Últimos pedidos</div>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => onGoto("orders")}>Ver todos →</Button>
+          <Button variant="ghost" size="sm" onClick={() => router.push("/admin/orders")}>Ver todos →</Button>
         </div>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead><tr>{["Pedido", "Cliente", "Fecha", "Total", "Estado"].map((h) => <th key={h} style={S.th}>{h}</th>)}</tr></thead>

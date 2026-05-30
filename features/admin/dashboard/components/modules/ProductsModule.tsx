@@ -7,8 +7,12 @@ import { StockBadge } from "@/features/admin/dashboard/components/StockBadge";
 import { S, formInp, FormField } from "@/features/admin/dashboard/lib/admin-styles";
 import { Button } from "@/components/ui/Button";
 import { Search, Pencil, X } from "lucide-react";
+import { useAdminStore } from "@/stores/admin.store";
 
-export function ProductsModule({ products, onSave, onDelete }: { products: Product[]; onSave: (p: Product) => void; onDelete: (id: number) => void }) {
+export function ProductsModule() {
+  const products = useAdminStore((s) => s.products);
+  const saveProduct = useAdminStore((s) => s.saveProduct);
+  const deleteProduct = useAdminStore((s) => s.deleteProduct);
   const [editing, setEditing] = useState<Product | null>(null);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("all");
@@ -51,7 +55,7 @@ export function ProductsModule({ products, onSave, onDelete }: { products: Produ
                 <td style={S.td}>
                   <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
                     <Button variant="icon" size="sm" onClick={() => setEditing(p)}><Pencil size={14} /></Button>
-                    <Button variant="icon" size="sm" destructive onClick={() => { if (confirm("¿Eliminar?")) onDelete(p.id); }}><X size={14} /></Button>
+                    <Button variant="icon" size="sm" destructive onClick={() => { if (confirm("¿Eliminar?")) deleteProduct(p.id); }}><X size={14} /></Button>
                   </div>
                 </td>
               </tr>
