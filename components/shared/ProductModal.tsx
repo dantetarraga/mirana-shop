@@ -8,7 +8,7 @@ import { X, Minus, Plus } from "lucide-react";
 
 function Stars({ r }: { r: number }) {
   return (
-    <span style={{ color: "var(--gold)" }}>
+    <span className="text-[var(--gold)]">
       {"★".repeat(Math.floor(r))}{"☆".repeat(5 - Math.floor(r))}
     </span>
   );
@@ -28,75 +28,62 @@ export function ProductModal() {
   if (!p) return null;
 
   return (
-    <div onClick={closeProductModal} style={{
-      position: "fixed", inset: 0, zIndex: 300,
-      background: "rgba(0,0,0,.82)", backdropFilter: "blur(10px)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      padding: 24,
-    }}>
-      <div onClick={(e) => e.stopPropagation()} style={{
-        background: "var(--surf)", border: "1px solid var(--bd)",
-        maxWidth: 880, width: "100%", maxHeight: "92vh", overflowY: "auto",
-        display: "grid", gridTemplateColumns: "1fr 1fr",
-        position: "relative",
-      }}>
+    <div
+      onClick={closeProductModal}
+      className="fixed inset-0 z-[300] bg-black/[.82] backdrop-blur-[10px] flex items-center justify-center p-6"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-surf border border-[var(--bd)] max-w-[880px] w-full max-h-[92vh] overflow-y-auto grid grid-cols-2 relative"
+      >
         {/* Image */}
-        <div className={CAT_STRIPE[p.cat]} style={{
-          minHeight: 440, display: "flex", alignItems: "center",
-          justifyContent: "center", position: "relative",
-        }}>
-          <div style={{ fontFamily: "monospace", fontSize: 12, letterSpacing: 2, color: "var(--mt)", textTransform: "uppercase" }}>
+        <div className={`${CAT_STRIPE[p.cat]} min-h-[440px] flex items-center justify-center relative`}>
+          <div className="font-mono text-[12px] tracking-[2px] text-muted uppercase">
             {p.name.toUpperCase()}
           </div>
           <Button
             variant="icon"
             size="md"
             onClick={closeProductModal}
-            style={{ position: "absolute", top: 16, right: 16, zIndex: 10 }}
+            className="absolute top-4 right-4 z-10"
           ><X size={16} /></Button>
           {p.badge && (
-            <div style={{
-              position: "absolute", top: 16, left: 0,
-              background: "var(--gold)", color: "#000",
-              fontSize: 9, fontWeight: 800, letterSpacing: 2,
-              textTransform: "uppercase", padding: "5px 10px",
-            }}>
+            <div className="absolute top-4 left-0 bg-[var(--gold)] text-black text-[9px] font-extrabold tracking-[2px] uppercase px-[10px] py-[5px]">
               {p.badge}
             </div>
           )}
         </div>
 
         {/* Info */}
-        <div style={{ padding: 44, display: "flex", flexDirection: "column", gap: 18 }}>
+        <div className="p-11 flex flex-col gap-[18px]">
           <div>
-            <div style={{ fontSize: 10, letterSpacing: 3, textTransform: "uppercase", color: "var(--mt)" }}>
+            <div className="text-[10px] tracking-[3px] uppercase text-muted">
               {CAT_LABELS[p.cat]}
             </div>
-            <div style={{
-              fontFamily: "var(--font-display)", fontSize: "clamp(32px,4vw,48px)",
-              fontWeight: 900, textTransform: "uppercase", lineHeight: .95, letterSpacing: -1,
-            }}>
+            <div
+              className="font-display font-black uppercase leading-[0.95] tracking-[-1px] text-[clamp(32px,4vw,48px)]"
+            >
               {p.name}
             </div>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--mt)" }}>
+          <div className="flex items-center gap-[6px] text-[13px] text-muted">
             <Stars r={p.rating} /> <span>{p.rating} · {p.reviews} reseñas</span>
           </div>
 
-          <div style={{ fontFamily: "var(--font-display)", fontSize: 52, fontWeight: 900, color: "var(--gold)", lineHeight: 1 }}>
+          <div className="font-display text-[52px] font-black text-[var(--gold)] leading-none">
             ${p.price.toFixed(2)}
           </div>
 
-          <p style={{ color: "var(--mt)", lineHeight: 1.75, fontSize: 14, borderTop: "1px solid var(--bd)", paddingTop: 18 }}>
+          <p className="text-muted leading-[1.75] text-[14px] border-t border-[var(--bd)] pt-[18px]">
             {p.desc}
           </p>
 
           <div>
-            <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--mt)", marginBottom: 10 }}>Cantidad</div>
-            <div style={{ display: "flex", alignItems: "center", border: "1px solid var(--bd)", width: "fit-content" }}>
+            <div className="text-[10px] tracking-[2px] uppercase text-muted mb-[10px]">Cantidad</div>
+            <div className="flex items-center border border-[var(--bd)] w-fit">
               <Button variant="icon" size="md" onClick={() => setQty((q) => Math.max(1, q - 1))}><Minus size={14} /></Button>
-              <div style={{ width: 52, textAlign: "center", fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 800, borderLeft: "1px solid var(--bd)", borderRight: "1px solid var(--bd)", display: "flex", alignItems: "center", justifyContent: "center", height: 42 }}>{qty}</div>
+              <div className="w-[52px] text-center font-display text-[20px] font-extrabold border-l border-r border-[var(--bd)] flex items-center justify-center h-[42px]">{qty}</div>
               <Button variant="icon" size="md" onClick={() => setQty((q) => q + 1)}><Plus size={14} /></Button>
             </div>
           </div>

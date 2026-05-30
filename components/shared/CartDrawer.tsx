@@ -20,71 +20,59 @@ export function CartDrawer() {
 
   return (
     <>
-      <div onClick={() => setCartOpen(false)} style={{
-        position: "fixed", inset: 0, zIndex: 400,
-        background: "rgba(0,0,0,.65)", backdropFilter: "blur(6px)",
-      }} />
-      <div style={{
-        position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 401,
-        width: 420, background: "var(--surf)",
-        borderLeft: "1px solid var(--bd)",
-        display: "flex", flexDirection: "column",
-        animation: "slideRight .28s cubic-bezier(.4,0,.2,1)",
-      }}>
+      <div
+        onClick={() => setCartOpen(false)}
+        className="fixed inset-0 z-[400] bg-black/[.65] backdrop-blur-[6px]"
+      />
+      <div className="fixed top-0 right-0 bottom-0 z-[401] w-[420px] bg-surf border-l border-[var(--bd)] flex flex-col animate-slide-right">
         {/* Header */}
-        <div style={{
-          padding: "24px 28px", borderBottom: "1px solid var(--bd)",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-        }}>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 900, textTransform: "uppercase", letterSpacing: 1 }}>
-            Carrito <span style={{ color: "var(--gold)" }}>({cart.length})</span>
+        <div className="px-7 py-6 border-b border-[var(--bd)] flex items-center justify-between">
+          <div className="font-display text-[26px] font-black uppercase tracking-[1px]">
+            Carrito <span className="text-[var(--gold)]">({cart.length})</span>
           </div>
           <Button variant="icon" size="md" onClick={() => setCartOpen(false)}><X size={16} /></Button>
         </div>
 
         {/* Items */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "20px 28px", display: "flex", flexDirection: "column", gap: 14 }}>
+        <div className="flex-1 overflow-y-auto px-7 py-5 flex flex-col gap-[14px]">
           {cart.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "64px 20px", color: "var(--mt)" }}>
-              <div style={{ fontSize: 52, marginBottom: 16, opacity: .25 }}>🛒</div>
-              <div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 900, textTransform: "uppercase", marginBottom: 8 }}>Carrito vacío</div>
-              <div style={{ fontSize: 13 }}>Agrega productos para continuar</div>
+            <div className="text-center py-16 px-5 text-muted">
+              <div className="text-[52px] mb-4 opacity-25">🛒</div>
+              <div className="font-display text-[22px] font-black uppercase mb-2">Carrito vacío</div>
+              <div className="text-[13px]">Agrega productos para continuar</div>
             </div>
           ) : cart.map((item) => (
-            <div key={item.product.id} style={{
-              display: "flex", gap: 14, alignItems: "center",
-              paddingBottom: 14, borderBottom: "1px solid var(--bd)",
-            }}>
-              <div className={CAT_STRIPE[item.product.cat]} style={{ width: 70, height: 70, flexShrink: 0 }} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: "var(--font-display)", fontSize: 17, fontWeight: 800, textTransform: "uppercase", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            <div key={item.product.id} className="flex gap-[14px] items-center pb-[14px] border-b border-[var(--bd)]">
+              <div className={`${CAT_STRIPE[item.product.cat]} w-[70px] h-[70px] shrink-0`} />
+              <div className="flex-1 min-w-0">
+                <div className="font-display text-[17px] font-extrabold uppercase whitespace-nowrap overflow-hidden text-ellipsis">
                   {item.product.name}
                 </div>
-                <div style={{ color: "var(--gold)", fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 800, marginTop: 1 }}>
+                <div className="text-[var(--gold)] font-display text-[20px] font-extrabold mt-[1px]">
                   ${item.product.price.toFixed(2)}
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+                <div className="flex items-center gap-2 mt-2">
                   <Button variant="icon" size="sm" onClick={() => updateQty(item.product.id, -1)}><Minus size={14} /></Button>
-                  <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, minWidth: 24, textAlign: "center" }}>{item.qty}</span>
+                  <span className="font-display font-extrabold min-w-[24px] text-center">{item.qty}</span>
                   <Button variant="icon" size="sm" onClick={() => updateQty(item.product.id, 1)}><Plus size={14} /></Button>
                 </div>
               </div>
-              <Button variant="icon" size="sm" destructive onClick={() => removeItem(item.product.id)} style={{ alignSelf: "flex-start" }}><X size={14} /></Button>
+              <Button variant="icon" size="sm" destructive onClick={() => removeItem(item.product.id)} className="self-start"><X size={14} /></Button>
             </div>
           ))}
         </div>
 
         {/* Footer */}
         {cart.length > 0 && (
-          <div style={{ padding: "24px 28px", borderTop: "1px solid var(--bd)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 20 }}>
-              <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: 1, color: "var(--mt)" }}>Total</span>
-              <span style={{ fontFamily: "var(--font-display)", fontSize: 38, fontWeight: 900, color: "var(--gold)" }}>${total.toFixed(2)}</span>
+          <div className="px-7 py-6 border-t border-[var(--bd)]">
+            <div className="flex justify-between items-baseline mb-5">
+              <span className="text-[12px] uppercase tracking-[1px] text-muted">Total</span>
+              <span className="font-display text-[38px] font-black text-[var(--gold)]">${total.toFixed(2)}</span>
             </div>
             <Button variant="accent" size="lg" full>
               Finalizar compra →
             </Button>
-            <div style={{ textAlign: "center", marginTop: 12, fontSize: 12, color: "var(--mt)" }}>Envío gratis en pedidos +$75</div>
+            <div className="text-center mt-3 text-[12px] text-muted">Envío gratis en pedidos +$75</div>
           </div>
         )}
       </div>

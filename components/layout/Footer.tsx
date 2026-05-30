@@ -1,11 +1,11 @@
 export function Footer() {
   return (
-    <footer style={{ borderTop: "1px solid var(--bd)", padding: "64px 48px 32px", display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr", gap: 40 }}>
+    <footer className="border-t border-[var(--bd)] pt-16 pb-8 px-12 grid gap-10 grid-cols-[1.4fr_1fr_1fr_1fr]">
       <div>
-        <div style={{ fontFamily: "var(--font-display)", fontSize: 36, fontWeight: 900, letterSpacing: 5, marginBottom: 14 }}>
-          MIRA<span style={{ color: "var(--gold)" }}>NA</span>
+        <div className="font-display text-[36px] font-black tracking-[5px] mb-[14px]">
+          MIRA<span className="text-[var(--gold)]">NA</span>
         </div>
-        <p style={{ fontSize: 13, color: "var(--mt)", lineHeight: 1.75, maxWidth: 220 }}>
+        <p className="text-[13px] text-muted leading-[1.75] max-w-[220px]">
           Tu tienda premium de figuras de colección, sets LEGO y modelos a escala. Importación directa, calidad garantizada.
         </p>
       </div>
@@ -16,11 +16,11 @@ export function Footer() {
         { title: "Info", links: ["Sobre MIRANA", "Envíos", "Términos", "Contacto"] },
       ].map(({ title, links }) => (
         <div key={title}>
-          <h4 style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "var(--mt)", marginBottom: 16 }}>{title}</h4>
-          <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 10 }}>
+          <h4 className="text-[10px] font-bold tracking-[2px] uppercase text-muted mb-4">{title}</h4>
+          <ul className="list-none flex flex-col gap-[10px]">
             {links.map((link) => (
               <li key={link}>
-                <a href="#" className="footer-link" style={{ fontSize: 14, color: "var(--text)", textDecoration: "none", display: "block" }}>
+                <a href="#" className="footer-link text-[14px] text-text no-underline block">
                   {link}
                 </a>
               </li>
@@ -29,11 +29,11 @@ export function Footer() {
         </div>
       ))}
 
-      <div style={{ gridColumn: "1/-1", paddingTop: 28, borderTop: "1px solid var(--bd)", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12, color: "var(--mt)" }}>
+      <div className="col-span-full pt-7 border-t border-[var(--bd)] flex justify-between items-center text-[12px] text-muted">
         <span>© 2026 MIRANA. Todos los derechos reservados.</span>
-        <div style={{ display: "flex", gap: 20 }}>
+        <div className="flex gap-5">
           {["Instagram", "TikTok", "YouTube", "WhatsApp"].map((s) => (
-            <a key={s} href="#" className="footer-link" style={{ color: "var(--mt)", textDecoration: "none", fontSize: 12, display: "block" }}>
+            <a key={s} href="#" className="footer-link text-muted no-underline text-[12px] block">
               {s}
             </a>
           ))}

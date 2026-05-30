@@ -2,19 +2,16 @@ import { Button } from "@/components/ui/Button";
 
 export function CTABand() {
   return (
-    <div style={{
-      margin: "0 48px 80px",
-      background: "var(--gold)", padding: "48px 48px",
-      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24,
-      clipPath: "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
-    }}>
+    <div
+      className="mx-12 mb-[80px] bg-[var(--gold)] px-12 py-12 flex items-center justify-between gap-6 [clip-path:polygon(0_0,calc(100%-16px)_0,100%_16px,100%_100%,16px_100%,0_calc(100%-16px))]"
+    >
       <div>
-        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px,4vw,54px)", fontWeight: 900, textTransform: "uppercase", color: "#000", lineHeight: .95, letterSpacing: -1 }}>
+        <h2 className="font-display font-black uppercase text-black leading-[0.95] tracking-[-1px] text-[clamp(28px,4vw,54px)]">
           Ediciones<br />Limitadas
         </h2>
-        <p style={{ color: "rgba(0,0,0,.55)", fontSize: 14, marginTop: 8 }}>Piezas por tiempo limitado — no te quedes sin las tuyas</p>
+        <p className="text-black/55 text-[14px] mt-2">Piezas por tiempo limitado — no te quedes sin las tuyas</p>
       </div>
-      <Button variant="dark" size="lg" style={{ whiteSpace: "nowrap", flexShrink: 0 }}>
+      <Button variant="dark" size="lg" className="whitespace-nowrap shrink-0">
         Explorar ahora →
       </Button>
     </div>

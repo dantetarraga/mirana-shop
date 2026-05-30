@@ -25,25 +25,17 @@ export function Navbar() {
     : "";
 
   return (
-    <nav style={{
-      position: "fixed", top: 0, left: 0, right: 0, zIndex: 200,
-      height: "var(--nh)",
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-      padding: "0 48px",
-      background: "rgba(3,4,9,.92)",
-      backdropFilter: "blur(28px)",
-      borderBottom: "1px solid var(--bd)",
-      transition: "background .3s",
-    }}>
-      <Link href="/" style={{
-        fontFamily: "var(--font-display)", fontWeight: 900, fontSize: 26,
-        letterSpacing: 5, color: "var(--text)", textDecoration: "none",
-        textTransform: "uppercase",
-      }}>
-        MIRA<span style={{ color: "var(--gold)" }}>NA</span>
+    <nav
+      className="fixed top-0 left-0 right-0 z-[200] flex items-center justify-between px-12 transition-[background] duration-300 h-[var(--nh)] bg-[rgba(3,4,9,.92)] backdrop-blur-[28px] border-b border-[var(--bd)]"
+    >
+      <Link
+        href="/"
+        className="font-display font-black text-[26px] tracking-[5px] no-underline uppercase text-text"
+      >
+        MIRA<span className="text-[var(--gold)]">NA</span>
       </Link>
 
-      <ul style={{ display: "flex", gap: 28, listStyle: "none" }}>
+      <ul className="flex gap-7 list-none">
         {[
           ["Inicio", "/"],
           ["Catálogo", "/catalogo"],
@@ -51,35 +43,27 @@ export function Navbar() {
           ["Preventas", "/catalogo?cat=preorder"],
         ].map(([label, href]) => (
           <li key={label}>
-            <Link href={href} style={{
-              fontSize: 12, fontWeight: 600, letterSpacing: 1,
-              color: "var(--mt)", textDecoration: "none",
-              textTransform: "uppercase", transition: ".2s",
-              paddingBottom: 4, borderBottom: "1px solid transparent",
-            }}>
+            <Link
+              href={href}
+              className="text-[12px] font-semibold tracking-[1px] no-underline uppercase transition-[color] duration-200 pb-1 border-b border-transparent text-muted"
+            >
               {label}
             </Link>
           </li>
         ))}
       </ul>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <div className="flex items-center gap-3">
         {/* Search */}
-        <div style={{
-          display: "flex", alignItems: "center", gap: 8,
-          background: "var(--surf)", border: "1px solid var(--bd)",
-          padding: "0 14px", height: 40,
-        }}>
-          <Search size={13} style={{ color: "var(--mt)", flexShrink: 0 }} />
+        <div
+          className="flex items-center gap-2 px-[14px] h-[40px] bg-surf border border-[var(--bd)]"
+        >
+          <Search size={13} className="shrink-0 text-muted" />
           <input
             value={searchVal}
             onChange={(e) => setSearchVal(e.target.value)}
             placeholder="Buscar..."
-            style={{
-              background: "none", border: "none", outline: "none",
-              color: "var(--text)", fontFamily: "var(--font-sans)",
-              fontSize: 13, width: 140,
-            }}
+            className="bg-transparent border-none outline-none font-sans text-[13px] w-[140px] text-text"
           />
         </div>
 
@@ -88,25 +72,20 @@ export function Navbar() {
           variant="icon"
           size="md"
           onClick={() => setCartOpen(true)}
-          style={{ position: "relative" }}
+          className="relative"
         >
           <ShoppingBag size={17} />
           {cartCount > 0 && (
-            <span style={{
-              position: "absolute", top: -6, right: -6,
-              background: "var(--gold)", color: "#000",
-              width: 18, height: 18, borderRadius: "50%",
-              fontSize: 10, fontWeight: 700,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontFamily: "var(--font-display)",
-            }}>
+            <span
+              className="absolute top-[-6px] right-[-6px] w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] font-bold font-display bg-[var(--gold)] text-black"
+            >
               {cartCount}
             </span>
           )}
         </Button>
 
         {/* User */}
-        <div style={{ position: "relative" }} ref={menuRef}>
+        <div className="relative" ref={menuRef}>
           {user ? (
             <Button
               variant="accent"
@@ -127,20 +106,14 @@ export function Navbar() {
 
           {/* Dropdown */}
           {menuOpen && user && (
-            <div style={{
-              position: "absolute", top: "calc(100% + 8px)", right: 0,
-              background: "var(--surf)", border: "1px solid var(--bd)",
-              minWidth: 220, zIndex: 250,
-              boxShadow: "0 16px 48px rgba(0,0,0,.4)",
-            }}>
-              <div style={{ padding: "16px 18px", borderBottom: "1px solid var(--bd)" }}>
-                <div style={{
-                  fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 800,
-                  textTransform: "uppercase", letterSpacing: ".5px",
-                }}>
+            <div
+              className="absolute top-[calc(100%+8px)] right-0 min-w-[220px] z-[250] bg-surf border border-[var(--bd)] shadow-[0_16px_48px_rgba(0,0,0,.4)]"
+            >
+              <div className="px-[18px] py-4 border-b border-[var(--bd)]">
+                <div className="font-display text-[16px] font-extrabold uppercase tracking-[0.5px]">
                   {user.name}
                 </div>
-                <div style={{ fontSize: 11, color: "var(--mt)", marginTop: 2 }}>{user.email}</div>
+                <div className="text-[11px] mt-0.5 text-muted">{user.email}</div>
               </div>
 
               {[
@@ -158,12 +131,7 @@ export function Navbar() {
                 <Link
                   href="/admin/dashboard"
                   onClick={() => setMenuOpen(false)}
-                  style={{
-                    padding: "11px 18px", display: "flex", alignItems: "center",
-                    gap: 10, fontSize: 13, color: "var(--gold)",
-                    textDecoration: "none", fontFamily: "var(--font-sans)",
-                    borderTop: "1px solid var(--bd)", fontWeight: 600,
-                  }}
+                  className="px-[18px] py-[11px] flex items-center gap-[10px] text-[13px] no-underline font-sans font-semibold text-[var(--gold)] border-t border-[var(--bd)]"
                 >
                   <LayoutGrid size={14} />
                   Panel Admin

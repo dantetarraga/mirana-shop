@@ -14,38 +14,28 @@ const BRANDS = [
 export function BrandsCarousel() {
   const doubled = [...BRANDS, ...BRANDS];
   return (
-    <section style={{ padding: "60px 0", borderTop: "1px solid var(--bd)", borderBottom: "1px solid var(--bd)", overflow: "hidden" }}>
-      <div style={{ padding: "0 48px 32px", display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+    <section className="py-[60px] border-t border-[var(--bd)] border-b border-b-[var(--bd)] overflow-hidden">
+      <div className="px-12 pb-8 flex justify-between items-baseline">
         <div>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: "var(--gold)", marginBottom: 10 }}>Marcas oficiales</div>
-          <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px,3.5vw,42px)", fontWeight: 900, textTransform: "uppercase", letterSpacing: -1, lineHeight: .95 }}>
+          <div className="text-[10px] font-bold tracking-[3px] uppercase text-[var(--gold)] mb-[10px]">Marcas oficiales</div>
+          <h2 className="font-display font-black uppercase tracking-[-1px] leading-[0.95] text-[clamp(28px,3.5vw,42px)]">
             Distribuidor autorizado
           </h2>
         </div>
-        <div style={{ fontSize: 12, color: "var(--mt)", letterSpacing: 1, textTransform: "uppercase" }}>10+ marcas premium</div>
+        <div className="text-[12px] text-muted tracking-[1px] uppercase">10+ marcas premium</div>
       </div>
 
-      <div className="animate-marquee-slow" style={{ display: "flex", gap: 0 }}>
+      <div className="animate-marquee-slow flex gap-0">
         {doubled.map((b, i) => (
-          <div key={i} className="brand-item" style={{
-            flexShrink: 0, width: 240, height: 120,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            borderRight: "1px solid var(--bd)", padding: "0 32px",
-          }}>
-            <div style={{ textAlign: "center" }}>
-              <div style={{
-                fontFamily: b.serif ? "Georgia,serif" : b.mono ? "monospace" : "var(--font-display)",
-                fontWeight: 900, textTransform: "uppercase", letterSpacing: 1,
-                fontSize: b.mono ? 20 : 24, color: "var(--text)",
-                fontStyle: b.italic ? "italic" : "normal",
-                lineHeight: 1,
-              }}>
+          <div key={i} className="brand-item shrink-0 w-[240px] h-[120px] flex items-center justify-center border-r border-[var(--bd)] px-8">
+            <div className="text-center">
+              <div
+                className={`font-black uppercase tracking-[1px] leading-none text-text ${b.mono ? "font-mono text-[20px]" : "font-display text-[24px]"} ${b.italic ? "italic" : ""}`}
+                style={b.serif ? { fontFamily: "Georgia,serif" } : undefined}
+              >
                 {b.name}
               </div>
-              <div style={{
-                fontFamily: "var(--font-sans)", fontSize: 9, letterSpacing: 3,
-                fontWeight: 500, color: "var(--mt)", marginTop: 6,
-              }}>
+              <div className="font-sans text-[9px] tracking-[3px] font-medium text-muted mt-[6px]">
                 {b.sub}
               </div>
             </div>

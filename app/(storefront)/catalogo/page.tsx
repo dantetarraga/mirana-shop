@@ -32,45 +32,51 @@ function CatalogContent() {
   );
 
   return (
-    <section style={{ padding: "calc(var(--nh) + 36px) 48px 80px" }}>
-      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: "var(--gold)", marginBottom: 6 }}>Tienda completa</div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 6 }}>
-        <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(36px,5vw,64px)", fontWeight: 900, textTransform: "uppercase", letterSpacing: -1, lineHeight: .95, margin: 0 }}>Catálogo</h1>
-        <div style={{ fontSize: 13, color: "var(--mt)" }}>{filtered.length} productos</div>
+    <section className="px-12 pb-[80px] pt-[calc(var(--nh)+36px)]">
+      <div className="text-[10px] font-bold tracking-[3px] uppercase mb-1.5 text-[var(--gold)]">
+        Tienda completa
+      </div>
+      <div className="flex justify-between items-end mb-1.5">
+        <h1
+          className="font-display font-black uppercase tracking-[-1px] m-0 leading-[0.95] text-[clamp(36px,5vw,64px)]"
+        >
+          Catálogo
+        </h1>
+        <div className="text-[13px] text-muted">{filtered.length} productos</div>
       </div>
 
-      <div style={{ height: 1, background: "var(--bd)", margin: "16px 0 24px" }} />
+      <div className="h-px my-4 mb-6 bg-[var(--bd)]" />
 
       {/* Filters */}
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 28, alignItems: "center" }}>
+      <div className="flex gap-2 flex-wrap mb-7 items-center">
         {FILTERS.map(({ key, label }) => (
           <Button key={key} variant="tab" size="sm" active={filter === key} onClick={() => setFilter(key)}>{label}</Button>
         ))}
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, background: "var(--surf)", border: "1px solid var(--bd)", padding: "0 14px", height: 40 }} className="search-wrap">
-          <Search size={13} style={{ color: "var(--mt)", flexShrink: 0 }} />
+        <div
+          className="ml-auto flex items-center gap-2 px-[14px] h-[40px] bg-surf border border-[var(--bd)] transition-[border-color] duration-[.2s] focus-within:border-[var(--gold)]"
+        >
+          <Search size={13} className="shrink-0 text-muted" />
           <input
             placeholder="Buscar..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ background: "none", border: "none", outline: "none", color: "var(--text)", fontFamily: "var(--font-sans)", fontSize: 13, width: 160 }}
+            className="bg-transparent border-none outline-none font-sans text-[13px] w-[160px] text-text"
           />
         </div>
       </div>
 
       {filtered.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "80px 20px", color: "var(--mt)" }}>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 900, textTransform: "uppercase", marginBottom: 8 }}>Sin resultados</div>
-          <div style={{ fontSize: 14 }}>Prueba con otro término de búsqueda</div>
+        <div className="text-center py-[80px] px-5 text-muted">
+          <div className="font-display text-[28px] font-black uppercase mb-2">Sin resultados</div>
+          <div className="text-[14px]">Prueba con otro término de búsqueda</div>
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+        <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
           {filtered.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
         </div>
       )}
-
-      <style>{`.search-wrap:focus-within { border-color: var(--gold) !important; }`}</style>
     </section>
   );
 }

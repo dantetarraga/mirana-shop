@@ -9,35 +9,32 @@ const REVIEWS = [
 
 export function ReviewsSection() {
   return (
-    <section style={{ padding: "80px 48px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 40 }}>
+    <section className="px-12 py-[80px]">
+      <div className="flex justify-between items-start mb-10">
         <div>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: "var(--gold)", marginBottom: 10 }}>Testimonios</div>
-          <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(36px,5vw,64px)", fontWeight: 900, textTransform: "uppercase", letterSpacing: -1, lineHeight: .95 }}>Lo que dicen<br />nuestros coleccionistas</h2>
-          <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 18 }}>
-            <span style={{ fontFamily: "var(--font-display)", fontSize: 48, fontWeight: 900, color: "var(--gold)", lineHeight: 1 }}>4.9</span>
+          <div className="text-[10px] font-bold tracking-[3px] uppercase text-[var(--gold)] mb-[10px]">Testimonios</div>
+          <h2 className="font-display font-black uppercase tracking-[-1px] leading-[0.95] text-[clamp(36px,5vw,64px)]">Lo que dicen<br />nuestros coleccionistas</h2>
+          <div className="flex items-center gap-[14px] mt-[18px]">
+            <span className="font-display text-[48px] font-black text-[var(--gold)] leading-none">4.9</span>
             <div>
-              <span style={{ color: "var(--gold)", fontSize: 14 }}>★★★★★</span>
-              <div style={{ fontSize: 11, color: "var(--mt)", letterSpacing: 1, textTransform: "uppercase", marginTop: 4 }}>Basado en 2,847 reseñas</div>
+              <span className="text-[var(--gold)] text-[14px]">★★★★★</span>
+              <div className="text-[11px] text-muted tracking-[1px] uppercase mt-1">Basado en 2,847 reseñas</div>
             </div>
           </div>
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
+      <div className="grid grid-cols-3 gap-4">
         {REVIEWS.map((r, i) => (
-          <div key={i} className="animate-fade-up" style={{
-            background: "var(--card)", border: "1px solid var(--bd)",
-            padding: 28, position: "relative", transition: ".25s",
-          }}>
-            <div style={{ position: "absolute", top: 14, right: 18, fontFamily: "var(--font-display)", fontSize: 72, fontWeight: 900, color: "var(--gold)", opacity: .15, lineHeight: .8, fontStyle: "italic" }}>"</div>
-            <div style={{ color: "var(--gold)", fontSize: 13, letterSpacing: 2, marginBottom: 14 }}>{"★".repeat(r.stars)}{"☆".repeat(5 - r.stars)}</div>
-            <p style={{ fontSize: 14, lineHeight: 1.7, color: "var(--text)", marginBottom: 20, fontWeight: 300, minHeight: 84 }}>{r.text}</p>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 18, borderTop: "1px solid var(--bd)" }}>
-              <div style={{ width: 42, height: 42, borderRadius: "50%", background: "var(--gold)", color: "#000", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontWeight: 900, fontSize: 16 }}>{r.initials}</div>
+          <div key={i} className="animate-fade-up bg-card border border-[var(--bd)] p-7 relative transition-[border-color] duration-[.25s]">
+            <div className="absolute top-[14px] right-[18px] font-display text-[72px] font-black text-[var(--gold)] opacity-[.15] leading-[0.8] italic">"</div>
+            <div className="text-[var(--gold)] text-[13px] tracking-[2px] mb-[14px]">{"★".repeat(r.stars)}{"☆".repeat(5 - r.stars)}</div>
+            <p className="text-[14px] leading-[1.7] text-text mb-5 font-light min-h-[84px]">{r.text}</p>
+            <div className="flex items-center gap-3 pt-[18px] border-t border-[var(--bd)]">
+              <div className="w-[42px] h-[42px] rounded-full bg-[var(--gold)] text-black flex items-center justify-center font-display font-black text-[16px]">{r.initials}</div>
               <div>
-                <div style={{ fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 800, textTransform: "uppercase", letterSpacing: .5 }}>{r.name}</div>
-                <div style={{ fontSize: 11, color: "var(--mt)", letterSpacing: 1, textTransform: "uppercase" }}>{r.role}</div>
+                <div className="font-display text-[16px] font-extrabold uppercase tracking-[0.5px]">{r.name}</div>
+                <div className="text-[11px] text-muted tracking-[1px] uppercase">{r.role}</div>
               </div>
             </div>
           </div>

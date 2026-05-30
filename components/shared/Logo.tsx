@@ -4,20 +4,19 @@ interface LogoProps {
   size?: "sm" | "md" | "lg";
 }
 
+const SIZE_CLASS = {
+  sm: "text-[20px]",
+  md: "text-[26px]",
+  lg: "text-[36px]",
+};
+
 export function Logo({ size = "md" }: LogoProps) {
-  const fontSize = size === "sm" ? 20 : size === "lg" ? 36 : 26;
   return (
     <Link
       href="/"
-      style={{
-        fontFamily: "var(--font-display)", fontWeight: 900,
-        fontSize, letterSpacing: 5, color: "var(--text)",
-        textDecoration: "none", textTransform: "uppercase" as const,
-        transition: "opacity .2s",
-      }}
-      className="hover:opacity-80"
+      className={`font-display font-black ${SIZE_CLASS[size]} tracking-[5px] text-text no-underline uppercase transition-opacity duration-200 hover:opacity-80`}
     >
-      MIRA<span style={{ color: "var(--gold)" }}>NA</span>
+      MIRA<span className="text-[var(--gold)]">NA</span>
     </Link>
   );
 }
