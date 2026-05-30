@@ -49,19 +49,19 @@
 
 ### Principios rectores
 
-- **Routing puro en `app/`**: las rutas solo contienen `page.tsx` y `layout.tsx`. La lógica UI de cada feature vive en `features/<feature>/`.
-- **Screaming Architecture**: la estructura del repositorio "grita" lo que hace el negocio, no el framework.
+- **Routing puro en `app/`**: las rutas solo contienen `page.tsx` y `layout.tsx`. Sin componentes, sin lógica inline.
+- **Vertical Slices**: cada feature en `features/<domain>/` contiene todo lo que necesita — components, actions, repositories, schemas, hooks, types. Sin saltar entre capas para trabajar en un dominio.
 - **Server-first**: Server Components y Server Actions por defecto; cliente solo cuando es estrictamente necesario (interactividad, estado local).
-- **Módulos de dominio en `modules/`**: la lógica de negocio (checkout, inventory, payment, preorder) vive en módulos independientes, accesibles desde server actions, route handlers, webhooks y jobs.
-- **Repositories funcionales**: cada módulo tiene `repositories/` con funciones puras que encapsulan Prisma. Sin clases, sin inyección de dependencias.
-- **Event-driven interno** desde el MVP: cambios de estado importantes emiten eventos (`order.paid`, `stock.updated`) que disparan side-effects (emails, notificaciones, analytics).
-- **Outbox Pattern obligatorio** para cualquier side-effect post-transacción: el evento se persiste en la **misma transacción** que el cambio de estado; un worker los procesa con retry.
-- **Type-safety end-to-end**: Zod en cada frontera (server actions, route handlers, webhooks, jobs, eventos). Prisma como única fuente de verdad para tipos de DB.
+- **Repositories dentro de la feature**: Prisma vive en `features/<domain>/repositories/`. Sin capa `modules/` separada. Los use-cases son Server Actions delgadas + helpers en `actions/`.
+- **Repositories funcionales**: funciones puras que encapsulan Prisma. Sin clases, sin inyección de dependencias.
+- **Sin middleware.ts**: protección de rutas vía `shared/lib/proxy.ts` (`requireAuth`, `requireRole`) llamado en los `layout.tsx` de cada grupo. Permite Node runtime completo (acceso a Prisma, lógica compleja).
+- **Type-safety end-to-end**: Zod en cada frontera (server actions, route handlers, webhooks). Prisma como única fuente de verdad para tipos de DB.
 - **Idempotencia y transacciones**: cualquier mutación de stock y pago debe ser idempotente y atómica.
 - **Inventario separado del producto**: tabla `ProductInventory` aislada permite multi-almacén futuro sin migración dolorosa y reduce lock contention.
-- **Payment Providers desacoplados**: interfaz `PaymentProvider` permite agregar Niubiz / MercadoPago / PayPal sin tocar checkout.
+- **Payment Providers desacoplados**: interfaz `PaymentProvider` en `features/payments/providers/` permite agregar Niubiz / MercadoPago sin tocar checkout.
 - **Auditoría total** de movimientos de inventario.
-- **Operación simple en Hostinger**: minimizar dependencias externas (sin Redis obligatorio en MVP, sin colas externas — Outbox + `node-cron` bastan).
+- **`shared/` para todo lo cross-feature**: componentes, lib, stores y types que se usan en 2+ features van en `shared/`. Las features nunca se importan entre sí.
+- **Operación simple en Hostinger**: sin Redis ni colas externas en fase inicial — `node-cron` para jobs basta.
 
 ### KPIs técnicos objetivo
 
@@ -77,46 +77,39 @@
 | Capa | Responsabilidad | Ubicación |
 |---|---|---|
 | **Routing** | Páginas y layouts exclusivamente (sin lógica ni componentes) | `app/**/page.tsx`, `app/**/layout.tsx` |
-| **Feature** | Componentes, server actions, schemas, hooks y helpers por feature | `features/<feature>/` |
-| **Module (Domain)** | Use cases, repositories, eventos y tipos por dominio | `modules/<domain>/` |
-| **Event Bus** | Bus global de eventos tipado + handlers cross-módulo + Outbox worker | `events/` |
-| **Infrastructure** | Clientes externos (Culqi, SMTP), Auth.js, proxy guards, logger | `lib/` |
-| **Config** | Variables de entorno validadas + constantes globales | `config/` |
-| **Shared** | UI primitives, utils, tipos cross-app, errores | `components/ui`, `shared/` |
+| **Feature (Vertical Slice)** | Todo lo de un dominio: components, actions, repositories, schemas, hooks, types | `features/<domain>/` |
+| **Shared** | UI primitives, lib de infra, stores Zustand, tipos cross-feature | `shared/` |
+| **Env** | Variables de entorno validadas con Zod | `env.ts` (raíz) |
 
-**Reglas de dependencia (flujo unidireccional):**
+**Flujo de datos:**
 
 ```
 Client Component
-  → Server Action (features/<feature>/actions/)
-    → Use Case (modules/<domain>/use-cases/)
-      → Repository (modules/<domain>/repositories/)
-        → Prisma
+  → Server Action (features/<domain>/actions/)
+    → Repository (features/<domain>/repositories/)  ← Prisma directo
 ```
 
-- Un Server Action **nunca** llama directamente a un repository: siempre pasa por un use case de `modules/<domain>/use-cases/`.
-- Una feature **nunca** importa de otra feature (ver §3.2).
-- RSC puede llamar directamente a un repository de `modules/<domain>/repositories/` para lectura simple (catálogo público).
+- Un Server Action puede llamar directamente al repository de su propia feature.
+- Para lógica que involucra **2+ features** (ej: place-order afecta products + inventory + payments), se orquesta en el Server Action del dominio principal o en un helper en `shared/lib/`.
+- Una feature **nunca** importa de otra feature. Lógica compartida → `shared/`.
+- RSC puede llamar directamente a repositories para lectura (catálogo público).
 
 ---
 
 ## 3. Estructura de Carpetas
 
-**Arquitectura: Routing (`app/`) + UI Features (`features/`) + Domain Modules (`modules/`) + Event Bus (`events/`).**
+**Arquitectura: Routing (`app/`) + Vertical Slices (`features/`) + Cross-feature (`shared/`).**
 
-> **`app/`** contiene **únicamente** archivos de routing de Next.js: `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`. Sin componentes, sin acciones, sin schemas.
+> **`app/`** contiene **únicamente** archivos de routing de Next.js: `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`. Sin componentes, sin acciones, sin schemas.
 >
-> **`features/`** contiene la lógica de UI organizada por feature: componentes, server actions, schemas, hooks. Solo orquestación UI — nunca lógica de negocio directa.
+> **`features/`** organiza el código por dominio de negocio. Cada feature es un **vertical slice** autónomo: tiene sus propios componentes, server actions, repositorios, schemas y tipos. Abrir `features/orders/` = ver todo lo relacionado con órdenes.
 >
-> **`modules/`** contiene los dominios de negocio. Cada módulo es autónomo: `repositories/`, `use-cases/`, `events/`, `types/`. Accesible solo desde server (RSC, server actions, route handlers, jobs).
->
-> **`events/`** contiene el bus global: tipos de eventos, `emit-event`, `dispatch-event`, handlers cross-módulo y el Outbox worker.
+> **`shared/`** contiene todo lo que usan 2+ features: componentes UI primitivos, lib de infraestructura (Prisma singleton, Auth.js, proxy guards), stores Zustand y tipos cross-app.
 
 **Por qué esta separación:**
-- `app/` = framework. `features/` = UI. `modules/` = negocio. Tres territorios sin mezcla.
-- Borrar una feature UI = borrar una carpeta en `features/`. Borrar un dominio = borrar una carpeta en `modules/`.
-- Los módulos no saben de React. Las features no saben de Prisma.
-- Los eventos cross-módulo viven en `events/` global; los tipos de eventos propios de un módulo viven dentro del módulo.
+- Abrir `features/products/` = ver componentes + acciones + repositorio + schemas. Sin saltar entre carpetas.
+- `shared/` tiene una regla clara: solo vive ahí lo que se usa en 2+ features.
+- Features nunca se importan entre sí — la dependencia cruzada va a `shared/`.
 
 ```
 mirana-shop/
@@ -125,8 +118,7 @@ mirana-shop/
 │   ├── migrations/
 │   └── seed.ts
 ├── public/
-│   ├── brand/
-│   └── placeholders/
+│   └── brand/
 │
 ├── app/                                # ⭐ SOLO routing — page.tsx y layout.tsx
 │   ├── layout.tsx
@@ -166,153 +158,84 @@ mirana-shop/
 │   │   └── registro/page.tsx
 │   └── api/
 │       ├── auth/[...nextauth]/route.ts
-│       ├── webhooks/culqi/route.ts      # → modules/payments/use-cases/
-│       ├── checkout/culqi/route.ts
-│       └── admin/import/route.ts
+│       └── webhooks/culqi/route.ts      # → features/payments/
 │
-├── features/                           # ⭐ UI organizada por feature (solo React)
-│   ├── catalog/
-│   │   ├── components/                 # CatalogGrid, CategoryFilter, SearchBar
-│   │   ├── actions/                    # search-products.action.ts
-│   │   ├── schemas/                    # catalog-query.schema.ts
-│   │   ├── hooks/                      # useCatalogFilters.ts
+├── features/                           # ⭐ Vertical slices — todo lo de un dominio junto
+│   ├── products/
+│   │   ├── components/                 # ProductsPage, CatalogGrid, ProductCard, Gallery
+│   │   ├── actions/                    # create-product.action.ts, search-products.action.ts
+│   │   ├── repositories/               # product.repo.ts, category.repo.ts
+│   │   ├── schemas/                    # product.schema.ts, catalog-query.schema.ts
+│   │   ├── hooks/                      # useProducts.ts
+│   │   ├── queries/                    # TanStack Query hooks (admin tables)
+│   │   ├── data/                       # products.ts (mock hasta conectar DB)
 │   │   └── types/
-│   ├── product/
-│   │   └── components/                 # Gallery, PriceBlock, AddToCartButton
+│   ├── orders/
+│   │   ├── components/                 # OrdersPage, OrderCard, OrderStatusBadge
+│   │   ├── actions/                    # place-order.action.ts, confirm-payment.action.ts, cancel-order.action.ts
+│   │   ├── repositories/               # order.repo.ts
+│   │   ├── jobs/                       # release-expired-reservations.job.ts
+│   │   └── types/
+│   ├── payments/
+│   │   ├── actions/                    # start-payment.action.ts
+│   │   ├── repositories/               # payment.repo.ts
+│   │   ├── providers/                  # culqi.provider.ts, transfer.provider.ts (WhatsApp)
+│   │   ├── jobs/                       # reconcile-culqi-payments.job.ts
+│   │   └── types/
+│   ├── inventory/
+│   │   ├── components/                 # InventoryPage
+│   │   ├── actions/                    # adjust-stock.action.ts, reserve-stock.action.ts
+│   │   ├── repositories/               # inventory.repo.ts, movement.repo.ts
+│   │   └── types/
+│   ├── users/
+│   │   ├── components/                 # UsersPage
+│   │   ├── actions/                    # register-user.action.ts
+│   │   ├── repositories/               # user.repo.ts
+│   │   └── types/
+│   ├── auth/
+│   │   ├── components/                 # LoginForm, RegisterForm, GoogleSignInButton
+│   │   ├── actions/                    # login.action.ts, register.action.ts
+│   │   └── schemas/                    # login.schema.ts, register.schema.ts
+│   ├── banners/
+│   │   ├── components/                 # BannersPage
+│   │   ├── actions/                    # save-banner.action.ts
+│   │   ├── repositories/               # banner.repo.ts
+│   │   └── schemas/
+│   ├── dashboard/
+│   │   └── components/                 # DashboardPage (KPIs, charts — lee de múltiples repos)
 │   ├── cart/
-│   │   ├── components/                 # CartList, CartItemRow, CartSummary
+│   │   ├── components/                 # CartList, CartItemRow
 │   │   └── hooks/                      # useCart.ts
 │   ├── checkout/
 │   │   ├── components/                 # CheckoutForm, ShippingFields, PaymentMethodPicker
 │   │   ├── actions/                    # start-checkout.action.ts
 │   │   ├── schemas/                    # checkout.schema.ts
-│   │   ├── hooks/                      # useCheckoutTotals.ts
-│   │   ├── types/
 │   │   └── lib/                        # whatsapp-link.ts
-│   ├── preorders/
-│   │   └── components/                 # PreorderCard, PreorderBadge, CountdownTimer
-│   ├── auth/
-│   │   ├── components/                 # LoginForm, GoogleSignInButton, RegisterForm
-│   │   ├── actions/                    # login.action.ts, register.action.ts
-│   │   └── schemas/
-│   ├── account/
-│   │   ├── components/
-│   │   ├── actions/
-│   │   └── schemas/
-│   ├── orders/
-│   │   └── components/                 # OrderCard, OrderStatusBadge, OrderTimeline
-│   └── admin/
-│       ├── dashboard/components/       # KpiCard, RecentOrdersTable, StockAlerts
-│       ├── products/
-│       │   ├── components/             # ProductForm, ProductsTable
-│       │   ├── actions/
-│       │   └── schemas/
-│       ├── inventory/
-│       │   ├── components/
-│       │   ├── actions/
-│       │   └── schemas/
-│       ├── orders/components/
-│       ├── banners/
-│       │   ├── components/
-│       │   ├── actions/
-│       │   └── schemas/
-│       └── import/
-│           ├── components/             # ImportDropzone, PreviewTable
-│           ├── actions/
-│           ├── schemas/                # row.schema.ts
-│           └── lib/                   # parsers (csv, xlsx)
+│   └── home/
+│       └── components/                 # HeroSection, FeaturedProducts, NewArrivals, etc.
 │
-├── modules/                            # ⭐ dominio de negocio (NO se importa en cliente)
-│   ├── auth/
-│   │   ├── repositories/               # user.repo.ts
-│   │   ├── use-cases/                  # register-user.ts, require-role.ts
-│   │   └── types/
-│   ├── catalog/
-│   │   ├── repositories/               # product.repo.ts, category.repo.ts, brand.repo.ts
-│   │   ├── use-cases/                  # get-product-by-slug.ts, list-products.ts
-│   │   └── types/
-│   ├── orders/
-│   │   ├── repositories/               # order.repo.ts
-│   │   ├── use-cases/
-│   │   │   ├── place-order.ts          # crea orden + reserva stock + emite evento
-│   │   │   ├── confirm-payment.ts      # marca PAID + descuenta stock + emite evento
-│   │   │   └── cancel-order.ts         # cancela + libera stock + emite evento
-│   │   ├── events/                     # order.created, order.paid, order.cancelled (tipos)
-│   │   ├── jobs/                       # release-expired-reservations.job.ts
-│   │   └── types/
-│   ├── payments/
-│   │   ├── repositories/               # payment.repo.ts
-│   │   ├── use-cases/
-│   │   │   ├── start-payment.ts
-│   │   │   └── handle-culqi-webhook.ts # idempotente
-│   │   ├── providers/                  # payment-provider.ts (interfaz), culqi.provider.ts, transfer.provider.ts
-│   │   ├── events/                     # payment.succeeded, payment.failed (tipos)
-│   │   ├── jobs/                       # reconcile-culqi-payments.job.ts
-│   │   └── types/
-│   ├── inventory/
-│   │   ├── repositories/               # inventory.repo.ts, movement.repo.ts
-│   │   ├── use-cases/
-│   │   │   ├── reserve-stock.ts
-│   │   │   ├── release-stock.ts
-│   │   │   ├── deduct-stock.ts
-│   │   │   └── adjust-stock.ts
-│   │   ├── events/                     # stock.updated (tipos)
-│   │   └── types/
-│   ├── preorder/
-│   │   ├── repositories/               # preorder.repo.ts
-│   │   ├── use-cases/
-│   │   │   ├── reserve-preorder.ts
-│   │   │   └── convert-to-stock.ts
-│   │   ├── events/                     # preorder.arrived (tipos)
-│   │   ├── jobs/                       # preorder-arrival-reminders.job.ts
-│   │   └── types/
-│   └── notifications/
-│       ├── use-cases/
-│       │   ├── send-order-confirmation.ts
-│       │   └── send-welcome-email.ts
-│       └── templates/
+├── shared/                             # ⭐ Todo lo cross-feature
+│   ├── components/
+│   │   ├── ui/                         # Button, FormField (shadcn primitives)
+│   │   ├── layout/                     # Navbar, Footer
+│   │   └── (plano)                     # AdminSidebar, AdminTopbar, AdminDrawer, KpiCard,
+│   │                                   # FilterBar, StatusBadge, ProductCard, CartDrawer, etc.
+│   ├── lib/
+│   │   ├── prisma.ts                   # singleton PrismaClient
+│   │   ├── auth.ts                     # Auth.js config
+│   │   ├── proxy.ts                    # requireAuth / requireRole (sin middleware.ts)
+│   │   ├── utils.ts                    # cn(), formatCurrency, slugify
+│   │   ├── store-context.tsx           # cart/user context
+│   │   ├── http.ts                     # respuestas estándar route handlers
+│   │   ├── rate-limit.ts
+│   │   └── logger.ts
+│   ├── stores/
+│   │   ├── cart.store.ts               # Zustand cart + persist
+│   │   └── admin.store.ts              # Zustand admin (datos mock)
+│   └── types/
+│       └── admin-mock.types.ts         # tipos mock (temporales hasta DB)
 │
-├── events/                             # ⭐ bus global de eventos + Outbox
-│   ├── event.types.ts                  # DomainEvent (unión de todos los módulos)
-│   ├── emit-event.ts                   # persiste OutboxEvent en misma transacción
-│   ├── dispatch-event.ts               # rutea evento → handler(s)
-│   ├── handlers/                       # handlers cross-módulo
-│   │   ├── order-paid.handler.ts       # → notifications + analytics
-│   │   ├── order-cancelled.handler.ts  # → notifications
-│   │   ├── stock-updated.handler.ts    # → alertas bajo stock
-│   │   └── preorder-arrived.handler.ts # → notifications a reservantes
-│   └── jobs/
-│       └── process-outbox.job.ts       # worker node-cron cada 30s
-│
-├── components/                         # UI compartido por 2+ features
-│   ├── ui/                             # primitives shadcn
-│   ├── layout/                         # Navbar, Footer, Sidebar, AdminShell
-│   └── shared/                         # Logo, Price, StatusBadge, ProductCard
-├── hooks/                              # hooks compartidos (useDebounce, useMediaQuery)
-├── stores/                             # Zustand global (estado puro cliente)
-│   ├── cart.store.ts
-│   └── ui.store.ts
-├── providers/                          # React providers del árbol de la app
-│   └── app-providers.tsx               # QueryClientProvider, SessionProvider, ThemeProvider
-├── lib/                                # infraestructura cross-app
-│   ├── prisma.ts                       # singleton PrismaClient
-│   ├── auth.ts                         # Auth.js config
-│   ├── proxy.ts                        # requireAuth / requireRole para layouts
-│   ├── culqi/
-│   │   ├── client.ts                   # cliente HTTP Culqi
-│   │   └── verify-webhook.ts
-│   ├── mailer.ts                       # cliente SMTP
-│   ├── rate-limit.ts
-│   ├── logger.ts
-│   ├── http.ts                         # respuestas estándar
-│   └── utils.ts                        # cn(), formatCurrency, slugify
-├── config/                             # configuración y constantes globales
-│   ├── env.ts                          # validación env con Zod
-│   └── constants.ts                    # ORDER_TTL_MIN, CURRENCY, etc.
-├── shared/                             # tipos y errores cross-app
-│   ├── types/                          # Money (value object), PaginationParams
-│   ├── schemas/                        # schemas Zod reutilizados
-│   └── errors/                         # AppError, OutOfStockError, etc.
+├── env.ts                              # validación env con Zod (raíz del proyecto)
 ├── docs/
 │   └── PLAN-IMPLEMENTATION.md
 ├── .env.example
@@ -322,44 +245,36 @@ mirana-shop/
 ```
 
 > **Notas:**
-> - **`app/`** solo contiene archivos de routing. Ningún componente, acción ni schema vive aquí.
-> - **`features/`** es territorio React: componentes, server actions, schemas, hooks. Nunca lógica de negocio con Prisma directo.
-> - **`modules/`** es territorio de dominio: sin React, sin Next.js. Solo lógica de negocio, repositorios y tipos. Next.js no lo enruta.
-> - **`events/`** es el bus global: tipos de dominio unificados, `emit-event`, `dispatch-event`, handlers cross-módulo. Los tipos de eventos propios de cada módulo viven en `modules/<domain>/events/`.
-> - **`providers/`** contiene los React Context providers del árbol raíz (no los providers de pago — esos están en `modules/payments/providers/`).
-> - **`config/`** centraliza env vars y constantes. No mezclar con `lib/` (que es código ejecutable).
-> - **No existe `middleware.ts`**: protección vía `lib/proxy.ts` en layouts.
-> - **No existe `tailwind.config.ts`**: Tailwind v4 usa `@theme` en `globals.css` (ver §30).
+> - **`app/`** solo routing. Sin componentes, acciones ni schemas.
+> - **`features/<domain>/`** es un vertical slice: abre una carpeta y ves todo lo de ese dominio.
+> - **`features/<domain>/repositories/`** es el único lugar que habla con Prisma. Los Server Actions llaman al repositorio directamente (sin capa use-cases intermedia para operaciones simples).
+> - **`shared/`** es la única dependencia permitida entre features. Las features nunca se importan entre sí.
+> - **Sin `middleware.ts`**: protección vía `shared/lib/proxy.ts` en `layout.tsx` de cada grupo de rutas.
+> - **Sin `tailwind.config.ts`**: Tailwind v4 usa `@theme` en `globals.css` (ver §30).
 > - **`tsconfig.json`**: `"paths": { "@/*": ["./*"] }` apunta a la raíz del proyecto.
 
 ### 3.1 Cuándo promover algo
 
 | Situación | Acción |
 |---|---|
-| Componente de una sola feature | `features/<feature>/components/` |
-| Componente usado en **2+ features** | `components/shared/` |
-| Primitive de UI (Button, Input) | `components/ui/` (shadcn) |
-| Hook de una sola feature | `features/<feature>/hooks/` |
-| Hook usado en **2+ features** | `hooks/` |
-| Acceso a datos Prisma | `modules/<domain>/repositories/` |
-| Use case de negocio | `modules/<domain>/use-cases/` |
-| Tipo de evento de un módulo | `modules/<domain>/events/` |
-| Tipo de evento cross-módulo | `events/event.types.ts` |
-| Tipo de dominio cruzado (`Money`) | `shared/types/` |
-| Util puro (`formatCurrency`) | `lib/utils.ts` |
-| Schema Zod reutilizado | `shared/schemas/` |
-| Constante global (`ORDER_TTL_MIN`) | `config/constants.ts` |
-| Variable de entorno | `config/env.ts` |
-| Store Zustand global | `stores/` |
-
-**Antipatrón:** poner lógica de negocio en `features/<feature>/actions/` con Prisma inline. Las server actions de feature solo validan input y llaman a un use case de `modules/<domain>/use-cases/`.
+| Componente específico de un dominio | `features/<domain>/components/` |
+| Componente usado en **2+ features** | `shared/components/` |
+| Primitive de UI (Button, Input) | `shared/components/ui/` (shadcn) |
+| Hook de un solo dominio | `features/<domain>/hooks/` |
+| Hook usado en **2+ features** | `shared/lib/` o `shared/hooks/` |
+| Acceso a datos Prisma | `features/<domain>/repositories/` |
+| Lógica que cruza 2+ dominios | Server Action del dominio principal + helper en `shared/lib/` |
+| Tipo cross-feature (`Money`) | `shared/types/` |
+| Util puro (`cn`, `formatCurrency`) | `shared/lib/utils.ts` |
+| Store Zustand | `shared/stores/` |
+| Variable de entorno | `env.ts` (raíz) |
 
 ### 3.2 Reglas de imports
 
-- **`app/`** solo importa de `features/`, `components/`, `lib/`, `stores/`, `providers/`.
-- **`features/`** importa de `components/`, `hooks/`, `stores/`, `lib/`, `config/`, `shared/`. Nunca de `modules/` directamente desde Client Components.
-- **`modules/`** importa de `lib/`, `config/`, `shared/`, `events/`. Nunca de `features/`, `app/`, `components/`, `stores/`.
-- **`events/`** importa de `modules/` (para tipos) y `lib/`. Nunca de `features/` ni `app/`.
+- **`app/`** importa de `features/` y `shared/`.
+- **`features/<domain>/`** importa de `shared/` y de su propia carpeta. **Nunca de otra feature.**
+- **`shared/`** no importa de `features/` ni de `app/`.
+- Path alias: `@/*` apunta a la raíz del proyecto.
 - **Prohibido** que una feature importe de otra feature. Lógica compartida → `components/shared/` (UI) o `modules/` (dominio).
 - Path alias: `@/*` apunta a la raíz del proyecto (`"paths": { "@/*": ["./*"] }`).
 
@@ -525,10 +440,10 @@ modules/<domain>/
 | `modules/auth/` | Registro, hash de password, guard `requireRole` |
 | `modules/catalog/` | Lectura de productos, categorías, marcas |
 | `modules/orders/` | Crear orden, confirmar pago, cancelar orden |
-| `modules/payments/` | Providers de pago + webhook handler + reconciliación |
+| `modules/payments/` | Culqi (tarjeta/Yape) + WhatsApp transferencia + webhook idempotente |
 | `modules/inventory/` | Reservar, liberar, descontar, ajustar stock (operaciones atómicas) |
-| `modules/preorder/` | Reservar preventa, convertir a stock al llegar |
-| `modules/notifications/` | Envío de emails transaccionales + templates |
+| ~~`modules/preorder/`~~ | _Fase 2 — preventas (fuera de alcance inicial)_ |
+| ~~`modules/notifications/`~~ | _Fase 2 — emails transaccionales (fuera de alcance inicial)_ |
 
 ---
 
@@ -604,6 +519,8 @@ export async function softDeleteProduct(id: string) {
 ---
 
 ## 7. Sistema de Eventos Internos + Outbox Pattern
+
+> **⚠️ Fase 2 — fuera de alcance inicial.** En la fase actual (CRUD + pagos Culqi/WhatsApp) no se envían emails ni notificaciones automáticas. Este sistema se implementa cuando se requieran side-effects post-transacción (emails de confirmación, alertas de stock, notificaciones de preventas).
 
 ### 7.1 Por qué desde el MVP
 
@@ -1263,17 +1180,13 @@ Use cases en `modules/inventory/use-cases/`:
 
 ## 13. Flujo de Preventas
 
+> **⚠️ Fase 2 — fuera de alcance inicial.** El flujo de preventas se implementa en una fase posterior. La infraestructura de base de datos (`Preorder`, `ProductInventory.preorderStock`, `isPreorder` en `Order`) ya está contemplada en el schema para no requerir migración disruptiva cuando se active.
+
 1. Admin crea producto `status=PREORDER` + `Preorder` + `ProductInventory.preorderStock`
 2. Cliente reserva → orden `isPreorder=true`, `reservedStock += qty` de `preorderStock`
 3. Pago adelanto (Culqi o transferencia) → orden `PAID` parcialmente con `isDepositPaid`
-4. Producto llega → `convert-to-stock`: `preorderStock → availableStock` + emit `preorder.arrived`
+4. Producto llega → `convert-to-stock`: `preorderStock → availableStock`
 5. Cobro saldo pendiente → envío → `DELIVERED`
-
-**Reglas:**
-- `Preorder.minReservation` valida cantidad mínima por orden.
-- `Preorder.closesAt` cierra reservas (UI muestra countdown).
-- Producto preventa se marca claramente con badge "PREVENTA · Llegada estimada DD/MM".
-- Al emitir `preorder.arrived`, el handler envía email a **todos** los reservantes (consulta órdenes con `isPreorder=true` para ese productId).
 
 ---
 
@@ -1475,17 +1388,16 @@ APP_URL=
 ## 21. Roadmap de Desarrollo
 
 ### Sprint 0 — Fundaciones (setup)
-- [ ] Crear estructura base en la raíz: `app/`, `features/`, `modules/`, `events/`, `components/`, `stores/`, `providers/`, `lib/`, `config/`, `shared/`. Configurar `tsconfig.json`: `"paths": { "@/*": ["./*"] }`.
+- [ ] Crear estructura base: `app/`, `features/`, `modules/`, `components/`, `stores/`, `providers/`, `lib/`, `config/`, `shared/`. Configurar `tsconfig.json`: `"paths": { "@/*": ["./*"] }`.
 - [ ] Instalar Tailwind v4 tokens, Shadcn UI, Lucide, Framer Motion.
 - [ ] Configurar Prisma, Postgres local (Docker), primera migración.
-- [ ] Crear esqueleto de módulos: `modules/{auth,catalog,orders,payments,inventory,preorder,notifications}/`.
+- [ ] Crear esqueleto de módulos: `modules/{auth,catalog,orders,payments,inventory}/`.
 - [ ] Auth.js + Google + Credentials. `modules/auth/use-cases/require-role.ts`.
 - [ ] `lib/proxy.ts` → `requireAuth` + `requireRole`. Usarlo en `app/(admin)/layout.tsx` y `app/(account)/layout.tsx`.
 - [ ] Layouts (storefront, account, admin). Tema oscuro premium.
 - [ ] `lib/prisma.ts`, `lib/auth.ts`, `lib/http.ts`, `lib/rate-limit.ts`, `lib/logger.ts`, `lib/utils.ts`.
 - [ ] `config/env.ts` (Zod) + `config/constants.ts`.
 - [ ] `shared/types/money.ts` + `shared/errors/`.
-- [ ] **Outbox**: modelo `OutboxEvent` + `events/` (emit-event, dispatch-event, event.types) + `events/jobs/process-outbox.job.ts`.
 
 ### Sprint 1 — Catálogo público
 - [ ] Modelos `Category`, `Brand`, `Product`, `ProductImage`, `ProductInventory`.
@@ -1499,15 +1411,15 @@ APP_URL=
 - [ ] `stores/cart.store.ts` (Zustand + persist).
 - [ ] `/carrito`, `/checkout` form.
 - [ ] `modules/orders/use-cases/place-order.ts` + `modules/inventory/use-cases/reserve-stock.ts`.
-- [ ] `modules/payments/providers/transfer.provider.ts` (WhatsApp + transferencia).
-- [ ] Email confirmación vía evento `order.created` + handler.
+- [ ] `modules/payments/providers/transfer.provider.ts` (WhatsApp + transferencia bancaria).
+- [ ] Deep link `wa.me/...` con código de orden (`lib/whatsapp-link.ts`).
 
 ### Sprint 3 — Checkout automático (Culqi)
 - [ ] `modules/payments/providers/culqi.provider.ts` implementando `PaymentProvider`.
-- [ ] Webhook firmado + idempotencia → `modules/payments/use-cases/handle-culqi-webhook.ts`.
-- [ ] `modules/orders/use-cases/confirm-payment.ts` → `deduct-stock` + emit `order.paid`.
-- [ ] `modules/orders/jobs/release-expired-reservations.job.ts`.
-- [ ] `modules/payments/jobs/reconcile-culqi-payments.job.ts`.
+- [ ] Webhook firmado + idempotencia (`culqiEventId @unique`) → `modules/payments/use-cases/handle-culqi-webhook.ts`.
+- [ ] `modules/orders/use-cases/confirm-payment.ts` → `deduct-stock` (mismo use case para webhook y validación manual admin).
+- [ ] `modules/orders/jobs/release-expired-reservations.job.ts` (TTL 30 min órdenes PENDING).
+- [ ] `modules/payments/jobs/reconcile-culqi-payments.job.ts` (cada 5 min, órdenes PROCESSING > 10 min).
 
 ### Sprint 4 — Panel administrativo base
 - [ ] Dashboard KPIs (repos de lectura directa).
@@ -1521,24 +1433,27 @@ APP_URL=
 - [ ] Alertas bajo stock vía `events/handlers/stock-updated.handler.ts`.
 - [ ] Histórico completo + filtros.
 
-### Sprint 6 — Preventas
+### Sprint 6 — Preventas _(Fase 2 — fuera de alcance inicial)_
 - [ ] Modelo `Preorder`, UI countdown, badges.
 - [ ] `modules/preorder/use-cases/reserve-preorder.ts` + `convert-to-stock.ts`.
 - [ ] Flujo reserva + adelanto.
-- [ ] Handler `preorder-arrived` → notifica reservantes.
 
-### Sprint 7 — Carga masiva
+### Sprint 7 — Notificaciones + Outbox _(Fase 2 — fuera de alcance inicial)_
+- [ ] `events/` bus + Outbox Pattern + process-outbox.job.ts.
+- [ ] `modules/notifications/` + templates de email (confirmación, bienvenida).
+- [ ] Handlers cross-módulo (order-paid, stock-updated, preorder-arrived).
+
+### Sprint 8 — Carga masiva _(Fase 2 — fuera de alcance inicial)_
 - [ ] Endpoint `/admin/importar` (CSV/XLSX).
 - [ ] Parser, validación Zod, preview, errores.
 - [ ] Modo `create` vs `update`.
 
-### Sprint 8 — Hardening + Deploy
+### Sprint 9 — Hardening + Deploy
 - [ ] Rate limit en server actions y route handlers, headers seguridad, CSP.
 - [ ] Tests (ver §27).
 - [ ] Hostinger VPS + PM2 + Nginx + TLS.
 - [ ] GitHub Actions CI/CD.
 - [ ] Backups DB automatizados.
-- [ ] Purga programada de `OutboxEvent` procesados > 30 días.
 
 ---
 

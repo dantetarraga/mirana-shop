@@ -1,9 +1,9 @@
-import { Button } from "@/components/ui/Button";
+﻿import { Button } from "@/shared/components/ui/Button";
 
 export function CTABand() {
   return (
     <div
-      className="mx-12 mb-[80px] bg-[var(--gold)] px-12 py-12 flex items-center justify-between gap-6 [clip-path:polygon(0_0,calc(100%-16px)_0,100%_16px,100%_100%,16px_100%,0_calc(100%-16px))]"
+      className="mx-12 mb-20 bg-[var(--gold)] px-12 py-12 flex items-center justify-between gap-6 [clip-path:polygon(0_0,calc(100%-16px)_0,100%_16px,100%_100%,16px_100%,0_calc(100%-16px))]"
     >
       <div>
         <h2 className="font-display font-black uppercase text-black leading-[0.95] tracking-[-1px] text-[clamp(28px,4vw,54px)]">

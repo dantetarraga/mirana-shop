@@ -1,16 +1,16 @@
-"use client";
+﻿"use client";
 
-import { PRODUCTS } from "@/shared/data/products";
-import { ProductCard } from "@/components/shared/ProductCard";
+import { PRODUCTS } from "@/features/products/data/products";
+import { ProductCard } from "@/shared/components/ProductCard";
 
 export function FeaturedProducts() {
   const items = PRODUCTS.slice(0, 8);
 
   return (
-    <section className="px-12 py-[80px]">
+    <section className="px-12 py-20">
       <div className="flex justify-between items-end mb-8">
         <div>
-          <div className="text-[10px] font-bold tracking-[3px] uppercase mb-[10px] text-[var(--gold)]">
+          <div className="text-[10px] font-bold tracking-[3px] uppercase mb-2.5 text-[var(--gold)]">
             Selección premium
           </div>
           <h2

@@ -1,4 +1,4 @@
-export function HeroSection() {
+﻿export function HeroSection() {
   return (
     <section className="min-h-screen relative overflow-hidden flex items-center px-12 pt-[var(--nh)]">
       {/* Neon background — doble radial-gradient complejo, no tiene equivalente en utilidades Tailwind */}
@@ -7,10 +7,8 @@ export function HeroSection() {
         style={{ background: "radial-gradient(ellipse 70% 60% at 65% 50%, rgba(80,150,255,.08) 0%, transparent 65%), radial-gradient(ellipse 40% 40% at 20% 70%, rgba(80,150,255,.05) 0%, transparent 50%)" }}
       />
 
-      {/* Ghost text — WebkitTextStroke no tiene equivalente Tailwind */}
       <div
-        className="absolute right-[-60px] top-1/2 -translate-y-[52%] font-display font-black italic pointer-events-none whitespace-nowrap select-none leading-none text-[clamp(180px,20vw,300px)] text-transparent tracking-[-6px]"
-        style={{ WebkitTextStroke: "1px rgba(80,150,255,.06)" }}
+        className="absolute right-[-60px] top-1/2 -translate-y-[52%] font-display font-black italic pointer-events-none whitespace-nowrap select-none leading-none text-[clamp(180px,20vw,300px)] text-transparent tracking-[-6px] [-webkit-text-stroke:1px_rgba(80,150,255,.06)]"
       >
         COLLECT
       </div>
@@ -18,7 +16,7 @@ export function HeroSection() {
       {/* Content */}
       <div className="relative z-[2] max-w-[580px]">
         <div
-          className="inline-flex items-center gap-2 px-[14px] py-1.5 text-[10px] font-bold tracking-[3px] uppercase mb-7 bg-[var(--gd)] border border-[rgba(80,150,255,.25)] text-[var(--gold)]"
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 text-[10px] font-bold tracking-[3px] uppercase mb-7 bg-[var(--gd)] border border-[rgba(80,150,255,.25)] text-[var(--gold)]"
         >
           <span
             className="animate-pulse-dot w-1.5 h-1.5 rounded-full inline-block bg-[var(--gold)]"
@@ -61,7 +59,7 @@ export function HeroSection() {
       {/* Visual placeholder */}
       <div className="absolute right-0 top-0 bottom-0 w-[42%] flex items-center justify-center pointer-events-none">
         <div
-          className="stripe-fig w-[380px] h-[480px] flex items-center justify-center flex-col gap-[10px] border border-[var(--bd)]"
+          className="stripe-fig w-[380px] h-[480px] flex items-center justify-center flex-col gap-2.5 border border-[var(--bd)]"
         >
           <span className="font-mono text-[11px] tracking-[2px] uppercase text-muted">product shot</span>
         </div>

@@ -1,7 +1,7 @@
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
-import { StoreProvider } from "@/lib/store-context";
-import { StoreOverlays } from "@/components/shared/StoreOverlays";
+﻿import { Navbar } from "@/shared/components/layout/Navbar";
+import { Footer } from "@/shared/components/layout/Footer";
+import { StoreProvider } from "@/shared/lib/store-context";
+import { StoreOverlays } from "@/shared/components/StoreOverlays";
 
 export default function StorefrontLayout({ children }: { children: React.ReactNode }) {
   return (

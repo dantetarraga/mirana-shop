@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import { useSearchParams } from "next/navigation";
 import { useState, useMemo, Suspense } from "react";
-import { ProductCard } from "@/components/shared/ProductCard";
-import { PRODUCTS, type ProductCategory } from "@/shared/data/products";
-import { Button } from "@/components/ui/Button";
+import { ProductCard } from "@/shared/components/ProductCard";
+import { PRODUCTS, type ProductCategory } from "@/features/products/data/products";
+import { Button } from "@/shared/components/ui/Button";
 import { Search } from "lucide-react";
 
 const FILTERS: { key: "all" | ProductCategory; label: string }[] = [
@@ -32,7 +32,7 @@ function CatalogContent() {
   );
 
   return (
-    <section className="px-12 pb-[80px] pt-[calc(var(--nh)+36px)]">
+    <section className="px-12 pb-20 pt-[calc(var(--nh)+36px)]">
       <div className="text-[10px] font-bold tracking-[3px] uppercase mb-1.5 text-[var(--gold)]">
         Tienda completa
       </div>
@@ -53,7 +53,7 @@ function CatalogContent() {
           <Button key={key} variant="tab" size="sm" active={filter === key} onClick={() => setFilter(key)}>{label}</Button>
         ))}
         <div
-          className="ml-auto flex items-center gap-2 px-[14px] h-[40px] bg-surf border border-[var(--bd)] transition-[border-color] duration-[.2s] focus-within:border-[var(--gold)]"
+          className="ml-auto flex items-center gap-2 px-3.5 h-10 bg-surf border border-[var(--bd)] transition-[border-color] duration-[.2s] focus-within:border-[var(--gold)]"
         >
           <Search size={13} className="shrink-0 text-muted" />
           <input
@@ -66,7 +66,7 @@ function CatalogContent() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-[80px] px-5 text-muted">
+        <div className="text-center py-20 px-5 text-muted">
           <div className="font-display text-[28px] font-black uppercase mb-2">Sin resultados</div>
           <div className="text-[14px]">Prueba con otro término de búsqueda</div>
         </div>

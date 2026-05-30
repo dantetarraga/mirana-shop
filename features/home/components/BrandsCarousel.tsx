@@ -1,4 +1,4 @@
-const BRANDS = [
+﻿const BRANDS = [
   { name: "MARVEL",     sub: "LEGENDS SERIES" },
   { name: "LEGO®",      sub: "OFFICIAL PARTNER",     serif: true },
   { name: "BANDAI",     sub: "TAMASHII NATIONS" },
@@ -17,7 +17,7 @@ export function BrandsCarousel() {
     <section className="py-[60px] border-t border-[var(--bd)] border-b border-b-[var(--bd)] overflow-hidden">
       <div className="px-12 pb-8 flex justify-between items-baseline">
         <div>
-          <div className="text-[10px] font-bold tracking-[3px] uppercase text-[var(--gold)] mb-[10px]">Marcas oficiales</div>
+          <div className="text-[10px] font-bold tracking-[3px] uppercase text-[var(--gold)] mb-2.5">Marcas oficiales</div>
           <h2 className="font-display font-black uppercase tracking-[-1px] leading-[0.95] text-[clamp(28px,3.5vw,42px)]">
             Distribuidor autorizado
           </h2>
@@ -35,7 +35,7 @@ export function BrandsCarousel() {
               >
                 {b.name}
               </div>
-              <div className="font-sans text-[9px] tracking-[3px] font-medium text-muted mt-[6px]">
+              <div className="font-sans text-[9px] tracking-[3px] font-medium text-muted mt-1.5">
                 {b.sub}
               </div>
             </div>

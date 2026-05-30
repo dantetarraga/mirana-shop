@@ -1,11 +1,11 @@
-export function CategoryStrips() {
+﻿export function CategoryStrips() {
   const cats = [
     { label: "Figuras de Acción", sub: "Marvel, DC, Anime, Sci-Fi", cls: "stripe-fig", href: "/catalogo?cat=figures" },
     { label: "Sets LEGO", sub: "Technic, Star Wars, Architecture", cls: "stripe-lego", href: "/catalogo?cat=lego" },
     { label: "Vehículos Escala", sub: "Hot Wheels, Burago, Maisto", cls: "stripe-veh", href: "/catalogo?cat=vehicles" },
   ];
   return (
-    <section className="px-12 pb-[80px] grid grid-cols-3 gap-4">
+    <section className="px-12 pb-20 grid grid-cols-3 gap-4">
       {cats.map((c) => (
         <a key={c.label} href={c.href} className="no-underline cursor-pointer block">
           <div className={`${c.cls} h-[180px] flex items-end px-6 pb-6 relative border border-[var(--bd)] transition-[border-color] duration-[.25s]`}>
