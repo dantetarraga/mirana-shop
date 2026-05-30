@@ -1,0 +1,374 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* =============================================================
+   TEMA — Mirana Shop (Tailwind v4 CSS-first)
+   Una sola fuente de verdad. @theme genera utility classes.
+   Cambiar aquí = cambiar toda la app.
+   ============================================================= */
+
+/* Fuentes: @theme inline porque referencian CSS vars de next/font */
+@theme inline {
+  --font-display: var(--font-barlow-condensed), "Barlow Condensed", system-ui, sans-serif;
+  --font-sans:    var(--font-plus-jakarta), "Plus Jakarta Sans", system-ui, sans-serif;
+}
+
+@theme {
+  /* ── Gold (marca) ──────────────────────────────────────────
+     Genera: bg-gold-500, text-gold-500, border-gold-500, etc. */
+  --color-gold-50:  oklch(98%   0.02  76);
+  --color-gold-100: oklch(95%   0.05  76);
+  --color-gold-200: oklch(90%   0.09  76);
+  --color-gold-300: oklch(84%   0.12  76);
+  --color-gold-400: oklch(78%   0.14  76);
+  --color-gold-500: oklch(72.3% 0.147 75.7); /* main gold #c9a840 */
+  --color-gold-600: oklch(63%   0.14  76);
+  --color-gold-700: oklch(52%   0.12  76);
+  --color-gold-800: oklch(40%   0.09  76);
+  --color-gold-900: oklch(28%   0.06  76);
+  --color-gold-950: oklch(16%   0.04  76);
+
+  /* ── Superficies (dark-first) ──────────────────────────────
+     Genera: bg-surface-950, text-surface-50, etc. */
+  --color-surface-0:   oklch(100%  0      0);
+  --color-surface-50:  oklch(97%   0.005  270);
+  --color-surface-100: oklch(94%   0.008  270);
+  --color-surface-200: oklch(88%   0.008  270);
+  --color-surface-300: oklch(76%   0.01   270);
+  --color-surface-400: oklch(62%   0.01   270);
+  --color-surface-500: oklch(50%   0.01   270);
+  --color-surface-600: oklch(38%   0.01   270);
+  --color-surface-700: oklch(30%   0.01   270);
+  --color-surface-800: oklch(22%   0.01   270);
+  --color-surface-900: oklch(14%   0.01   270);
+  --color-surface-950: oklch(8%    0.015  270);
+
+  /* ── Tokens de diseño exactos ──────────────────────────────
+     Genera: bg-bg, bg-card, text-muted, border-border, etc. */
+  --color-bg:           oklch(5%   0.015 270);   /* #07090f — fondo base */
+  --color-surf:         oklch(8%   0.018 270);   /* #0d1019 — superficies elevadas */
+  --color-card:         oklch(11%  0.018 270);   /* #12151f — tarjetas */
+  --color-card-hover:   oklch(13%  0.018 270);   /* #181c2b — tarjeta :hover */
+  --color-text:         oklch(95%  0.008 80);    /* #f0eee8 — texto principal */
+  --color-muted:        oklch(95%  0.008 80 / 0.42); /* texto secundario */
+  --color-subtle:       oklch(95%  0.008 80 / 0.07); /* fondo sutil */
+  --color-border:       oklch(100% 0     0 / 0.06);  /* borde default */
+  --color-border-gold:  oklch(72.3% 0.147 75.7 / 0.35); /* borde gold hover */
+  --color-gold-glow:    oklch(72.3% 0.147 75.7 / 0.12); /* fondo pill gold */
+
+  /* ── Semánticos ────────────────────────────────────────────
+     Genera: bg-success, text-danger, etc. */
+  --color-success: oklch(72% 0.17 150);
+  --color-warning: oklch(80% 0.17 80);
+  --color-danger:  oklch(65% 0.22 25);
+  --color-info:    oklch(70% 0.15 230);
+
+  /* ── Radios ────────────────────────────────────────────────
+     Genera: rounded-xs, rounded-sm, rounded-md, etc. */
+  --radius-xs:   0.25rem;
+  --radius-sm:   0.375rem;
+  --radius-md:   0.5rem;
+  --radius-lg:   0.75rem;
+  --radius-xl:   1rem;
+  --radius-2xl:  1.5rem;
+  --radius-full: 9999px;
+
+  /* ── Sombras ────────────────────────────────────────────────
+     Genera: shadow-premium, shadow-card, shadow-gold */
+  --shadow-premium: 0 25px 50px -12px oklch(0% 0 0 / 0.5);
+  --shadow-card:    0 4px 24px -4px oklch(0% 0 0 / 0.4);
+  --shadow-gold:    0 8px 24px oklch(72.3% 0.147 75.7 / 0.25);
+
+  /* ── Animaciones ────────────────────────────────────────────
+     Genera: animate-marquee, animate-fade-in, etc. */
+  --animate-marquee:      marquee 22s linear infinite;
+  --animate-marquee-slow: marquee 32s linear infinite;
+  --animate-fade-in:      fade-in .2s ease both;
+  --animate-slide-up:     slide-up .25s cubic-bezier(.4,0,.2,1) both;
+  --animate-slide-right:  slide-right .28s cubic-bezier(.4,0,.2,1) both;
+  --animate-pulse-dot:    pulse-dot 2s infinite;
+  --animate-fade-up:      fade-up .5s ease both;
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slide-right {
+    from { transform: translateX(100%); }
+    to   { transform: translateX(0); }
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: .4; }
+  }
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/* =============================================================
+   Midnight Neon — tema por defecto
+   Accent azul eléctrico #58aaff en lugar del gold.
+   Cambiar aquí para volver al tema gold.
+   ============================================================= */
+:root {
+  /* Superficies near-black con tinte azul */
+  --bg:     #030409;
+  --surf:   #07091a;
+  --card:   #090d1e;
+  --card-h: #0e1328;
+  /* Acento — azul eléctrico */
+  --gold:   #58aaff;
+  --gl:     #88ccff;
+  --gd:     rgba(80, 150, 255, 0.10);
+  /* Bordes con tinte neon */
+  --bd:     rgba(80, 150, 255, 0.12);
+  --bdh:    rgba(80, 150, 255, 0.50);
+  /* Texto */
+  --text:   #f0eee8;
+  --mt:     rgba(240, 238, 232, 0.42);
+  --sub:    rgba(80, 150, 255, 0.05);
+  /* Altura navbar */
+  --nh: 68px;
+}
+
+/* =============================================================
+   Base
+   ============================================================= */
+@layer base {
+  html { color-scheme: dark; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    @apply font-sans antialiased overflow-x-hidden;
+    transition: background .3s, color .3s;
+  }
+
+  h1, h2, h3, h4 { @apply font-display; }
+  button { @apply cursor-pointer; }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { @apply bg-bg; }
+  ::-webkit-scrollbar-thumb { @apply bg-border rounded; }
+}
+
+/* =============================================================
+   Componentes reutilizables (usar @apply con Tailwind)
+   ============================================================= */
+@layer components {
+
+  /* =============================================================
+     UI BUTTON — componente unificado <Button />
+     Variantes: accent | outline | ghost | dark | tab | icon
+     Tamaños:   sm | md | lg
+     ============================================================= */
+
+  /* Base */
+  .ui-btn {
+    @apply font-display font-bold uppercase cursor-pointer inline-flex
+           items-center justify-center gap-2 transition-all duration-200
+           outline-none select-none shrink-0;
+    letter-spacing: 1.5px;
+    border: none;
+  }
+
+  /* ── Variantes ── */
+
+  /* accent: acento principal (gold/neon), texto negro */
+  .ui-btn--accent {
+    background: var(--gold);
+    color: #000;
+  }
+  .ui-btn--accent:hover:not(:disabled) {
+    background: var(--gl);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-gold);
+  }
+
+  /* outline: borde sutil, fondo transparente */
+  .ui-btn--outline {
+    background: transparent;
+    border: 1px solid var(--bd);
+    color: var(--text);
+  }
+  .ui-btn--outline:hover:not(:disabled) { border-color: var(--mt); }
+
+  /* ghost: sin borde, texto muted — para acciones secundarias */
+  .ui-btn--ghost {
+    background: transparent;
+    color: var(--mt);
+    padding-bottom: 2px;
+    border-bottom: 1px solid transparent;
+  }
+  .ui-btn--ghost:hover:not(:disabled) {
+    color: var(--text);
+    border-bottom-color: var(--gold);
+  }
+
+  /* dark: fondo negro, texto acento — para CTAs sobre fondos dorados */
+  .ui-btn--dark {
+    background: #000;
+    color: var(--gold);
+  }
+  .ui-btn--dark:hover:not(:disabled) { background: #111; }
+
+  /* tab: filtro activo/inactivo */
+  .ui-btn--tab {
+    background: var(--card);
+    border: 1px solid var(--bd);
+    color: var(--mt);
+  }
+  .ui-btn--tab:hover:not(:disabled):not(.ui-btn--active) {
+    color: var(--text);
+    border-color: var(--mt);
+  }
+  .ui-btn--tab.ui-btn--active {
+    background: var(--gold);
+    color: #000;
+    border-color: var(--gold);
+  }
+
+  /* icon: cuadrado, solo borde */
+  .ui-btn--icon {
+    background: transparent;
+    border: 1px solid var(--bd);
+    color: var(--mt);
+    padding: 0;
+  }
+  .ui-btn--icon:hover:not(:disabled) { color: var(--text); border-color: var(--mt); }
+  .ui-btn--icon.ui-btn--destructive:hover:not(:disabled) {
+    color: #ff6644;
+    border-color: #ff6644;
+  }
+
+  /* ── Tamaños (no aplica a icon — tiene su propia lógica) ── */
+  .ui-btn--sm { font-size: 13px; padding: 8px 18px; }
+  .ui-btn--md { font-size: 14px; padding: 11px 22px; }
+  .ui-btn--lg { font-size: 15px; padding: 14px 36px; }
+
+  /* Tamaños para icon */
+  .ui-btn--icon.ui-btn--sm { width: 28px; height: 28px; font-size: 13px; }
+  .ui-btn--icon.ui-btn--md { width: 36px; height: 36px; font-size: 15px; }
+  .ui-btn--icon.ui-btn--lg { width: 44px; height: 44px; font-size: 18px; }
+
+  /* ── Modificadores ── */
+  .ui-btn--full   { @apply w-full; }
+  .ui-btn--clip   { clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px)); }
+  .ui-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+  /* ── Botones legacy (mantener retrocompatibilidad) ── */
+  .btn-gold {
+    @apply bg-gold-500 text-black font-display font-extrabold uppercase
+           cursor-pointer inline-block transition-all duration-200;
+    font-size: 15px;
+    letter-spacing: 2px;
+    padding: 14px 36px;
+    border: none;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  }
+  .btn-gold:hover {
+    @apply bg-gold-400 -translate-y-0.5 shadow-gold;
+  }
+
+  .btn-outline-mirana {
+    @apply bg-transparent border border-border text-text font-display font-bold
+           uppercase cursor-pointer inline-block transition-all duration-200;
+    font-size: 15px;
+    letter-spacing: 2px;
+    padding: 13px 32px;
+  }
+  .btn-outline-mirana:hover { @apply border-muted; }
+
+  .btn-dark {
+    @apply bg-black text-gold-500 font-display font-extrabold uppercase
+           cursor-pointer transition-colors duration-200 whitespace-nowrap shrink-0;
+    font-size: 15px;
+    letter-spacing: 2px;
+    padding: 14px 32px;
+    border: none;
+  }
+  .btn-dark:hover { @apply bg-[#111]; }
+
+  /* ── Product card ── */
+  .pcard {
+    @apply bg-card border border-border cursor-pointer relative
+           transition-all duration-300 ease-out;
+  }
+  .pcard:hover {
+    @apply bg-card-hover -translate-y-1.5;
+    border-color: var(--bdh);
+    box-shadow: 0 20px 48px oklch(0% 0 0 / 0.35), 0 0 0 1px var(--bdh);
+  }
+  .pcard .add-btn {
+    @apply w-full bg-gold-500 text-black border-none font-display font-extrabold
+           uppercase cursor-pointer transition-all duration-200;
+    font-size: 14px;
+    letter-spacing: 1.5px;
+    padding: 10px;
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  .pcard:hover .add-btn {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .pcard .add-btn:hover { @apply bg-gold-400; }
+
+  /* ── Stripe placeholders ── */
+  .stripe-fig {
+    background: repeating-linear-gradient(45deg, #111624 0, #111624 9px, #161d30 9px, #161d30 18px);
+  }
+  .stripe-lego {
+    background: repeating-linear-gradient(45deg, #0f1f10 0, #0f1f10 9px, #162418 9px, #162418 18px);
+  }
+  .stripe-veh {
+    background: repeating-linear-gradient(45deg, #1f1010 0, #1f1010 9px, #281818 9px, #281818 18px);
+  }
+
+  /* ── Filter pills ── */
+  .filt {
+    @apply bg-transparent border border-border text-muted font-display font-bold
+           uppercase cursor-pointer transition-all duration-200;
+    font-size: 14px;
+    letter-spacing: 1px;
+    padding: 8px 20px;
+  }
+  .filt:hover { @apply border-muted text-text; }
+  .filt.active { @apply bg-gold-500 text-black border-gold-500; }
+
+  /* ── Footer links ── */
+  .footer-link {
+    @apply transition-opacity duration-200;
+    opacity: 0.55;
+  }
+  .footer-link:hover { opacity: 1; }
+
+  /* ── Brand carousel item ── */
+  .brand-item {
+    filter: grayscale(.7);
+    opacity: .55;
+    transition: filter .3s, opacity .3s, background .3s;
+  }
+  .brand-item:hover { filter: none; opacity: 1; background: var(--sub); }
+
+  /* ── Stock badges ── */
+  .adm-stock {
+    @apply font-display font-extrabold inline-flex items-center gap-1.5
+           border px-2.5 py-1;
+    font-size: 15px;
+  }
+  .stock-ok  { @apply text-[#5fcf7f] border-[rgba(95,207,127,.3)]; }
+  .stock-low { @apply text-[#ffb84a] border-[rgba(255,184,74,.3)]; }
+  .stock-out { @apply text-[#ff6644] border-[rgba(255,102,68,.3)]; }
+}
