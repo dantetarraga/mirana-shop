@@ -9,7 +9,7 @@ import { BANNER_STATUS } from "@/shared/lib/admin-constants";
 import { useAdminStore } from "@/shared/stores/admin.store";
 import type { Banner } from "@/shared/types/admin-mock.types";
 import { PanelHeader } from "@/shared/components/PanelHeader";
-import { Plus } from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
 import { useState } from "react";
 
 export default function BannersPage() {
