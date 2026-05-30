@@ -148,7 +148,7 @@ export function Navbar() {
                 ["Mis pedidos", "📦"],
                 ["Favoritos", "♡"],
               ].map(([label, icon]) => (
-                <Button key={label} variant="ghost" size="sm" full className="justify-start px-[18px]">
+                <Button key={label} variant="ghost" size="sm" full className="justify-start px-4.5">
                   <span>{icon}</span> {label}
                 </Button>
               ))}
