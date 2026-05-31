@@ -6,7 +6,7 @@ import { X, Upload, FileSpreadsheet, AlertCircle, CheckCircle2 } from "lucide-re
 import { Button } from "@/shared/components/ui/Button";
 import { cls } from "@/shared/lib/admin-classes";
 import { cn } from "@/shared/lib/utils";
-import type { Product, ProductCategory } from "@/features/products/data/products";
+import type { ImportProductRow } from "@/shared/lib/schemas";
 
 // ---------------------------------------------------------------------------
 // Column mapping — acepta variaciones en español e inglés, case-insensitive
@@ -21,13 +21,15 @@ const COL_ALIASES: Record<string, keyof ExcelRow> = {
   categoria: "cat", categoría: "cat", category: "cat", cat: "cat",
 };
 
-const CAT_MAP: Record<string, ProductCategory> = {
+type CatKey = "figures" | "lego" | "vehicles";
+
+const CAT_MAP: Record<string, CatKey> = {
   figures: "figures", figuras: "figures", figura: "figures", "figura de acción": "figures",
-  "figura de accion": "figures", accion: "figures", acción: "figures",
-  lego: "lego", "set lego": "lego",
+  "figura de accion": "figures", accion: "figures", acción: "figures", "figuras de accion": "figures",
+  lego: "lego", "set lego": "lego", legos: "lego",
   vehicles: "vehicles", vehiculos: "vehicles", vehículos: "vehicles",
   vehículo: "vehicles", vehiculo: "vehicles", modelos: "vehicles",
-  escala: "vehicles", "modelo escala": "vehicles",
+  escala: "vehicles", "modelo escala": "vehicles", "modelos a escala": "vehicles",
 };
 
 interface ExcelRow {
@@ -37,7 +39,7 @@ interface ExcelRow {
   price: number;
   stock: number;
   brand: string;
-  cat: ProductCategory;
+  cat: CatKey;
 }
 
 interface ParsedRow {
@@ -48,7 +50,7 @@ interface ParsedRow {
 
 interface Props {
   onClose: () => void;
-  onImport: (products: Omit<Product, "id" | "badge" | "rating" | "reviews" | "isNew">[]) => void;
+  onImport: (products: ImportProductRow[]) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -120,7 +122,7 @@ export function ExcelImportDrawer({ onClose, onImport }: Props) {
   const errorRows = rows?.filter((r) => r.errors.length > 0) ?? [];
 
   const handleImport = () => {
-    const products = validRows.map((r) => ({
+    const products: ImportProductRow[] = validRows.map((r) => ({
       sku:   r.data.sku!,
       name:  r.data.name!,
       desc:  r.data.desc ?? "",

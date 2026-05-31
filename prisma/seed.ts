@@ -1,12 +1,23 @@
 import 'dotenv/config'
 import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient, ProductStatus, OrderStatus, PaymentStatus, PaymentMethod, InventoryMovementType } from '../generated/prisma/client'
+import { PrismaClient, ProductStatus, OrderStatus, PaymentStatus, PaymentMethod, InventoryMovementType } from '../generated/prisma'
+import { Pool } from 'pg'
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
+// ---------------------------------------------------------------------------
+// Nota sobre slugs de categoría:
+// Los slugs deben coincidir exactamente con CATEGORY_STRIPE en catalog.types.ts:
+//   "figuras-accion" -> stripe-fig
+//   "lego"           -> stripe-lego
+//   "modelos-escala" -> stripe-veh
+//   "anime"          -> stripe-fig
+// ---------------------------------------------------------------------------
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL! })
+const adapter = new PrismaPg(pool)
 const prisma = new PrismaClient({ adapter })
 
 async function main() {
-  console.log('🌱 Seeding database...')
+  console.log('Seeding database...')
 
   // ── Admin user ─────────────────────────────────────────────────────────────
   const admin = await prisma.user.upsert({
@@ -41,30 +52,42 @@ async function main() {
     },
   })
 
-  console.log(`✅ Users: ${admin.email}, ${customer.email}`)
+  console.log(`Users: ${admin.email}, ${customer.email}`)
 
-  // ── Categories ─────────────────────────────────────────────────────────────
+  // ── Categories — slugs alineados con CATEGORY_STRIPE ──────────────────────
   const catFiguras = await prisma.category.upsert({
-    where: { slug: 'figuras-de-accion' },
-    update: {},
-    create: { name: 'Figuras de Acción', slug: 'figuras-de-accion' },
+    where: { slug: 'figuras-accion' },
+    update: { name: 'Figuras de Acción' },
+    create: { name: 'Figuras de Acción', slug: 'figuras-accion' },
   })
 
   const catLego = await prisma.category.upsert({
-    where: { slug: 'sets-lego' },
-    update: {},
-    create: { name: 'Sets LEGO', slug: 'sets-lego' },
+    where: { slug: 'lego' },
+    update: { name: 'LEGO' },
+    create: { name: 'LEGO', slug: 'lego' },
   })
 
   const catModelos = await prisma.category.upsert({
-    where: { slug: 'modelos-a-escala' },
-    update: {},
-    create: { name: 'Modelos a Escala', slug: 'modelos-a-escala' },
+    where: { slug: 'modelos-escala' },
+    update: { name: 'Modelos a Escala' },
+    create: { name: 'Modelos a Escala', slug: 'modelos-escala' },
   })
 
-  console.log(`✅ Categories: ${catFiguras.name}, ${catLego.name}, ${catModelos.name}`)
+  const catAnime = await prisma.category.upsert({
+    where: { slug: 'anime' },
+    update: { name: 'Anime & Manga' },
+    create: { name: 'Anime & Manga', slug: 'anime' },
+  })
+
+  console.log(`Categories: ${catFiguras.name}, ${catLego.name}, ${catModelos.name}, ${catAnime.name}`)
 
   // ── Brands ─────────────────────────────────────────────────────────────────
+  const hasbro = await prisma.brand.upsert({
+    where: { slug: 'hasbro' },
+    update: {},
+    create: { name: 'Hasbro', slug: 'hasbro' },
+  })
+
   const bandai = await prisma.brand.upsert({
     where: { slug: 'bandai' },
     update: {},
@@ -89,7 +112,19 @@ async function main() {
     create: { name: 'Kotobukiya', slug: 'kotobukiya' },
   })
 
-  console.log(`✅ Brands: ${bandai.name}, ${legoGroup.name}, ${goodSmile.name}, ${kotobukiya.name}`)
+  const funko = await prisma.brand.upsert({
+    where: { slug: 'funko' },
+    update: {},
+    create: { name: 'Funko', slug: 'funko' },
+  })
+
+  const hotWheels = await prisma.brand.upsert({
+    where: { slug: 'hot-wheels' },
+    update: {},
+    create: { name: 'Hot Wheels', slug: 'hot-wheels' },
+  })
+
+  console.log(`Brands: ${bandai.name}, ${legoGroup.name}, ${goodSmile.name}, ${kotobukiya.name}, ${hasbro.name}, ${funko.name}, ${hotWheels.name}`)
 
   // ── Products ───────────────────────────────────────────────────────────────
   const p1 = await prisma.product.upsert({
@@ -99,13 +134,13 @@ async function main() {
       sku: 'BND-DBZ-GOKU-001',
       slug: 'son-goku-super-saiyan-dragon-ball-z-bandai',
       name: 'Son Goku Super Saiyan — Dragon Ball Z',
-      description: 'Figura articulada de Son Goku en forma Super Saiyan. Escala 1:10. Incluye accesorios de energía. Fabricada por Bandai Spirits.',
+      description: 'Figura articulada de Son Goku en forma Super Saiyan. Escala 1:10. Incluye accesorios de energía intercambiables. Fabricada por Bandai Spirits con pintura de alta definición.',
       price: 249.90,
       compareAtPrice: 299.90,
       currency: 'PEN',
       status: ProductStatus.AVAILABLE,
       featured: true,
-      categoryId: catFiguras.id,
+      categoryId: catAnime.id,
       brandId: bandai.id,
       images: {
         create: [
@@ -125,13 +160,13 @@ async function main() {
     create: {
       sku: 'BND-EVA-UNIT01-001',
       slug: 'evangelion-unit-01-neon-genesis-bandai-robot-spirits',
-      name: 'Evangelion Unit-01 — Neon Genesis Evangelion',
-      description: 'Robot Spirits figura del Evangelion Unit-01. Alta fidelidad de detalle, múltiples puntos de articulación. Incluye lanza de Longinus.',
+      name: 'Evangelion Unit-01 — Robot Spirits',
+      description: 'Robot Spirits figura del Evangelion Unit-01. Alta fidelidad de detalle, múltiples puntos de articulación. Incluye lanza de Longinus y efectos de AT Field.',
       price: 389.90,
       currency: 'PEN',
       status: ProductStatus.AVAILABLE,
       featured: true,
-      categoryId: catFiguras.id,
+      categoryId: catAnime.id,
       brandId: bandai.id,
       images: {
         create: [
@@ -156,7 +191,7 @@ async function main() {
       compareAtPrice: 699.90,
       currency: 'PEN',
       status: ProductStatus.AVAILABLE,
-      featured: false,
+      featured: true,
       categoryId: catLego.id,
       brandId: legoGroup.id,
       images: {
@@ -177,12 +212,12 @@ async function main() {
       sku: 'GSC-CSW-MAKIMA-001',
       slug: 'makima-chainsaw-man-pop-up-parade-good-smile',
       name: 'Makima — Chainsaw Man Pop Up Parade',
-      description: 'Figura Pop Up Parade de Makima de la serie Chainsaw Man. Altura 17 cm. Pintura de alta calidad. Edición estándar.',
+      description: 'Figura Pop Up Parade de Makima de la serie Chainsaw Man. Altura 17 cm. Pintura de alta calidad con detalles en el traje y expresión característica.',
       price: 199.90,
       currency: 'PEN',
       status: ProductStatus.AVAILABLE,
       featured: true,
-      categoryId: catFiguras.id,
+      categoryId: catAnime.id,
       brandId: goodSmile.id,
       images: {
         create: [
@@ -201,14 +236,14 @@ async function main() {
     create: {
       sku: 'KOT-NRT-NARUTO-001',
       slug: 'naruto-uzumaki-sage-mode-kotobukiya-artfx',
-      name: 'Naruto Uzumaki Sage Mode — Kotobukiya ARTFX J',
-      description: 'Figura ARTFX J de Naruto en modo sabio. Escala 1:8. Base decorativa incluida. Edición limitada Kotobukiya.',
+      name: 'Naruto Uzumaki Sage Mode — ARTFX J',
+      description: 'Figura ARTFX J de Naruto en modo sabio. Escala 1:8. Base decorativa incluida. Edición limitada Kotobukiya con efectos de chakra natural.',
       price: 459.90,
       compareAtPrice: 529.90,
       currency: 'PEN',
       status: ProductStatus.AVAILABLE,
       featured: false,
-      categoryId: catFiguras.id,
+      categoryId: catAnime.id,
       brandId: kotobukiya.id,
       images: {
         create: [
@@ -228,10 +263,10 @@ async function main() {
       sku: 'LGO-TCH-BUGATTI-001',
       slug: 'bugatti-bolide-lego-technic-42151',
       name: 'Bugatti Bolide — LEGO Technic 42151',
-      description: 'Réplica del Bugatti Bolide con 905 piezas. Motor funcional con movimiento de pistones. Colores azul y negro.',
+      description: 'Réplica del Bugatti Bolide con 905 piezas. Motor funcional con movimiento de pistones. Colores azul y negro característicos del modelo real.',
       price: 449.90,
       currency: 'PEN',
-      status: ProductStatus.COMING_SOON,
+      status: ProductStatus.AVAILABLE,
       featured: false,
       categoryId: catLego.id,
       brandId: legoGroup.id,
@@ -241,21 +276,178 @@ async function main() {
         ],
       },
       inventory: {
-        create: { availableStock: 0, reservedStock: 0, lowStockThreshold: 3 },
+        create: { availableStock: 7, reservedStock: 0, lowStockThreshold: 3 },
       },
     },
   })
 
-  console.log(`✅ Products: ${p1.name}, ${p2.name}, ${p3.name}, ${p4.name}, ${p5.name}, ${p6.name}`)
+  // Productos adicionales para poblar mejor el catálogo
+  const p7 = await prisma.product.upsert({
+    where: { sku: 'HAS-MAR-IRONMAN-001' },
+    update: {},
+    create: {
+      sku: 'HAS-MAR-IRONMAN-001',
+      slug: 'iron-man-mk85-marvel-legends-hasbro',
+      name: 'Iron Man MK-85 — Marvel Legends',
+      description: 'Figura articulada de Iron Man en la armadura Mark 85 de Avengers: Endgame. 16 cm, 20 puntos de articulación. Incluye efecto de reactores y 3 pares de manos.',
+      price: 149.90,
+      compareAtPrice: 179.90,
+      currency: 'PEN',
+      status: ProductStatus.AVAILABLE,
+      featured: true,
+      categoryId: catFiguras.id,
+      brandId: hasbro.id,
+      images: {
+        create: [
+          { url: 'https://placehold.co/800x800/111624/58aaff?text=Iron+Man+MK85', alt: 'Iron Man MK-85 Marvel Legends', position: 0 },
+        ],
+      },
+      inventory: {
+        create: { availableStock: 22, reservedStock: 0, lowStockThreshold: 5 },
+      },
+    },
+  })
+
+  const p8 = await prisma.product.upsert({
+    where: { sku: 'HW-PREM-FERRARI-001' },
+    update: {},
+    create: {
+      sku: 'HW-PREM-FERRARI-001',
+      slug: 'ferrari-sf90-hot-wheels-premium-escala',
+      name: 'Ferrari SF90 Stradale — Hot Wheels Premium',
+      description: 'Modelo de metal fundido escala 1:64. Carrocería roja con detalles en carbono. Ruedas de perfil bajo con llantas doradas. Edición Premium de coleccionista.',
+      price: 59.90,
+      currency: 'PEN',
+      status: ProductStatus.AVAILABLE,
+      featured: false,
+      categoryId: catModelos.id,
+      brandId: hotWheels.id,
+      images: {
+        create: [
+          { url: 'https://placehold.co/800x800/111624/ff4444?text=Ferrari+SF90', alt: 'Ferrari SF90 Hot Wheels Premium', position: 0 },
+        ],
+      },
+      inventory: {
+        create: { availableStock: 45, reservedStock: 0, lowStockThreshold: 10 },
+      },
+    },
+  })
+
+  const p9 = await prisma.product.upsert({
+    where: { sku: 'FNK-OP-LUFFY-001' },
+    update: {},
+    create: {
+      sku: 'FNK-OP-LUFFY-001',
+      slug: 'luffy-gear-5-funko-pop-one-piece',
+      name: 'Luffy Gear 5 — Funko POP! One Piece',
+      description: 'Funko POP! de Monkey D. Luffy en su transformación Gear 5 Sun God Nika. 15 cm de altura. Detalles en blanco con aura dorada. Edición especial de coleccionista.',
+      price: 89.90,
+      currency: 'PEN',
+      status: ProductStatus.PREORDER,
+      featured: false,
+      categoryId: catAnime.id,
+      brandId: funko.id,
+      images: {
+        create: [
+          { url: 'https://placehold.co/800x800/111624/ffdd00?text=Luffy+Gear5', alt: 'Luffy Gear 5 Funko POP', position: 0 },
+        ],
+      },
+      inventory: {
+        create: { availableStock: 0, reservedStock: 0, preorderedStock: 30, lowStockThreshold: 5 },
+      },
+    },
+  })
+
+  const p10 = await prisma.product.upsert({
+    where: { sku: 'LGO-HGW-CASTLE-001' },
+    update: {},
+    create: {
+      sku: 'LGO-HGW-CASTLE-001',
+      slug: 'hogwarts-castle-lego-harry-potter-71043',
+      name: 'Castillo de Hogwarts — LEGO Harry Potter 71043',
+      description: '6,020 piezas. El castillo más icónico de la saga. Incluye 4 torres emblemáticas, el Gran Salón y más de 27 minifiguras exclusivas. Para mayores de 16 años.',
+      price: 1299.90,
+      compareAtPrice: 1499.90,
+      currency: 'PEN',
+      status: ProductStatus.AVAILABLE,
+      featured: true,
+      categoryId: catLego.id,
+      brandId: legoGroup.id,
+      images: {
+        create: [
+          { url: 'https://placehold.co/800x800/111624/8B4513?text=Hogwarts+Castle', alt: 'Castillo de Hogwarts LEGO', position: 0 },
+        ],
+      },
+      inventory: {
+        create: { availableStock: 4, reservedStock: 1, lowStockThreshold: 2 },
+      },
+    },
+  })
+
+  const p11 = await prisma.product.upsert({
+    where: { sku: 'KOT-DEM-TANJIRO-001' },
+    update: {},
+    create: {
+      sku: 'KOT-DEM-TANJIRO-001',
+      slug: 'tanjiro-kamado-demon-slayer-kotobukiya',
+      name: 'Tanjiro Kamado — Demon Slayer ARTFX J',
+      description: 'Figura ARTFX J de Tanjiro Kamado del manga Demon Slayer. Escala 1:8. Pose de ataque con efectos de agua. Base diorama incluida con detalles del universo.',
+      price: 479.90,
+      currency: 'PEN',
+      status: ProductStatus.AVAILABLE,
+      featured: false,
+      categoryId: catAnime.id,
+      brandId: kotobukiya.id,
+      images: {
+        create: [
+          { url: 'https://placehold.co/800x800/111624/22aaff?text=Tanjiro+ARTFX', alt: 'Tanjiro Kamado Demon Slayer', position: 0 },
+        ],
+      },
+      inventory: {
+        create: { availableStock: 6, reservedStock: 0, lowStockThreshold: 2 },
+      },
+    },
+  })
+
+  const p12 = await prisma.product.upsert({
+    where: { sku: 'HW-F1-REDBULL-001' },
+    update: {},
+    create: {
+      sku: 'HW-F1-REDBULL-001',
+      slug: 'red-bull-racing-rb19-hot-wheels-f1-2023',
+      name: 'Red Bull Racing RB19 — Hot Wheels F1',
+      description: 'Réplica oficial del RB19 de Red Bull Racing, campeón del mundo F1 2023. Escala 1:18. Metal fundido con detalles aerodinámicos auténticos y livrea completa.',
+      price: 199.90,
+      compareAtPrice: 249.90,
+      currency: 'PEN',
+      status: ProductStatus.AVAILABLE,
+      featured: false,
+      categoryId: catModelos.id,
+      brandId: hotWheels.id,
+      images: {
+        create: [
+          { url: 'https://placehold.co/800x800/111624/0033FF?text=Red+Bull+F1', alt: 'Red Bull RB19 Hot Wheels F1', position: 0 },
+        ],
+      },
+      inventory: {
+        create: { availableStock: 18, reservedStock: 0, lowStockThreshold: 4 },
+      },
+    },
+  })
+
+  console.log(`Products: ${[p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12].map(p => p.sku).join(', ')}`)
 
   // ── Inventory movements (restock inicial) ──────────────────────────────────
-  for (const { product, qty } of [
-    { product: p1, qty: 15 },
-    { product: p2, qty: 8 },
-    { product: p3, qty: 5 },
-    { product: p4, qty: 3 },
-    { product: p5, qty: 2 },
-  ]) {
+  const stockEntries = [
+    { product: p1, qty: 15 }, { product: p2, qty: 8 },
+    { product: p3, qty: 5 },  { product: p4, qty: 3 },
+    { product: p5, qty: 2 },  { product: p6, qty: 7 },
+    { product: p7, qty: 22 }, { product: p8, qty: 45 },
+    { product: p10, qty: 4 }, { product: p11, qty: 6 },
+    { product: p12, qty: 18 },
+  ]
+
+  for (const { product, qty } of stockEntries) {
     const existing = await prisma.inventoryMovement.findFirst({
       where: { productId: product.id, type: InventoryMovementType.PURCHASE, reason: 'Restock inicial seed' },
     })
@@ -324,7 +516,7 @@ async function main() {
     create: {
       code: 'MIR-2025-0002',
       guestEmail: 'invitado@example.com',
-      status: OrderStatus.PAID,
+      status: OrderStatus.DELIVERED,
       paymentStatus: PaymentStatus.PAID,
       paymentMethod: PaymentMethod.WHATSAPP_TRANSFER,
       subtotal: 599.90,
@@ -409,7 +601,7 @@ async function main() {
       shippingCost: 0,
       total: 918.80,
       currency: 'PEN',
-      notes: 'Cliente solicitó envío a domicilio. Coordinar horario.',
+      notes: 'Cliente solicitó envío a domicilio. Coordinar horario por WhatsApp.',
       items: {
         create: [
           { productId: p5.id, quantity: 1, unitPrice: 459.90, productName: p5.name, productSku: p5.sku },
@@ -436,7 +628,48 @@ async function main() {
     },
   })
 
-  console.log(`✅ Orders: ${order1.code}, ${order2.code}, ${order3.code}, ${order4.code}`)
+  const order5 = await prisma.order.upsert({
+    where: { code: 'MIR-2025-0005' },
+    update: {},
+    create: {
+      code: 'MIR-2025-0005',
+      guestEmail: 'sofia@example.com',
+      status: OrderStatus.SHIPPED,
+      paymentStatus: PaymentStatus.PAID,
+      paymentMethod: PaymentMethod.CULQI_YAPE,
+      subtotal: 1549.70,
+      shippingCost: 0,
+      total: 1549.70,
+      currency: 'PEN',
+      paidAt: new Date('2025-05-20T16:40:00Z'),
+      items: {
+        create: [
+          { productId: p10.id, quantity: 1, unitPrice: 1299.90, productName: p10.name, productSku: p10.sku },
+          { productId: p7.id, quantity: 1, unitPrice: 149.90, productName: p7.name, productSku: p7.sku },
+          { productId: p8.id, quantity: 1, unitPrice: 59.90, productName: p8.name, productSku: p8.sku },
+        ],
+      },
+      payment: {
+        create: {
+          method: PaymentMethod.CULQI_YAPE,
+          status: PaymentStatus.PAID,
+          amount: 1549.70,
+          currency: 'PEN',
+        },
+      },
+      shipping: {
+        create: {
+          fullName: 'Sofía Paredes',
+          phone: '945678901',
+          address: 'Av. Petit Thouars 3001',
+          district: 'San Isidro',
+          city: 'Lima',
+        },
+      },
+    },
+  })
+
+  console.log(`Orders: ${[order1, order2, order3, order4, order5].map(o => o.code).join(', ')}`)
 
   // ── Banners ────────────────────────────────────────────────────────────────
   const banner1 = await prisma.banner.upsert({
@@ -444,8 +677,8 @@ async function main() {
     update: {},
     create: {
       id: 'seed-banner-hero-01',
-      title: 'Colección Verano 2025',
-      subtitle: 'Figuras exclusivas de Dragon Ball, Evangelion y más',
+      title: 'Nueva Temporada 2026',
+      subtitle: 'Figuras exclusivas de anime, Marvel y LEGO',
       imageUrl: 'https://placehold.co/1920x600/07090f/58aaff?text=Mirana+Shop',
       ctaLabel: 'Ver colección',
       ctaHref: '/catalogo',
@@ -459,18 +692,48 @@ async function main() {
     update: {},
     create: {
       id: 'seed-banner-promo-01',
-      title: 'LEGO Star Wars',
-      subtitle: 'Sets nuevos disponibles — envío gratis en compras +S/500',
-      imageUrl: 'https://placehold.co/1920x600/07090f/5f9eff?text=LEGO+Star+Wars',
+      title: 'LEGO — Nuevos Sets',
+      subtitle: 'Envío gratis en compras mayores a S/500',
+      imageUrl: 'https://placehold.co/1920x600/07090f/5f9eff?text=LEGO+Sets',
       ctaLabel: 'Ver LEGO',
-      ctaHref: '/catalogo?cat=sets-lego',
+      ctaHref: '/catalogo?cat=lego',
       position: 1,
       active: true,
     },
   })
 
-  console.log(`✅ Banners: ${banner1.title}, ${banner2.title}`)
-  console.log('✅ Seed completado.')
+  const banner3 = await prisma.banner.upsert({
+    where: { id: 'seed-banner-anime-01' },
+    update: {},
+    create: {
+      id: 'seed-banner-anime-01',
+      title: 'Anime & Manga',
+      subtitle: 'Dragon Ball, Demon Slayer, One Piece y más',
+      imageUrl: 'https://placehold.co/1920x600/07090f/7b5fff?text=Anime+Manga',
+      ctaLabel: 'Explorar',
+      ctaHref: '/catalogo?cat=anime',
+      position: 2,
+      active: true,
+    },
+  })
+
+  const banner4 = await prisma.banner.upsert({
+    where: { id: 'seed-banner-bf-01' },
+    update: {},
+    create: {
+      id: 'seed-banner-bf-01',
+      title: 'Black Friday Anticipado',
+      subtitle: 'Hasta 40% de descuento en figuras seleccionadas',
+      imageUrl: 'https://placehold.co/1920x600/1a0000/ff6644?text=Black+Friday',
+      ctaLabel: 'Ver ofertas',
+      ctaHref: '/catalogo',
+      position: 3,
+      active: false,
+    },
+  })
+
+  console.log(`Banners: ${[banner1, banner2, banner3, banner4].map(b => b.title).join(', ')}`)
+  console.log('Seed completado exitosamente.')
 }
 
 main()
@@ -480,4 +743,5 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect()
+    await pool.end()
   })

@@ -1,4 +1,9 @@
 ﻿"use client";
+/**
+ * @deprecated Este store mock ya no se usa en las páginas admin.
+ * Las páginas ahora usan Server Components + Server Actions con datos reales de la BD.
+ * Se mantiene para no romper imports residuales durante la migración.
+ */
 import { create } from "zustand";
 import { PRODUCTS, type Product } from "@/features/products/data/products";
 import { ORDERS_DATA, BANNERS_DATA } from "@/shared/lib/admin-data";
