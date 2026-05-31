@@ -232,4 +232,70 @@ export const orderRepo = {
       revenue: revenue._sum.total ?? (0 as unknown as Decimal),
     };
   },
+
+  // Ingresos por mes — últimos 12 meses (para el gráfico de área)
+  async getRevenueByMonth(): Promise<{ m: string; v: number }[]> {
+    const rows = await db.$queryRaw<{ month: Date; revenue: number }[]>`
+      SELECT
+        DATE_TRUNC('month', "createdAt") AS month,
+        COALESCE(SUM(total)::float, 0)   AS revenue
+      FROM "Order"
+      WHERE "createdAt" >= NOW() - INTERVAL '12 months'
+        AND status NOT IN ('CANCELLED', 'REFUNDED')
+      GROUP BY DATE_TRUNC('month', "createdAt")
+      ORDER BY month ASC
+    `;
+    return rows.map((r) => ({
+      m: new Date(r.month).toLocaleDateString("es-PE", { month: "short" }),
+      v: Math.round(Number(r.revenue) / 1000 * 10) / 10, // en miles con 1 decimal
+    }));
+  },
+
+  // Pedidos por día — últimos N días (para el gráfico de barras)
+  async getOrdersByDay(days = 14): Promise<{ d: string; v: number }[]> {
+    const rows = await db.$queryRaw<{ day: Date; count: number }[]>`
+      SELECT
+        DATE_TRUNC('day', "createdAt") AS day,
+        COUNT(*)::int                  AS count
+      FROM "Order"
+      WHERE "createdAt" >= NOW() - INTERVAL '1 day' * ${days}
+      GROUP BY DATE_TRUNC('day', "createdAt")
+      ORDER BY day ASC
+    `;
+    // Rellenar días sin pedidos con 0
+    const map = new Map(rows.map((r) => [
+      new Date(r.day).toISOString().slice(0, 10),
+      Number(r.count),
+    ]));
+    return Array.from({ length: days }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (days - 1 - i));
+      const key = d.toISOString().slice(0, 10);
+      return {
+        d: `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`,
+        v: map.get(key) ?? 0,
+      };
+    });
+  },
+
+  // Pedidos por categoría (para el donut)
+  async getOrdersByCategory(): Promise<{ name: string; value: number }[]> {
+    const rows = await db.$queryRaw<{ category: string; total: number }[]>`
+      SELECT
+        c.name              AS category,
+        COUNT(oi.id)::int   AS total
+      FROM "OrderItem" oi
+      JOIN "Product"  p ON p.id = oi."productId"
+      JOIN "Category" c ON c.id = p."categoryId"
+      GROUP BY c.id, c.name
+      ORDER BY total DESC
+      LIMIT 5
+    `;
+    if (rows.length === 0) return [];
+    const sum = rows.reduce((s, r) => s + Number(r.total), 0);
+    return rows.map((r) => ({
+      name:  r.category,
+      value: Math.round((Number(r.total) / sum) * 100),
+    }));
+  },
 };

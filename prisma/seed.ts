@@ -13,6 +13,60 @@ import { PrismaClient, ProductStatus, OrderStatus, PaymentStatus, PaymentMethod,
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter })
 
+// ---------------------------------------------------------------------------
+// Helpers de Unsplash — URLs estables con crop y calidad
+// ---------------------------------------------------------------------------
+const img = (id: string, w = 800, h = 800) =>
+  `https://images.unsplash.com/photo-${id}?w=${w}&h=${h}&fit=crop&q=80&auto=format`
+
+const banner = (id: string) =>
+  `https://images.unsplash.com/photo-${id}?w=1920&h=600&fit=crop&q=80&auto=format`
+
+// ---------------------------------------------------------------------------
+// Imágenes por tema (IDs de Unsplash)
+// ---------------------------------------------------------------------------
+
+const IMGS = {
+  // Figuras de acción y anime
+  goku:      '1563396983906-b3795482a59a', // figura articulada colorida
+  eva01:     '1608889825205-eebdb9fc5806', // colección de figuras
+  makima:    '1614732414444-086425adebe5', // figura anime femenina
+  naruto:    '1611532736597-de2d4265fba3', // acción figure orange
+  ironman:   '1594736797933-d0401ba2fe65', // superhero figure rojo
+  tanjiro:   '1619364726002-c54a0bc7ba04', // anime figure azul
+  luffy:     '1578632767115-351597cf2477', // anime figure naranja
+
+  // LEGO
+  falcon:    '1587654780291-39c9404d746b', // LEGO colorido
+  bugatti:   '1530281700549-e82e7bf110d6', // LEGO technic
+  hogwarts:  '1516770965459-ef23bdff65dd', // LEGO castle
+
+  // Modelos a escala / autos
+  ferrari:   '1568605117036-5fe5e7bab0b7', // Ferrari rojo
+  f1:        '1525609004556-c46c7d6cf023', // Formula 1
+
+  // Categorías (paisaje)
+  catFiguras: '1527443224154-599571801185', // estante de figuras
+  catLego:    '1607604276583-eef5d176b328', // LEGO colorido wide
+  catModelos: '1558618666-fcd25c85cd64',   // colección de autos
+  catAnime:   '1612036782180-6f0b6cd846fe', // figuras anime shelf
+
+  // Banners (panorámico oscuro)
+  bannerHero:    '1542281286-9e0a16bb7366', // toys display dark
+  bannerLego:    '1531746790731-6c087fecd65a', // LEGO dark
+  bannerAnime:   '1518770660439-4636190af475', // neon dark collectibles
+  bannerBlack:   '1616159236399-5f52e6ad60b3', // dark discount
+
+  // Marcas (logos placeholder con color de marca real)
+  brandBandai:     '1608889825205-eebdb9fc5806',
+  brandLego:       '1587654780291-39c9404d746b',
+  brandGsc:        '1614732414444-086425adebe5',
+  brandKotobukiya: '1611532736597-de2d4265fba3',
+  brandHasbro:     '1594736797933-d0401ba2fe65',
+  brandFunko:      '1578632767115-351597cf2477',
+  brandHotWheels:  '1568605117036-5fe5e7bab0b7',
+}
+
 async function main() {
   console.log('Seeding database...')
 
@@ -51,29 +105,65 @@ async function main() {
 
   console.log(`Users: ${admin.email}, ${customer.email}`)
 
-  // ── Categories — slugs alineados con CATEGORY_STRIPE ──────────────────────
+  // ── Categories ─────────────────────────────────────────────────────────────
   const catFiguras = await prisma.category.upsert({
     where: { slug: 'figuras-accion' },
-    update: { name: 'Figuras de Acción' },
-    create: { name: 'Figuras de Acción', slug: 'figuras-accion' },
+    update: {
+      name: 'Figuras de Acción',
+      description: 'Figuras articuladas de superhéroes, personajes de videojuegos y series de TV. Alta fidelidad de detalle para coleccionistas exigentes.',
+      imageUrl: img(IMGS.catFiguras, 800, 400),
+    },
+    create: {
+      name: 'Figuras de Acción',
+      slug: 'figuras-accion',
+      description: 'Figuras articuladas de superhéroes, personajes de videojuegos y series de TV. Alta fidelidad de detalle para coleccionistas exigentes.',
+      imageUrl: img(IMGS.catFiguras, 800, 400),
+    },
   })
 
   const catLego = await prisma.category.upsert({
     where: { slug: 'lego' },
-    update: { name: 'LEGO' },
-    create: { name: 'LEGO', slug: 'lego' },
+    update: {
+      name: 'LEGO',
+      description: 'Sets oficiales LEGO: Star Wars, Harry Potter, Technic, City y más. Desde sets para principiantes hasta colecciones de experto.',
+      imageUrl: img(IMGS.catLego, 800, 400),
+    },
+    create: {
+      name: 'LEGO',
+      slug: 'lego',
+      description: 'Sets oficiales LEGO: Star Wars, Harry Potter, Technic, City y más. Desde sets para principiantes hasta colecciones de experto.',
+      imageUrl: img(IMGS.catLego, 800, 400),
+    },
   })
 
   const catModelos = await prisma.category.upsert({
     where: { slug: 'modelos-escala' },
-    update: { name: 'Modelos a Escala' },
-    create: { name: 'Modelos a Escala', slug: 'modelos-escala' },
+    update: {
+      name: 'Modelos a Escala',
+      description: 'Réplicas de alta precisión de autos, aviones y motos a escala. Metal fundido y detalles auténticos para coleccionistas serios.',
+      imageUrl: img(IMGS.catModelos, 800, 400),
+    },
+    create: {
+      name: 'Modelos a Escala',
+      slug: 'modelos-escala',
+      description: 'Réplicas de alta precisión de autos, aviones y motos a escala. Metal fundido y detalles auténticos para coleccionistas serios.',
+      imageUrl: img(IMGS.catModelos, 800, 400),
+    },
   })
 
   const catAnime = await prisma.category.upsert({
     where: { slug: 'anime' },
-    update: { name: 'Anime & Manga' },
-    create: { name: 'Anime & Manga', slug: 'anime' },
+    update: {
+      name: 'Anime & Manga',
+      description: 'Figuras oficiales de series anime: Dragon Ball, Naruto, One Piece, Demon Slayer y más. Importaciones directas de Japón.',
+      imageUrl: img(IMGS.catAnime, 800, 400),
+    },
+    create: {
+      name: 'Anime & Manga',
+      slug: 'anime',
+      description: 'Figuras oficiales de series anime: Dragon Ball, Naruto, One Piece, Demon Slayer y más. Importaciones directas de Japón.',
+      imageUrl: img(IMGS.catAnime, 800, 400),
+    },
   })
 
   console.log(`Categories: ${catFiguras.name}, ${catLego.name}, ${catModelos.name}, ${catAnime.name}`)
@@ -81,44 +171,100 @@ async function main() {
   // ── Brands ─────────────────────────────────────────────────────────────────
   const hasbro = await prisma.brand.upsert({
     where: { slug: 'hasbro' },
-    update: {},
-    create: { name: 'Hasbro', slug: 'hasbro' },
+    update: {
+      description: 'Fabricante estadounidense de juguetes y figuras de acción. Creadores de Marvel Legends, Star Wars Black Series y G.I. Joe.',
+      imageUrl: img(IMGS.brandHasbro, 400, 400),
+    },
+    create: {
+      name: 'Hasbro',
+      slug: 'hasbro',
+      description: 'Fabricante estadounidense de juguetes y figuras de acción. Creadores de Marvel Legends, Star Wars Black Series y G.I. Joe.',
+      imageUrl: img(IMGS.brandHasbro, 400, 400),
+    },
   })
 
   const bandai = await prisma.brand.upsert({
     where: { slug: 'bandai' },
-    update: {},
-    create: { name: 'Bandai', slug: 'bandai' },
+    update: {
+      description: 'Casa japonesa líder en figuras de anime y mecha. Creadores de la línea Robot Spirits, S.H.Figuarts y Dragon Stars.',
+      imageUrl: img(IMGS.brandBandai, 400, 400),
+    },
+    create: {
+      name: 'Bandai',
+      slug: 'bandai',
+      description: 'Casa japonesa líder en figuras de anime y mecha. Creadores de la línea Robot Spirits, S.H.Figuarts y Dragon Stars.',
+      imageUrl: img(IMGS.brandBandai, 400, 400),
+    },
   })
 
   const legoGroup = await prisma.brand.upsert({
     where: { slug: 'lego-group' },
-    update: {},
-    create: { name: 'LEGO Group', slug: 'lego-group' },
+    update: {
+      description: 'La marca de construcción más reconocida del mundo. Desde Dinamarca, con sets para todas las edades y niveles de habilidad.',
+      imageUrl: img(IMGS.brandLego, 400, 400),
+    },
+    create: {
+      name: 'LEGO Group',
+      slug: 'lego-group',
+      description: 'La marca de construcción más reconocida del mundo. Desde Dinamarca, con sets para todas las edades y niveles de habilidad.',
+      imageUrl: img(IMGS.brandLego, 400, 400),
+    },
   })
 
   const goodSmile = await prisma.brand.upsert({
     where: { slug: 'good-smile-company' },
-    update: {},
-    create: { name: 'Good Smile Company', slug: 'good-smile-company' },
+    update: {
+      description: 'Fabricante japonés premium de figuras de anime. Creadores de las líneas Nendoroid, Figma y Pop Up Parade.',
+      imageUrl: img(IMGS.brandGsc, 400, 400),
+    },
+    create: {
+      name: 'Good Smile Company',
+      slug: 'good-smile-company',
+      description: 'Fabricante japonés premium de figuras de anime. Creadores de las líneas Nendoroid, Figma y Pop Up Parade.',
+      imageUrl: img(IMGS.brandGsc, 400, 400),
+    },
   })
 
   const kotobukiya = await prisma.brand.upsert({
     where: { slug: 'kotobukiya' },
-    update: {},
-    create: { name: 'Kotobukiya', slug: 'kotobukiya' },
+    update: {
+      description: 'Fabricante japonés especializado en kits de modelos y figuras ARTFX. Detalles escultóricos excepcionales en cada pieza.',
+      imageUrl: img(IMGS.brandKotobukiya, 400, 400),
+    },
+    create: {
+      name: 'Kotobukiya',
+      slug: 'kotobukiya',
+      description: 'Fabricante japonés especializado en kits de modelos y figuras ARTFX. Detalles escultóricos excepcionales en cada pieza.',
+      imageUrl: img(IMGS.brandKotobukiya, 400, 400),
+    },
   })
 
   const funko = await prisma.brand.upsert({
     where: { slug: 'funko' },
-    update: {},
-    create: { name: 'Funko', slug: 'funko' },
+    update: {
+      description: 'Creadores de los icónicos Funko POP! con más de 15,000 diseños de pop culture: anime, películas, videojuegos y más.',
+      imageUrl: img(IMGS.brandFunko, 400, 400),
+    },
+    create: {
+      name: 'Funko',
+      slug: 'funko',
+      description: 'Creadores de los icónicos Funko POP! con más de 15,000 diseños de pop culture: anime, películas, videojuegos y más.',
+      imageUrl: img(IMGS.brandFunko, 400, 400),
+    },
   })
 
   const hotWheels = await prisma.brand.upsert({
     where: { slug: 'hot-wheels' },
-    update: {},
-    create: { name: 'Hot Wheels', slug: 'hot-wheels' },
+    update: {
+      description: 'La marca de autos a escala más popular del mundo. Desde modelos básicos hasta la línea Premium de coleccionistas en metal fundido.',
+      imageUrl: img(IMGS.brandHotWheels, 400, 400),
+    },
+    create: {
+      name: 'Hot Wheels',
+      slug: 'hot-wheels',
+      description: 'La marca de autos a escala más popular del mundo. Desde modelos básicos hasta la línea Premium de coleccionistas en metal fundido.',
+      imageUrl: img(IMGS.brandHotWheels, 400, 400),
+    },
   })
 
   console.log(`Brands: ${bandai.name}, ${legoGroup.name}, ${goodSmile.name}, ${kotobukiya.name}, ${hasbro.name}, ${funko.name}, ${hotWheels.name}`)
@@ -126,13 +272,16 @@ async function main() {
   // ── Products ───────────────────────────────────────────────────────────────
   const p1 = await prisma.product.upsert({
     where: { sku: 'BND-DBZ-GOKU-001' },
-    update: {},
+    update: {
+      images: { deleteMany: {} },
+    },
     create: {
       sku: 'BND-DBZ-GOKU-001',
       slug: 'son-goku-super-saiyan-dragon-ball-z-bandai',
       name: 'Son Goku Super Saiyan — Dragon Ball Z',
       description: 'Figura articulada de Son Goku en forma Super Saiyan. Escala 1:10. Incluye accesorios de energía intercambiables. Fabricada por Bandai Spirits con pintura de alta definición.',
       price: 249.90,
+      salePrice: 219.90,
       compareAtPrice: 299.90,
       currency: 'PEN',
       status: ProductStatus.AVAILABLE,
@@ -141,8 +290,8 @@ async function main() {
       brandId: bandai.id,
       images: {
         create: [
-          { url: 'https://placehold.co/800x800/111624/58aaff?text=Goku+SS', alt: 'Son Goku Super Saiyan frente', position: 0 },
-          { url: 'https://placehold.co/800x800/111624/58aaff?text=Goku+Back', alt: 'Son Goku Super Saiyan reverso', position: 1 },
+          { url: img(IMGS.goku), alt: 'Son Goku Super Saiyan frente', position: 0 },
+          { url: img(IMGS.goku, 800, 600), alt: 'Son Goku Super Saiyan reverso', position: 1 },
         ],
       },
       inventory: {
@@ -150,6 +299,14 @@ async function main() {
       },
     },
   })
+
+  await prisma.productImage.createMany({
+    data: [
+      { productId: p1.id, url: img(IMGS.goku), alt: 'Son Goku Super Saiyan frente', position: 0 },
+      { productId: p1.id, url: img(IMGS.goku, 800, 600), alt: 'Son Goku reverso', position: 1 },
+    ],
+    skipDuplicates: true,
+  }).catch(() => {}) // Ignorar si ya existen
 
   const p2 = await prisma.product.upsert({
     where: { sku: 'BND-EVA-UNIT01-001' },
@@ -166,9 +323,7 @@ async function main() {
       categoryId: catAnime.id,
       brandId: bandai.id,
       images: {
-        create: [
-          { url: 'https://placehold.co/800x800/111624/7b5fff?text=EVA+Unit+01', alt: 'Evangelion Unit-01 frente', position: 0 },
-        ],
+        create: [{ url: img(IMGS.eva01), alt: 'Evangelion Unit-01 frente', position: 0 }],
       },
       inventory: {
         create: { availableStock: 8, reservedStock: 1, lowStockThreshold: 2 },
@@ -185,6 +340,7 @@ async function main() {
       name: 'Millennium Falcon — LEGO Star Wars 75375',
       description: 'Construye el mítico Halcón Milenario con 921 piezas. Incluye 7 minifiguras: Han Solo, Chewbacca, Leia, Luke Skywalker, R2-D2, C-3PO y Finn.',
       price: 599.90,
+      salePrice: 539.90,
       compareAtPrice: 699.90,
       currency: 'PEN',
       status: ProductStatus.AVAILABLE,
@@ -192,9 +348,7 @@ async function main() {
       categoryId: catLego.id,
       brandId: legoGroup.id,
       images: {
-        create: [
-          { url: 'https://placehold.co/800x800/111624/5f9eff?text=LEGO+Falcon', alt: 'Millennium Falcon LEGO', position: 0 },
-        ],
+        create: [{ url: img(IMGS.falcon), alt: 'Millennium Falcon LEGO', position: 0 }],
       },
       inventory: {
         create: { availableStock: 5, reservedStock: 0, lowStockThreshold: 2 },
@@ -217,9 +371,7 @@ async function main() {
       categoryId: catAnime.id,
       brandId: goodSmile.id,
       images: {
-        create: [
-          { url: 'https://placehold.co/800x800/111624/3fcf7f?text=Makima+PUP', alt: 'Makima Pop Up Parade', position: 0 },
-        ],
+        create: [{ url: img(IMGS.makima), alt: 'Makima Pop Up Parade', position: 0 }],
       },
       inventory: {
         create: { availableStock: 3, reservedStock: 0, lowStockThreshold: 2 },
@@ -236,6 +388,7 @@ async function main() {
       name: 'Naruto Uzumaki Sage Mode — ARTFX J',
       description: 'Figura ARTFX J de Naruto en modo sabio. Escala 1:8. Base decorativa incluida. Edición limitada Kotobukiya con efectos de chakra natural.',
       price: 459.90,
+      salePrice: 389.90,
       compareAtPrice: 529.90,
       currency: 'PEN',
       status: ProductStatus.AVAILABLE,
@@ -243,9 +396,7 @@ async function main() {
       categoryId: catAnime.id,
       brandId: kotobukiya.id,
       images: {
-        create: [
-          { url: 'https://placehold.co/800x800/111624/ffb84a?text=Naruto+ARTFX', alt: 'Naruto Sage Mode ARTFX J', position: 0 },
-        ],
+        create: [{ url: img(IMGS.naruto), alt: 'Naruto Sage Mode ARTFX J', position: 0 }],
       },
       inventory: {
         create: { availableStock: 2, reservedStock: 1, lowStockThreshold: 2 },
@@ -268,9 +419,7 @@ async function main() {
       categoryId: catLego.id,
       brandId: legoGroup.id,
       images: {
-        create: [
-          { url: 'https://placehold.co/800x800/111624/ff6644?text=LEGO+Bugatti', alt: 'Bugatti Bolide LEGO Technic', position: 0 },
-        ],
+        create: [{ url: img(IMGS.bugatti), alt: 'Bugatti Bolide LEGO Technic', position: 0 }],
       },
       inventory: {
         create: { availableStock: 7, reservedStock: 0, lowStockThreshold: 3 },
@@ -278,7 +427,6 @@ async function main() {
     },
   })
 
-  // Productos adicionales para poblar mejor el catálogo
   const p7 = await prisma.product.upsert({
     where: { sku: 'HAS-MAR-IRONMAN-001' },
     update: {},
@@ -288,6 +436,7 @@ async function main() {
       name: 'Iron Man MK-85 — Marvel Legends',
       description: 'Figura articulada de Iron Man en la armadura Mark 85 de Avengers: Endgame. 16 cm, 20 puntos de articulación. Incluye efecto de reactores y 3 pares de manos.',
       price: 149.90,
+      salePrice: 129.90,
       compareAtPrice: 179.90,
       currency: 'PEN',
       status: ProductStatus.AVAILABLE,
@@ -295,9 +444,7 @@ async function main() {
       categoryId: catFiguras.id,
       brandId: hasbro.id,
       images: {
-        create: [
-          { url: 'https://placehold.co/800x800/111624/58aaff?text=Iron+Man+MK85', alt: 'Iron Man MK-85 Marvel Legends', position: 0 },
-        ],
+        create: [{ url: img(IMGS.ironman), alt: 'Iron Man MK-85 Marvel Legends', position: 0 }],
       },
       inventory: {
         create: { availableStock: 22, reservedStock: 0, lowStockThreshold: 5 },
@@ -320,9 +467,7 @@ async function main() {
       categoryId: catModelos.id,
       brandId: hotWheels.id,
       images: {
-        create: [
-          { url: 'https://placehold.co/800x800/111624/ff4444?text=Ferrari+SF90', alt: 'Ferrari SF90 Hot Wheels Premium', position: 0 },
-        ],
+        create: [{ url: img(IMGS.ferrari), alt: 'Ferrari SF90 Hot Wheels Premium', position: 0 }],
       },
       inventory: {
         create: { availableStock: 45, reservedStock: 0, lowStockThreshold: 10 },
@@ -345,9 +490,7 @@ async function main() {
       categoryId: catAnime.id,
       brandId: funko.id,
       images: {
-        create: [
-          { url: 'https://placehold.co/800x800/111624/ffdd00?text=Luffy+Gear5', alt: 'Luffy Gear 5 Funko POP', position: 0 },
-        ],
+        create: [{ url: img(IMGS.luffy), alt: 'Luffy Gear 5 Funko POP', position: 0 }],
       },
       inventory: {
         create: { availableStock: 0, reservedStock: 0, preorderedStock: 30, lowStockThreshold: 5 },
@@ -364,6 +507,7 @@ async function main() {
       name: 'Castillo de Hogwarts — LEGO Harry Potter 71043',
       description: '6,020 piezas. El castillo más icónico de la saga. Incluye 4 torres emblemáticas, el Gran Salón y más de 27 minifiguras exclusivas. Para mayores de 16 años.',
       price: 1299.90,
+      salePrice: 1099.90,
       compareAtPrice: 1499.90,
       currency: 'PEN',
       status: ProductStatus.AVAILABLE,
@@ -371,9 +515,7 @@ async function main() {
       categoryId: catLego.id,
       brandId: legoGroup.id,
       images: {
-        create: [
-          { url: 'https://placehold.co/800x800/111624/8B4513?text=Hogwarts+Castle', alt: 'Castillo de Hogwarts LEGO', position: 0 },
-        ],
+        create: [{ url: img(IMGS.hogwarts), alt: 'Castillo de Hogwarts LEGO', position: 0 }],
       },
       inventory: {
         create: { availableStock: 4, reservedStock: 1, lowStockThreshold: 2 },
@@ -396,9 +538,7 @@ async function main() {
       categoryId: catAnime.id,
       brandId: kotobukiya.id,
       images: {
-        create: [
-          { url: 'https://placehold.co/800x800/111624/22aaff?text=Tanjiro+ARTFX', alt: 'Tanjiro Kamado Demon Slayer', position: 0 },
-        ],
+        create: [{ url: img(IMGS.tanjiro), alt: 'Tanjiro Kamado Demon Slayer', position: 0 }],
       },
       inventory: {
         create: { availableStock: 6, reservedStock: 0, lowStockThreshold: 2 },
@@ -415,6 +555,7 @@ async function main() {
       name: 'Red Bull Racing RB19 — Hot Wheels F1',
       description: 'Réplica oficial del RB19 de Red Bull Racing, campeón del mundo F1 2023. Escala 1:18. Metal fundido con detalles aerodinámicos auténticos y livrea completa.',
       price: 199.90,
+      salePrice: 169.90,
       compareAtPrice: 249.90,
       currency: 'PEN',
       status: ProductStatus.AVAILABLE,
@@ -422,9 +563,7 @@ async function main() {
       categoryId: catModelos.id,
       brandId: hotWheels.id,
       images: {
-        create: [
-          { url: 'https://placehold.co/800x800/111624/0033FF?text=Red+Bull+F1', alt: 'Red Bull RB19 Hot Wheels F1', position: 0 },
-        ],
+        create: [{ url: img(IMGS.f1), alt: 'Red Bull RB19 Hot Wheels F1', position: 0 }],
       },
       inventory: {
         create: { availableStock: 18, reservedStock: 0, lowStockThreshold: 4 },
@@ -434,11 +573,11 @@ async function main() {
 
   console.log(`Products: ${[p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12].map(p => p.sku).join(', ')}`)
 
-  // ── Inventory movements (restock inicial) ──────────────────────────────────
+  // ── Inventory movements ────────────────────────────────────────────────────
   const stockEntries = [
-    { product: p1, qty: 15 }, { product: p2, qty: 8 },
-    { product: p3, qty: 5 },  { product: p4, qty: 3 },
-    { product: p5, qty: 2 },  { product: p6, qty: 7 },
+    { product: p1, qty: 15 }, { product: p2, qty: 8  },
+    { product: p3, qty: 5  }, { product: p4, qty: 3  },
+    { product: p5, qty: 2  }, { product: p6, qty: 7  },
     { product: p7, qty: 22 }, { product: p8, qty: 45 },
     { product: p10, qty: 4 }, { product: p11, qty: 6 },
     { product: p12, qty: 18 },
@@ -532,7 +671,6 @@ async function main() {
           status: PaymentStatus.PAID,
           amount: 619.90,
           currency: 'PEN',
-          proofUrl: 'https://placehold.co/400x600?text=Comprobante',
         },
       },
       shipping: {
@@ -642,8 +780,8 @@ async function main() {
       items: {
         create: [
           { productId: p10.id, quantity: 1, unitPrice: 1299.90, productName: p10.name, productSku: p10.sku },
-          { productId: p7.id, quantity: 1, unitPrice: 149.90, productName: p7.name, productSku: p7.sku },
-          { productId: p8.id, quantity: 1, unitPrice: 59.90, productName: p8.name, productSku: p8.sku },
+          { productId: p7.id,  quantity: 1, unitPrice: 149.90,  productName: p7.name,  productSku: p7.sku  },
+          { productId: p8.id,  quantity: 1, unitPrice: 59.90,   productName: p8.name,  productSku: p8.sku  },
         ],
       },
       payment: {
@@ -669,14 +807,22 @@ async function main() {
   console.log(`Orders: ${[order1, order2, order3, order4, order5].map(o => o.code).join(', ')}`)
 
   // ── Banners ────────────────────────────────────────────────────────────────
-  const banner1 = await prisma.banner.upsert({
+  await prisma.banner.upsert({
     where: { id: 'seed-banner-hero-01' },
-    update: {},
+    update: {
+      title: 'Nueva Temporada 2026',
+      subtitle: 'Figuras exclusivas de anime, Marvel y LEGO — importaciones directas',
+      imageUrl: banner(IMGS.bannerHero),
+      ctaLabel: 'Ver colección',
+      ctaHref: '/catalogo',
+      position: 0,
+      active: true,
+    },
     create: {
       id: 'seed-banner-hero-01',
       title: 'Nueva Temporada 2026',
-      subtitle: 'Figuras exclusivas de anime, Marvel y LEGO',
-      imageUrl: 'https://placehold.co/1920x600/07090f/58aaff?text=Mirana+Shop',
+      subtitle: 'Figuras exclusivas de anime, Marvel y LEGO — importaciones directas',
+      imageUrl: banner(IMGS.bannerHero),
       ctaLabel: 'Ver colección',
       ctaHref: '/catalogo',
       position: 0,
@@ -684,14 +830,18 @@ async function main() {
     },
   })
 
-  const banner2 = await prisma.banner.upsert({
+  await prisma.banner.upsert({
     where: { id: 'seed-banner-promo-01' },
-    update: {},
+    update: {
+      imageUrl: banner(IMGS.bannerLego),
+      title: 'LEGO — Nuevos Sets',
+      subtitle: 'Envío gratis en compras mayores a S/ 500',
+    },
     create: {
       id: 'seed-banner-promo-01',
       title: 'LEGO — Nuevos Sets',
-      subtitle: 'Envío gratis en compras mayores a S/500',
-      imageUrl: 'https://placehold.co/1920x600/07090f/5f9eff?text=LEGO+Sets',
+      subtitle: 'Envío gratis en compras mayores a S/ 500',
+      imageUrl: banner(IMGS.bannerLego),
       ctaLabel: 'Ver LEGO',
       ctaHref: '/catalogo?cat=lego',
       position: 1,
@@ -699,14 +849,18 @@ async function main() {
     },
   })
 
-  const banner3 = await prisma.banner.upsert({
+  await prisma.banner.upsert({
     where: { id: 'seed-banner-anime-01' },
-    update: {},
+    update: {
+      imageUrl: banner(IMGS.bannerAnime),
+      title: 'Anime & Manga',
+      subtitle: 'Dragon Ball, Demon Slayer, One Piece y más',
+    },
     create: {
       id: 'seed-banner-anime-01',
       title: 'Anime & Manga',
       subtitle: 'Dragon Ball, Demon Slayer, One Piece y más',
-      imageUrl: 'https://placehold.co/1920x600/07090f/7b5fff?text=Anime+Manga',
+      imageUrl: banner(IMGS.bannerAnime),
       ctaLabel: 'Explorar',
       ctaHref: '/catalogo?cat=anime',
       position: 2,
@@ -714,14 +868,16 @@ async function main() {
     },
   })
 
-  const banner4 = await prisma.banner.upsert({
+  await prisma.banner.upsert({
     where: { id: 'seed-banner-bf-01' },
-    update: {},
+    update: {
+      imageUrl: banner(IMGS.bannerBlack),
+    },
     create: {
       id: 'seed-banner-bf-01',
       title: 'Black Friday Anticipado',
       subtitle: 'Hasta 40% de descuento en figuras seleccionadas',
-      imageUrl: 'https://placehold.co/1920x600/1a0000/ff6644?text=Black+Friday',
+      imageUrl: banner(IMGS.bannerBlack),
       ctaLabel: 'Ver ofertas',
       ctaHref: '/catalogo',
       position: 3,
@@ -729,212 +885,80 @@ async function main() {
     },
   })
 
-  console.log(`Banners: ${[banner1, banner2, banner3, banner4].map(b => b.title).join(', ')}`)
+  console.log('Banners actualizados con imágenes de Unsplash')
 
-  // ── Enriquecer marcas con description e imageUrl ───────────────────────────
-  await prisma.brand.update({
-    where: { slug: 'bandai' },
-    data: {
-      description: 'Fabricante japonés líder en figuras de anime y modelos coleccionables. Responsables de las líneas Robot Spirits, S.H.Figuarts y Dragon Stars.',
-      imageUrl: 'https://placehold.co/800x400/111624/58aaff?text=Bandai',
-    },
-  })
-
-  await prisma.brand.update({
-    where: { slug: 'lego-group' },
-    data: {
-      description: 'El grupo LEGO es el fabricante de juguetes de construcción más grande del mundo, con sets para todas las edades bajo las líneas City, Technic, Creator y más.',
-      imageUrl: 'https://placehold.co/800x400/111624/5f9eff?text=LEGO+Group',
-    },
-  })
-
-  await prisma.brand.update({
-    where: { slug: 'good-smile-company' },
-    data: {
-      description: 'Fabricante japonés especializado en figuras de alta gama. Creadores de las líneas Nendoroid, figma y Pop Up Parade.',
-      imageUrl: 'https://placehold.co/800x400/111624/3fcf7f?text=Good+Smile',
-    },
-  })
-
-  await prisma.brand.update({
-    where: { slug: 'kotobukiya' },
-    data: {
-      description: 'Empresa japonesa de figuras premium conocida por sus líneas ARTFX y ARTFX J con esculturas de alta fidelidad de personajes de anime y videojuegos.',
-      imageUrl: 'https://placehold.co/800x400/111624/ffb84a?text=Kotobukiya',
-    },
-  })
-
-  await prisma.brand.update({
-    where: { slug: 'hasbro' },
-    data: {
-      description: 'Empresa estadounidense de juguetes y entretenimiento, conocida por las líneas Marvel Legends, G.I. Joe, Transformers y Star Wars Black Series.',
-      imageUrl: 'https://placehold.co/800x400/111624/ff6644?text=Hasbro',
-    },
-  })
-
-  await prisma.brand.update({
-    where: { slug: 'funko' },
-    data: {
-      description: 'Fabricante de figuras Pop! coleccionables con licencias de cultura pop: anime, películas, series, videojuegos y deportes.',
-      imageUrl: 'https://placehold.co/800x400/111624/ffdd00?text=Funko',
-    },
-  })
-
-  await prisma.brand.update({
-    where: { slug: 'hot-wheels' },
-    data: {
-      description: 'Línea de vehículos a escala de Mattel. La colección Premium y Race Team incluye réplicas oficiales de autos deportivos y de Fórmula 1.',
-      imageUrl: 'https://placehold.co/800x400/111624/ff4444?text=Hot+Wheels',
-    },
-  })
-
-  console.log('Brands enriquecidos con description e imageUrl')
-
-  // ── Enriquecer categorías con description e imageUrl ──────────────────────
-  await prisma.category.update({
-    where: { slug: 'figuras-accion' },
-    data: {
-      description: 'Figuras articuladas de personajes de series, películas y cómics. Incluye líneas Marvel Legends, DC Multiverse y más.',
-      imageUrl: 'https://placehold.co/800x400/111624/58aaff?text=Figuras',
-    },
-  })
-
-  await prisma.category.update({
-    where: { slug: 'lego' },
-    data: {
-      description: 'Sets de construcción LEGO oficiales: City, Technic, Creator Expert, Star Wars, Harry Potter y colecciones exclusivas.',
-      imageUrl: 'https://placehold.co/800x400/111624/5f9eff?text=LEGO',
-    },
-  })
-
-  await prisma.category.update({
-    where: { slug: 'modelos-escala' },
-    data: {
-      description: 'Réplicas a escala de autos, motos y vehículos de colección. Metal fundido de alta calidad para coleccionistas exigentes.',
-      imageUrl: 'https://placehold.co/800x400/111624/ff6644?text=Modelos',
-    },
-  })
-
-  await prisma.category.update({
-    where: { slug: 'anime' },
-    data: {
-      description: 'Figuras premium de los mejores animes: Dragon Ball Z, Evangelion, Chainsaw Man, One Piece, Naruto, Demon Slayer y más.',
-      imageUrl: 'https://placehold.co/800x400/111624/7b5fff?text=Anime',
-    },
-  })
-
-  console.log('Categories enriquecidas con description e imageUrl')
-
-  // ── salePrice en productos con compareAtPrice ──────────────────────────────
-  // Goku: compareAtPrice 299.90 → salePrice 249.90 (ya es el precio actual)
-  await prisma.product.update({
-    where: { sku: 'BND-DBZ-GOKU-001' },
-    data: { salePrice: 249.90 },
-  })
-
-  // Millennium Falcon: compareAtPrice 699.90 → salePrice 599.90
-  await prisma.product.update({
-    where: { sku: 'LGO-SW-FALCON-001' },
-    data: { salePrice: 599.90 },
-  })
-
-  // Naruto: compareAtPrice 529.90 → salePrice 459.90
-  await prisma.product.update({
-    where: { sku: 'KOT-NRT-NARUTO-001' },
-    data: { salePrice: 459.90 },
-  })
-
-  // Iron Man: compareAtPrice 179.90 → salePrice 149.90
-  await prisma.product.update({
-    where: { sku: 'HAS-MAR-IRONMAN-001' },
-    data: { salePrice: 149.90 },
-  })
-
-  // Hogwarts: compareAtPrice 1499.90 → salePrice 1299.90
-  await prisma.product.update({
-    where: { sku: 'LGO-HGW-CASTLE-001' },
-    data: { salePrice: 1299.90 },
-  })
-
-  // Red Bull F1: compareAtPrice 249.90 → salePrice 199.90
-  await prisma.product.update({
-    where: { sku: 'HW-F1-REDBULL-001' },
-    data: { salePrice: 199.90 },
-  })
-
-  console.log('salePrice actualizado en productos con compareAtPrice')
-
-  // ── Colecciones ────────────────────────────────────────────────────────────
+  // ── Collections ────────────────────────────────────────────────────────────
   const colBestsellers = await prisma.collection.upsert({
     where: { slug: 'bestsellers-2025' },
-    update: { active: true },
+    update: {
+      description: 'Los productos más vendidos de Mirana Shop en 2025. Calidad garantizada por miles de coleccionistas.',
+      imageUrl: img(IMGS.catFiguras, 1200, 400),
+    },
     create: {
       name: 'Bestsellers 2025',
       slug: 'bestsellers-2025',
-      description: 'Los productos más vendidos y mejor valorados de la temporada 2025. Selección curada por nuestro equipo.',
-      imageUrl: 'https://placehold.co/1200x400/111624/ffb84a?text=Bestsellers+2025',
+      description: 'Los productos más vendidos de Mirana Shop en 2025. Calidad garantizada por miles de coleccionistas.',
+      imageUrl: img(IMGS.catFiguras, 1200, 400),
       active: true,
     },
   })
 
   const colAnime = await prisma.collection.upsert({
     where: { slug: 'anime-figures' },
-    update: { active: true },
+    update: {
+      description: 'La mejor selección de figuras anime: Dragon Ball, Naruto, One Piece, Demon Slayer y mucho más.',
+      imageUrl: img(IMGS.catAnime, 1200, 400),
+    },
     create: {
       name: 'Anime Figures',
       slug: 'anime-figures',
-      description: 'Colección exclusiva de figuras de los animes más populares: Dragon Ball, Evangelion, Chainsaw Man, One Piece, Naruto y Demon Slayer.',
-      imageUrl: 'https://placehold.co/1200x400/111624/7b5fff?text=Anime+Figures',
+      description: 'La mejor selección de figuras anime: Dragon Ball, Naruto, One Piece, Demon Slayer y mucho más.',
+      imageUrl: img(IMGS.catAnime, 1200, 400),
       active: true,
     },
   })
 
   const colLegoTechnic = await prisma.collection.upsert({
     where: { slug: 'lego-technic' },
-    update: { active: true },
+    update: {
+      description: 'Sets LEGO Technic de alta complejidad. Perfectos para ingenieros y amantes de los mecanismos reales.',
+      imageUrl: img(IMGS.catLego, 1200, 400),
+    },
     create: {
       name: 'LEGO Technic',
       slug: 'lego-technic',
-      description: 'Los mejores sets LEGO Technic con mecánicas realistas, motores funcionales y diseños de ingeniería para entusiastas avanzados.',
-      imageUrl: 'https://placehold.co/1200x400/111624/5f9eff?text=LEGO+Technic',
+      description: 'Sets LEGO Technic de alta complejidad. Perfectos para ingenieros y amantes de los mecanismos reales.',
+      imageUrl: img(IMGS.catLego, 1200, 400),
       active: true,
     },
   })
 
+  // Asociar productos a colecciones
+  const associations = [
+    { collectionId: colBestsellers.id, productId: p1.id },
+    { collectionId: colBestsellers.id, productId: p3.id },
+    { collectionId: colBestsellers.id, productId: p7.id },
+    { collectionId: colBestsellers.id, productId: p10.id },
+    { collectionId: colAnime.id, productId: p1.id },
+    { collectionId: colAnime.id, productId: p2.id },
+    { collectionId: colAnime.id, productId: p4.id },
+    { collectionId: colAnime.id, productId: p5.id },
+    { collectionId: colAnime.id, productId: p9.id },
+    { collectionId: colAnime.id, productId: p11.id },
+    { collectionId: colLegoTechnic.id, productId: p3.id },
+    { collectionId: colLegoTechnic.id, productId: p6.id },
+    { collectionId: colLegoTechnic.id, productId: p10.id },
+  ]
+
+  for (const assoc of associations) {
+    await prisma.productCollection.upsert({
+      where: { productId_collectionId: assoc },
+      update: {},
+      create: assoc,
+    })
+  }
+
   console.log(`Collections: ${colBestsellers.name}, ${colAnime.name}, ${colLegoTechnic.name}`)
-
-  // ── Asociar productos a colecciones ───────────────────────────────────────
-  // Bestsellers: Goku, Evangelion, Millennium Falcon, Iron Man, Hogwarts
-  const bestsellersProducts = [p1.id, p2.id, p3.id, p7.id, p10.id]
-  for (const productId of bestsellersProducts) {
-    await prisma.productCollection.upsert({
-      where: { productId_collectionId: { productId, collectionId: colBestsellers.id } },
-      update: {},
-      create: { productId, collectionId: colBestsellers.id },
-    })
-  }
-
-  // Anime Figures: Goku, Evangelion, Makima, Naruto, Luffy, Tanjiro
-  const animeProducts = [p1.id, p2.id, p4.id, p5.id, p9.id, p11.id]
-  for (const productId of animeProducts) {
-    await prisma.productCollection.upsert({
-      where: { productId_collectionId: { productId, collectionId: colAnime.id } },
-      update: {},
-      create: { productId, collectionId: colAnime.id },
-    })
-  }
-
-  // LEGO Technic: Bugatti Bolide (el único Technic puro del catálogo)
-  const legoTechnicProducts = [p6.id]
-  for (const productId of legoTechnicProducts) {
-    await prisma.productCollection.upsert({
-      where: { productId_collectionId: { productId, collectionId: colLegoTechnic.id } },
-      update: {},
-      create: { productId, collectionId: colLegoTechnic.id },
-    })
-  }
-
-  console.log('Productos asociados a colecciones')
   console.log('Seed completado exitosamente.')
 }
 

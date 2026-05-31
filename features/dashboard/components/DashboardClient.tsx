@@ -20,28 +20,7 @@ import { PanelHeader } from "@/shared/components/PanelHeader";
 import { cls } from "@/shared/lib/admin-classes";
 import { fmt } from "@/shared/lib/admin-constants";
 import { cn } from "@/shared/lib/utils";
-// Datos estáticos de los gráficos del dashboard (placeholder hasta tener analytics real)
-const SALES_DATA = [
-  { m: "Jun", v: 38.2 }, { m: "Jul", v: 42.5 }, { m: "Ago", v: 39.8 }, { m: "Sep", v: 47.1 },
-  { m: "Oct", v: 52.3 }, { m: "Nov", v: 68.9 }, { m: "Dic", v: 84.2 }, { m: "Ene", v: 51.4 },
-  { m: "Feb", v: 49.7 }, { m: "Mar", v: 58.3 }, { m: "Abr", v: 62.1 }, { m: "May", v: 71.6 },
-];
-const ORDERS_DAILY = Array.from({ length: 14 }, (_, i) => ({
-  d: `D${i + 1}`,
-  v: [12, 15, 9, 18, 22, 17, 25, 21, 19, 28, 24, 31, 27, 34][i],
-}));
-const CATEGORY_PIE = [
-  { name: "Anime & Figuras", value: 54 },
-  { name: "LEGO",            value: 31 },
-  { name: "Modelos Escala",  value: 15 },
-];
-const PIE_COLORS = ["#58aaff", "#5f9eff", "#7b5fff"];
-const SPARK = {
-  revenue: [42, 45, 41, 48, 52, 49, 58, 55, 62, 68, 64, 71, 69, 72],
-  orders:  [8,  9,  7,  11, 13, 10, 15, 14, 12, 18, 16, 21, 19, 24],
-  users:   [2,  3,  2,  4,  3,  5,  4,  6,  5,  7,  6,  8,  9,  11],
-  ticket:  [95, 98, 92, 101,99, 105,110,108,115,112,118,121,119,124],
-};
+const PIE_COLORS = ["#58aaff", "#5f9eff", "#7b5fff", "#3fcf7f", "#ffb84a"];
 import type { ProductListItem } from "@/modules/catalog/repositories/product.repo";
 import type { OrderListItem } from "@/modules/orders/repositories/order.repo";
 
@@ -157,11 +136,14 @@ type SerializedProduct = Omit<ProductListItem, "price" | "compareAtPrice"> & {
 };
 
 interface DashboardClientProps {
-  orderStats: OrderStats;
-  topProducts: SerializedProduct[];
-  inventoryStats: InventoryStats;
-  userCount: number;
-  recentOrders: SerializedOrder[];
+  orderStats:        OrderStats;
+  topProducts:       SerializedProduct[];
+  inventoryStats:    InventoryStats;
+  userCount:         number;
+  recentOrders:      SerializedOrder[];
+  revenueByMonth:    { m: string; v: number }[];
+  ordersByDay:       { d: string; v: number }[];
+  ordersByCategory:  { name: string; value: number }[];
 }
 
 function getCategoryStripe(slug: string): string {
@@ -199,8 +181,14 @@ export function DashboardClient({
   inventoryStats,
   userCount,
   recentOrders,
+  revenueByMonth,
+  ordersByDay,
+  ordersByCategory,
 }: DashboardClientProps) {
   const revenueNum = orderStats.revenue;
+  // Sparklines: extraemos los últimos 14 puntos de los datos reales
+  const sparkRevenue = revenueByMonth.slice(-14).map((r) => r.v);
+  const sparkOrders  = ordersByDay.map((r) => r.v);
   const topByStock = [...topProducts]
     .sort((a, b) => (b.inventory?.availableStock ?? 0) - (a.inventory?.availableStock ?? 0))
     .slice(0, 5);
@@ -214,29 +202,29 @@ export function DashboardClient({
           {
             label: "Ingresos (total)",
             value: `S/ ${(revenueNum / 1000).toFixed(1)}K`,
-            delta: "↑ vs mes anterior",
-            data: SPARK.revenue,
+            delta: "acumulado sin cancelados",
+            data: sparkRevenue.length ? sparkRevenue : [0],
             color: "#58aaff",
           },
           {
             label: "Pedidos",
             value: String(orderStats.total),
             delta: `${orderStats.pending} pendientes`,
-            data: SPARK.orders,
+            data: sparkOrders.length ? sparkOrders : [0],
             color: "#5f9eff",
           },
           {
             label: "Clientes",
             value: String(userCount),
             delta: "Total registrados",
-            data: SPARK.users,
+            data: [userCount],
             color: "#7b5fff",
           },
           {
             label: "Inventario",
             value: `S/ ${(inventoryStats.totalValue / 1000).toFixed(1)}K`,
             delta: `${inventoryStats.lowStockCount} en stock bajo`,
-            data: SPARK.ticket,
+            data: [inventoryStats.totalValue / 1000],
             color: "#3fcf7f",
           },
         ].map((k) => (
@@ -269,7 +257,7 @@ export function DashboardClient({
           />
           <ResponsiveContainer width="100%" height={260}>
             <AreaChart
-              data={SALES_DATA}
+              data={revenueByMonth}
               margin={{ top: 5, right: 10, left: -10, bottom: 5 }}
             >
               <defs>
@@ -330,7 +318,7 @@ export function DashboardClient({
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie
-                data={CATEGORY_PIE}
+                data={ordersByCategory}
                 cx="50%"
                 cy="50%"
                 innerRadius={55}
@@ -338,8 +326,8 @@ export function DashboardClient({
                 dataKey="value"
                 strokeWidth={0}
               >
-                {CATEGORY_PIE.map((_, i) => (
-                  <Cell key={i} fill={PIE_COLORS[i]} />
+                {ordersByCategory.map((_, i) => (
+                  <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip
@@ -355,13 +343,13 @@ export function DashboardClient({
             </PieChart>
           </ResponsiveContainer>
           <div className="flex flex-col gap-2.5 mt-1">
-            {CATEGORY_PIE.map((d, i) => (
+            {ordersByCategory.length === 0 ? (
+              <p className="text-[12px] text-muted text-center py-2">Sin datos de pedidos aún</p>
+            ) : ordersByCategory.map((d, i) => (
               <div key={d.name} className="flex items-center gap-2.5">
-                <span className={cn("w-2.5 h-2.5 shrink-0", `pie-dot-${i}`)} />
+                <span className="w-2.5 h-2.5 shrink-0 rounded-full" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
                 <span className="text-[13px] flex-1">{d.name}</span>
-                <span className="font-display font-extrabold text-[16px]">
-                  {d.value}%
-                </span>
+                <span className="font-display font-extrabold text-[16px]">{d.value}%</span>
               </div>
             ))}
           </div>
@@ -386,7 +374,7 @@ export function DashboardClient({
           />
           <ResponsiveContainer width="100%" height={180}>
             <BarChart
-              data={ORDERS_DAILY}
+              data={ordersByDay}
               margin={{ top: 5, right: 10, left: -20, bottom: 5 }}
             >
               <CartesianGrid

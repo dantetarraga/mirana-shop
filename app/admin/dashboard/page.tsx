@@ -9,34 +9,49 @@ async function getUserCount() {
 }
 
 export default async function DashboardPage() {
-  const [orderStats, products, inventoryStats, userCount, recentOrders] =
-    await Promise.all([
-      orderRepo.getStats(),
-      productRepo.findMany({ take: 10 }),
-      inventoryRepo.getStats(),
-      getUserCount(),
-      orderRepo.findMany({ take: 6 }),
-    ]);
+  const [
+    orderStats,
+    products,
+    inventoryStats,
+    userCount,
+    recentOrders,
+    revenueByMonth,
+    ordersByDay,
+    ordersByCategory,
+  ] = await Promise.all([
+    orderRepo.getStats(),
+    productRepo.findMany({ take: 10 }),
+    inventoryRepo.getStats(),
+    getUserCount(),
+    orderRepo.findMany({ take: 6 }),
+    orderRepo.getRevenueByMonth(),
+    orderRepo.getOrdersByDay(14),
+    orderRepo.getOrdersByCategory(),
+  ]);
+
+  const serializedOrders = recentOrders.map((o) => ({
+    ...o,
+    total:        Number(o.total),
+    subtotal:     Number(o.subtotal),
+    shippingCost: Number(o.shippingCost),
+  }));
+
+  const serializedProducts = products.map((p) => ({
+    ...p,
+    price:          Number(p.price),
+    compareAtPrice: p.compareAtPrice != null ? Number(p.compareAtPrice) : null,
+  }));
 
   return (
     <DashboardClient
-      orderStats={{
-        ...orderStats,
-        revenue: Number(orderStats.revenue),
-      }}
-      topProducts={products.map((p) => ({
-        ...p,
-        price: Number(p.price),
-        compareAtPrice: p.compareAtPrice != null ? Number(p.compareAtPrice) : null,
-      }))}
+      orderStats={{ ...orderStats, revenue: Number(orderStats.revenue) }}
+      topProducts={serializedProducts}
       inventoryStats={inventoryStats}
       userCount={userCount}
-      recentOrders={recentOrders.map((o) => ({
-        ...o,
-        total:        Number(o.total),
-        subtotal:     Number(o.subtotal),
-        shippingCost: Number(o.shippingCost),
-      }))}
+      recentOrders={serializedOrders}
+      revenueByMonth={revenueByMonth}
+      ordersByDay={ordersByDay}
+      ordersByCategory={ordersByCategory}
     />
   );
 }
