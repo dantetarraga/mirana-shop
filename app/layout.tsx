@@ -45,8 +45,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           toastOptions={{
             style: {
               background: 'var(--color-surf)',
-              border: '1px solid var(--color-bd)',
+              border: '1px solid rgba(80,150,255,0.15)',
               color: 'var(--color-text)',
+            },
+            classNames: {
+              success: 'mirana-toast-success',
+              error: 'mirana-toast-error',
+              warning: 'mirana-toast-warning',
+              info: 'mirana-toast-info',
             },
           }}
         />

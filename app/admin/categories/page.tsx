@@ -34,7 +34,7 @@ export default async function CategoriesPage({ searchParams }: PageProps) {
         )}
       </div>
 
-      <CategoriesTableClient categories={categories} total={total} />
+      <CategoriesTableClient categories={categories} total={total} allCategories={categories} />
 
       {/* Paginación server-side */}
       {totalPages > 1 && (

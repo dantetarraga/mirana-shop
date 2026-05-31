@@ -8,6 +8,7 @@ import { Button } from "@/shared/components/ui/Button";
 import { PanelHeader } from "@/shared/components/PanelHeader";
 import { StatusBadge } from "@/shared/components/StatusBadge";
 import { CollectionCrudDrawer } from "@/features/collections/components/CollectionCrudDrawer";
+import { EntityProductsDrawer } from "@/shared/components/EntityProductsDrawer";
 import { deleteCollection } from "@/features/collections/actions/collection.actions";
 import { cls } from "@/shared/lib/admin-classes";
 import type { CollectionRow } from "@/modules/catalog/repositories/collection.repo";
@@ -19,6 +20,7 @@ interface CollectionsTableClientProps {
 
 export function CollectionsTableClient({ collections, total }: CollectionsTableClientProps) {
   const [editingCollection, setEditingCollection] = useState<CollectionRow | null>(null);
+  const [viewingId, setViewingId] = useState<string | null>(null);
   const [isNew, setIsNew] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -100,7 +102,7 @@ export function CollectionsTableClient({ collections, total }: CollectionsTableC
           <Button
             variant="icon"
             size="sm"
-            onClick={() => { setIsNew(false); setEditingCollection(c); }}
+            onClick={(e) => { e.stopPropagation(); setIsNew(false); setEditingCollection(c); }}
             title="Editar"
           >
             <Pencil size={14} />
@@ -110,7 +112,7 @@ export function CollectionsTableClient({ collections, total }: CollectionsTableC
             size="sm"
             destructive
             disabled={isPending}
-            onClick={() => handleDelete(c)}
+            onClick={(e) => { e.stopPropagation(); handleDelete(c); }}
             title="Eliminar"
           >
             <Trash2 size={14} />
@@ -146,6 +148,7 @@ export function CollectionsTableClient({ collections, total }: CollectionsTableC
           columns={columns}
           data={collections}
           keyExtractor={(c) => c.id}
+          onRowClick={(c) => { setEditingCollection(null); setViewingId(c.id); }}
         />
       )}
 
@@ -154,6 +157,15 @@ export function CollectionsTableClient({ collections, total }: CollectionsTableC
           collection={editingCollection}
           isNew={isNew}
           onClose={closeDrawer}
+        />
+      )}
+
+      {viewingId && (
+        <EntityProductsDrawer
+          entityId={viewingId}
+          entityName={collections.find((c) => c.id === viewingId)?.name ?? ""}
+          entityType="collection"
+          onClose={() => setViewingId(null)}
         />
       )}
     </div>

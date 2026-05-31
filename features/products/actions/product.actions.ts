@@ -6,6 +6,8 @@ import { categoryRepo } from "@/modules/catalog/repositories/category.repo";
 import { brandRepo } from "@/modules/catalog/repositories/brand.repo";
 import { productDbSchema, importProductRowSchema } from "@/shared/lib/schemas";
 import { z } from "zod";
+import { db } from "@/shared/lib/db";
+import type { DrawerProduct } from "@/shared/types/entity-products.types";
 
 // ---------------------------------------------------------------------------
 // Tipos de resultado
@@ -232,4 +234,66 @@ export async function importProducts(
 
   invalidateProductCaches();
   return { success: true, data: { created, updated, errors } };
+}
+
+// ---------------------------------------------------------------------------
+// searchAvailableProducts
+// Busca productos por nombre/SKU, excluyendo los IDs dados.
+// Usada por EntityProductsDrawer para el flujo "Agregar producto".
+// ---------------------------------------------------------------------------
+
+export async function searchAvailableProducts(
+  query: string,
+  excludeIds: string[] = []
+): Promise<{ success: true; data: DrawerProduct[] } | { success: false; error: string }> {
+  if (!query || query.trim().length < 2) {
+    return { success: true, data: [] };
+  }
+
+  try {
+    const products = await db.product.findMany({
+      where: {
+        deletedAt: null,
+        id: excludeIds.length > 0 ? { notIn: excludeIds } : undefined,
+        OR: [
+          { name: { contains: query.trim(), mode: "insensitive" } },
+          { sku: { contains: query.trim(), mode: "insensitive" } },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+        sku: true,
+        price: true,
+        status: true,
+        images: {
+          select: { url: true },
+          orderBy: { position: "asc" },
+          take: 1,
+        },
+        category: { select: { name: true } },
+        brand: { select: { name: true } },
+        inventory: { select: { availableStock: true } },
+      },
+      orderBy: { name: "asc" },
+      take: 20,
+    });
+
+    return {
+      success: true,
+      data: products.map((p) => ({
+        id: p.id,
+        name: p.name,
+        sku: p.sku,
+        price: Number(p.price),
+        status: p.status,
+        imageUrl: p.images[0]?.url ?? null,
+        category: p.category.name,
+        brand: p.brand.name,
+        stock: p.inventory?.availableStock ?? 0,
+      })),
+    };
+  } catch {
+    return { success: false, error: "Error al buscar productos" };
+  }
 }

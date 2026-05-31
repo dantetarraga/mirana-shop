@@ -3,6 +3,8 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 import { collectionRepo } from "@/modules/catalog/repositories/collection.repo";
+import { db } from "@/shared/lib/db";
+import type { DrawerProduct } from "@/shared/types/entity-products.types";
 
 // ---------------------------------------------------------------------------
 // Tipos
@@ -154,6 +156,56 @@ export async function addProductToCollection(
   } catch (err) {
     const message = err instanceof Error ? err.message : "Error al agregar producto a colección";
     return { success: false, error: message };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// getCollectionProducts
+// ---------------------------------------------------------------------------
+
+export async function getCollectionProducts(
+  collectionId: string
+): Promise<{ success: true; data: DrawerProduct[] } | { success: false; error: string }> {
+  try {
+    const products = await db.product.findMany({
+      where: {
+        deletedAt: null,
+        collections: { some: { collectionId } },
+      },
+      select: {
+        id: true,
+        name: true,
+        sku: true,
+        price: true,
+        status: true,
+        images: {
+          select: { url: true },
+          orderBy: { position: "asc" },
+          take: 1,
+        },
+        category: { select: { name: true } },
+        brand: { select: { name: true } },
+        inventory: { select: { availableStock: true } },
+      },
+      orderBy: { name: "asc" },
+    });
+
+    return {
+      success: true,
+      data: products.map((p) => ({
+        id: p.id,
+        name: p.name,
+        sku: p.sku,
+        price: Number(p.price),
+        status: p.status,
+        imageUrl: p.images[0]?.url ?? null,
+        category: p.category.name,
+        brand: p.brand.name,
+        stock: p.inventory?.availableStock ?? 0,
+      })),
+    };
+  } catch {
+    return { success: false, error: "Error al cargar productos" };
   }
 }
 

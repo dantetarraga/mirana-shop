@@ -3,6 +3,8 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 import { categoryRepo } from "@/modules/catalog/repositories/category.repo";
+import { db } from "@/shared/lib/db";
+import type { DrawerProduct } from "@/shared/types/entity-products.types";
 
 // ---------------------------------------------------------------------------
 // Tipos
@@ -125,6 +127,81 @@ export async function updateCategory(
     return { success: true, data: { id: category.id } };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Error al actualizar categoría";
+    return { success: false, error: message };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// getCategoryProducts
+// ---------------------------------------------------------------------------
+
+export async function getCategoryProducts(
+  categoryId: string
+): Promise<{ success: true; data: DrawerProduct[] } | { success: false; error: string }> {
+  try {
+    const products = await db.product.findMany({
+      where: { deletedAt: null, categoryId },
+      select: {
+        id: true,
+        name: true,
+        sku: true,
+        price: true,
+        status: true,
+        images: {
+          select: { url: true },
+          orderBy: { position: "asc" },
+          take: 1,
+        },
+        category: { select: { name: true } },
+        brand: { select: { name: true } },
+        inventory: { select: { availableStock: true } },
+      },
+      orderBy: { name: "asc" },
+    });
+
+    return {
+      success: true,
+      data: products.map((p) => ({
+        id: p.id,
+        name: p.name,
+        sku: p.sku,
+        price: Number(p.price),
+        status: p.status,
+        imageUrl: p.images[0]?.url ?? null,
+        category: p.category.name,
+        brand: p.brand.name,
+        stock: p.inventory?.availableStock ?? 0,
+      })),
+    };
+  } catch {
+    return { success: false, error: "Error al cargar productos" };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// reassignProductCategory
+// ---------------------------------------------------------------------------
+
+export async function reassignProductCategory(
+  productId: string,
+  newCategoryId: string
+): Promise<ActionResult> {
+  if (!productId || !newCategoryId) {
+    return { success: false, error: "IDs de producto y categoría requeridos" };
+  }
+
+  try {
+    await db.product.update({
+      where: { id: productId },
+      data: { categoryId: newCategoryId },
+    });
+    revalidatePath("/admin/categories");
+    revalidatePath("/admin/products");
+    revalidateTag("categories");
+    revalidateTag("catalog");
+    return { success: true, data: undefined };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Error al reasignar categoría";
     return { success: false, error: message };
   }
 }

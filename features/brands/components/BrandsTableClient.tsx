@@ -7,6 +7,7 @@ import { AdminTable, type Column } from "@/shared/components/AdminTable";
 import { Button } from "@/shared/components/ui/Button";
 import { PanelHeader } from "@/shared/components/PanelHeader";
 import { BrandCrudDrawer } from "@/features/brands/components/BrandCrudDrawer";
+import { EntityProductsDrawer } from "@/shared/components/EntityProductsDrawer";
 import { deleteBrand } from "@/features/brands/actions/brand.actions";
 import { cls } from "@/shared/lib/admin-classes";
 import type { BrandRow } from "@/modules/catalog/repositories/brand.repo";
@@ -14,10 +15,12 @@ import type { BrandRow } from "@/modules/catalog/repositories/brand.repo";
 interface BrandsTableClientProps {
   brands: BrandRow[];
   total: number;
+  allBrands: BrandRow[];
 }
 
-export function BrandsTableClient({ brands, total }: BrandsTableClientProps) {
+export function BrandsTableClient({ brands, total, allBrands }: BrandsTableClientProps) {
   const [editingBrand, setEditingBrand] = useState<BrandRow | null>(null);
+  const [viewingId, setViewingId] = useState<string | null>(null);
   const [isNew, setIsNew] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -89,7 +92,7 @@ export function BrandsTableClient({ brands, total }: BrandsTableClientProps) {
           <Button
             variant="icon"
             size="sm"
-            onClick={() => { setIsNew(false); setEditingBrand(b); }}
+            onClick={(e) => { e.stopPropagation(); setIsNew(false); setEditingBrand(b); }}
             title="Editar"
           >
             <Pencil size={14} />
@@ -99,7 +102,7 @@ export function BrandsTableClient({ brands, total }: BrandsTableClientProps) {
             size="sm"
             destructive
             disabled={isPending}
-            onClick={() => handleDelete(b)}
+            onClick={(e) => { e.stopPropagation(); handleDelete(b); }}
             title="Eliminar"
           >
             <Trash2 size={14} />
@@ -135,6 +138,7 @@ export function BrandsTableClient({ brands, total }: BrandsTableClientProps) {
           columns={columns}
           data={brands}
           keyExtractor={(b) => b.id}
+          onRowClick={(b) => { setEditingBrand(null); setViewingId(b.id); }}
         />
       )}
 
@@ -143,6 +147,16 @@ export function BrandsTableClient({ brands, total }: BrandsTableClientProps) {
           brand={editingBrand}
           isNew={isNew}
           onClose={closeDrawer}
+        />
+      )}
+
+      {viewingId && (
+        <EntityProductsDrawer
+          entityId={viewingId}
+          entityName={brands.find((b) => b.id === viewingId)?.name ?? ""}
+          entityType="brand"
+          allBrands={allBrands.map((b) => ({ id: b.id, name: b.name }))}
+          onClose={() => setViewingId(null)}
         />
       )}
     </div>

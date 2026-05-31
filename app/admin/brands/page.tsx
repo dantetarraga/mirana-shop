@@ -39,7 +39,7 @@ export default async function BrandsPage({ searchParams }: PageProps) {
         )}
       </div>
 
-      <BrandsTableClient brands={brands} total={total} />
+      <BrandsTableClient brands={brands} total={total} allBrands={brands} />
 
       {/* Paginación server-side */}
       {totalPages > 1 && (

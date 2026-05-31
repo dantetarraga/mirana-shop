@@ -32,6 +32,7 @@ import type { ImportProductRow } from "@/shared/lib/schemas";
 type SerializedProduct = Omit<ProductListItem, "price" | "compareAtPrice"> & {
   price: number;
   compareAtPrice: number | null;
+  collections: { collection: { id: string; name: string; slug: string } }[];
 };
 
 // ---------------------------------------------------------------------------
@@ -191,6 +192,23 @@ export function ProductsClient({
     { header: "Marca",                             render: (p) => p.brand.name },
     { header: "Precio",    className: cls.valGold, render: (p) => `S/ ${p.price.toFixed(2)}` },
     { header: "Stock",                             render: (p) => <StockBadge s={p.inventory?.availableStock ?? 0} /> },
+    {
+      header: "Colecciones",
+      render: (p) => p.collections.length === 0 ? (
+        <span className="text-muted text-[12px]">—</span>
+      ) : (
+        <div className="flex gap-1 flex-wrap">
+          {p.collections.slice(0, 2).map(({ collection: c }) => (
+            <span key={c.id} className="text-[10px] tracking-[1px] px-2 py-0.5 bg-(--sub) border border-(--bd) text-muted uppercase">
+              {c.name}
+            </span>
+          ))}
+          {p.collections.length > 2 && (
+            <span className="text-[10px] text-muted">+{p.collections.length - 2}</span>
+          )}
+        </div>
+      ),
+    },
     {
       header: "Acciones", headerClassName: "text-right", className: "text-right",
       render: (p) => (

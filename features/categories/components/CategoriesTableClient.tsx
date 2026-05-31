@@ -2,6 +2,7 @@
 
 import { deleteCategory } from '@/features/categories/actions/category.actions'
 import { CategoryCrudDrawer } from '@/features/categories/components/CategoryCrudDrawer'
+import { EntityProductsDrawer } from '@/shared/components/EntityProductsDrawer'
 import type { CategoryRow } from '@/modules/catalog/repositories/category.repo'
 import { AdminTable, type Column } from '@/shared/components/AdminTable'
 import { PanelHeader } from '@/shared/components/PanelHeader'
@@ -14,10 +15,12 @@ import { toast } from 'sonner'
 interface CategoriesTableClientProps {
   categories: CategoryRow[]
   total: number
+  allCategories: CategoryRow[]
 }
 
-export function CategoriesTableClient({ categories, total }: CategoriesTableClientProps) {
+export function CategoriesTableClient({ categories, total, allCategories }: CategoriesTableClientProps) {
   const [editingCategory, setEditingCategory] = useState<CategoryRow | null>(null)
+  const [viewingId, setViewingId] = useState<string | null>(null)
   const [isNew, setIsNew] = useState(false)
   const [isPending, startTransition] = useTransition()
 
@@ -95,7 +98,8 @@ export function CategoriesTableClient({ categories, total }: CategoriesTableClie
           <Button
             variant="icon"
             size="sm"
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation()
               setIsNew(false)
               setEditingCategory(c)
             }}
@@ -108,7 +112,7 @@ export function CategoriesTableClient({ categories, total }: CategoriesTableClie
             size="sm"
             destructive
             disabled={isPending}
-            onClick={() => handleDelete(c)}
+            onClick={(e) => { e.stopPropagation(); handleDelete(c) }}
             title="Eliminar"
           >
             <Trash2 size={14} />
@@ -141,7 +145,12 @@ export function CategoriesTableClient({ categories, total }: CategoriesTableClie
       {categories.length === 0 ? (
         <div className="text-center py-16 text-muted text-sm">No se encontraron categorías.</div>
       ) : (
-        <AdminTable columns={columns} data={categories} keyExtractor={(c) => c.id} />
+        <AdminTable
+          columns={columns}
+          data={categories}
+          keyExtractor={(c) => c.id}
+          onRowClick={(c) => { setEditingCategory(null); setViewingId(c.id); }}
+        />
       )}
 
       {drawerOpen && (
@@ -150,6 +159,16 @@ export function CategoriesTableClient({ categories, total }: CategoriesTableClie
           isNew={isNew}
           allCategories={categories}
           onClose={closeDrawer}
+        />
+      )}
+
+      {viewingId && (
+        <EntityProductsDrawer
+          entityId={viewingId}
+          entityName={allCategories.find((c) => c.id === viewingId)?.name ?? ''}
+          entityType="category"
+          allCategories={allCategories.map((c) => ({ id: c.id, name: c.name }))}
+          onClose={() => setViewingId(null)}
         />
       )}
     </div>

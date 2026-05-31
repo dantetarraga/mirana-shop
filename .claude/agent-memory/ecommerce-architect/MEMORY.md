@@ -7,3 +7,4 @@
 - [Schema v2: Collections + campos enriquecidos](project_schema_v2.md) — Collection, ProductCollection, salePrice, description/imageUrl en Brand y Category; 3 colecciones en seed
 - [Zod v4 + react-hook-form: usar z.input<>](feedback_zod_v4_rhf.md) — useForm<z.input<typeof schema>> para evitar error de tipos con .default()
 - [Next.js 16 APIs: revalidateTag(tag, profile) y searchParams await](feedback_nextjs16_apis.md) — Cambios de firma que rompen build en Next.js 16
+- [EntityProductsDrawer + Colecciones en productos](project_entity_products_drawer.md) — Drawer compartido collections/brands/categories, tipo DrawerProduct, columna colecciones, toast colors

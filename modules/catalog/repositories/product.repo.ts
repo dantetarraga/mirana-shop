@@ -27,6 +27,7 @@ export type ProductListItem = {
   brand: { id: string; name: string; slug: string };
   images: ProductImage[];
   inventory: { availableStock: number } | null;
+  collections: { collection: { id: string; name: string; slug: string } }[];
 };
 
 export type ProductDetail = ProductListItem & {
@@ -89,6 +90,12 @@ const listSelect = {
     take: 1,
   },
   inventory: { select: { availableStock: true } },
+  collections: {
+    select: {
+      collection: { select: { id: true, name: true, slug: true } },
+    },
+    take: 3,
+  },
 } as const;
 
 const detailSelect = {
