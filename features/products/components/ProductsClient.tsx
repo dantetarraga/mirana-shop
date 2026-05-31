@@ -13,7 +13,11 @@ import { StockBadge } from "@/shared/components/StockBadge";
 import { Button } from "@/shared/components/ui/Button";
 import { FormField } from "@/shared/components/ui/FormField";
 import { cls } from "@/shared/lib/admin-classes";
-import { productDbSchema, type ProductDbInput } from "@/shared/lib/schemas";
+import { productDbSchema } from "@/shared/lib/schemas";
+import { z } from "zod";
+
+// En Zod v4, z.input<> captura el tipo antes de aplicar .default() — compatible con useForm
+type ProductFormValues = z.input<typeof productDbSchema>;
 import {
   createProduct,
   updateProduct,
@@ -73,7 +77,7 @@ interface ProductsClientProps {
 // Form defaults
 // ---------------------------------------------------------------------------
 
-const EMPTY_FORM: ProductDbInput = {
+const EMPTY_FORM: ProductFormValues = {
   name: "",
   slug: "",
   sku: "",
@@ -105,7 +109,7 @@ export function ProductsClient({
 
   const TABS = useMemo(() => buildTabs(categories), [categories]);
 
-  const form = useForm<ProductDbInput>({
+  const form = useForm<ProductFormValues>({
     resolver: zodResolver(productDbSchema),
     defaultValues: EMPTY_FORM,
   });
@@ -122,7 +126,7 @@ export function ProductsClient({
         name: editingProduct.name,
         slug: editingProduct.slug,
         sku: editingProduct.sku,
-        description: editingProduct.description ?? "",
+        description: (editingProduct as { description?: string }).description ?? "",
         price: Number(editingProduct.price),
         compareAtPrice: editingProduct.compareAtPrice
           ? Number(editingProduct.compareAtPrice)
@@ -160,7 +164,7 @@ export function ProductsClient({
     reset(EMPTY_FORM);
   };
 
-  const onSubmit = (data: ProductDbInput) => {
+  const onSubmit = (data: ProductFormValues) => {
     startTransition(async () => {
       if (isNew) {
         const result = await createProduct(data);
@@ -186,8 +190,8 @@ export function ProductsClient({
                     sku: data.sku,
                     slug: data.slug,
                     price: data.price as unknown as ProductListItem["price"],
-                    status: data.status,
-                    featured: data.featured,
+                    status: (data.status ?? "AVAILABLE") as ProductListItem["status"],
+                    featured: data.featured ?? false,
                     inventory: { availableStock: data.stock },
                   }
                 : p

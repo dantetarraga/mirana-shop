@@ -28,6 +28,7 @@ import {
   SPARK,
 } from "@/shared/lib/admin-data";
 import type { ProductListItem } from "@/modules/catalog/repositories/product.repo";
+import type { OrderListItem } from "@/modules/orders/repositories/order.repo";
 
 // ---------------------------------------------------------------------------
 // Sparkline reutilizable
@@ -117,7 +118,7 @@ interface OrderStats {
   shipped: number;
   delivered: number;
   cancelled: number;
-  revenue: unknown;
+  revenue: number;
 }
 
 interface InventoryStats {
@@ -127,11 +128,25 @@ interface InventoryStats {
   outOfStockCount: number;
 }
 
+// Versión serializable de OrderListItem — Decimals ya convertidos a number
+type SerializedOrder = Omit<OrderListItem, "total" | "subtotal" | "shippingCost"> & {
+  total: number;
+  subtotal: number;
+  shippingCost: number;
+};
+
+// Versión serializable de ProductListItem — Decimals ya convertidos a number
+type SerializedProduct = Omit<ProductListItem, "price" | "compareAtPrice"> & {
+  price: number;
+  compareAtPrice: number | null;
+};
+
 interface DashboardClientProps {
   orderStats: OrderStats;
-  topProducts: ProductListItem[];
+  topProducts: SerializedProduct[];
   inventoryStats: InventoryStats;
   userCount: number;
+  recentOrders: SerializedOrder[];
 }
 
 function getCategoryStripe(slug: string): string {
@@ -148,13 +163,29 @@ function getCategoryStripe(slug: string): string {
 // Component
 // ---------------------------------------------------------------------------
 
+const ORDER_STATUS_CFG: Record<string, { label: string; color: string }> = {
+  PENDING:        { label: "Pendiente",    color: "text-[#ffb84a]" },
+  AWAITING_PROOF: { label: "Esp. comprobante", color: "text-[#ff9933]" },
+  PAID:           { label: "Pagado",       color: "text-[#3fcf7f]" },
+  PREPARING:      { label: "Preparando",   color: "text-[#58aaff]" },
+  SHIPPED:        { label: "Enviado",      color: "text-[#5f9eff]" },
+  DELIVERED:      { label: "Entregado",    color: "text-[#3fcf7f]" },
+  CANCELLED:      { label: "Cancelado",    color: "text-[#ff6644]" },
+  REFUNDED:       { label: "Reembolsado",  color: "text-muted" },
+};
+
+function orderCustomer(o: SerializedOrder): string {
+  return o.shipping?.fullName ?? o.user?.name ?? o.user?.email ?? o.guestEmail ?? "—";
+}
+
 export function DashboardClient({
   orderStats,
   topProducts,
   inventoryStats,
   userCount,
+  recentOrders,
 }: DashboardClientProps) {
-  const revenueNum = Number(orderStats.revenue ?? 0);
+  const revenueNum = orderStats.revenue;
   const topByStock = [...topProducts]
     .sort((a, b) => (b.inventory?.availableStock ?? 0) - (a.inventory?.availableStock ?? 0))
     .slice(0, 5);
@@ -431,42 +462,74 @@ export function DashboardClient({
         </div>
       </div>
 
-      {/* Stats de órdenes */}
-      <div className={cls.panel}>
-        <PanelHeader
-          label="Resumen de estados"
-          title="Pedidos por estado"
-          side={
-            <Link
-              href="/admin/orders"
-              className="font-display text-[14px] font-bold no-underline tracking-[1px] text-muted"
-            >
-              Ver todos →
-            </Link>
-          }
-        />
-        <div className="grid grid-cols-4 gap-4 mt-4">
-          {[
-            { label: "Pendientes", value: orderStats.pending, color: "text-[#ffb84a]" },
-            { label: "Enviados", value: orderStats.shipped, color: "text-[#5f9eff]" },
-            { label: "Entregados", value: orderStats.delivered, color: "text-[#3fcf7f]" },
-            { label: "Cancelados", value: orderStats.cancelled, color: "text-[#ff6644]" },
-          ].map((s) => (
-            <div key={s.label} className="text-center">
-              <div
-                className={cn(
-                  "font-display font-black text-[32px] leading-none",
-                  s.color
-                )}
-              >
-                {s.value}
-              </div>
-              <div className="text-[10px] tracking-[1px] uppercase text-muted mt-1">
-                {s.label}
-              </div>
+      {/* Actividad reciente */}
+      <div className={cls.panelTable}>
+        <div className="px-6 py-4 flex items-center justify-between border-b border-(--bd)">
+          <div>
+            <div className={cls.label}>Actividad reciente</div>
+            <div className="font-display text-[20px] font-black uppercase tracking-tight">
+              Últimos pedidos
             </div>
-          ))}
+          </div>
+          <Link
+            href="/admin/orders"
+            className="font-display text-[13px] font-bold no-underline tracking-[1px] uppercase text-muted hover:text-(--gold) transition-colors"
+          >
+            Ver todos →
+          </Link>
         </div>
+
+        <table className="w-full">
+          <thead>
+            <tr>
+              {["Código", "Cliente", "Productos", "Total", "Estado", "Fecha"].map((h) => (
+                <th key={h} className={cls.th}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {recentOrders.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-8 text-center text-muted text-[13px]">
+                  Sin pedidos registrados aún
+                </td>
+              </tr>
+            ) : (
+              recentOrders.map((o) => {
+                const cfg = ORDER_STATUS_CFG[o.status] ?? { label: o.status, color: "text-muted" };
+                return (
+                  <tr key={o.id} className="hover:bg-white/2 transition-colors">
+                    <td className={cn(cls.td, cls.monoGold)}>{o.code}</td>
+                    <td className={cls.td}>
+                      <div className="text-[14px]">{orderCustomer(o)}</div>
+                      {o.shipping?.district && (
+                        <div className="text-[11px] text-muted">{o.shipping.district}</div>
+                      )}
+                    </td>
+                    <td className={cn(cls.td, cls.mono)}>
+                      {o._count.items} {o._count.items === 1 ? "ítem" : "ítems"}
+                    </td>
+                    <td className={cn(cls.td, cls.valGold)}>
+                      S/ {o.total.toFixed(2)}
+                    </td>
+                    <td className={cls.td}>
+                      <span className={cn("text-[12px] font-semibold tracking-wide", cfg.color)}>
+                        {cfg.label}
+                      </span>
+                    </td>
+                    <td className={cn(cls.td, cls.mono, "text-muted")}>
+                      {new Date(o.createdAt).toLocaleDateString("es-PE", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { orderRepo } from "@/modules/orders/repositories/order.repo";
 import { updateOrderStatusSchema } from "@/shared/lib/schemas";
-import type { OrderStatus } from "../generated/prisma/client";
+import type { OrderStatus } from "@/generated/prisma/client";
 
 // ---------------------------------------------------------------------------
 // Tipos

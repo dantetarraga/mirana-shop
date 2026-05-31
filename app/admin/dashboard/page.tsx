@@ -9,19 +9,34 @@ async function getUserCount() {
 }
 
 export default async function DashboardPage() {
-  const [orderStats, products, inventoryStats, userCount] = await Promise.all([
-    orderRepo.getStats(),
-    productRepo.findMany({ take: 10 }),
-    inventoryRepo.getStats(),
-    getUserCount(),
-  ]);
+  const [orderStats, products, inventoryStats, userCount, recentOrders] =
+    await Promise.all([
+      orderRepo.getStats(),
+      productRepo.findMany({ take: 10 }),
+      inventoryRepo.getStats(),
+      getUserCount(),
+      orderRepo.findMany({ take: 6 }),
+    ]);
 
   return (
     <DashboardClient
-      orderStats={orderStats}
-      topProducts={products}
+      orderStats={{
+        ...orderStats,
+        revenue: Number(orderStats.revenue),
+      }}
+      topProducts={products.map((p) => ({
+        ...p,
+        price: Number(p.price),
+        compareAtPrice: p.compareAtPrice != null ? Number(p.compareAtPrice) : null,
+      }))}
       inventoryStats={inventoryStats}
       userCount={userCount}
+      recentOrders={recentOrders.map((o) => ({
+        ...o,
+        total:        Number(o.total),
+        subtotal:     Number(o.subtotal),
+        shippingCost: Number(o.shippingCost),
+      }))}
     />
   );
 }

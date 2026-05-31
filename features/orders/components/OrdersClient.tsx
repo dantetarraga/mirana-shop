@@ -14,7 +14,7 @@ import { ORDER_STATUS, fmt } from "@/shared/lib/admin-constants";
 import { cn } from "@/shared/lib/utils";
 import { updateOrderStatus } from "@/features/orders/actions/order.actions";
 import type { OrderListItem } from "@/modules/orders/repositories/order.repo";
-import type { OrderStatus } from "../../../generated/prisma";
+import type { OrderStatus } from "@/generated/prisma/client";
 
 // ---------------------------------------------------------------------------
 // Mapeo de estados BD -> UI

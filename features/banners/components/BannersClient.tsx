@@ -12,7 +12,12 @@ import { Button } from "@/shared/components/ui/Button";
 import { FormField } from "@/shared/components/ui/FormField";
 import { cls } from "@/shared/lib/admin-classes";
 import { BANNER_STATUS } from "@/shared/lib/admin-constants";
-import { bannerDbSchema, type BannerDbInput } from "@/shared/lib/schemas";
+import { bannerDbSchema } from "@/shared/lib/schemas";
+import { z } from "zod";
+
+// En Zod v4, z.input captura los tipos antes de .default() (opcionales).
+// El form opera sobre estos valores; zodResolver transforma al output.
+type BannerFormValues = z.input<typeof bannerDbSchema>;
 import {
   saveBanner,
   toggleBanner,
@@ -35,7 +40,7 @@ function getBannerStatus(banner: BannerRow): "activo" | "programado" | "inactivo
 // Form por defecto
 // ---------------------------------------------------------------------------
 
-const EMPTY_FORM: BannerDbInput = {
+const EMPTY_FORM = {
   title: "",
   subtitle: "",
   ctaLabel: "",
@@ -43,7 +48,7 @@ const EMPTY_FORM: BannerDbInput = {
   imageUrl: "https://placehold.co/1200x400/111111/FFFFFF?text=Banner",
   position: 0,
   active: false,
-};
+} satisfies BannerFormValues;
 
 interface BannersClientProps {
   initialBanners: BannerRow[];
@@ -55,7 +60,7 @@ export function BannersClient({ initialBanners }: BannersClientProps) {
   const [isNew, setIsNew] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const form = useForm<BannerDbInput>({
+  const form = useForm<BannerFormValues>({
     resolver: zodResolver(bannerDbSchema),
     defaultValues: EMPTY_FORM,
   });
@@ -85,7 +90,7 @@ export function BannersClient({ initialBanners }: BannersClientProps) {
     reset(EMPTY_FORM);
   };
 
-  const onSubmit = (data: BannerDbInput) => {
+  const onSubmit = (data: BannerFormValues) => {
     startTransition(async () => {
       const result = await saveBanner(editingId, data);
       if (result.success) {

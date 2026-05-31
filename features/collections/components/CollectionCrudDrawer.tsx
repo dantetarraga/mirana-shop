@@ -30,7 +30,8 @@ const formSchema = z.object({
   active: z.boolean().default(true),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+// z.input captura los tipos antes de aplicar .default() — compatible con useForm generic
+type FormValues = z.input<typeof formSchema>;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -102,6 +103,7 @@ export function CollectionCrudDrawer({
     startTransition(async () => {
       const payload = {
         ...data,
+        active: data.active ?? true,
         ...(collection && { id: collection.id }),
       };
 

@@ -35,8 +35,8 @@ function invalidateProductCaches() {
   revalidatePath("/admin/dashboard");
   revalidatePath("/catalogo");
   revalidatePath("/");
-  revalidateTag("products");
-  revalidateTag("catalog");
+  revalidateTag("products", "layout");
+  revalidateTag("catalog", "layout");
 }
 
 // ---------------------------------------------------------------------------
@@ -48,7 +48,7 @@ export async function createProduct(
 ): Promise<ActionResult<{ id: string; slug: string }>> {
   const parsed = productDbSchema.safeParse(rawInput);
   if (!parsed.success) {
-    const firstError = parsed.error.errors[0]?.message ?? "Datos inválidos";
+    const firstError = parsed.error.issues[0]?.message ?? "Datos inválidos";
     return { success: false, error: firstError };
   }
 
@@ -96,7 +96,7 @@ export async function updateProduct(
 
   const parsed = productDbSchema.partial().safeParse(rawInput);
   if (!parsed.success) {
-    const firstError = parsed.error.errors[0]?.message ?? "Datos inválidos";
+    const firstError = parsed.error.issues[0]?.message ?? "Datos inválidos";
     return { success: false, error: firstError };
   }
 

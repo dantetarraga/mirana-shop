@@ -1,6 +1,6 @@
 import { db } from "@/shared/lib/db";
-import type { ProductStatus } from "../generated/prisma/client";
-import type { Decimal } from "../../../generated/prisma/runtime/library";
+import type { ProductStatus } from "@/generated/prisma/client";
+import type { Decimal } from "@/generated/prisma/internal/prismaNamespace";
 
 // ---------------------------------------------------------------------------
 // Tipos de retorno — nunca devolvemos el modelo Prisma crudo,

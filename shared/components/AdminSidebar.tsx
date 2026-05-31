@@ -4,10 +4,14 @@ import { Button } from '@/shared/components/ui/Button'
 import {
   Archive,
   ArrowLeft,
+  Boxes,
+  FolderTree,
   Image,
   LayoutDashboard,
   Package,
   ShoppingCart,
+  Star,
+  Tag,
   Users,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -28,6 +32,9 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/admin/orders', label: 'Pedidos', icon: ShoppingCart },
   { section: 'Catálogo' },
   { href: '/admin/products', label: 'Productos', icon: Package },
+  { href: '/admin/collections', label: 'Colecciones', icon: Star },
+  { href: '/admin/brands', label: 'Marcas', icon: Tag },
+  { href: '/admin/categories', label: 'Categorías', icon: FolderTree },
   { href: '/admin/inventory', label: 'Inventario', icon: Archive },
   { href: '/admin/banners', label: 'Banners', icon: Image },
   { section: 'Clientes' },

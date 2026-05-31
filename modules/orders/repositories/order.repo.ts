@@ -1,6 +1,6 @@
 import { db } from "@/shared/lib/db";
-import type { OrderStatus, PaymentStatus } from "../generated/prisma/client";
-import type { Decimal } from "../../../generated/prisma/runtime/library";
+import type { OrderStatus, PaymentStatus } from "@/generated/prisma/client";
+import type { Decimal } from "@/generated/prisma/internal/prismaNamespace";
 
 // ---------------------------------------------------------------------------
 // Tipos de retorno del dominio Orders

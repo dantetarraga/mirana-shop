@@ -21,7 +21,7 @@ type ActionResult<T = void> =
 export async function adjustStock(rawInput: unknown): Promise<ActionResult<{ newStock: number }>> {
   const parsed = adjustStockSchema.safeParse(rawInput);
   if (!parsed.success) {
-    const firstError = parsed.error.errors[0]?.message ?? "Datos inválidos";
+    const firstError = parsed.error.issues[0]?.message ?? "Datos inválidos";
     return { success: false, error: firstError };
   }
 

@@ -16,7 +16,7 @@ function invalidateBannerCaches() {
   revalidatePath("/admin/banners");
   revalidatePath("/admin/dashboard");
   revalidatePath("/");
-  revalidateTag("banners");
+  revalidateTag("banners", "layout");
 }
 
 // ---------------------------------------------------------------------------
@@ -29,7 +29,7 @@ export async function saveBanner(
 ): Promise<ActionResult<{ id: string }>> {
   const parsed = bannerDbSchema.safeParse(rawInput);
   if (!parsed.success) {
-    const firstError = parsed.error.errors[0]?.message ?? "Datos inválidos";
+    const firstError = parsed.error.issues[0]?.message ?? "Datos inválidos";
     return { success: false, error: firstError };
   }
 
