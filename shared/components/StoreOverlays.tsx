@@ -1,8 +1,8 @@
-"use client";
+'use client'
 
-import { CartDrawer } from "./CartDrawer";
-import { ProductModal } from "./ProductModal";
-import { AuthModal } from "./AuthModal";
+import { AuthModal } from './AuthModal'
+import { CartDrawer } from './CartDrawer'
+import { ProductModal } from './ProductModal'
 
 export function StoreOverlays() {
   return (
@@ -11,5 +11,5 @@ export function StoreOverlays() {
       <ProductModal />
       <AuthModal />
     </>
-  );
+  )
 }

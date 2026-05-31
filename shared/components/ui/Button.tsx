@@ -1,28 +1,24 @@
-﻿import { type ButtonHTMLAttributes } from "react";
-import { cn } from "@/shared/lib/utils";
+﻿import { cn } from '@/shared/lib/utils'
+import { type ButtonHTMLAttributes } from 'react'
 
-export type ButtonVariant = "accent" | "outline" | "ghost" | "dark" | "tab" | "icon";
-export type ButtonSize    = "sm" | "md" | "lg";
+export type ButtonVariant = 'accent' | 'outline' | 'ghost' | 'dark' | 'tab' | 'icon'
+export type ButtonSize = 'sm' | 'md' | 'lg'
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?:     ButtonVariant;
-  size?:        ButtonSize;
-  /** Para variant="tab": marca el tab como activo */
-  active?:      boolean;
-  /** width: 100% */
-  full?:        boolean;
-  /** Clip-path diagonal (estilo hero storefront) */
-  clip?:        boolean;
-  /** Icono destructivo (hover rojo) — solo para variant="icon" */
-  destructive?: boolean;
+  variant?: ButtonVariant
+  size?: ButtonSize
+  active?: boolean
+  full?: boolean
+  clip?: boolean
+  destructive?: boolean
 }
 
 export function Button({
-  variant     = "accent",
-  size        = "md",
-  active      = false,
-  full        = false,
-  clip        = false,
+  variant = 'accent',
+  size = 'md',
+  active = false,
+  full = false,
+  clip = false,
   destructive = false,
   className,
   children,
@@ -31,18 +27,18 @@ export function Button({
   return (
     <button
       className={cn(
-        "ui-btn",
+        'ui-btn',
         `ui-btn--${variant}`,
         `ui-btn--${size}`,
-        active      && "ui-btn--active",
-        full        && "ui-btn--full",
-        clip        && "ui-btn--clip",
-        destructive && "ui-btn--destructive",
+        active && 'ui-btn--active',
+        full && 'ui-btn--full',
+        clip && 'ui-btn--clip',
+        destructive && 'ui-btn--destructive',
         className,
       )}
       {...props}
     >
       {children}
     </button>
-  );
+  )
 }

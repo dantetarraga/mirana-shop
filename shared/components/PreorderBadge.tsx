@@ -1,20 +1,16 @@
-﻿import { Clock } from "lucide-react";
-import { formatDate } from "@/shared/lib/utils";
+﻿import { formatDate } from '@/shared/lib/utils'
+import { Clock } from 'lucide-react'
 
 interface PreorderBadgeProps {
-  estimatedArrival: Date;
-  size?: "sm" | "md";
+  estimatedArrival: Date
+  size?: 'sm' | 'md'
 }
 
-export function PreorderBadge({ estimatedArrival, size = "sm" }: PreorderBadgeProps) {
+export function PreorderBadge({ estimatedArrival, size = 'sm' }: PreorderBadgeProps) {
   return (
     <span className="badge-preorder">
-      <Clock
-        size={size === "sm" ? 10 : 12}
-        className="shrink-0"
-        aria-hidden
-      />
-      <span>PREVENTA · {formatDate(estimatedArrival, { month: "short", year: "numeric" })}</span>
+      <Clock size={size === 'sm' ? 10 : 12} className="shrink-0" aria-hidden />
+      <span>PREVENTA · {formatDate(estimatedArrival, { month: 'short', year: 'numeric' })}</span>
     </span>
-  );
+  )
 }

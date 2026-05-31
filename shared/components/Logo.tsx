@@ -1,16 +1,16 @@
-import Link from "next/link";
+import Link from 'next/link'
 
 interface LogoProps {
-  size?: "sm" | "md" | "lg";
+  size?: 'sm' | 'md' | 'lg'
 }
 
 const SIZE_CLASS = {
-  sm: "text-[20px]",
-  md: "text-[26px]",
-  lg: "text-[36px]",
-};
+  sm: 'text-[20px]',
+  md: 'text-[26px]',
+  lg: 'text-[36px]',
+}
 
-export function Logo({ size = "md" }: LogoProps) {
+export function Logo({ size = 'md' }: LogoProps) {
   return (
     <Link
       href="/"
@@ -18,5 +18,5 @@ export function Logo({ size = "md" }: LogoProps) {
     >
       MIRA<span className="text-(--gold)">NA</span>
     </Link>
-  );
+  )
 }

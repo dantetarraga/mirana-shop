@@ -1,8 +1,8 @@
-﻿import { cls } from "@/shared/lib/admin-classes";
+﻿import { cls } from '@/shared/lib/admin-classes'
 
 interface FormFieldProps {
-  label:    string;
-  children: React.ReactNode;
+  label: string
+  children: React.ReactNode
 }
 
 export function FormField({ label, children }: FormFieldProps) {
@@ -11,5 +11,5 @@ export function FormField({ label, children }: FormFieldProps) {
       <label className={`${cls.label} block`}>{label}</label>
       {children}
     </div>
-  );
+  )
 }
