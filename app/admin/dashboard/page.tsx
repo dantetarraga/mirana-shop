@@ -43,10 +43,10 @@ function Sparkline({ data, color = "#58aaff", w = 160, h = 40 }: { data: number[
         stroke={color}
         strokeWidth={2}
         fill={`url(#${gradId})`}
-        isAnimationActive={false}
-        dot={(p: any) => p.index === data.length - 1
-          ? <circle key="end" cx={p.cx} cy={p.cy} r={2.5} fill={color} />
-          : <g key={p.index} />
+        dot={(p: { cx?: number; cy?: number; index?: number }) =>
+          p.index === data.length - 1
+            ? <circle key="end" cx={p.cx ?? 0} cy={p.cy ?? 0} r={2.5} fill={color} />
+            : <g key={p.index} />
         }
         activeDot={false}
       />
@@ -54,7 +54,11 @@ function Sparkline({ data, color = "#58aaff", w = 160, h = 40 }: { data: number[
   );
 }
 
-function ChartTooltip({ active, payload, label, prefix = "$", suffix = "K" }: { active?: boolean; payload?: ReadonlyArray<any>; label?: string | number; prefix?: string; suffix?: string }) {
+interface TooltipPayload {
+  value: number | string;
+}
+
+function ChartTooltip({ active, payload, label, prefix = "$", suffix = "K" }: { active?: boolean; payload?: ReadonlyArray<TooltipPayload>; label?: string | number; prefix?: string; suffix?: string }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="px-3.5 py-2 bg-card-hover border border-(--gold)">
