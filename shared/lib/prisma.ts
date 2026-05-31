@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@/generated/prisma";
 
 // ---------------------------------------------------------------------------
 // Singleton PrismaClient con guard HMR para Next.js

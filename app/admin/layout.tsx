@@ -1,21 +1,17 @@
-﻿import { AdminSidebar } from "@/shared/components/AdminSidebar";
-import { AdminTopbar } from "@/shared/components/AdminTopbar";
-import React from "react";
+﻿import { AdminSidebar } from '@/shared/components/AdminSidebar'
+import { AdminTopbar } from '@/shared/components/AdminTopbar'
+import React from 'react'
 
-/**
- * Layout del panel de administración.
- * Es un Server Component: no tiene "use client".
- * La interactividad (pathname, useState) vive en AdminSidebar y AdminTopbar.
- */
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-bg text-text font-sans">
       <AdminSidebar />
 
-      <main className="flex-1 min-w-0 ml-[248px]">
+      <main className="flex-1 min-w-0 ml-62">
         <AdminTopbar />
+
         {children}
       </main>
     </div>
-  );
+  )
 }
