@@ -33,7 +33,7 @@ function CatalogContent() {
 
   return (
     <section className="px-12 pb-20 pt-[calc(var(--nh)+36px)]">
-      <div className="text-[10px] font-bold tracking-[3px] uppercase mb-1.5 text-[var(--gold)]">
+      <div className="text-[10px] font-bold tracking-[3px] uppercase mb-1.5 text-(--gold)">
         Tienda completa
       </div>
       <div className="flex justify-between items-end mb-1.5">
@@ -45,7 +45,7 @@ function CatalogContent() {
         <div className="text-[13px] text-muted">{filtered.length} productos</div>
       </div>
 
-      <div className="h-px my-4 mb-6 bg-[var(--bd)]" />
+      <div className="h-px my-4 mb-6 bg-(--bd)" />
 
       {/* Filters */}
       <div className="flex gap-2 flex-wrap mb-7 items-center">
@@ -53,7 +53,7 @@ function CatalogContent() {
           <Button key={key} variant="tab" size="sm" active={filter === key} onClick={() => setFilter(key)}>{label}</Button>
         ))}
         <div
-          className="ml-auto flex items-center gap-2 px-3.5 h-10 bg-surf border border-[var(--bd)] transition-[border-color] duration-[.2s] focus-within:border-[var(--gold)]"
+          className="ml-auto flex items-center gap-2 px-3.5 h-10 bg-surf border border-(--bd) transition-[border-color] duration-[.2s] focus-within:border-(--gold)"
         >
           <Search size={13} className="shrink-0 text-muted" />
           <input

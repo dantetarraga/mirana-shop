@@ -11,7 +11,7 @@ export const ORDER_STATUS: Record<string, { label: string; color: string; bg: st
 };
 
 export const USER_STATUS: Record<string, { label: string; color: string; cls: string; outlineCls: string; textCls: string }> = {
-  vip:    { label: "VIP",    color: "var(--gold)", cls: "badge-gold",  outlineCls: "badge-gold-outline",  textCls: "text-[var(--gold)]"  },
+  vip:    { label: "VIP",    color: "var(--gold)", cls: "badge-gold",  outlineCls: "badge-gold-outline",  textCls: "text-(--gold)"  },
   activo: { label: "Activo", color: "#3fcf7f",     cls: "badge-green", outlineCls: "badge-green-outline", textCls: "text-[#3fcf7f]"      },
   nuevo:  { label: "Nuevo",  color: "#5f9eff",     cls: "badge-blue",  outlineCls: "badge-blue-outline",  textCls: "text-[#5f9eff]"      },
 };

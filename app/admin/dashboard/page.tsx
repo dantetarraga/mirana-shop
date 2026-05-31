@@ -5,12 +5,12 @@ import { AdminTable, type Column } from "@/shared/components/AdminTable";
 import { KpiCard } from "@/shared/components/KpiCard";
 import { PanelHeader } from "@/shared/components/PanelHeader";
 import { StatusBadge } from "@/shared/components/StatusBadge";
-import { A } from "@/shared/lib/admin-classes";
+import { cls } from "@/shared/lib/admin-classes";
 import { ORDER_STATUS, fmt, fmtDate, orderTotal } from "@/shared/lib/admin-constants";
-import type { Order } from "@/shared/types/admin-mock.types";
 import { CATEGORY_PIE, ORDERS_DAILY, PIE_COLORS, SALES_DATA, SPARK } from "@/shared/lib/admin-data";
 import { cn } from "@/shared/lib/utils";
 import { useAdminStore } from "@/shared/stores/admin.store";
+import type { Order } from "@/shared/types/admin-mock.types";
 import Link from "next/link";
 import {
   Area,
@@ -26,28 +26,34 @@ import {
   XAxis, YAxis,
 } from "recharts";
 
-function Sparkline({ data, color = "#58aaff", w = 120, h = 36 }: { data: number[]; color?: string; w?: number; h?: number }) {
-  const max = Math.max(...data), min = Math.min(...data), rng = max - min || 1;
-  const pts = data.map((v, i) => [(i / (data.length - 1)) * w, h - ((v - min) / rng) * (h - 6) - 3]);
-  const line = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
-  const area = line + ` L${w} ${h} L0 ${h} Z`;
-  const id = "sp" + w + h + color.replace(/[^a-z0-9]/gi, "");
+function Sparkline({ data, color = "#58aaff", w = 160, h = 40 }: { data: number[]; color?: string; w?: number; h?: number }) {
+  const chartData = data.map((v) => ({ v }));
+  const gradId    = "spark-" + color.replace(/[^a-z0-9]/gi, "");
   return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="block">
+    <AreaChart width={w} height={h} data={chartData} margin={{ top: 3, right: 0, left: 0, bottom: 0 }}>
       <defs>
-        <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.25" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stopColor={color} stopOpacity={0.25} />
+          <stop offset="100%" stopColor={color} stopOpacity={0} />
         </linearGradient>
       </defs>
-      <path d={area} fill={`url(#${id})`} />
-      <path d={line} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx={pts[pts.length - 1][0]} cy={pts[pts.length - 1][1]} r="2.5" fill={color} />
-    </svg>
+      <Area
+        type="monotone"
+        dataKey="v"
+        stroke={color}
+        strokeWidth={2}
+        fill={`url(#${gradId})`}
+        isAnimationActive={false}
+        dot={(p: any) => p.index === data.length - 1
+          ? <circle key="end" cx={p.cx} cy={p.cy} r={2.5} fill={color} />
+          : <g key={p.index} />
+        }
+        activeDot={false}
+      />
+    </AreaChart>
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ChartTooltip({ active, payload, label, prefix = "$", suffix = "K" }: { active?: boolean; payload?: ReadonlyArray<any>; label?: string | number; prefix?: string; suffix?: string }) {
   if (!active || !payload?.length) return null;
   return (
@@ -59,10 +65,10 @@ function ChartTooltip({ active, payload, label, prefix = "$", suffix = "K" }: { 
 }
 
 const recentOrderColumns: Column<Order>[] = [
-  { header: "Pedido",  className: A.monoGold,                     render: (o) => o.id },
-  { header: "Cliente", render: (o) => <div className={A.rowName}>{o.customer}</div> },
-  { header: "Fecha",   className: `${A.mono} text-[13px]`,        render: (o) => fmtDate(o.date) },
-  { header: "Total",   className: A.valGold,                      render: (o) => `$${fmt(orderTotal(o))}` },
+  { header: "Pedido",  className: cls.monoGold,                     render: (o) => o.id },
+  { header: "Cliente", render: (o) => <div className={cls.rowName}>{o.customer}</div> },
+  { header: "Fecha",   className: `${cls.mono} text-[13px]`,        render: (o) => fmtDate(o.date) },
+  { header: "Total",   className: cls.valGold,                      render: (o) => `$${fmt(orderTotal(o))}` },
   { header: "Estado",  render: (o) => <StatusBadge config={ORDER_STATUS[o.status]} variant="filled" /> },
 ];
 
@@ -93,7 +99,7 @@ export default function DashboardPage() {
 
       {/* Área + Donut */}
       <div className="grid grid-cols-[1.55fr_1fr] gap-4 mb-4">
-        <div className={A.panel}>
+        <div className={cls.panel}>
           <PanelHeader
             label="Ingresos" title="Ventas últimos 12 meses" mb="mb-5"
             side={<div className="font-display text-[22px] font-black text-right">$667.9K<span className="block text-[10px] font-medium tracking-[1px] uppercase text-muted">total anual</span></div>}
@@ -115,7 +121,7 @@ export default function DashboardPage() {
           </ResponsiveContainer>
         </div>
 
-        <div className={A.panel}>
+        <div className={cls.panel}>
           <PanelHeader label="Distribución" title="Ventas por categoría" mb="mb-5" />
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
@@ -128,7 +134,7 @@ export default function DashboardPage() {
           <div className="flex flex-col gap-2.5 mt-1">
             {CATEGORY_PIE.map((d, i) => (
               <div key={d.name} className="flex items-center gap-2.5">
-                <span className={cn("w-[10px] h-[10px] shrink-0", `pie-dot-${i}`)} />
+                <span className={cn("w-2.5 h-2.5 shrink-0", `pie-dot-${i}`)} />
                 <span className="text-[13px] flex-1">{d.name}</span>
                 <span className="font-display font-extrabold text-[16px]">{d.value}%</span>
               </div>
@@ -139,7 +145,7 @@ export default function DashboardPage() {
 
       {/* Barras + Top productos */}
       <div className="grid grid-cols-[1.55fr_1fr] gap-4 mb-4">
-        <div className={A.panel}>
+        <div className={cls.panel}>
           <PanelHeader
             label="Rendimiento" title="Pedidos últimos 14 días" mb="mb-5"
             side={<div className="font-display text-[22px] font-black text-right">+18%<span className="block text-[10px] font-medium tracking-[1px] uppercase text-muted">vs anterior</span></div>}
@@ -155,7 +161,7 @@ export default function DashboardPage() {
           </ResponsiveContainer>
         </div>
 
-        <div className={A.panel}>
+        <div className={cls.panel}>
           <PanelHeader
             label="Más vendidos" title="Top productos"
             side={<Link href="/admin/products" className="font-display text-[14px] font-bold no-underline tracking-[1px] text-muted">Ver todos →</Link>}
@@ -166,9 +172,9 @@ export default function DashboardPage() {
                 <span className="font-display font-black text-[18px] w-4.5 text-muted">{i + 1}</span>
                 <div className={`${CAT_STRIPE[p.cat]} w-10 h-10 shrink-0`} />
                 <div className="flex-1 min-w-0">
-                  <div className={cn(A.rowName, "text-[15px] whitespace-nowrap overflow-hidden text-ellipsis mb-[5px]")}>{p.name}</div>
-                  <div className="h-[5px] overflow-hidden bg-[var(--sub)]">
-                    <span className="block h-full bg-[var(--gold)]" style={{ width: `${(p.stock / maxStock) * 100}%` }} />
+                  <div className={cn(cls.rowName, "text-[15px] whitespace-nowrap overflow-hidden text-ellipsis mb-[5px]")}>{p.name}</div>
+                  <div className="h-[5px] overflow-hidden bg-(--sub)">
+                    <span className="block h-full bg-(--gold)" style={{ width: `${(p.stock / maxStock) * 100}%` }} />
                   </div>
                 </div>
                 <div className="font-display font-black text-[18px] text-right">
@@ -182,7 +188,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Últimos pedidos */}
-      <div className={A.panel}>
+      <div className={cls.panel}>
         <PanelHeader
           label="Actividad reciente" title="Últimos pedidos"
           side={<Link href="/admin/orders" className="font-display text-[14px] font-bold no-underline tracking-[1px] text-muted">Ver todos →</Link>}

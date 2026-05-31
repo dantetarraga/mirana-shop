@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import { cn } from "@/shared/lib/utils";
-import { A } from "@/shared/lib/admin-classes";
+import { cls } from "@/shared/lib/admin-classes";
 
 export interface Column<T> {
   header: string;
@@ -15,7 +15,7 @@ interface Props<T> {
   data: T[];
   keyExtractor: (row: T) => string | number;
   onRowClick?: (row: T) => void;
-  /** Omite el div wrapper con A.panelTable. Usar cuando la tabla vive dentro de un A.panel existente. */
+  /** Omite el div wrapper con cls.panelTable. Usar cuando la tabla vive dentro de un cls.panel existente. */
   noWrapper?: boolean;
 }
 
@@ -25,7 +25,7 @@ export function AdminTable<T>({ columns, data, keyExtractor, onRowClick, noWrapp
       <thead>
         <tr>
           {columns.map((col, i) => (
-            <th key={i} className={cn(A.th, col.headerClassName)}>
+            <th key={i} className={cn(cls.th, col.headerClassName)}>
               {col.header}
             </th>
           ))}
@@ -39,7 +39,7 @@ export function AdminTable<T>({ columns, data, keyExtractor, onRowClick, noWrapp
             className={onRowClick ? "cursor-pointer" : undefined}
           >
             {columns.map((col, i) => (
-              <td key={i} className={cn(A.td, col.className)}>
+              <td key={i} className={cn(cls.td, col.className)}>
                 {col.render(row)}
               </td>
             ))}
@@ -50,5 +50,5 @@ export function AdminTable<T>({ columns, data, keyExtractor, onRowClick, noWrapp
   );
 
   if (noWrapper) return table;
-  return <div className={A.panelTable}>{table}</div>;
+  return <div className={cls.panelTable}>{table}</div>;
 }

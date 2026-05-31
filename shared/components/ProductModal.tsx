@@ -8,7 +8,7 @@ import { X, Minus, Plus } from "lucide-react";
 
 function Stars({ r }: { r: number }) {
   return (
-    <span className="text-[var(--gold)]">
+    <span className="text-(--gold)">
       {"★".repeat(Math.floor(r))}{"☆".repeat(5 - Math.floor(r))}
     </span>
   );
@@ -34,7 +34,7 @@ export function ProductModal() {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-surf border border-[var(--bd)] max-w-[880px] w-full max-h-[92vh] overflow-y-auto grid grid-cols-2 relative"
+        className="bg-surf border border-(--bd) max-w-[880px] w-full max-h-[92vh] overflow-y-auto grid grid-cols-2 relative"
       >
         {/* Image */}
         <div className={`${CAT_STRIPE[p.cat]} min-h-[440px] flex items-center justify-center relative`}>
@@ -48,7 +48,7 @@ export function ProductModal() {
             className="absolute top-4 right-4 z-10"
           ><X size={16} /></Button>
           {p.badge && (
-            <div className="absolute top-4 left-0 bg-[var(--gold)] text-black text-[9px] font-extrabold tracking-[2px] uppercase px-2.5 py-[5px]">
+            <div className="absolute top-4 left-0 bg-(--gold) text-black text-[9px] font-extrabold tracking-[2px] uppercase px-2.5 py-[5px]">
               {p.badge}
             </div>
           )}
@@ -71,19 +71,19 @@ export function ProductModal() {
             <Stars r={p.rating} /> <span>{p.rating} · {p.reviews} reseñas</span>
           </div>
 
-          <div className="font-display text-[52px] font-black text-[var(--gold)] leading-none">
+          <div className="font-display text-[52px] font-black text-(--gold) leading-none">
             ${p.price.toFixed(2)}
           </div>
 
-          <p className="text-muted leading-[1.75] text-[14px] border-t border-[var(--bd)] pt-4.5">
+          <p className="text-muted leading-[1.75] text-[14px] border-t border-(--bd) pt-4.5">
             {p.desc}
           </p>
 
           <div>
             <div className="text-[10px] tracking-[2px] uppercase text-muted mb-2.5">Cantidad</div>
-            <div className="flex items-center border border-[var(--bd)] w-fit">
+            <div className="flex items-center border border-(--bd) w-fit">
               <Button variant="icon" size="md" onClick={() => setQty((q) => Math.max(1, q - 1))}><Minus size={14} /></Button>
-              <div className="w-[52px] text-center font-display text-[20px] font-extrabold border-l border-r border-[var(--bd)] flex items-center justify-center h-10.5">{qty}</div>
+              <div className="w-[52px] text-center font-display text-[20px] font-extrabold border-l border-r border-(--bd) flex items-center justify-center h-10.5">{qty}</div>
               <Button variant="icon" size="md" onClick={() => setQty((q) => q + 1)}><Plus size={14} /></Button>
             </div>
           </div>

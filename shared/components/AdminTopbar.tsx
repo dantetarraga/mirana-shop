@@ -18,7 +18,7 @@ export function AdminTopbar() {
   const [t1, t2] = TITLES[pathname] ?? ["Admin", "Panel de administración"];
 
   return (
-    <div className="h-[68px] flex items-center justify-between px-8 sticky top-0 z-40 border-b border-[var(--bd)] bg-bg">
+    <div className="h-[68px] flex items-center justify-between px-8 sticky top-0 z-40 border-b border-(--bd) bg-bg">
       <div>
         <div className="font-display text-[30px] font-black uppercase tracking-[-0.5px] leading-none">
           {t1}
@@ -28,13 +28,13 @@ export function AdminTopbar() {
         </div>
       </div>
       <div className="flex items-center gap-3">
-        <div className="text-[12px] flex items-center gap-2 px-3.5 py-2 text-muted border border-[var(--bd)]">
+        <div className="text-[12px] flex items-center gap-2 px-3.5 py-2 text-muted border border-(--bd)">
           <Calendar size={13} />
           May 2026
         </div>
         <Button variant="icon" size="md" className="relative">
           <Bell size={17} />
-          <span className="absolute top-2 right-[9px] w-1.5 h-1.5 rounded-full bg-[var(--gold)]" />
+          <span className="absolute top-2 right-[9px] w-1.5 h-1.5 rounded-full bg-(--gold)" />
         </Button>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { A } from "@/shared/lib/admin-classes";
+﻿import { cls } from "@/shared/lib/admin-classes";
 
 interface FormFieldProps {
   label:    string;
@@ -8,7 +8,7 @@ interface FormFieldProps {
 export function FormField({ label, children }: FormFieldProps) {
   return (
     <div>
-      <label className={`${A.label} block`}>{label}</label>
+      <label className={`${cls.label} block`}>{label}</label>
       {children}
     </div>
   );

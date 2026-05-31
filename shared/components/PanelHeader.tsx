@@ -1,5 +1,5 @@
-import { cn } from "@/shared/lib/utils";
-import { A } from "@/shared/lib/admin-classes";
+﻿import { cn } from "@/shared/lib/utils";
+import { cls } from "@/shared/lib/admin-classes";
 
 interface Props {
   label: string;
@@ -13,8 +13,8 @@ export function PanelHeader({ label, title, side, mb = "mb-4.5", align = "start"
   return (
     <div className={cn("flex justify-between", align === "center" ? "items-center" : "items-start", mb)}>
       <div>
-        <div className={A.label}>{label}</div>
-        <div className={A.title}>{title}</div>
+        <div className={cls.label}>{label}</div>
+        <div className={cls.title}>{title}</div>
       </div>
       {side}
     </div>

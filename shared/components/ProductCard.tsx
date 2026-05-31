@@ -13,7 +13,7 @@ interface ProductCardProps {
 function Stars({ r }: { r: number }) {
   const full = Math.floor(r);
   return (
-    <span className="text-[var(--gold)]">
+    <span className="text-(--gold)">
       {"★".repeat(full)}{"☆".repeat(5 - full)}
     </span>
   );
@@ -34,7 +34,7 @@ export function ProductCard({ product: p, showBadge = true }: ProductCardProps) 
         </div>
         {showBadge && p.badge && (
           <div
-            className="absolute top-3 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-2.5 py-[5px] bg-[var(--gold)] text-black"
+            className="absolute top-3 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-2.5 py-[5px] bg-(--gold) text-black"
           >
             {p.badge}
           </div>
@@ -49,7 +49,7 @@ export function ProductCard({ product: p, showBadge = true }: ProductCardProps) 
           {p.name}
         </div>
         <div className="flex items-center justify-between">
-          <div className="font-display text-[26px] font-black text-[var(--gold)]">
+          <div className="font-display text-[26px] font-black text-(--gold)">
             ${p.price.toFixed(2)}
           </div>
           <div className="text-[11px] text-muted">

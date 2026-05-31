@@ -34,13 +34,13 @@ export function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-[248px] fixed top-0 bottom-0 left-0 flex flex-col z-50 bg-surf border-r border-[var(--bd)]">
+    <aside className="w-[248px] fixed top-0 bottom-0 left-0 flex flex-col z-50 bg-surf border-r border-(--bd)">
       {/* Logo */}
-      <div className="px-6 pt-6 pb-5 flex items-center gap-2.5 border-b border-[var(--bd)]">
+      <div className="px-6 pt-6 pb-5 flex items-center gap-2.5 border-b border-(--bd)">
         <span className="font-display font-black text-[26px] tracking-[4px] uppercase">
-          MIRA<span className="text-[var(--gold)]">NA</span>
+          MIRA<span className="text-(--gold)">NA</span>
         </span>
-        <span className="text-[9px] tracking-[2px] uppercase ml-auto px-[7px] py-[3px] text-muted border border-[var(--bd)]">
+        <span className="text-[9px] tracking-[2px] uppercase ml-auto px-[7px] py-[3px] text-muted border border-(--bd)">
           Admin
         </span>
       </div>
@@ -63,7 +63,7 @@ export function AdminSidebar() {
             <Link key={link.href} href={link.href} className="no-underline">
               <Button variant="ghost" size="sm" full active={pathname === link.href} className="justify-start gap-3 px-3 relative">
                 {pathname === link.href && (
-                  <span className="absolute left-0 top-2 bottom-2 w-[3px] bg-[var(--gold)]" />
+                  <span className="absolute left-0 top-2 bottom-2 w-[3px] bg-(--gold)" />
                 )}
                 <link.icon size={17} className="shrink-0" />
                 {link.label}
@@ -74,7 +74,7 @@ export function AdminSidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="p-3 border-t border-[var(--bd)]">
+      <div className="p-3 border-t border-(--bd)">
         <a
           href="/"
           className="flex items-center gap-3 px-3 py-[11px] no-underline font-sans text-sm text-muted"
@@ -83,7 +83,7 @@ export function AdminSidebar() {
           Volver a la tienda
         </a>
         <div className="flex items-center gap-2.5 px-3 py-2.5">
-          <div className="w-[34px] h-[34px] flex items-center justify-center font-display font-black text-[14px] shrink-0 bg-[var(--gold)] text-black">
+          <div className="w-[34px] h-[34px] flex items-center justify-center font-display font-black text-[14px] shrink-0 bg-(--gold) text-black">
             AD
           </div>
           <div>

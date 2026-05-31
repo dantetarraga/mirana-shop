@@ -7,7 +7,7 @@ import { AdminTable, type Column } from "@/shared/components/AdminTable";
 import { DrawerSection } from "@/shared/components/DrawerSection";
 import { FilterBar } from "@/shared/components/FilterBar";
 import { StatusBadge } from "@/shared/components/StatusBadge";
-import { A } from "@/shared/lib/admin-classes";
+import { cls } from "@/shared/lib/admin-classes";
 import { USER_STATUS, fmt } from "@/shared/lib/admin-constants";
 import { USERS_DATA } from "@/shared/lib/admin-data";
 import type { User } from "@/shared/types/admin-mock.types";
@@ -33,17 +33,17 @@ export default function UsersPage() {
   const columns = useMemo<Column<User>[]>(() => [
     { header: "Usuario", render: (u) => (
       <div className="flex items-center gap-3">
-        <div className="w-9.5 h-9.5 flex items-center justify-center font-display font-black text-[14px] shrink-0 bg-card-hover border border-[var(--bd)] text-[var(--gold)]">
+        <div className="w-9.5 h-9.5 flex items-center justify-center font-display font-black text-[14px] shrink-0 bg-card-hover border border-(--bd) text-(--gold)">
           {u.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
         </div>
         <div>
-          <div className={A.rowName}>{u.name}</div>
+          <div className={cls.rowName}>{u.name}</div>
           <div className="text-[11px] text-muted">{u.email}</div>
         </div>
       </div>
     )},
-    { header: "Pedidos",  className: A.val,     render: (u) => u.orders },
-    { header: "Gastado",  className: A.valGold, render: (u) => `$${fmt(u.spent)}` },
+    { header: "Pedidos",  className: cls.val,     render: (u) => u.orders },
+    { header: "Gastado",  className: cls.valGold, render: (u) => `$${fmt(u.spent)}` },
     { header: "Desde",    className: "text-[13px] text-muted", render: (u) => new Date(u.joined).toLocaleDateString("es-PE", { year: "numeric", month: "short" }) },
     { header: "Segmento", render: (u) => <StatusBadge config={USER_STATUS[u.status]} variant="outlined" /> },
   ], []);
@@ -63,7 +63,7 @@ export default function UsersPage() {
         <AdminDrawer title={detail.name} sub="Perfil de cliente" onClose={() => setDetail(null)}>
           <div className="grid grid-cols-3 gap-2.5">
             {([["Pedidos", detail.orders], ["Gastado", `$${fmt(detail.spent)}`], ["Ticket", `$${fmt(detail.spent / detail.orders)}`]] as [string, string | number][]).map(([l, v]) => (
-              <div key={l} className="p-[14px] text-center bg-card border border-[var(--bd)]">
+              <div key={l} className="p-[14px] text-center bg-card border border-(--bd)">
                 <div className="font-display text-[24px] font-black leading-none">{v}</div>
                 <div className="text-[9px] tracking-[1px] uppercase mt-[5px] text-muted">{l}</div>
               </div>

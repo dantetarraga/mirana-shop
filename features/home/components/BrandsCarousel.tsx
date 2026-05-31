@@ -14,10 +14,10 @@
 export function BrandsCarousel() {
   const doubled = [...BRANDS, ...BRANDS];
   return (
-    <section className="py-[60px] border-t border-[var(--bd)] border-b border-b-[var(--bd)] overflow-hidden">
+    <section className="py-[60px] border-t border-(--bd) border-b border-b-(--bd) overflow-hidden">
       <div className="px-12 pb-8 flex justify-between items-baseline">
         <div>
-          <div className="text-[10px] font-bold tracking-[3px] uppercase text-[var(--gold)] mb-2.5">Marcas oficiales</div>
+          <div className="text-[10px] font-bold tracking-[3px] uppercase text-(--gold) mb-2.5">Marcas oficiales</div>
           <h2 className="font-display font-black uppercase tracking-[-1px] leading-[0.95] text-[clamp(28px,3.5vw,42px)]">
             Distribuidor autorizado
           </h2>
@@ -27,7 +27,7 @@ export function BrandsCarousel() {
 
       <div className="animate-marquee-slow flex gap-0">
         {doubled.map((b, i) => (
-          <div key={i} className="brand-item shrink-0 w-[240px] h-[120px] flex items-center justify-center border-r border-[var(--bd)] px-8">
+          <div key={i} className="brand-item shrink-0 w-[240px] h-[120px] flex items-center justify-center border-r border-(--bd) px-8">
             <div className="text-center">
               <div
                 className={`font-black uppercase tracking-[1px] leading-none text-text ${b.mono ? "font-mono text-[20px]" : "font-display text-[24px]"} ${b.italic ? "italic" : ""}`}

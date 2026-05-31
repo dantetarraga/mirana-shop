@@ -12,12 +12,12 @@ export function ReviewsSection() {
     <section className="px-12 py-20">
       <div className="flex justify-between items-start mb-10">
         <div>
-          <div className="text-[10px] font-bold tracking-[3px] uppercase text-[var(--gold)] mb-2.5">Testimonios</div>
+          <div className="text-[10px] font-bold tracking-[3px] uppercase text-(--gold) mb-2.5">Testimonios</div>
           <h2 className="font-display font-black uppercase tracking-[-1px] leading-[0.95] text-[clamp(36px,5vw,64px)]">Lo que dicen<br />nuestros coleccionistas</h2>
           <div className="flex items-center gap-3.5 mt-4.5">
-            <span className="font-display text-[48px] font-black text-[var(--gold)] leading-none">4.9</span>
+            <span className="font-display text-[48px] font-black text-(--gold) leading-none">4.9</span>
             <div>
-              <span className="text-[var(--gold)] text-[14px]">★★★★★</span>
+              <span className="text-(--gold) text-[14px]">★★★★★</span>
               <div className="text-[11px] text-muted tracking-[1px] uppercase mt-1">Basado en 2,847 reseñas</div>
             </div>
           </div>
@@ -26,12 +26,12 @@ export function ReviewsSection() {
 
       <div className="grid grid-cols-3 gap-4">
         {REVIEWS.map((r, i) => (
-          <div key={i} className="animate-fade-up bg-card border border-[var(--bd)] p-7 relative transition-[border-color] duration-[.25s]">
-            <div className="absolute top-3.5 right-[18px] font-display text-[72px] font-black text-[var(--gold)] opacity-[.15] leading-[0.8] italic">"</div>
-            <div className="text-[var(--gold)] text-[13px] tracking-[2px] mb-3.5">{"★".repeat(r.stars)}{"☆".repeat(5 - r.stars)}</div>
+          <div key={i} className="animate-fade-up bg-card border border-(--bd) p-7 relative transition-[border-color] duration-[.25s]">
+            <div className="absolute top-3.5 right-[18px] font-display text-[72px] font-black text-(--gold) opacity-[.15] leading-[0.8] italic">"</div>
+            <div className="text-(--gold) text-[13px] tracking-[2px] mb-3.5">{"★".repeat(r.stars)}{"☆".repeat(5 - r.stars)}</div>
             <p className="text-[14px] leading-[1.7] text-text mb-5 font-light min-h-[84px]">{r.text}</p>
-            <div className="flex items-center gap-3 pt-4.5 border-t border-[var(--bd)]">
-              <div className="w-10.5 h-10.5 rounded-full bg-[var(--gold)] text-black flex items-center justify-center font-display font-black text-[16px]">{r.initials}</div>
+            <div className="flex items-center gap-3 pt-4.5 border-t border-(--bd)">
+              <div className="w-10.5 h-10.5 rounded-full bg-(--gold) text-black flex items-center justify-center font-display font-black text-[16px]">{r.initials}</div>
               <div>
                 <div className="font-display text-[16px] font-extrabold uppercase tracking-[0.5px]">{r.name}</div>
                 <div className="text-[11px] text-muted tracking-[1px] uppercase">{r.role}</div>

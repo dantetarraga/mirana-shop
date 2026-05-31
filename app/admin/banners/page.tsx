@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import { AdminDrawer } from "@/shared/components/AdminDrawer";
 import { StatusBadge } from "@/shared/components/StatusBadge";
 import { Button } from "@/shared/components/ui/Button";
 import { FormField } from "@/shared/components/ui/FormField";
-import { A } from "@/shared/lib/admin-classes";
+import { cls } from "@/shared/lib/admin-classes";
 import { BANNER_STATUS } from "@/shared/lib/admin-constants";
 import { useAdminStore } from "@/shared/stores/admin.store";
 import type { Banner } from "@/shared/types/admin-mock.types";
@@ -83,20 +83,20 @@ export default function BannersPage() {
           onClose={() => setEditing(null)}
         >
           <FormField label="Título">
-            <input value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} className={A.input} />
+            <input value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} className={cls.input} />
           </FormField>
 
           <FormField label="Subtítulo">
-            <input value={editing.subtitle} onChange={(e) => setEditing({ ...editing, subtitle: e.target.value })} className={A.input} />
+            <input value={editing.subtitle} onChange={(e) => setEditing({ ...editing, subtitle: e.target.value })} className={cls.input} />
           </FormField>
           
           <div className="grid grid-cols-2 gap-3.5">
             <FormField label="Texto botón">
-              <input value={editing.cta} onChange={(e) => setEditing({ ...editing, cta: e.target.value })} className={A.input} />
+              <input value={editing.cta} onChange={(e) => setEditing({ ...editing, cta: e.target.value })} className={cls.input} />
             </FormField>
 
             <FormField label="Posición">
-              <select value={editing.position} onChange={(e) => setEditing({ ...editing, position: e.target.value })} className={A.input}>
+              <select value={editing.position} onChange={(e) => setEditing({ ...editing, position: e.target.value })} className={cls.input}>
                 <option>Hero principal</option>
                 <option>Banda CTA</option>
                 <option>Marquee superior</option>

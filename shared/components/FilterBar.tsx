@@ -41,7 +41,7 @@ export function FilterBar({
 }: FilterBarProps) {
   return (
     <div className="flex items-center gap-3.5 mb-4.5 flex-wrap">
-      <div className="flex items-center gap-[9px] px-3.5 h-10.5 flex-1 min-w-[200px] max-w-[340px] bg-card border border-[var(--bd)]">
+      <div className="flex items-center gap-[9px] px-3.5 h-10.5 flex-1 min-w-[200px] max-w-[340px] bg-card border border-(--bd)">
         <Search size={13} className="text-muted" />
         <input
           placeholder={placeholder}

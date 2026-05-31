@@ -10,7 +10,7 @@ export function FeaturedProducts() {
     <section className="px-12 py-20">
       <div className="flex justify-between items-end mb-8">
         <div>
-          <div className="text-[10px] font-bold tracking-[3px] uppercase mb-2.5 text-[var(--gold)]">
+          <div className="text-[10px] font-bold tracking-[3px] uppercase mb-2.5 text-(--gold)">
             Selección premium
           </div>
           <h2

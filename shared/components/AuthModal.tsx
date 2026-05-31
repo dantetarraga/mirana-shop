@@ -39,7 +39,7 @@ export function AuthModal() {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-surf border border-[var(--bd)] max-w-[440px] w-full relative px-9 py-10"
+        className="bg-surf border border-(--bd) max-w-[440px] w-full relative px-9 py-10"
       >
         <Button
           variant="icon"
@@ -48,7 +48,7 @@ export function AuthModal() {
           className="absolute top-3.5 right-3.5"
         ><X size={16} /></Button>
 
-        <div className="flex border border-[var(--bd)] mb-7">
+        <div className="flex border border-(--bd) mb-7">
           {(["login", "register"] as const).map((m) => (
             <Button
               key={m}
@@ -95,8 +95,8 @@ export function AuthModal() {
           <div className="flex justify-between items-center text-[12px] text-muted my-[6px] mb-4.5">
             {mode === "login" ? (
               <><label className="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" /> Recordarme</label>
-                <a className="text-[var(--gold)] cursor-pointer">¿Olvidaste tu contraseña?</a></>
-            ) : <span>Al registrarte aceptas los <a className="text-[var(--gold)]">Términos</a></span>}
+                <a className="text-(--gold) cursor-pointer">¿Olvidaste tu contraseña?</a></>
+            ) : <span>Al registrarte aceptas los <a className="text-(--gold)">Términos</a></span>}
           </div>
           <Button type="submit" variant="accent" size="lg" full>
             {mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
@@ -104,7 +104,7 @@ export function AuthModal() {
         </form>
 
         <div className="flex items-center gap-3 my-5 text-muted text-[11px] tracking-[2px] uppercase">
-          <span className="flex-1 h-px bg-[var(--bd)]" /> o continúa con <span className="flex-1 h-px bg-[var(--bd)]" />
+          <span className="flex-1 h-px bg-(--bd)" /> o continúa con <span className="flex-1 h-px bg-(--bd)" />
         </div>
 
         <div className="flex gap-2">

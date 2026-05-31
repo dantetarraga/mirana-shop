@@ -26,13 +26,13 @@ export function Navbar() {
 
   return (
     <nav
-      className="fixed top-0 left-0 right-0 z-[200] flex items-center justify-between px-12 transition-[background] duration-300 h-[var(--nh)] bg-[rgba(3,4,9,.92)] backdrop-blur-[28px] border-b border-[var(--bd)]"
+      className="fixed top-0 left-0 right-0 z-[200] flex items-center justify-between px-12 transition-[background] duration-300 h-(--nh) bg-[rgba(3,4,9,.92)] backdrop-blur-[28px] border-b border-(--bd)"
     >
       <Link
         href="/"
         className="font-display font-black text-[26px] tracking-[5px] no-underline uppercase text-text"
       >
-        MIRA<span className="text-[var(--gold)]">NA</span>
+        MIRA<span className="text-(--gold)">NA</span>
       </Link>
 
       <ul className="flex gap-7 list-none">
@@ -56,7 +56,7 @@ export function Navbar() {
       <div className="flex items-center gap-3">
         {/* Search */}
         <div
-          className="flex items-center gap-2 px-3.5 h-10 bg-surf border border-[var(--bd)]"
+          className="flex items-center gap-2 px-3.5 h-10 bg-surf border border-(--bd)"
         >
           <Search size={13} className="shrink-0 text-muted" />
           <input
@@ -77,7 +77,7 @@ export function Navbar() {
           <ShoppingBag size={17} />
           {cartCount > 0 && (
             <span
-              className="absolute top-[-6px] right-[-6px] w-4.5 h-4.5 rounded-full flex items-center justify-center text-[10px] font-bold font-display bg-[var(--gold)] text-black"
+              className="absolute top-[-6px] right-[-6px] w-4.5 h-4.5 rounded-full flex items-center justify-center text-[10px] font-bold font-display bg-(--gold) text-black"
             >
               {cartCount}
             </span>
@@ -107,9 +107,9 @@ export function Navbar() {
           {/* Dropdown */}
           {menuOpen && user && (
             <div
-              className="absolute top-[calc(100%+8px)] right-0 min-w-[220px] z-[250] bg-surf border border-[var(--bd)] shadow-[0_16px_48px_rgba(0,0,0,.4)]"
+              className="absolute top-[calc(100%+8px)] right-0 min-w-[220px] z-[250] bg-surf border border-(--bd) shadow-[0_16px_48px_rgba(0,0,0,.4)]"
             >
-              <div className="px-4.5 py-4 border-b border-[var(--bd)]">
+              <div className="px-4.5 py-4 border-b border-(--bd)">
                 <div className="font-display text-[16px] font-extrabold uppercase tracking-[0.5px]">
                   {user.name}
                 </div>
@@ -131,7 +131,7 @@ export function Navbar() {
                 <Link
                   href="/admin/dashboard"
                   onClick={() => setMenuOpen(false)}
-                  className="px-4.5 py-[11px] flex items-center gap-2.5 text-[13px] no-underline font-sans font-semibold text-[var(--gold)] border-t border-[var(--bd)]"
+                  className="px-4.5 py-[11px] flex items-center gap-2.5 text-[13px] no-underline font-sans font-semibold text-(--gold) border-t border-(--bd)"
                 >
                   <LayoutGrid size={14} />
                   Panel Admin
@@ -143,7 +143,7 @@ export function Navbar() {
                 size="sm"
                 full
                 onClick={() => { logout(); setMenuOpen(false); }}
-                className="justify-start px-4.5 border-t border-[var(--bd)]"
+                className="justify-start px-4.5 border-t border-(--bd)"
               >
                 <LogOut size={14} />
                 Cerrar sesión

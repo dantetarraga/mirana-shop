@@ -24,11 +24,11 @@ export function CartDrawer() {
         onClick={() => setCartOpen(false)}
         className="fixed inset-0 z-[400] bg-black/[.65] backdrop-blur-[6px]"
       />
-      <div className="fixed top-0 right-0 bottom-0 z-[401] w-[420px] bg-surf border-l border-[var(--bd)] flex flex-col animate-slide-right">
+      <div className="fixed top-0 right-0 bottom-0 z-[401] w-[420px] bg-surf border-l border-(--bd) flex flex-col animate-slide-right">
         {/* Header */}
-        <div className="px-7 py-6 border-b border-[var(--bd)] flex items-center justify-between">
+        <div className="px-7 py-6 border-b border-(--bd) flex items-center justify-between">
           <div className="font-display text-[26px] font-black uppercase tracking-[1px]">
-            Carrito <span className="text-[var(--gold)]">({cart.length})</span>
+            Carrito <span className="text-(--gold)">({cart.length})</span>
           </div>
           <Button variant="icon" size="md" onClick={() => setCartOpen(false)}><X size={16} /></Button>
         </div>
@@ -42,13 +42,13 @@ export function CartDrawer() {
               <div className="text-[13px]">Agrega productos para continuar</div>
             </div>
           ) : cart.map((item) => (
-            <div key={item.product.id} className="flex gap-3.5 items-center pb-3.5 border-b border-[var(--bd)]">
+            <div key={item.product.id} className="flex gap-3.5 items-center pb-3.5 border-b border-(--bd)">
               <div className={`${CAT_STRIPE[item.product.cat]} w-[70px] h-[70px] shrink-0`} />
               <div className="flex-1 min-w-0">
                 <div className="font-display text-[17px] font-extrabold uppercase whitespace-nowrap overflow-hidden text-ellipsis">
                   {item.product.name}
                 </div>
-                <div className="text-[var(--gold)] font-display text-[20px] font-extrabold mt-[1px]">
+                <div className="text-(--gold) font-display text-[20px] font-extrabold mt-[1px]">
                   ${item.product.price.toFixed(2)}
                 </div>
                 <div className="flex items-center gap-2 mt-2">
@@ -64,10 +64,10 @@ export function CartDrawer() {
 
         {/* Footer */}
         {cart.length > 0 && (
-          <div className="px-7 py-6 border-t border-[var(--bd)]">
+          <div className="px-7 py-6 border-t border-(--bd)">
             <div className="flex justify-between items-baseline mb-5">
               <span className="text-[12px] uppercase tracking-[1px] text-muted">Total</span>
-              <span className="font-display text-[38px] font-black text-[var(--gold)]">${total.toFixed(2)}</span>
+              <span className="font-display text-[38px] font-black text-(--gold)">${total.toFixed(2)}</span>
             </div>
             <Button variant="accent" size="lg" full>
               Finalizar compra →

@@ -1,5 +1,5 @@
-import { cn } from "@/shared/lib/utils";
-import { A } from "@/shared/lib/admin-classes";
+﻿import { cn } from "@/shared/lib/utils";
+import { cls } from "@/shared/lib/admin-classes";
 
 interface Props {
   title: string;
@@ -10,8 +10,8 @@ interface Props {
 
 export function DrawerSection({ title, children, divider = true }: Props) {
   return (
-    <div className={cn(divider && "pt-4.5 border-t border-[var(--bd)]")}>
-      <div className={cn(A.label, "mb-2.5")}>{title}</div>
+    <div className={cn(divider && "pt-4.5 border-t border-(--bd)")}>
+      <div className={cn(cls.label, "mb-2.5")}>{title}</div>
       {children}
     </div>
   );

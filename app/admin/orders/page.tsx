@@ -12,7 +12,7 @@ import { Button } from "@/shared/components/ui/Button";
 import { ORDER_STATUS, fmt, fmtDate, orderTotal } from "@/shared/lib/admin-constants";
 import { useAdminStore } from "@/shared/stores/admin.store";
 import type { Order } from "@/shared/types/admin-mock.types";
-import { A } from "@/shared/lib/admin-classes";
+import { cls } from "@/shared/lib/admin-classes";
 
 export default function OrdersPage() {
   const orders         = useAdminStore((s) => s.orders);
@@ -44,17 +44,17 @@ export default function OrdersPage() {
   ];
 
   const columns = useMemo<Column<Order>[]>(() => [
-    { header: "Pedido",    className: A.monoGold, render: (o) => o.id },
+    { header: "Pedido",    className: cls.monoGold, render: (o) => o.id },
     { header: "Cliente",   render: (o) => (
       <>
-        <div className={cn(A.rowName, "text-[14px]")}>{o.customer}</div>
-        <div className={A.rowSub}>{o.city}</div>
+        <div className={cn(cls.rowName, "text-[14px]")}>{o.customer}</div>
+        <div className={cls.rowSub}>{o.city}</div>
       </>
     )},
-    { header: "Artículos", className: A.val, render: (o) => o.items.reduce((s, i) => s + i.qty, 0) },
+    { header: "Artículos", className: cls.val, render: (o) => o.items.reduce((s, i) => s + i.qty, 0) },
     { header: "Fecha",     className: "text-[13px] text-muted", render: (o) => fmtDate(o.date) },
     { header: "Pago",      className: "text-[13px]", render: (o) => o.payment },
-    { header: "Total",     className: A.valGold, render: (o) => `$${fmt(orderTotal(o))}` },
+    { header: "Total",     className: cls.valGold, render: (o) => `$${fmt(orderTotal(o))}` },
     { header: "Estado",    render: (o) => <StatusBadge config={ORDER_STATUS[o.status]} variant="filled" /> },
     { header: "",          className: "text-right text-muted", render: () => "→" },
   ], []);
@@ -65,7 +65,7 @@ export default function OrdersPage() {
         <KpiCard label="Total pedidos" value={orders.length}                      valueClass="text-text" />
         <KpiCard label="Por procesar"  value={counts.pendiente}                   valueClass="text-[#ffb84a]" />
         <KpiCard label="En tránsito"   value={counts.enviado}                     valueClass="text-[#5f9eff]" />
-        <KpiCard label="Ingresos"      value={`$${(revenue / 1000).toFixed(1)}K`} valueClass="text-[var(--gold)]" />
+        <KpiCard label="Ingresos"      value={`$${(revenue / 1000).toFixed(1)}K`} valueClass="text-(--gold)" />
       </div>
 
       <FilterBar query={query} placeholder="Buscar pedido o cliente..." activeTab={filter} tabs={tabs} onQuery={setQuery} onTab={setFilter} />
@@ -87,12 +87,12 @@ export default function OrdersPage() {
             {detail.items.map((it, i) => (
               <div key={i} className="flex justify-between py-2">
                 <span className="text-[14px]">{it.qty}× {it.name}</span>
-                <span className="font-display font-extrabold text-[15px] text-[var(--gold)]">${fmt(it.price * it.qty)}</span>
+                <span className="font-display font-extrabold text-[15px] text-(--gold)">${fmt(it.price * it.qty)}</span>
               </div>
             ))}
-            <div className="flex justify-between items-baseline mt-2 pt-3.5 border-t border-[var(--bd)]">
+            <div className="flex justify-between items-baseline mt-2 pt-3.5 border-t border-(--bd)">
               <span className="text-[12px] tracking-[1px] uppercase text-muted">Total</span>
-              <span className="font-display font-black text-[26px] text-[var(--gold)]">${fmt(orderTotal(detail))}</span>
+              <span className="font-display font-black text-[26px] text-(--gold)">${fmt(orderTotal(detail))}</span>
             </div>
           </DrawerSection>
           <DrawerSection title="Cambiar estado">
