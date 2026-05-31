@@ -1,46 +1,49 @@
-﻿'use client'
+'use client'
 
+import { useEffect } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { toast } from 'sonner'
+import { LayoutGrid, X } from 'lucide-react'
 import { Button } from '@/shared/components/ui/Button'
 import { useStore } from '@/shared/lib/store-context'
-import { LayoutGrid, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import {
+  loginSchema, registerSchema,
+  type LoginInput, type RegisterInput,
+} from '@/shared/lib/schemas'
+
+type FormValues = LoginInput & Partial<Pick<RegisterInput, 'name' | 'confirm'>>
+
+const inputCls = 'adm-input'
+const labelCls = 'text-[10px] tracking-[2px] uppercase text-muted mb-1.5 block'
 
 export function AuthModal() {
   const { authOpen, authMode, closeAuth, authenticate, openAuth } = useStore()
-  const [mode, setMode] = useState<'login' | 'register'>(authMode)
-  const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' })
-  const [err, setErr] = useState('')
+  const mode = authMode
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(mode === 'login' ? loginSchema : registerSchema),
+    defaultValues: { name: '', email: '', password: '', confirm: '' },
+  })
+
+  // Reset errores al cambiar de tab
+  useEffect(() => { form.clearErrors() }, [mode, form])
 
   useEffect(() => {
-    setMode(authMode)
-  }, [authMode])
-  useEffect(() => {
-    const h = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeAuth()
-    }
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') closeAuth() }
     if (authOpen) window.addEventListener('keydown', h)
     return () => window.removeEventListener('keydown', h)
   }, [authOpen, closeAuth])
 
   if (!authOpen) return null
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setErr('')
-    if (!form.email || !form.password) {
-      setErr('Completa todos los campos')
-      return
-    }
-    if (mode === 'register' && form.password !== form.confirm) {
-      setErr('Las contraseñas no coinciden')
-      return
-    }
-    authenticate({ name: form.name || form.email.split('@')[0], email: form.email })
-  }
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = form
 
-  const I = ({ label }: { label: string }) => (
-    <label className="text-[10px] tracking-[2px] uppercase text-muted mb-1.5 block">{label}</label>
-  )
+  const onSubmit = (data: FormValues) => {
+    authenticate({ name: data.name || data.email.split('@')[0], email: data.email })
+    toast.success(mode === 'login' ? 'Sesión iniciada' : 'Cuenta creada')
+    closeAuth()
+  }
 
   return (
     <div
@@ -55,6 +58,7 @@ export function AuthModal() {
           <X size={16} />
         </Button>
 
+        {/* Tabs */}
         <div className="flex border border-(--bd) mb-7">
           {(['login', 'register'] as const).map((m) => (
             <Button
@@ -62,11 +66,7 @@ export function AuthModal() {
               variant="tab"
               size="md"
               active={mode === m}
-              onClick={() => {
-                setMode(m)
-                setErr('')
-                openAuth(m)
-              }}
+              onClick={() => { form.reset(); openAuth(m) }}
               className="flex-1"
             >
               {m === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
@@ -83,51 +83,35 @@ export function AuthModal() {
             : 'Crea una cuenta y desbloquea ofertas exclusivas'}
         </div>
 
-        <form onSubmit={submit}>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
           {mode === 'register' && (
             <div className="mb-3.5">
-              <I label="Nombre completo" />
-              <input
-                className="adm-input"
-                placeholder="Tu nombre"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-              />
+              <label className={labelCls}>Nombre completo</label>
+              <input {...register('name')} className={inputCls} placeholder="Tu nombre" />
+              {errors.name && <p className="mt-1 text-[11px] text-[#ff6644]">{errors.name.message}</p>}
             </div>
           )}
+
           <div className="mb-3.5">
-            <I label="Correo electrónico" />
-            <input
-              type="email"
-              className="adm-input"
-              placeholder="tucorreo@ejemplo.com"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-            />
+            <label className={labelCls}>Correo electrónico</label>
+            <input {...register('email')} type="email" className={inputCls} placeholder="tucorreo@ejemplo.com" />
+            {errors.email && <p className="mt-1 text-[11px] text-[#ff6644]">{errors.email.message}</p>}
           </div>
+
           <div className="mb-3.5">
-            <I label="Contraseña" />
-            <input
-              type="password"
-              className="adm-input"
-              placeholder="••••••••"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-            />
+            <label className={labelCls}>Contraseña</label>
+            <input {...register('password')} type="password" className={inputCls} placeholder="••••••••" />
+            {errors.password && <p className="mt-1 text-[11px] text-[#ff6644]">{errors.password.message}</p>}
           </div>
+
           {mode === 'register' && (
             <div className="mb-3.5">
-              <I label="Confirmar contraseña" />
-              <input
-                type="password"
-                className="adm-input"
-                placeholder="••••••••"
-                value={form.confirm}
-                onChange={(e) => setForm({ ...form, confirm: e.target.value })}
-              />
+              <label className={labelCls}>Confirmar contraseña</label>
+              <input {...register('confirm')} type="password" className={inputCls} placeholder="••••••••" />
+              {errors.confirm && <p className="mt-1 text-[11px] text-[#ff6644]">{errors.confirm.message}</p>}
             </div>
           )}
-          {err && <div className="text-[#ff6644] text-[12px] mb-2.5">{err}</div>}
+
           <div className="flex justify-between items-center text-[12px] text-muted my-1.5 mb-4.5">
             {mode === 'login' ? (
               <>
@@ -142,7 +126,8 @@ export function AuthModal() {
               </span>
             )}
           </div>
-          <Button type="submit" variant="accent" size="lg" full>
+
+          <Button type="submit" variant="accent" size="lg" full disabled={isSubmitting}>
             {mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
           </Button>
         </form>
@@ -156,26 +141,14 @@ export function AuthModal() {
           <Button
             variant="outline"
             size="md"
-            onClick={() => authenticate({ name: 'Usuario Google', email: 'demo@gmail.com' })}
+            onClick={() => { authenticate({ name: 'Usuario Google', email: 'demo@gmail.com' }); toast.success('Sesión iniciada con Google'); closeAuth() }}
             className="flex-1"
           >
             <svg width="15" height="15" viewBox="0 0 24 24">
-              <path
-                fill="#4285F4"
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-              />
-              <path
-                fill="#34A853"
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-              />
-              <path
-                fill="#EA4335"
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-              />
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
             </svg>
             Google
           </Button>
@@ -183,7 +156,7 @@ export function AuthModal() {
           <Button
             variant="outline"
             size="md"
-            onClick={() => authenticate({ name: 'Admin Mirana', email: 'admin@mirana.com' })}
+            onClick={() => { authenticate({ name: 'Admin Mirana', email: 'admin@mirana.com' }); toast.success('Demo admin activado'); closeAuth() }}
             className="flex-1"
           >
             <LayoutGrid size={14} />

@@ -60,6 +60,15 @@ enum InventoryStockType {
   PREORDER
 }
 
+enum PreorderStatus {
+  PENDING    // Reserva creada, pendiente de depósito
+  CONFIRMED  // Depósito recibido y confirmado
+  READY      // Producto en stock, listo para cobrar saldo
+  CONVERTED  // Convertida en Order final
+  CANCELLED
+  EXPIRED
+}
+
 // ---------------------------------------------------------------------------
 // Auth.js / NextAuth models
 // ---------------------------------------------------------------------------
@@ -74,9 +83,10 @@ model User {
   role          Role      @default(CUSTOMER)
 
   profile  Profile?
-  accounts Account[]
-  sessions Session[]
-  orders   Order[]
+  accounts  Account[]
+  sessions  Session[]
+  orders    Order[]
+  preorders Preorder[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -191,6 +201,7 @@ model Product {
   inventory  ProductInventory?
   orderItems OrderItem[]
   movements  InventoryMovement[]
+  preorders  Preorder[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -210,6 +221,7 @@ model ProductInventory {
 
   availableStock    Int  @default(0)
   reservedStock     Int  @default(0)
+  preorderedStock   Int  @default(0)
   lowStockThreshold Int?
   /// Optimistic locking — se incrementa en cada actualización de stock
   version           Int  @default(0)
@@ -255,6 +267,7 @@ model Order {
   payment  Payment?
   shipping ShippingAddress?
   movements InventoryMovement[]
+  preorder  Preorder?
 
   notes String? @db.Text
 
@@ -344,6 +357,91 @@ model InventoryMovement {
   @@index([productId, createdAt])
   @@index([type])
   @@index([orderId])
+}
+
+// ---------------------------------------------------------------------------
+// Preorders
+// ---------------------------------------------------------------------------
+
+model Preorder {
+  id         String  @id @default(cuid())
+  /// Código legible para el cliente, ej: PRE-2025-0001
+  code       String  @unique
+  userId     String?
+  user       User?   @relation(fields: [userId], references: [id])
+  guestEmail String?
+  productId  String
+  product    Product @relation(fields: [productId], references: [id])
+
+  quantity        Int
+  unitPrice       Decimal @db.Decimal(10, 2)
+  depositAmount   Decimal @db.Decimal(10, 2)
+  remainingAmount Decimal @db.Decimal(10, 2)
+  currency        String  @default("PEN")
+
+  status           PreorderStatus @default(PENDING)
+  estimatedArrival DateTime?
+  /// Si no paga el depósito en X días, la reserva expira
+  expiresAt        DateTime?
+
+  /// Pago del depósito (puede ser transferencia o Culqi)
+  depositStatus        PaymentStatus  @default(UNPAID)
+  depositMethod        PaymentMethod?
+  depositPaidAt        DateTime?
+  depositProofUrl      String?
+  /// Idempotencia Culqi para el depósito
+  depositCulqiChargeId String?        @unique
+
+  /// Cuando la reserva se convierte en pedido final
+  orderId String? @unique
+  order   Order?  @relation(fields: [orderId], references: [id])
+
+  notes String? @db.Text
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  confirmedAt DateTime?
+  cancelledAt DateTime?
+  convertedAt DateTime?
+
+  @@index([userId])
+  @@index([productId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Payments — Idempotency
+// ---------------------------------------------------------------------------
+
+/// Garantiza que un pago no se procese dos veces aunque el cliente reintente.
+/// El frontend genera un UUID por intento de pago y lo envía como header X-Idempotency-Key.
+model IdempotencyKey {
+  id       String  @id @default(cuid())
+  /// UUID generado por el cliente — clave de deduplicación
+  key      String  @unique
+  userId   String?
+  /// Endpoint o acción que se está protegiendo, ej: "checkout", "preorder.deposit"
+  endpoint String
+
+  /// Hash del body de la request — detecta reutilización incorrecta de la misma key con distinto payload
+  requestHash String?
+
+  /// Resultado cacheado de la operación
+  statusCode Int?
+  response   Json?
+
+  /// lockedAt: procesando. resolvedAt: completado. Ambos null: nueva.
+  lockedAt   DateTime?
+  resolvedAt DateTime?
+
+  /// Después de esta fecha la key puede reutilizarse (recomendado: 24h)
+  expiresAt DateTime
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 // ---------------------------------------------------------------------------

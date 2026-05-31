@@ -10,6 +10,7 @@ interface AdminState {
   banners:         Banner[];
   saveProduct:     (p: Product) => void;
   deleteProduct:   (id: number) => void;
+  importProducts:  (items: Omit<Product, "id" | "badge" | "rating" | "reviews" | "isNew">[]) => void;
   setOrderStatus:  (id: string, status: string) => void;
   saveBanner:      (b: Banner) => void;
   toggleBanner:    (id: number) => void;
@@ -29,6 +30,23 @@ export const useAdminStore = create<AdminState>((set) => ({
 
   deleteProduct: (id) =>
     set((s) => ({ products: s.products.filter((p) => p.id !== id) })),
+
+  importProducts: (items) =>
+    set((s) => {
+      const nextId = Math.max(0, ...s.products.map((p) => p.id)) + 1;
+      const incoming = items.map((item, i) => ({
+        ...item,
+        id:      nextId + i,
+        badge:   null,
+        rating:  0,
+        reviews: 0,
+        isNew:   true,
+      }));
+      // SKUs duplicados se actualizan en lugar de duplicarse
+      const skuMap = new Map(s.products.map((p) => [p.sku, p]));
+      incoming.forEach((p) => skuMap.set(p.sku, { ...skuMap.get(p.sku), ...p } as Product));
+      return { products: Array.from(skuMap.values()) };
+    }),
 
   setOrderStatus: (id, status) =>
     set((s) => ({

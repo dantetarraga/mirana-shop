@@ -12,6 +12,7 @@ export interface Product {
   stock: number;
   sku: string;
   desc: string;
+  brand?: string;
 }
 
 export const CAT_LABELS: Record<ProductCategory, string> = {
