@@ -174,20 +174,25 @@ export default function DashboardPage() {
                   <stop offset="100%" stopColor="#58aaff" stopOpacity={0.02} />
                 </linearGradient>
               </defs>
+
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(80,150,255,.1)" />
+
               <XAxis
                 dataKey="m"
                 tick={{ fill: 'rgba(240,238,232,.42)', fontSize: 10, fontFamily: 'monospace' }}
                 axisLine={false}
                 tickLine={false}
               />
+
               <YAxis
                 tick={{ fill: 'rgba(240,238,232,.42)', fontSize: 10, fontFamily: 'monospace' }}
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={(v) => `$${v}K`}
               />
+
               <Tooltip content={ChartTooltip} />
+
               <Area
                 type="monotone"
                 dataKey="v"
