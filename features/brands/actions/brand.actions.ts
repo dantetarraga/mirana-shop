@@ -41,8 +41,8 @@ function invalidateBrandCaches() {
   revalidatePath("/admin/brands");
   revalidatePath("/admin/products");
   revalidatePath("/admin/dashboard");
-  revalidateTag("brands", "layout");
-  revalidateTag("catalog", "layout");
+  revalidateTag("brands");
+  revalidateTag("catalog");
 }
 
 // ---------------------------------------------------------------------------

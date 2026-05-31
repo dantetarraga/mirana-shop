@@ -36,12 +36,17 @@ export type ProductDetail = ProductListItem & {
   updatedAt: Date;
 };
 
+export type StockFilter = "all" | "low" | "out";
+
+const LOW_STOCK_THRESHOLD = 8;
+
 export type ProductFilters = {
   categorySlug?: string;
   brandSlug?: string;
   search?: string;
   featured?: boolean;
   status?: ProductStatus;
+  stockFilter?: StockFilter;
   take?: number;
   skip?: number;
 };
@@ -110,9 +115,17 @@ export const productRepo = {
       search,
       featured,
       status = "AVAILABLE",
+      stockFilter,
       take = 50,
       skip = 0,
     } = filters;
+
+    const inventoryWhere =
+      stockFilter === "low"
+        ? { inventory: { availableStock: { gt: 0, lte: LOW_STOCK_THRESHOLD } } }
+        : stockFilter === "out"
+        ? { inventory: { availableStock: 0 } }
+        : {};
 
     return db.product.findMany({
       where: {
@@ -122,6 +135,7 @@ export const productRepo = {
         category: categorySlug ? { slug: categorySlug } : undefined,
         brand: brandSlug ? { slug: brandSlug } : undefined,
         name: search ? { contains: search, mode: "insensitive" } : undefined,
+        ...inventoryWhere,
       },
       select: listSelect,
       orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
@@ -163,7 +177,13 @@ export const productRepo = {
   },
 
   async count(filters: Omit<ProductFilters, "take" | "skip"> = {}): Promise<number> {
-    const { categorySlug, brandSlug, search, featured, status = "AVAILABLE" } = filters;
+    const { categorySlug, brandSlug, search, featured, status = "AVAILABLE", stockFilter } = filters;
+    const inventoryWhere =
+      stockFilter === "low"
+        ? { inventory: { availableStock: { gt: 0, lte: LOW_STOCK_THRESHOLD } } }
+        : stockFilter === "out"
+        ? { inventory: { availableStock: 0 } }
+        : {};
     return db.product.count({
       where: {
         deletedAt: null,
@@ -171,6 +191,7 @@ export const productRepo = {
         featured: featured ?? undefined,
         category: categorySlug ? { slug: categorySlug } : undefined,
         brand: brandSlug ? { slug: brandSlug } : undefined,
+        ...inventoryWhere,
         name: search ? { contains: search, mode: "insensitive" } : undefined,
       },
     });

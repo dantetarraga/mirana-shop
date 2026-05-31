@@ -34,6 +34,10 @@ export function Button({
         full && 'ui-btn--full',
         clip && 'ui-btn--clip',
         destructive && 'ui-btn--destructive',
+        // Tailwind utilities (@layer utilities) tienen mayor especificidad
+        // que @layer components — garantiza que el icono siempre sea visible
+        variant === 'icon' && !destructive && 'text-white/70 hover:text-white',
+        variant === 'icon' && destructive && 'text-white/70',
         className,
       )}
       {...props}

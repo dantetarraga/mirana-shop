@@ -239,17 +239,20 @@
     border-color: var(--gold);
   }
 
-  /* icon: cuadrado, solo borde */
-  .ui-btn--icon {
+  /* icon: especificidad 0,2,0 — gana a .ui-btn {border:none} que tiene 0,1,0 */
+  .ui-btn.ui-btn--icon {
     background: transparent;
-    border: 1px solid var(--bd);
-    color: var(--mt);
+    border: 1px solid rgba(80, 150, 255, 0.25);
     padding: 0;
   }
-  .ui-btn--icon:hover:not(:disabled) { color: var(--text); border-color: var(--mt); }
-  .ui-btn--icon.ui-btn--destructive:hover:not(:disabled) {
+  .ui-btn.ui-btn--icon:hover:not(:disabled) {
+    border-color: rgba(80, 150, 255, 0.55);
+    background: rgba(80, 150, 255, 0.07);
+  }
+  .ui-btn.ui-btn--icon.ui-btn--destructive:hover:not(:disabled) {
     color: #ff6644;
-    border-color: #ff6644;
+    border-color: rgba(255, 102, 68, 0.55);
+    background: rgba(255, 102, 68, 0.07);
   }
 
   /* ── Tamaños (no aplica a icon — tiene su propia lógica) ── */

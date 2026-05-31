@@ -41,8 +41,8 @@ function invalidateCategoryCaches() {
   revalidatePath("/admin/categories");
   revalidatePath("/admin/products");
   revalidatePath("/admin/dashboard");
-  revalidateTag("categories", "layout");
-  revalidateTag("catalog", "layout");
+  revalidateTag("categories");
+  revalidateTag("catalog");
 }
 
 // ---------------------------------------------------------------------------

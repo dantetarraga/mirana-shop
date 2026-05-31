@@ -46,8 +46,18 @@ export type OrderDetail = OrderListItem & {
   cancelledAt: Date | null;
 };
 
+export type OrderStatusGroup = "pendiente" | "enviado" | "entregado" | "cancelado";
+
+const STATUS_GROUP_MAP: Record<OrderStatusGroup, OrderStatus[]> = {
+  pendiente:  ["PENDING", "AWAITING_PROOF", "PAID", "PREPARING"],
+  enviado:    ["SHIPPED"],
+  entregado:  ["DELIVERED"],
+  cancelado:  ["CANCELLED", "REFUNDED"],
+};
+
 export type OrderFilters = {
   status?: OrderStatus;
+  statusGroup?: OrderStatusGroup;
   paymentStatus?: PaymentStatus;
   search?: string;
   take?: number;
@@ -107,11 +117,17 @@ const detailSelect = {
 
 export const orderRepo = {
   async findMany(filters: OrderFilters = {}): Promise<OrderListItem[]> {
-    const { status, paymentStatus, search, take = 50, skip = 0 } = filters;
+    const { status, statusGroup, paymentStatus, search, take = 50, skip = 0 } = filters;
+
+    const statusFilter = statusGroup
+      ? { status: { in: STATUS_GROUP_MAP[statusGroup] } }
+      : status
+      ? { status }
+      : {};
 
     return db.order.findMany({
       where: {
-        status: status ?? undefined,
+        ...statusFilter,
         paymentStatus: paymentStatus ?? undefined,
         OR: search
           ? [
@@ -145,10 +161,17 @@ export const orderRepo = {
   },
 
   async count(filters: Omit<OrderFilters, "take" | "skip"> = {}): Promise<number> {
-    const { status, paymentStatus, search } = filters;
+    const { status, statusGroup, paymentStatus, search } = filters;
+
+    const statusFilter = statusGroup
+      ? { status: { in: STATUS_GROUP_MAP[statusGroup] } }
+      : status
+      ? { status }
+      : {};
+
     return db.order.count({
       where: {
-        status: status ?? undefined,
+        ...statusFilter,
         paymentStatus: paymentStatus ?? undefined,
         OR: search
           ? [

@@ -1,52 +1,51 @@
-"use client";
+'use client'
 
-import { useState, useTransition } from "react";
-import { toast } from "sonner";
-import { Plus, Pencil, Trash2 } from "lucide-react";
-import { AdminTable, type Column } from "@/shared/components/AdminTable";
-import { Button } from "@/shared/components/ui/Button";
-import { PanelHeader } from "@/shared/components/PanelHeader";
-import { CategoryCrudDrawer } from "@/features/categories/components/CategoryCrudDrawer";
-import { deleteCategory } from "@/features/categories/actions/category.actions";
-import { cls } from "@/shared/lib/admin-classes";
-import type { CategoryRow } from "@/modules/catalog/repositories/category.repo";
+import { deleteCategory } from '@/features/categories/actions/category.actions'
+import { CategoryCrudDrawer } from '@/features/categories/components/CategoryCrudDrawer'
+import type { CategoryRow } from '@/modules/catalog/repositories/category.repo'
+import { AdminTable, type Column } from '@/shared/components/AdminTable'
+import { PanelHeader } from '@/shared/components/PanelHeader'
+import { Button } from '@/shared/components/ui/Button'
+import { cls } from '@/shared/lib/admin-classes'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { useState, useTransition } from 'react'
+import { toast } from 'sonner'
 
 interface CategoriesTableClientProps {
-  categories: CategoryRow[];
-  total: number;
+  categories: CategoryRow[]
+  total: number
 }
 
 export function CategoriesTableClient({ categories, total }: CategoriesTableClientProps) {
-  const [editingCategory, setEditingCategory] = useState<CategoryRow | null>(null);
-  const [isNew, setIsNew] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [editingCategory, setEditingCategory] = useState<CategoryRow | null>(null)
+  const [isNew, setIsNew] = useState(false)
+  const [isPending, startTransition] = useTransition()
 
-  const drawerOpen = isNew || editingCategory !== null;
+  const drawerOpen = isNew || editingCategory !== null
 
   const closeDrawer = () => {
-    setEditingCategory(null);
-    setIsNew(false);
-  };
+    setEditingCategory(null)
+    setIsNew(false)
+  }
 
   const handleDelete = (category: CategoryRow) => {
-    if (!confirm(`¿Eliminar la categoría "${category.name}"?`)) return;
+    if (!confirm(`¿Eliminar la categoría "${category.name}"?`)) return
     startTransition(async () => {
-      const result = await deleteCategory(category.id);
+      const result = await deleteCategory(category.id)
       if (result.success) {
-        toast.success(`"${category.name}" eliminada`);
-        window.location.reload();
+        toast.success(`"${category.name}" eliminada`)
+        window.location.reload()
       } else {
-        toast.error(result.error);
+        toast.error(result.error)
       }
-    });
-  };
+    })
+  }
 
-  // Mapa id -> nombre para mostrar padre
-  const nameById = Object.fromEntries(categories.map((c) => [c.id, c.name]));
+  const nameById = Object.fromEntries(categories.map((c) => [c.id, c.name]))
 
   const columns: Column<CategoryRow>[] = [
     {
-      header: "Categoría",
+      header: 'Categoría',
       render: (c) => (
         <div className="flex items-center gap-3">
           {c.imageUrl ? (
@@ -68,37 +67,38 @@ export function CategoriesTableClient({ categories, total }: CategoriesTableClie
       ),
     },
     {
-      header: "Padre",
+      header: 'Padre',
       render: (c) => (
         <span className="text-[13px] text-muted">
-          {c.parentId ? (nameById[c.parentId] ?? "—") : "—"}
+          {c.parentId ? (nameById[c.parentId] ?? '—') : '—'}
         </span>
       ),
     },
     {
-      header: "Descripción",
+      header: 'Descripción',
       render: (c) => (
-        <span className="text-[13px] text-muted line-clamp-1 max-w-xs">
-          {c.description ?? "—"}
-        </span>
+        <span className="text-[13px] text-muted line-clamp-1 max-w-xs">{c.description ?? '—'}</span>
       ),
     },
     {
-      header: "Productos",
-      headerClassName: "text-right",
-      className: "text-right",
+      header: 'Productos',
+      headerClassName: 'text-right',
+      className: 'text-right',
       render: (c) => <span className={cls.val}>{c.productCount}</span>,
     },
     {
-      header: "Acciones",
-      headerClassName: "text-right",
-      className: "text-right",
+      header: 'Acciones',
+      headerClassName: 'text-right',
+      className: 'text-right',
       render: (c) => (
         <div className="flex gap-1.5 justify-end">
           <Button
             variant="icon"
             size="sm"
-            onClick={() => { setIsNew(false); setEditingCategory(c); }}
+            onClick={() => {
+              setIsNew(false)
+              setEditingCategory(c)
+            }}
             title="Editar"
           >
             <Pencil size={14} />
@@ -116,19 +116,22 @@ export function CategoriesTableClient({ categories, total }: CategoriesTableClie
         </div>
       ),
     },
-  ];
+  ]
 
   return (
     <div className="px-8 pt-7 pb-12">
       <PanelHeader
         label="Catálogo"
-        title={`${total} categoría${total !== 1 ? "s" : ""}`}
+        title={`${total} categoría${total !== 1 ? 's' : ''}`}
         align="center"
         side={
           <Button
             variant="accent"
             size="md"
-            onClick={() => { setEditingCategory(null); setIsNew(true); }}
+            onClick={() => {
+              setEditingCategory(null)
+              setIsNew(true)
+            }}
           >
             <Plus size={15} className="mr-2" /> Nueva categoría
           </Button>
@@ -136,15 +139,9 @@ export function CategoriesTableClient({ categories, total }: CategoriesTableClie
       />
 
       {categories.length === 0 ? (
-        <div className="text-center py-16 text-muted text-sm">
-          No se encontraron categorías.
-        </div>
+        <div className="text-center py-16 text-muted text-sm">No se encontraron categorías.</div>
       ) : (
-        <AdminTable
-          columns={columns}
-          data={categories}
-          keyExtractor={(c) => c.id}
-        />
+        <AdminTable columns={columns} data={categories} keyExtractor={(c) => c.id} />
       )}
 
       {drawerOpen && (
@@ -156,5 +153,5 @@ export function CategoriesTableClient({ categories, total }: CategoriesTableClie
         />
       )}
     </div>
-  );
+  )
 }

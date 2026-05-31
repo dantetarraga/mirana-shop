@@ -35,8 +35,8 @@ function invalidateProductCaches() {
   revalidatePath("/admin/dashboard");
   revalidatePath("/catalogo");
   revalidatePath("/");
-  revalidateTag("products", "layout");
-  revalidateTag("catalog", "layout");
+  revalidateTag("products");
+  revalidateTag("catalog");
 }
 
 // ---------------------------------------------------------------------------

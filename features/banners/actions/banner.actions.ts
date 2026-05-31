@@ -16,7 +16,7 @@ function invalidateBannerCaches() {
   revalidatePath("/admin/banners");
   revalidatePath("/admin/dashboard");
   revalidatePath("/");
-  revalidateTag("banners", "layout");
+  revalidateTag("banners");
 }
 
 // ---------------------------------------------------------------------------

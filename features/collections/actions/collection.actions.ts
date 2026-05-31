@@ -41,8 +41,8 @@ function invalidateCollectionCaches() {
   revalidatePath("/admin/collections");
   revalidatePath("/admin/dashboard");
   revalidatePath("/");
-  revalidateTag("collections", "layout");
-  revalidateTag("catalog", "layout");
+  revalidateTag("collections");
+  revalidateTag("catalog");
 }
 
 // ---------------------------------------------------------------------------

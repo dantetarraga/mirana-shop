@@ -97,7 +97,11 @@ export const bannerDbSchema = z.object({
   title:    z.string().min(1, "Título requerido"),
   subtitle: z.string().optional().default(""),
   ctaLabel: z.string().optional().default(""),
-  ctaHref:  z.string().url("URL inválida").optional().or(z.literal("")),
+  ctaHref:  z.union([
+    z.string().url("URL inválida"),   // URL absoluta: https://...
+    z.string().startsWith("/"),        // Ruta interna: /catalogo, /productos/...
+    z.literal(""),
+  ]).optional(),
   imageUrl: z.string().url("URL de imagen requerida"),
   position: z.number().int().min(0).default(0),
   active:   z.boolean().default(false),
