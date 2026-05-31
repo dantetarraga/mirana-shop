@@ -152,10 +152,12 @@ model VerificationToken {
 // ---------------------------------------------------------------------------
 
 model Category {
-  id       String  @id @default(cuid())
-  name     String  @unique
-  slug     String  @unique
-  parentId String?
+  id          String  @id @default(cuid())
+  name        String  @unique
+  slug        String  @unique
+  parentId    String?
+  description String? @db.Text
+  imageUrl    String?
 
   parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
   children Category[] @relation("CategoryTree")
@@ -168,10 +170,12 @@ model Category {
 }
 
 model Brand {
-  id      String  @id @default(cuid())
-  name    String  @unique
-  slug    String  @unique
-  logoUrl String?
+  id          String  @id @default(cuid())
+  name        String  @unique
+  slug        String  @unique
+  logoUrl     String?
+  description String? @db.Text
+  imageUrl    String?
 
   products Product[]
 
@@ -189,19 +193,21 @@ model Product {
   description    String        @db.Text
   price          Decimal       @db.Decimal(10, 2)
   compareAtPrice Decimal?      @db.Decimal(10, 2)
+  salePrice      Decimal?      @db.Decimal(10, 2)
   currency       String        @default("PEN")
   status         ProductStatus @default(AVAILABLE)
   featured       Boolean       @default(false)
   categoryId     String
   brandId        String
 
-  category   Category          @relation(fields: [categoryId], references: [id])
-  brand      Brand             @relation(fields: [brandId], references: [id])
-  images     ProductImage[]
-  inventory  ProductInventory?
-  orderItems OrderItem[]
-  movements  InventoryMovement[]
-  preorders  Preorder[]
+  category    Category           @relation(fields: [categoryId], references: [id])
+  brand       Brand              @relation(fields: [brandId], references: [id])
+  images      ProductImage[]
+  inventory   ProductInventory?
+  orderItems  OrderItem[]
+  movements   InventoryMovement[]
+  preorders   Preorder[]
+  collections ProductCollection[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -442,6 +448,39 @@ model IdempotencyKey {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+// ---------------------------------------------------------------------------
+// Collections
+// ---------------------------------------------------------------------------
+
+model Collection {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  slug        String  @unique
+  description String? @db.Text
+  imageUrl    String?
+  active      Boolean @default(true)
+
+  products ProductCollection[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([slug])
+  @@index([active])
+}
+
+model ProductCollection {
+  productId    String
+  collectionId String
+
+  product    Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@id([productId, collectionId])
+  @@index([collectionId])
 }
 
 // ---------------------------------------------------------------------------

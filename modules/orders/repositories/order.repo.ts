@@ -1,5 +1,5 @@
 import { db } from "@/shared/lib/db";
-import type { OrderStatus, PaymentStatus } from "../../../generated/prisma";
+import type { OrderStatus, PaymentStatus } from "../generated/prisma/client";
 import type { Decimal } from "../../../generated/prisma/runtime/library";
 
 // ---------------------------------------------------------------------------

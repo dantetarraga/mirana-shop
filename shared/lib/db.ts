@@ -1,22 +1,18 @@
-import { PrismaClient } from "../../generated/prisma";
+import { PrismaClient } from "../../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { Pool } from "pg";
 
 // ---------------------------------------------------------------------------
-// Singleton de PrismaClient para Next.js
-// En desarrollo, hot-reload crea múltiples instancias si no usamos el global.
-// En producción el módulo se carga una sola vez, así que el global no importa.
+// Singleton de PrismaClient para Next.js.
+// En dev, hot-reload recrea módulos — el globalThis evita múltiples instancias.
+// En producción el módulo se evalúa una sola vez, el global no importa.
+// Patrón oficial: https://www.prisma.io/docs/orm/more/help-and-troubleshooting/nextjs-help
 // ---------------------------------------------------------------------------
 
 function createPrismaClient() {
   const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error("DATABASE_URL no está definida en las variables de entorno");
-  }
+  if (!connectionString) throw new Error("DATABASE_URL no definida");
 
-  const pool = new Pool({ connectionString });
-  const adapter = new PrismaPg(pool);
-
+  const adapter = new PrismaPg({ connectionString });
   return new PrismaClient({ adapter });
 }
 
@@ -25,8 +21,7 @@ declare global {
   var __prisma: ReturnType<typeof createPrismaClient> | undefined;
 }
 
-export const db =
-  globalThis.__prisma ?? createPrismaClient();
+export const db = globalThis.__prisma ?? createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") {
   globalThis.__prisma = db;

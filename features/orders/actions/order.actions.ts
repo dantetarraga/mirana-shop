@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { orderRepo } from "@/modules/orders/repositories/order.repo";
 import { updateOrderStatusSchema } from "@/shared/lib/schemas";
-import type { OrderStatus } from "../../../generated/prisma";
+import type { OrderStatus } from "../generated/prisma/client";
 
 // ---------------------------------------------------------------------------
 // Tipos
@@ -20,7 +20,7 @@ type ActionResult<T = void> =
 export async function updateOrderStatus(rawInput: unknown): Promise<ActionResult<{ id: string; status: string }>> {
   const parsed = updateOrderStatusSchema.safeParse(rawInput);
   if (!parsed.success) {
-    const firstError = parsed.error.errors[0]?.message ?? "Datos inválidos";
+    const firstError = parsed.error.issues[0]?.message ?? "Datos inválidos";
     return { success: false, error: firstError };
   }
 

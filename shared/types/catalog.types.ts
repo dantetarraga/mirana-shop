@@ -2,7 +2,7 @@
 // Tipos de dominio del catálogo público — compatibles con la UI del storefront
 // ---------------------------------------------------------------------------
 
-import type { ProductStatus } from "../../generated/prisma";
+import type { ProductStatus } from "../generated/prisma/client";
 
 /**
  * Producto normalizado para componentes de UI del storefront.

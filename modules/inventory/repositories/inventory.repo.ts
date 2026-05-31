@@ -1,5 +1,5 @@
 import { db } from "@/shared/lib/db";
-import type { InventoryMovementType, InventoryStockType } from "../../../generated/prisma";
+import type { InventoryMovementType, InventoryStockType } from "../generated/prisma/client";
 
 // ---------------------------------------------------------------------------
 // InventoryRepo — gestión de stock con optimistic locking
