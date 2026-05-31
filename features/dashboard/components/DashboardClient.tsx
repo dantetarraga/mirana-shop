@@ -20,13 +20,28 @@ import { PanelHeader } from "@/shared/components/PanelHeader";
 import { cls } from "@/shared/lib/admin-classes";
 import { fmt } from "@/shared/lib/admin-constants";
 import { cn } from "@/shared/lib/utils";
-import {
-  SALES_DATA,
-  ORDERS_DAILY,
-  CATEGORY_PIE,
-  PIE_COLORS,
-  SPARK,
-} from "@/shared/lib/admin-data";
+// Datos estáticos de los gráficos del dashboard (placeholder hasta tener analytics real)
+const SALES_DATA = [
+  { m: "Jun", v: 38.2 }, { m: "Jul", v: 42.5 }, { m: "Ago", v: 39.8 }, { m: "Sep", v: 47.1 },
+  { m: "Oct", v: 52.3 }, { m: "Nov", v: 68.9 }, { m: "Dic", v: 84.2 }, { m: "Ene", v: 51.4 },
+  { m: "Feb", v: 49.7 }, { m: "Mar", v: 58.3 }, { m: "Abr", v: 62.1 }, { m: "May", v: 71.6 },
+];
+const ORDERS_DAILY = Array.from({ length: 14 }, (_, i) => ({
+  d: `D${i + 1}`,
+  v: [12, 15, 9, 18, 22, 17, 25, 21, 19, 28, 24, 31, 27, 34][i],
+}));
+const CATEGORY_PIE = [
+  { name: "Anime & Figuras", value: 54 },
+  { name: "LEGO",            value: 31 },
+  { name: "Modelos Escala",  value: 15 },
+];
+const PIE_COLORS = ["#58aaff", "#5f9eff", "#7b5fff"];
+const SPARK = {
+  revenue: [42, 45, 41, 48, 52, 49, 58, 55, 62, 68, 64, 71, 69, 72],
+  orders:  [8,  9,  7,  11, 13, 10, 15, 14, 12, 18, 16, 21, 19, 24],
+  users:   [2,  3,  2,  4,  3,  5,  4,  6,  5,  7,  6,  8,  9,  11],
+  ticket:  [95, 98, 92, 101,99, 105,110,108,115,112,118,121,119,124],
+};
 import type { ProductListItem } from "@/modules/catalog/repositories/product.repo";
 import type { OrderListItem } from "@/modules/orders/repositories/order.repo";
 

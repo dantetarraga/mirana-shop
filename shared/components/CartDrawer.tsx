@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { CAT_STRIPE } from '@/features/products/data/products'
+import { getCategoryStripe } from '@/shared/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
 import { useStore } from '@/shared/lib/store-context'
 import { Minus, Plus, X } from 'lucide-react'
@@ -53,7 +53,7 @@ export function CartDrawer() {
                 key={item.product.id}
                 className="flex gap-3.5 items-center pb-3.5 border-b border-(--bd)"
               >
-                <div className={`${CAT_STRIPE[item.product.cat]} w-17.5 h-17.5 shrink-0`} />
+                <div className={`${getCategoryStripe(item.product.category.slug)} w-17.5 h-17.5 shrink-0`} />
                 <div className="flex-1 min-w-0">
                   <div className="font-display text-[17px] font-extrabold uppercase whitespace-nowrap overflow-hidden text-ellipsis">
                     {item.product.name}

@@ -1,7 +1,4 @@
-﻿import type { Order } from "@/shared/types/admin-mock.types";
-
-export type Module = "dashboard" | "orders" | "products" | "inventory" | "banners" | "users";
-export type { Order };
+﻿export type Module = "dashboard" | "orders" | "products" | "inventory" | "banners" | "users";
 
 export const ORDER_STATUS: Record<string, { label: string; color: string; bg: string; cls: string; outlineCls: string; btnCls: string }> = {
   pendiente: { label: "Pendiente", color: "#ffb84a", bg: "rgba(255,184,74,.12)",  cls: "badge-amber", outlineCls: "badge-amber-outline", btnCls: "btn-status-amber" },
@@ -22,6 +19,5 @@ export const BANNER_STATUS: Record<string, { label: string; color: string; cls: 
   inactivo:   { label: "Inactivo",   color: "#ff6644", cls: "badge-red",   outlineCls: "badge-red-outline"   },
 };
 
-export const fmt      = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-export const orderTotal = (o: Order) => o.items.reduce((s, i) => s + i.price * i.qty, 0);
-export const fmtDate  = (d: string) => new Date(d + "T00:00").toLocaleDateString("es-PE", { day: "2-digit", month: "short" });
+export const fmt     = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+export const fmtDate = (d: string) => new Date(d + "T00:00").toLocaleDateString("es-PE", { day: "2-digit", month: "short" });

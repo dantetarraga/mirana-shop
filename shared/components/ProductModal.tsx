@@ -1,19 +1,10 @@
 ﻿'use client'
 
-import { CAT_LABELS, CAT_STRIPE } from '@/features/products/data/products'
+import { getCategoryStripe } from '@/shared/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
 import { useStore } from '@/shared/lib/store-context'
 import { Minus, Plus, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
-
-function Stars({ r }: { r: number }) {
-  return (
-    <span className="text-(--gold)">
-      {'★'.repeat(Math.floor(r))}
-      {'☆'.repeat(5 - Math.floor(r))}
-    </span>
-  )
-}
 
 export function ProductModal() {
   const { activeProduct: p, closeProductModal, addToCart } = useStore()
@@ -40,50 +31,31 @@ export function ProductModal() {
         className="bg-surf border border-(--bd) max-w-220 w-full max-h-[92vh] overflow-y-auto grid grid-cols-2 relative"
       >
         {/* Image */}
-        <div className={`${CAT_STRIPE[p.cat]} min-h-110 flex items-center justify-center relative`}>
-          <div className="font-mono text-[12px] tracking-[2px] text-muted uppercase">
-            {p.name.toUpperCase()}
-          </div>
-          <Button
-            variant="icon"
-            size="md"
-            onClick={closeProductModal}
-            className="absolute top-4 right-4 z-10"
-          >
+        <div className={`${getCategoryStripe(p.category.slug)} min-h-110 flex items-center justify-center relative`}>
+          {p.imageUrl ? (
+            <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover absolute inset-0" />
+          ) : (
+            <div className="font-mono text-[12px] tracking-[2px] text-muted uppercase">{p.name.toUpperCase()}</div>
+          )}
+          <Button variant="icon" size="md" onClick={closeProductModal} className="absolute top-4 right-4 z-10">
             <X size={16} />
           </Button>
-          {p.badge && (
-            <div className="absolute top-4 left-0 bg-(--gold) text-black text-[9px] font-extrabold tracking-[2px] uppercase px-2.5 py-1.25">
-              {p.badge}
-            </div>
-          )}
         </div>
 
         {/* Info */}
         <div className="p-11 flex flex-col gap-4.5">
           <div>
             <div className="text-[10px] tracking-[3px] uppercase text-muted">
-              {CAT_LABELS[p.cat]}
+              {p.category.name} · {p.brand.name}
             </div>
             <div className="font-display font-black uppercase leading-[0.95] tracking-[-1px] text-[clamp(32px,4vw,48px)]">
               {p.name}
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 text-[13px] text-muted">
-            <Stars r={p.rating} />{' '}
-            <span>
-              {p.rating} · {p.reviews} reseñas
-            </span>
-          </div>
-
           <div className="font-display text-[52px] font-black text-(--gold) leading-none">
-            ${p.price.toFixed(2)}
+            S/ {p.price.toFixed(2)}
           </div>
-
-          <p className="text-muted leading-[1.75] text-[14px] border-t border-(--bd) pt-4.5">
-            {p.desc}
-          </p>
 
           <div>
             <div className="text-[10px] tracking-[2px] uppercase text-muted mb-2.5">Cantidad</div>
