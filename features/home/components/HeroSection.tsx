@@ -1,7 +1,21 @@
-﻿export function HeroSection() {
+import type { BannerRow } from '@/modules/catalog/repositories/banner.repo'
+
+interface HeroSectionProps {
+  banner?: BannerRow | null
+}
+
+export function HeroSection({ banner }: HeroSectionProps) {
+  const title = banner?.title ?? 'Colecciona lo Extraordinario'
+  const subtitle =
+    banner?.subtitle ??
+    'Figuras de acción, sets LEGO y modelos a escala. Para coleccionistas que no se conforman con menos.'
+  const ctaLabel = banner?.ctaLabel ?? 'Ver Catálogo'
+  const ctaHref = banner?.ctaHref ?? '/catalogo'
+  const imageUrl = banner?.imageUrl ?? null
+
   return (
     <section className="min-h-screen relative overflow-hidden flex items-center px-12 pt-(--nh)">
-      {/* Neon background — doble radial-gradient complejo, no tiene equivalente en utilidades Tailwind */}
+      {/* Neon background */}
       <div
         className="absolute inset-0"
         style={{
@@ -22,19 +36,16 @@
         </div>
 
         <h1 className="font-display font-black uppercase mb-6 tracking-[-2px] leading-[0.9] text-[clamp(60px,8vw,108px)]">
-          Colecciona
-          <br />
-          lo <em className="not-italic block text-(--gold)">Extraordinario</em>
+          {title}
         </h1>
 
         <p className="text-[16px] max-w-100 leading-[1.75] mb-10 font-light text-muted">
-          Figuras de acción, sets LEGO y modelos a escala. Para coleccionistas que no se conforman
-          con menos.
+          {subtitle}
         </p>
 
         <div className="flex gap-3 flex-wrap">
-          <a href="/catalogo" className="btn-gold">
-            Ver Catálogo
+          <a href={ctaHref} className="btn-gold">
+            {ctaLabel}
           </a>
           <a href="/catalogo?cat=figures" className="btn-outline-mirana">
             Novedades →
@@ -57,12 +68,16 @@
         </div>
       </div>
 
-      {/* Visual placeholder */}
+      {/* Visual — imagen dentro del placeholder original, mismo tamaño */}
       <div className="absolute right-0 top-0 bottom-0 w-[42%] flex items-center justify-center pointer-events-none">
-        <div className="stripe-fig w-95 h-120 flex items-center justify-center flex-col gap-2.5 border border-(--bd)">
-          <span className="font-mono text-[11px] tracking-[2px] uppercase text-muted">
-            product shot
-          </span>
+        <div className="stripe-fig w-95 h-120 flex items-center justify-center flex-col gap-2.5 border border-(--bd) relative overflow-hidden">
+          {imageUrl ? (
+            <img src={imageUrl} alt={title} className="absolute inset-0 w-full h-full object-cover opacity-70" />
+          ) : (
+            <span className="font-mono text-[11px] tracking-[2px] uppercase text-muted">
+              product shot
+            </span>
+          )}
         </div>
       </div>
     </section>

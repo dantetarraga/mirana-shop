@@ -1,26 +1,39 @@
-import { db } from "@/shared/lib/db";
+import { userRepo, type UserSegment, type UserRow } from "@/modules/users/repositories/user.repo";
 import { UsersClient } from "@/features/users/components/UsersClient";
 
-async function getUsers() {
-  return db.user.findMany({
-    where: { deletedAt: null },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      createdAt: true,
-      deletedAt: true,
-      _count: { select: { orders: true } },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 100,
-  });
+export type { UserRow };
+
+const VALID_SEGMENTS = new Set<UserSegment>(["todos", "vip", "activo", "nuevo"]);
+
+function toSegment(v: string | undefined): UserSegment {
+  return v && VALID_SEGMENTS.has(v as UserSegment) ? (v as UserSegment) : "todos";
 }
 
-export type AdminUserRow = Awaited<ReturnType<typeof getUsers>>[number];
+interface PageProps {
+  searchParams: Promise<{ q?: string; segment?: string; page?: string }>;
+}
 
-export default async function UsersPage() {
-  const users = await getUsers();
-  return <UsersClient initialUsers={users} />;
+const PER_PAGE = 50;
+
+export default async function UsersPage({ searchParams }: PageProps) {
+  const { q, segment: rawSegment, page: rawPage } = await searchParams;
+  const segment = toSegment(rawSegment);
+  const page = Math.max(1, Number(rawPage ?? 1));
+  const skip = (page - 1) * PER_PAGE;
+
+  const [users, total] = await Promise.all([
+    userRepo.findMany({ search: q, segment, take: PER_PAGE, skip }),
+    userRepo.count({ search: q, segment }),
+  ]);
+
+  return (
+    <UsersClient
+      users={users}
+      total={total}
+      currentPage={page}
+      perPage={PER_PAGE}
+      currentQ={q ?? ""}
+      currentSegment={rawSegment ?? "todos"}
+    />
+  );
 }
