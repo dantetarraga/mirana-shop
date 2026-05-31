@@ -25,7 +25,6 @@ import {
   Tooltip,
   XAxis, YAxis,
 } from "recharts";
-
 function Sparkline({ data, color = "#58aaff", w = 160, h = 40 }: { data: number[]; color?: string; w?: number; h?: number }) {
   const chartData = data.map((v) => ({ v }));
   const gradId    = "spark-" + color.replace(/[^a-z0-9]/gi, "");
@@ -54,15 +53,20 @@ function Sparkline({ data, color = "#58aaff", w = 160, h = 40 }: { data: number[
   );
 }
 
-interface TooltipPayload {
-  value: number | string;
+interface ChartTooltipProps {
+  active?:  boolean;
+  payload?: unknown[];
+  label?:   string | number;
+  prefix?:  string;
+  suffix?:  string;
 }
 
-function ChartTooltip({ active, payload, label, prefix = "$", suffix = "K" }: { active?: boolean; payload?: ReadonlyArray<TooltipPayload>; label?: string | number; prefix?: string; suffix?: string }) {
+function ChartTooltip({ active, payload, label, prefix = "$", suffix = "K" }: ChartTooltipProps) {
   if (!active || !payload?.length) return null;
+  const value = (payload[0] as { value?: number | string })?.value;
   return (
     <div className="px-3.5 py-2 bg-card-hover border border-(--gold)">
-      <div className="font-display font-extrabold text-[16px] text-(--gold)">{prefix}{payload[0].value}{suffix}</div>
+      <div className="font-display font-extrabold text-[16px] text-(--gold)">{prefix}{value}{suffix}</div>
       <div className="text-[10px] tracking-[1px] uppercase text-muted">{label}</div>
     </div>
   );
@@ -119,7 +123,7 @@ export default function DashboardPage() {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(80,150,255,.1)" />
               <XAxis dataKey="m" tick={{ fill: "rgba(240,238,232,.42)", fontSize: 10, fontFamily: "monospace" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: "rgba(240,238,232,.42)", fontSize: 10, fontFamily: "monospace" }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${v}K`} />
-              <Tooltip content={<ChartTooltip />} />
+              <Tooltip content={ChartTooltip} />
               <Area type="monotone" dataKey="v" stroke="#58aaff" strokeWidth={2.5} fill="url(#areaGrad)" dot={false} activeDot={{ r: 5, fill: "#58aaff", stroke: "var(--surf)", strokeWidth: 2 }} />
             </AreaChart>
           </ResponsiveContainer>
@@ -176,8 +180,8 @@ export default function DashboardPage() {
                 <span className="font-display font-black text-[18px] w-4.5 text-muted">{i + 1}</span>
                 <div className={`${CAT_STRIPE[p.cat]} w-10 h-10 shrink-0`} />
                 <div className="flex-1 min-w-0">
-                  <div className={cn(cls.rowName, "text-[15px] whitespace-nowrap overflow-hidden text-ellipsis mb-[5px]")}>{p.name}</div>
-                  <div className="h-[5px] overflow-hidden bg-(--sub)">
+                  <div className={cn(cls.rowName, "text-[15px] whitespace-nowrap overflow-hidden text-ellipsis mb-1.25")}>{p.name}</div>
+                  <div className="h-1.25 overflow-hidden bg-(--sub)">
                     <span className="block h-full bg-(--gold)" style={{ width: `${(p.stock / maxStock) * 100}%` }} />
                   </div>
                 </div>
