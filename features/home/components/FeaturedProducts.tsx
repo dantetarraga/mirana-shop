@@ -1,10 +1,19 @@
-﻿"use client";
-
-import { PRODUCTS } from "@/features/products/data/products";
+import { productRepo } from "@/modules/catalog/repositories/product.repo";
+import { toProductCards } from "@/modules/catalog/mappers/product.mapper";
 import { ProductCard } from "@/shared/components/ProductCard";
 
-export function FeaturedProducts() {
-  const items = PRODUCTS.slice(0, 8);
+// Server Component — fetcha directamente desde el repo
+export async function FeaturedProducts() {
+  // Primero busca destacados, si no hay suficientes completa con recientes
+  const [featured, recent] = await Promise.all([
+    productRepo.findFeatured(8),
+    productRepo.findMany({ take: 8 }),
+  ]);
+
+  const source = featured.length >= 4 ? featured : recent;
+  const items = toProductCards(source.slice(0, 8));
+
+  if (items.length === 0) return null;
 
   return (
     <section className="px-12 py-20">
@@ -13,10 +22,10 @@ export function FeaturedProducts() {
           <div className="text-[10px] font-bold tracking-[3px] uppercase mb-2.5 text-(--gold)">
             Selección premium
           </div>
-          <h2
-            className="font-display font-black uppercase tracking-[-1px] leading-[0.95] text-[clamp(36px,5vw,64px)]"
-          >
-            Favoritos del<br />momento
+          <h2 className="font-display font-black uppercase tracking-[-1px] leading-[0.95] text-[clamp(36px,5vw,64px)]">
+            Favoritos del
+            <br />
+            momento
           </h2>
         </div>
         <a

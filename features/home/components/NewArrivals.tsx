@@ -1,10 +1,13 @@
-﻿"use client";
-
-import { PRODUCTS } from "@/features/products/data/products";
+import { productRepo } from "@/modules/catalog/repositories/product.repo";
+import { toProductCards } from "@/modules/catalog/mappers/product.mapper";
 import { ProductCard } from "@/shared/components/ProductCard";
 
-export function NewArrivals() {
-  const items = PRODUCTS.filter((p) => p.isNew).slice(0, 6);
+// Server Component — no necesita "use client"
+export async function NewArrivals() {
+  const products = await productRepo.findNew(6);
+  const items = toProductCards(products);
+
+  if (items.length === 0) return null;
 
   return (
     <section className="px-12 py-20">
@@ -13,9 +16,7 @@ export function NewArrivals() {
           <div className="text-[10px] font-bold tracking-[3px] uppercase mb-2.5 text-(--gold)">
             Recién llegados
           </div>
-          <h2
-            className="font-display font-black uppercase tracking-[-1px] leading-[0.95] text-[clamp(36px,5vw,64px)]"
-          >
+          <h2 className="font-display font-black uppercase tracking-[-1px] leading-[0.95] text-[clamp(36px,5vw,64px)]">
             Novedades
           </h2>
         </div>
