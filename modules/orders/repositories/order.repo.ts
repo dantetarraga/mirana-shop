@@ -83,6 +83,8 @@ export type CreateOrderInput = {
     qrUrl?: string
     peUrl?: string
   }
+  // true cuando el cobro ya fue confirmado sincrónicamente (CULQI_CARD)
+  isPaid?: boolean
 }
 
 const STATUS_GROUP_MAP: Record<OrderStatusGroup, OrderStatus[]> = {
@@ -357,8 +359,12 @@ export const orderRepo = {
     const code = `MIR-${year}-${String(count + 1).padStart(4, '0')}`
 
     // WHATSAPP_TRANSFER espera comprobante → AWAITING_PROOF
-    const initialStatus: OrderStatus =
-      input.paymentMethod === 'WHATSAPP_TRANSFER' ? 'AWAITING_PROOF' : 'PENDING'
+    // CULQI_CARD ya cobrado → PAID
+    const initialStatus: OrderStatus = input.isPaid
+      ? 'PAID'
+      : input.paymentMethod === 'WHATSAPP_TRANSFER'
+        ? 'AWAITING_PROOF'
+        : 'PENDING'
 
     const order = await db.order.create({
       data: {
@@ -367,7 +373,8 @@ export const orderRepo = {
         userId: input.userId,
         paymentMethod: input.paymentMethod,
         status: initialStatus,
-        paymentStatus: 'UNPAID',
+        paymentStatus: input.isPaid ? 'PAID' : 'UNPAID',
+        paidAt: input.isPaid ? new Date() : undefined,
         subtotal: input.subtotal,
         shippingCost: input.shippingCost,
         total: input.total,
@@ -384,7 +391,7 @@ export const orderRepo = {
         payment: {
           create: {
             method: input.paymentMethod,
-            status: 'UNPAID',
+            status: input.isPaid ? 'PAID' : 'UNPAID',
             amount: input.total,
             currency: 'PEN',
             culqiOrderId: input.culqi?.orderId,

@@ -2,7 +2,12 @@
 
 import type { PaymentMethod } from '@/generated/prisma/client'
 import { orderRepo } from '@/modules/orders/repositories/order.repo'
-import { createCulqiOrder, culqiExpiration, toCulqiAmount } from '@/shared/lib/culqi'
+import {
+  createCulqiCharge,
+  createCulqiOrder,
+  culqiExpiration,
+  toCulqiAmount,
+} from '@/shared/lib/culqi'
 import { checkoutSchema } from '@/shared/lib/schemas'
 import { revalidatePath } from 'next/cache'
 
@@ -24,6 +29,8 @@ export type PlaceOrderInput = {
   subtotal: number
   shippingCost: number
   total: number
+  /** Token de tarjeta generado por Culqi.js (solo CULQI_CARD) */
+  culqiTokenId?: string
 }
 
 type PlaceOrderResult =
@@ -32,6 +39,7 @@ type PlaceOrderResult =
       data: {
         code: string
         paymentMethod: string
+        cardNumber?: string
         culqi?: {
           orderId: string
           qrUrl: string | null
@@ -78,6 +86,9 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     let culqiData:
       | { orderId: string; qrUrl: string | null; peUrl: string | null; paymentCode: string | null }
       | undefined
+    let culqiChargeId: string | undefined
+    let culqiCardNumber: string | undefined
+    let isPaid = false
 
     if (d.paymentMethod === 'CULQI_YAPE') {
       const { first_name, last_name } = splitName(d.fullName)
@@ -109,6 +120,32 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       }
     }
 
+    if (d.paymentMethod === 'CULQI_CARD') {
+      if (!input.culqiTokenId) {
+        return { success: false, error: 'No se recibió el token de la tarjeta' }
+      }
+
+      const charge = await createCulqiCharge({
+        amount: toCulqiAmount(input.total),
+        currency_code: 'PEN',
+        description: `Pedido Mirana Shop — ${d.fullName}`,
+        source_id: input.culqiTokenId,
+        email: d.email,
+        metadata: { channel: 'storefront' },
+      })
+
+      if (charge.outcome.type !== 'venta_exitosa') {
+        return {
+          success: false,
+          error: charge.outcome.user_message || charge.outcome.merchant_message || 'Pago rechazado',
+        }
+      }
+
+      culqiChargeId = charge.id
+      culqiCardNumber = charge.source.card_number
+      isPaid = true
+    }
+
     // ------------------------------------------------------------------
     // 2. Crear la orden interna en nuestra BD
     // ------------------------------------------------------------------
@@ -133,7 +170,10 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
             qrUrl: culqiData.qrUrl ?? undefined,
             peUrl: culqiData.peUrl ?? undefined,
           }
-        : undefined,
+        : culqiChargeId
+          ? { chargeId: culqiChargeId }
+          : undefined,
+      isPaid,
     })
 
     revalidatePath('/admin/orders')
@@ -141,7 +181,12 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
 
     return {
       success: true,
-      data: { code: order.code, paymentMethod: d.paymentMethod, culqi: culqiData },
+      data: {
+        code: order.code,
+        paymentMethod: d.paymentMethod,
+        culqi: culqiData,
+        cardNumber: culqiCardNumber,
+      },
     }
   } catch (err) {
     return {
