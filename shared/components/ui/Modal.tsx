@@ -71,7 +71,7 @@ export function Modal({
       role="dialog"
       aria-modal="true"
       onClick={onClose}
-      className="fixed inset-0 z-300 flex items-center justify-center p-4 sm:p-6
+      className="fixed inset-0 z-500 flex items-center justify-center p-4 sm:p-6
                  bg-black/82 backdrop-blur-[10px] animate-fade-in"
     >
       {/* Panel */}

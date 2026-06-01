@@ -44,7 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
           <Toaster
             theme="dark"
-            position="top-right"
+            position="bottom-right"
             /* Iconos coloreados — API oficial de Sonner */
             icons={{
               success: <CheckCircle2 size={16} color="#3fcf7f" />,

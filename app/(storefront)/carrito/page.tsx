@@ -1,12 +1,14 @@
 'use client'
 
 import { Button } from '@/shared/components/ui/Button'
+import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
 import { useStore } from '@/shared/lib/store-context'
 import { formatCurrency } from '@/shared/lib/utils'
 import { getCategoryLabel, getCategoryStripe } from '@/shared/types/catalog.types'
 import { ArrowLeft, CreditCard, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { toast } from 'sonner'
 
 const SHIPPING_THRESHOLD = 150
@@ -15,6 +17,7 @@ const SHIPPING_COST = 15
 export default function CartPage() {
   const { cart, updateQty, removeItem } = useStore()
   const router = useRouter()
+  const [pendingRemove, setPendingRemove] = useState<{ id: string; name: string } | null>(null)
 
   const subtotal = cart.reduce((s, i) => s + i.product.price * i.qty, 0)
   const itemCount = cart.reduce((s, i) => s + i.qty, 0)
@@ -47,6 +50,7 @@ export default function CartPage() {
   }
 
   return (
+    <>
     <div className="px-6 py-12 max-w-360 mx-auto">
       {/* ── Page header ── */}
       <div className="flex items-center gap-4 mb-10">
@@ -129,10 +133,7 @@ export default function CartPage() {
                       </button>
                     </div>
                     <button
-                      onClick={() => {
-                        removeItem(item.product.id)
-                        toast.success(`"${item.product.name}" eliminado`)
-                      }}
+                      onClick={() => setPendingRemove({ id: item.product.id, name: item.product.name })}
                       className="text-muted hover:text-red-400 transition-colors duration-200"
                       aria-label="Eliminar producto"
                     >
@@ -212,5 +213,21 @@ export default function CartPage() {
         </div>
       </div>
     </div>
+
+    <ConfirmModal
+      open={pendingRemove !== null}
+      onClose={() => setPendingRemove(null)}
+      onConfirm={() => {
+        if (!pendingRemove) return
+        removeItem(pendingRemove.id)
+        toast.success(`"${pendingRemove.name}" eliminado del carrito`)
+        setPendingRemove(null)
+      }}
+      title="¿Eliminar producto?"
+      description={pendingRemove ? `"${pendingRemove.name}" será eliminado de tu carrito.` : undefined}
+      confirmLabel="Eliminar"
+      cancelLabel="Cancelar"
+    />
+  </>
   )
 }

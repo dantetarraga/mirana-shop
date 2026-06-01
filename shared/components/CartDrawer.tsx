@@ -1,16 +1,19 @@
 ﻿'use client'
 
 import { Button } from '@/shared/components/ui/Button'
+import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
 import { useStore } from '@/shared/lib/store-context'
+import { formatCurrency } from '@/shared/lib/utils'
 import { getCategoryStripe } from '@/shared/types/catalog.types'
 import { Minus, Plus, X } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 export function CartDrawer() {
   const { cart, cartOpen, setCartOpen, updateQty, removeItem } = useStore()
   const total = cart.reduce((s, i) => s + i.product.price * i.qty, 0)
+  const [pendingRemove, setPendingRemove] = useState<{ id: string; name: string } | null>(null)
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
@@ -19,6 +22,10 @@ export function CartDrawer() {
     if (cartOpen) window.addEventListener('keydown', h)
     return () => window.removeEventListener('keydown', h)
   }, [cartOpen, setCartOpen])
+
+  useEffect(() => {
+    if (!cartOpen) setPendingRemove(null)
+  }, [cartOpen])
 
   if (!cartOpen) return null
 
@@ -63,7 +70,7 @@ export function CartDrawer() {
                     {item.product.name}
                   </div>
                   <div className="text-(--gold) font-display text-[20px] font-extrabold mt-px">
-                    ${item.product.price.toFixed(2)}
+                    {formatCurrency(item.product.price)}
                   </div>
                   <div className="flex items-center gap-2 mt-2">
                     <Button variant="icon" size="sm" onClick={() => updateQty(item.product.id, -1)}>
@@ -81,10 +88,7 @@ export function CartDrawer() {
                   variant="icon"
                   size="sm"
                   destructive
-                  onClick={() => {
-                    removeItem(item.product.id)
-                    toast.success(`"${item.product.name}" eliminado del carrito`)
-                  }}
+                  onClick={() => setPendingRemove({ id: item.product.id, name: item.product.name })}
                   className="self-start"
                 >
                   <X size={14} />
@@ -94,13 +98,28 @@ export function CartDrawer() {
           )}
         </div>
 
-        {/* Footer */}
+        <ConfirmModal
+        open={pendingRemove !== null}
+        onClose={() => setPendingRemove(null)}
+        onConfirm={() => {
+          if (!pendingRemove) return
+          removeItem(pendingRemove.id)
+          toast.success(`"${pendingRemove.name}" eliminado del carrito`)
+          setPendingRemove(null)
+        }}
+        title="¿Eliminar producto?"
+        description={pendingRemove ? `"${pendingRemove.name}" será eliminado de tu carrito.` : undefined}
+        confirmLabel="Eliminar"
+        cancelLabel="Cancelar"
+      />
+
+      {/* Footer */}
         {cart.length > 0 && (
           <div className="px-7 py-6 border-t border-(--bd)">
             <div className="flex justify-between items-baseline mb-5">
               <span className="text-[12px] uppercase tracking-[1px] text-muted">Total</span>
               <span className="font-display text-[38px] font-black text-(--gold)">
-                ${total.toFixed(2)}
+                {formatCurrency(total)}
               </span>
             </div>
             <Button variant="accent" size="lg" full>
@@ -109,7 +128,7 @@ export function CartDrawer() {
               </Link>
             </Button>
             <div className="text-center mt-3 text-[12px] text-muted">
-              Envío gratis en pedidos +$75
+              Envío gratis en pedidos +S/ 75
             </div>
           </div>
         )}
