@@ -4,7 +4,7 @@ import { Button } from '@/shared/components/ui/Button'
 import {
   Archive,
   ArrowLeft,
-  Boxes,
+  BadgePercent,
   FolderTree,
   Image,
   LayoutDashboard,
@@ -37,6 +37,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/admin/categories', label: 'Categorías', icon: FolderTree },
   { href: '/admin/inventory', label: 'Inventario', icon: Archive },
   { href: '/admin/banners', label: 'Banners', icon: Image },
+  { href: '/admin/promotions', label: 'Promociones', icon: BadgePercent },
   { section: 'Clientes' },
   { href: '/admin/users', label: 'Usuarios', icon: Users },
 ]

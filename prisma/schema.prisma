@@ -484,6 +484,39 @@ model ProductCollection {
 }
 
 // ---------------------------------------------------------------------------
+// Promotions
+// ---------------------------------------------------------------------------
+
+enum PromotionType {
+  FREE_SHIPPING
+  FIXED_DISCOUNT
+  PERCENT_DISCOUNT
+}
+
+model Promotion {
+  id          String        @id @default(cuid())
+  name        String
+  description String?       @db.Text
+  type        PromotionType
+  active      Boolean       @default(true)
+
+  /// Monto mínimo de compra (en PEN) para activar la promoción
+  minAmount       Decimal?  @db.Decimal(10, 2)
+  /// Descuento fijo en soles (para FIXED_DISCOUNT)
+  discountAmount  Decimal?  @db.Decimal(10, 2)
+  /// Porcentaje de descuento 0-100 (para PERCENT_DISCOUNT)
+  discountPercent Decimal?  @db.Decimal(5, 2)
+
+  startsAt DateTime?
+  endsAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type, active])
+}
+
+// ---------------------------------------------------------------------------
 // Marketing
 // ---------------------------------------------------------------------------
 

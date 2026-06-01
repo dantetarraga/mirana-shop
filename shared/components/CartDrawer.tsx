@@ -4,6 +4,7 @@ import { Button } from '@/shared/components/ui/Button'
 import { useStore } from '@/shared/lib/store-context'
 import { getCategoryStripe } from '@/shared/types/catalog.types'
 import { Minus, Plus, X } from 'lucide-react'
+import Link from 'next/link'
 import { useEffect } from 'react'
 import { toast } from 'sonner'
 
@@ -103,7 +104,9 @@ export function CartDrawer() {
               </span>
             </div>
             <Button variant="accent" size="lg" full>
-              Finalizar compra →
+              <Link href="/carrito" onClick={() => setCartOpen(false)} className="w-full block">
+                Ver carrito y pagar →
+              </Link>
             </Button>
             <div className="text-center mt-3 text-[12px] text-muted">
               Envío gratis en pedidos +$75
