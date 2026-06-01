@@ -2,8 +2,11 @@
 
 import { Button } from '@/shared/components/ui/Button'
 import { useStore } from '@/shared/lib/store-context'
+import { cn } from '@/shared/lib/utils'
 import { LayoutGrid, LogOut, MapPin, Package, Search, ShoppingBag, User } from 'lucide-react'
+import { signOut } from 'next-auth/react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
 export function Navbar() {
@@ -11,6 +14,7 @@ export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchVal, setSearchVal] = useState('')
   const menuRef = useRef<HTMLDivElement>(null)
+  const pathname = usePathname()
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -108,17 +112,27 @@ export function Navbar() {
                 { label: 'Mi perfil', icon: User, href: '/cuenta/perfil' },
                 { label: 'Mis pedidos', icon: Package, href: '/cuenta/pedidos' },
                 { label: 'Mis direcciones', icon: MapPin, href: '/cuenta/direcciones' },
-              ].map(({ label, icon: Icon, href }) => (
-                <Link
-                  key={label}
-                  href={href}
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-2.5 px-4.5 py-2.75 text-[13px] no-underline font-sans font-semibold text-text hover:bg-card transition-colors duration-150"
-                >
-                  <Icon size={14} className="text-muted shrink-0" />
-                  {label}
-                </Link>
-              ))}
+              ].map(({ label, icon: Icon, href }) => {
+                const isActive = pathname === href
+                return (
+                  <Link
+                    key={label}
+                    href={href}
+                    onClick={() => setMenuOpen(false)}
+                    className={cn(
+                      'flex items-center gap-2.5 px-4.5 py-2.75 text-[13px] no-underline font-sans font-semibold transition-colors duration-150',
+                      isActive ? 'text-(--gold) bg-card' : 'text-text hover:bg-card',
+                    )}
+                  >
+                    <Icon
+                      size={14}
+                      className={cn('shrink-0', isActive ? 'text-(--gold)' : 'text-muted')}
+                    />
+                    {label}
+                    {isActive && <span className="ml-auto w-1 h-1 rounded-full bg-(--gold)" />}
+                  </Link>
+                )
+              })}
 
               {user.role === 'admin' && (
                 <Link
@@ -137,6 +151,7 @@ export function Navbar() {
                 full
                 onClick={() => {
                   logout()
+                  signOut({ callbackUrl: '/' })
                   setMenuOpen(false)
                 }}
                 className="justify-start px-4.5 border-t border-(--bd)"
