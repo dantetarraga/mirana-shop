@@ -2,15 +2,16 @@
 
 import { deleteCategory } from '@/features/categories/actions/category.actions'
 import { CategoryCrudDrawer } from '@/features/categories/components/CategoryCrudDrawer'
-import { EntityProductsDrawer } from '@/shared/components/EntityProductsDrawer'
 import type { CategoryRow } from '@/modules/catalog/repositories/category.repo'
 import { AdminTable, type Column } from '@/shared/components/AdminTable'
+import { EntityProductsDrawer } from '@/shared/components/EntityProductsDrawer'
 import { PanelHeader } from '@/shared/components/PanelHeader'
 import { Button } from '@/shared/components/ui/Button'
+import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
+import { useCrudState, useServerAction } from '@/shared/hooks'
 import { cls } from '@/shared/lib/admin-classes'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
-import { useState, useTransition } from 'react'
-import { toast } from 'sonner'
+import { useState } from 'react'
 
 interface CategoriesTableClientProps {
   categories: CategoryRow[]
@@ -18,29 +19,22 @@ interface CategoriesTableClientProps {
   allCategories: CategoryRow[]
 }
 
-export function CategoriesTableClient({ categories, total, allCategories }: CategoriesTableClientProps) {
-  const [editingCategory, setEditingCategory] = useState<CategoryRow | null>(null)
-  const [viewingId, setViewingId] = useState<string | null>(null)
-  const [isNew, setIsNew] = useState(false)
-  const [isPending, startTransition] = useTransition()
+export function CategoriesTableClient({
+  categories,
+  total,
+  allCategories,
+}: CategoriesTableClientProps) {
+  const crud = useCrudState<CategoryRow>()
+  const { isPending, run } = useServerAction()
+  const [pendingDelete, setPendingDelete] = useState<CategoryRow | null>(null)
 
-  const drawerOpen = isNew || editingCategory !== null
-
-  const closeDrawer = () => {
-    setEditingCategory(null)
-    setIsNew(false)
-  }
-
-  const handleDelete = (category: CategoryRow) => {
-    if (!confirm(`¿Eliminar la categoría "${category.name}"?`)) return
-    startTransition(async () => {
-      const result = await deleteCategory(category.id)
-      if (result.success) {
-        toast.success(`"${category.name}" eliminada`)
-        window.location.reload()
-      } else {
-        toast.error(result.error)
-      }
+  const handleDelete = () => {
+    if (!pendingDelete) return
+    const category = pendingDelete
+    setPendingDelete(null)
+    run(() => deleteCategory(category.id), {
+      successMsg: `"${category.name}" eliminada`,
+      refresh: true,
     })
   }
 
@@ -100,8 +94,7 @@ export function CategoriesTableClient({ categories, total, allCategories }: Cate
             size="sm"
             onClick={(e) => {
               e.stopPropagation()
-              setIsNew(false)
-              setEditingCategory(c)
+              crud.openEdit(c)
             }}
             title="Editar"
           >
@@ -112,7 +105,10 @@ export function CategoriesTableClient({ categories, total, allCategories }: Cate
             size="sm"
             destructive
             disabled={isPending}
-            onClick={(e) => { e.stopPropagation(); handleDelete(c) }}
+            onClick={(e) => {
+              e.stopPropagation()
+              setPendingDelete(c)
+            }}
             title="Eliminar"
           >
             <Trash2 size={14} />
@@ -129,14 +125,7 @@ export function CategoriesTableClient({ categories, total, allCategories }: Cate
         title={`${total} categoría${total !== 1 ? 's' : ''}`}
         align="center"
         side={
-          <Button
-            variant="accent"
-            size="md"
-            onClick={() => {
-              setEditingCategory(null)
-              setIsNew(true)
-            }}
-          >
+          <Button variant="accent" size="md" onClick={crud.openNew}>
             <Plus size={15} className="mr-2" /> Nueva categoría
           </Button>
         }
@@ -149,26 +138,35 @@ export function CategoriesTableClient({ categories, total, allCategories }: Cate
           columns={columns}
           data={categories}
           keyExtractor={(c) => c.id}
-          onRowClick={(c) => { setEditingCategory(null); setViewingId(c.id); }}
+          onRowClick={(c) => crud.openViewing(c.id)}
         />
       )}
 
-      {drawerOpen && (
+      <ConfirmModal
+        open={!!pendingDelete}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={handleDelete}
+        title="¿Eliminar categoría?"
+        description={`"${pendingDelete?.name}" se eliminará permanentemente.`}
+        isPending={isPending}
+      />
+
+      {crud.drawerOpen && (
         <CategoryCrudDrawer
-          category={editingCategory}
-          isNew={isNew}
+          category={crud.editing}
+          isNew={crud.isNew}
           allCategories={categories}
-          onClose={closeDrawer}
+          onClose={crud.closeDrawer}
         />
       )}
 
-      {viewingId && (
+      {crud.viewingId && (
         <EntityProductsDrawer
-          entityId={viewingId}
-          entityName={allCategories.find((c) => c.id === viewingId)?.name ?? ''}
+          entityId={crud.viewingId}
+          entityName={allCategories.find((c) => c.id === crud.viewingId)?.name ?? ''}
           entityType="category"
           allCategories={allCategories.map((c) => ({ id: c.id, name: c.name }))}
-          onClose={() => setViewingId(null)}
+          onClose={crud.closeViewing}
         />
       )}
     </div>

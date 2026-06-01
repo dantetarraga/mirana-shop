@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Barlow_Condensed, Plus_Jakarta_Sans } from 'next/font/google'
 import { Toaster } from 'sonner'
+import { CheckCircle2, XCircle, AlertTriangle, Info } from 'lucide-react'
 import './globals.css'
 
 const barlowCondensed = Barlow_Condensed({
@@ -42,17 +43,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Toaster
           theme="dark"
           position="top-right"
+          /* Iconos coloreados — API oficial de Sonner */
+          icons={{
+            success: <CheckCircle2 size={16} color="#3fcf7f" />,
+            error:   <XCircle      size={16} color="#ff6644" />,
+            warning: <AlertTriangle size={16} color="#ffb84a" />,
+            info:    <Info          size={16} color="#58aaff" />,
+          }}
           toastOptions={{
             style: {
               background: 'var(--color-surf)',
-              border: '1px solid rgba(80,150,255,0.15)',
-              color: 'var(--color-text)',
+              border:     '1px solid rgba(80,150,255,0.15)',
+              color:      'var(--color-text)',
             },
+            /* classNames con ! (Tailwind !important) sobreescriben los estilos de Sonner */
             classNames: {
-              success: 'mirana-toast-success',
-              error: 'mirana-toast-error',
-              warning: 'mirana-toast-warning',
-              info: 'mirana-toast-info',
+              success: '!border-l-[3px] ![border-left-color:#3fcf7f]',
+              error:   '!border-l-[3px] ![border-left-color:#ff6644]',
+              warning: '!border-l-[3px] ![border-left-color:#ffb84a]',
+              info:    '!border-l-[3px] ![border-left-color:#58aaff]',
             },
           }}
         />

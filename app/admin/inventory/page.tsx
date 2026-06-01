@@ -1,10 +1,12 @@
 import { productRepo, type StockFilter } from "@/modules/catalog/repositories/product.repo";
 import { inventoryRepo } from "@/modules/inventory/repositories/inventory.repo";
 import { StockAdjustControl } from "@/features/inventory/components/StockAdjustControl";
+import { AdminTable, type Column } from "@/shared/components/AdminTable";
 import { KpiCard } from "@/shared/components/KpiCard";
 import { StockBadge } from "@/shared/components/StockBadge";
 import { cls } from "@/shared/lib/admin-classes";
 import { cn } from "@/shared/lib/utils";
+import type { ProductListItem } from "@/modules/catalog/repositories/product.repo";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -30,8 +32,44 @@ interface PageProps {
 }
 
 // ---------------------------------------------------------------------------
+// Columnas — definidas en el Server Component.
+// Las render functions corren en el servidor; StockAdjustControl es la
+// única isla cliente y se hidrata en el browser.
+// ---------------------------------------------------------------------------
+
+const columns: Column<ProductListItem>[] = [
+  {
+    header: "Producto",
+    render: (p) => (
+      <div className="flex items-center gap-3">
+        <div className={`${CATEGORY_STRIPE[p.category.slug] ?? "stripe-fig"} w-10.5 h-10.5 shrink-0`} />
+        <div>
+          <div className={cls.rowName}>{p.name}</div>
+          <div className={cls.rowSub}>{p.brand.name}</div>
+        </div>
+      </div>
+    ),
+  },
+  { header: "SKU",   className: cls.mono,    render: (p) => p.sku },
+  { header: "Stock",                          render: (p) => <StockBadge s={p.inventory?.availableStock ?? 0} /> },
+  {
+    header: "Valor", className: cls.valGold,
+    render: (p) => `S/ ${((p.inventory?.availableStock ?? 0) * Number(p.price)).toFixed(2)}`,
+  },
+  {
+    header: "Ajustar inventario",
+    render: (p) => (
+      <StockAdjustControl
+        productId={p.id}
+        productName={p.name}
+        stock={p.inventory?.availableStock ?? 0}
+      />
+    ),
+  },
+];
+
+// ---------------------------------------------------------------------------
 // Page — 100% Server Component
-// La única isla cliente es <StockAdjustControl />, que pesa ~1 KB.
 // ---------------------------------------------------------------------------
 
 export default async function InventoryPage({ searchParams }: PageProps) {
@@ -51,13 +89,13 @@ export default async function InventoryPage({ searchParams }: PageProps) {
 
       {/* KPIs */}
       <div className="grid grid-cols-4 gap-4 mb-6">
-        <KpiCard label="Unidades totales" value={stats.totalUnits}                                        valueClass="text-text" />
-        <KpiCard label="Valor inventario" value={`S/ ${(stats.totalValue / 1000).toFixed(1)}K`}          valueClass="text-(--gold)" />
-        <KpiCard label="Stock bajo"       value={stats.lowStockCount}                                     valueClass="text-[#ffb84a]" />
-        <KpiCard label="Agotados"         value={stats.outOfStockCount}                                   valueClass="text-[#ff6644]" />
+        <KpiCard label="Unidades totales" value={stats.totalUnits}                                       valueClass="text-text" />
+        <KpiCard label="Valor inventario" value={`S/ ${(stats.totalValue / 1000).toFixed(1)}K`}         valueClass="text-(--gold)" />
+        <KpiCard label="Stock bajo"       value={stats.lowStockCount}                                    valueClass="text-[#ffb84a]" />
+        <KpiCard label="Agotados"         value={stats.outOfStockCount}                                  valueClass="text-[#ff6644]" />
       </div>
 
-      {/* Tabs — navegación GET, sin estado cliente */}
+      {/* Tabs — GET navigation, sin estado cliente */}
       <div className="flex gap-1.5 mb-5">
         {FILTER_TABS.map(({ key, label, href }) => (
           <a
@@ -78,55 +116,12 @@ export default async function InventoryPage({ searchParams }: PageProps) {
         ))}
       </div>
 
-      {/* Tabla — server rendered, sin useState */}
-      <div className={cls.panelTable}>
-        <table className="w-full border-collapse">
-          <thead>
-            <tr>
-              {["Producto", "SKU", "Stock", "Valor", "Ajustar inventario"].map((h) => (
-                <th key={h} className={cls.th}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {products.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-12 text-center text-muted text-[13px]">
-                  Sin productos en este filtro.
-                </td>
-              </tr>
-            ) : products.map((p) => {
-              const stock = p.inventory?.availableStock ?? 0;
-              const value = stock * Number(p.price);
-              const stripe = CATEGORY_STRIPE[p.category.slug] ?? "stripe-fig";
-
-              return (
-                <tr key={p.id} className="hover:bg-white/2 transition-colors">
-                  <td className={cls.td}>
-                    <div className="flex items-center gap-3">
-                      <div className={`${stripe} w-10.5 h-10.5 shrink-0`} />
-                      <div>
-                        <div className={cls.rowName}>{p.name}</div>
-                        <div className={cls.rowSub}>{p.brand.name}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className={cn(cls.td, cls.mono)}>{p.sku}</td>
-                  <td className={cls.td}><StockBadge s={stock} /></td>
-                  <td className={cn(cls.td, cls.valGold)}>S/ {value.toFixed(2)}</td>
-                  <td className={cls.td}>
-                    <StockAdjustControl
-                      productId={p.id}
-                      productName={p.name}
-                      stock={stock}
-                    />
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      {/* AdminTable — mismo componente que el resto del admin */}
+      <AdminTable
+        columns={columns}
+        data={products}
+        keyExtractor={(p) => p.id}
+      />
     </div>
   );
 }

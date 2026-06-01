@@ -4,5 +4,5 @@ import { BannersClient } from "@/features/banners/components/BannersClient";
 export default async function BannersPage() {
   const banners = await bannerRepo.findAll();
 
-  return <BannersClient initialBanners={banners} />;
+  return <BannersClient banners={banners} />;
 }

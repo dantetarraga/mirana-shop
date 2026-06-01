@@ -6,23 +6,23 @@ import { AdminDrawer } from '@/shared/components/AdminDrawer'
 import { PanelHeader } from '@/shared/components/PanelHeader'
 import { StatusBadge } from '@/shared/components/StatusBadge'
 import { Button } from '@/shared/components/ui/Button'
+import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
 import { FormField } from '@/shared/components/ui/FormField'
+import { useServerAction } from '@/shared/hooks'
 import { cls } from '@/shared/lib/admin-classes'
 import { BANNER_STATUS } from '@/shared/lib/admin-constants'
 import { bannerDbSchema } from '@/shared/lib/schemas'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowRight, Plus } from 'lucide-react'
-import { useEffect, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { toast } from 'sonner'
 import { z } from 'zod'
 
-// En Zod v4, z.input captura los tipos antes de .default() (opcionales).
-// El form opera sobre estos valores; zodResolver transforma al output.
 type BannerFormValues = z.input<typeof bannerDbSchema>
 
 // ---------------------------------------------------------------------------
-// Mapeo de estado BD -> estado UI
+// Helpers
 // ---------------------------------------------------------------------------
 
 function getBannerStatus(banner: BannerRow): 'activo' | 'programado' | 'inactivo' {
@@ -31,10 +31,6 @@ function getBannerStatus(banner: BannerRow): 'activo' | 'programado' | 'inactivo
   if (banner.startsAt && banner.startsAt > now) return 'programado'
   return 'activo'
 }
-
-// ---------------------------------------------------------------------------
-// Form por defecto
-// ---------------------------------------------------------------------------
 
 const EMPTY_FORM = {
   title: '',
@@ -46,15 +42,21 @@ const EMPTY_FORM = {
   active: false,
 } satisfies BannerFormValues
 
+// ---------------------------------------------------------------------------
+// Props — "banners" viene siempre del servidor, nunca de estado cliente
+// ---------------------------------------------------------------------------
+
 interface BannersClientProps {
-  initialBanners: BannerRow[]
+  banners: BannerRow[]
 }
 
-export function BannersClient({ initialBanners }: BannersClientProps) {
-  const [banners, setBanners] = useState<BannerRow[]>(initialBanners)
+export function BannersClient({ banners }: BannersClientProps) {
+  // Solo estado de UI: qué drawer está abierto
   const [editingId, setEditingId] = useState<string | null>(null)
   const [isNew, setIsNew] = useState(false)
-  const [isPending, startTransition] = useTransition()
+  const [pendingDelete, setPendingDelete] = useState<BannerRow | null>(null)
+  const { isPending, run } = useServerAction()
+  const router = useRouter()
 
   const form = useForm<BannerFormValues>({
     resolver: zodResolver(bannerDbSchema),
@@ -67,8 +69,10 @@ export function BannersClient({ initialBanners }: BannersClientProps) {
     formState: { errors },
   } = form
 
+  // editingBanner se deriva de la prop (no de estado local)
   const editingBanner = banners.find((b) => b.id === editingId) ?? null
 
+  // Poblamos el form cuando cambia el banner seleccionado
   useEffect(() => {
     if (editingBanner) {
       reset({
@@ -91,43 +95,40 @@ export function BannersClient({ initialBanners }: BannersClientProps) {
     reset(EMPTY_FORM)
   }
 
+  // ---------------------------------------------------------------------------
+  // Handlers — router.refresh() re-ejecuta el Server Component con datos frescos
+  // ---------------------------------------------------------------------------
+
   const onSubmit = (data: BannerFormValues) => {
-    startTransition(async () => {
-      const result = await saveBanner(editingId, data)
-      if (result.success) {
-        toast.success(isNew ? 'Banner creado' : 'Banner actualizado')
+    run(() => saveBanner(editingId, data), {
+      successMsg: isNew ? 'Banner creado' : 'Banner actualizado',
+      onSuccess: () => {
         closeDrawer()
-        window.location.reload()
-      } else {
-        toast.error(result.error)
-      }
+        router.refresh()
+      },
     })
   }
 
   const handleToggle = (b: BannerRow) => {
-    startTransition(async () => {
-      const result = await toggleBanner(b.id, b.active)
-      if (result.success) {
-        setBanners((prev) => prev.map((x) => (x.id === b.id ? { ...x, active: !x.active } : x)))
-        toast.success(b.active ? `"${b.title}" pausado` : `"${b.title}" activado`)
-      } else {
-        toast.error(result.error)
-      }
+    run(() => toggleBanner(b.id, b.active), {
+      successMsg: b.active ? `"${b.title}" pausado` : `"${b.title}" activado`,
+      onSuccess: () => router.refresh(),
     })
   }
 
-  const handleDelete = (b: BannerRow) => {
-    if (!confirm(`¿Eliminar "${b.title}"?`)) return
-    startTransition(async () => {
-      const result = await deleteBanner(b.id)
-      if (result.success) {
-        setBanners((prev) => prev.filter((x) => x.id !== b.id))
-        toast.success(`"${b.title}" eliminado`)
-      } else {
-        toast.error(result.error)
-      }
+  const handleDelete = () => {
+    if (!pendingDelete) return
+    const b = pendingDelete
+    setPendingDelete(null)
+    run(() => deleteBanner(b.id), {
+      successMsg: `"${b.title}" eliminado`,
+      onSuccess: () => router.refresh(),
     })
   }
+
+  // ---------------------------------------------------------------------------
+  // Render — la grid de cards se nutre de la prop (server data)
+  // ---------------------------------------------------------------------------
 
   const activeCount = banners.filter((b) => getBannerStatus(b) === 'activo').length
   const drawerOpen = isNew || editingId !== null
@@ -157,6 +158,7 @@ export function BannersClient({ initialBanners }: BannersClientProps) {
           const uiStatus = getBannerStatus(b)
           return (
             <div key={b.id} className="overflow-hidden bg-card border border-(--bd)">
+              {/* Preview del banner */}
               <div className="h-37.5 relative">
                 <div className="stripe-fig absolute inset-0" />
                 <div
@@ -166,9 +168,7 @@ export function BannersClient({ initialBanners }: BannersClientProps) {
                   <div className="font-display text-[26px] font-black uppercase leading-[0.95]">
                     {b.title}
                   </div>
-
                   <div className="text-[12px] mt-1 text-white/80">{b.subtitle}</div>
-
                   {b.ctaLabel && (
                     <div className="font-display font-extrabold text-[12px] tracking-[1px] uppercase px-3 py-1.25 mt-2.5 w-fit bg-(--gold) text-black">
                       {b.ctaLabel} <ArrowRight className="inline-block ml-1" />
@@ -180,6 +180,7 @@ export function BannersClient({ initialBanners }: BannersClientProps) {
                 </span>
               </div>
 
+              {/* Metadatos y acciones */}
               <div className="px-4.5 py-4">
                 <div className="flex justify-between py-1.5 text-[13px]">
                   <span className="text-[11px] tracking-[1px] uppercase text-muted">Posición</span>
@@ -216,7 +217,7 @@ export function BannersClient({ initialBanners }: BannersClientProps) {
                     variant="icon"
                     size="sm"
                     destructive
-                    onClick={() => handleDelete(b)}
+                    onClick={() => setPendingDelete(b)}
                     disabled={isPending}
                   >
                     ×
@@ -227,6 +228,15 @@ export function BannersClient({ initialBanners }: BannersClientProps) {
           )
         })}
       </div>
+
+      <ConfirmModal
+        open={!!pendingDelete}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={handleDelete}
+        title="¿Eliminar banner?"
+        description={`"${pendingDelete?.title}" se eliminará permanentemente.`}
+        isPending={isPending}
+      />
 
       {drawerOpen && (
         <AdminDrawer
@@ -259,7 +269,6 @@ export function BannersClient({ initialBanners }: BannersClientProps) {
                   placeholder="Ver colección"
                 />
               </FormField>
-
               <FormField label="URL botón" error={errors.ctaHref?.message}>
                 <input {...register('ctaHref')} className={cls.input} placeholder="/catalogo" />
               </FormField>
@@ -275,12 +284,9 @@ export function BannersClient({ initialBanners }: BannersClientProps) {
                   placeholder="0"
                 />
               </FormField>
-
               <FormField label="Estado" error={errors.active?.message}>
                 <select
-                  {...register('active', {
-                    setValueAs: (v) => v === 'true' || v === true,
-                  })}
+                  {...register('active', { setValueAs: (v) => v === 'true' || v === true })}
                   className={cls.input}
                 >
                   <option value="false">Inactivo</option>

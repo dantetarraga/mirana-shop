@@ -1,52 +1,42 @@
-"use client";
+'use client'
 
-import { useState, useTransition } from "react";
-import { toast } from "sonner";
-import { Plus, Pencil, Trash2 } from "lucide-react";
-import { AdminTable, type Column } from "@/shared/components/AdminTable";
-import { Button } from "@/shared/components/ui/Button";
-import { PanelHeader } from "@/shared/components/PanelHeader";
-import { StatusBadge } from "@/shared/components/StatusBadge";
-import { CollectionCrudDrawer } from "@/features/collections/components/CollectionCrudDrawer";
-import { EntityProductsDrawer } from "@/shared/components/EntityProductsDrawer";
-import { deleteCollection } from "@/features/collections/actions/collection.actions";
-import { cls } from "@/shared/lib/admin-classes";
-import type { CollectionRow } from "@/modules/catalog/repositories/collection.repo";
+import { deleteCollection } from '@/features/collections/actions/collection.actions'
+import { CollectionCrudDrawer } from '@/features/collections/components/CollectionCrudDrawer'
+import type { CollectionRow } from '@/modules/catalog/repositories/collection.repo'
+import { AdminTable, type Column } from '@/shared/components/AdminTable'
+import { EntityProductsDrawer } from '@/shared/components/EntityProductsDrawer'
+import { PanelHeader } from '@/shared/components/PanelHeader'
+import { StatusBadge } from '@/shared/components/StatusBadge'
+import { Button } from '@/shared/components/ui/Button'
+import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
+import { useCrudState, useServerAction } from '@/shared/hooks'
+import { cls } from '@/shared/lib/admin-classes'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { useState } from 'react'
 
 interface CollectionsTableClientProps {
-  collections: CollectionRow[];
-  total: number;
+  collections: CollectionRow[]
+  total: number
 }
 
 export function CollectionsTableClient({ collections, total }: CollectionsTableClientProps) {
-  const [editingCollection, setEditingCollection] = useState<CollectionRow | null>(null);
-  const [viewingId, setViewingId] = useState<string | null>(null);
-  const [isNew, setIsNew] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const crud = useCrudState<CollectionRow>()
+  const { isPending, run } = useServerAction()
+  const [pendingDelete, setPendingDelete] = useState<CollectionRow | null>(null)
 
-  const drawerOpen = isNew || editingCollection !== null;
-
-  const closeDrawer = () => {
-    setEditingCollection(null);
-    setIsNew(false);
-  };
-
-  const handleDelete = (collection: CollectionRow) => {
-    if (!confirm(`¿Eliminar la colección "${collection.name}"?`)) return;
-    startTransition(async () => {
-      const result = await deleteCollection(collection.id);
-      if (result.success) {
-        toast.success(`"${collection.name}" eliminada`);
-        window.location.reload();
-      } else {
-        toast.error(result.error);
-      }
-    });
-  };
+  const handleDelete = () => {
+    if (!pendingDelete) return
+    const collection = pendingDelete
+    setPendingDelete(null)
+    run(() => deleteCollection(collection.id), {
+      successMsg: `"${collection.name}" eliminada`,
+      refresh: true,
+    })
+  }
 
   const columns: Column<CollectionRow>[] = [
     {
-      header: "Colección",
+      header: 'Colección',
       render: (c) => (
         <div className="flex items-center gap-3">
           {c.imageUrl ? (
@@ -68,41 +58,42 @@ export function CollectionsTableClient({ collections, total }: CollectionsTableC
       ),
     },
     {
-      header: "Descripción",
+      header: 'Descripción',
       render: (c) => (
-        <span className="text-[13px] text-muted line-clamp-1 max-w-xs">
-          {c.description ?? "—"}
-        </span>
+        <span className="text-[13px] text-muted line-clamp-1 max-w-xs">{c.description ?? '—'}</span>
       ),
     },
     {
-      header: "Productos",
-      headerClassName: "text-right",
-      className: "text-right",
+      header: 'Productos',
+      headerClassName: 'text-right',
+      className: 'text-right',
       render: (c) => <span className={cls.val}>{c.productCount}</span>,
     },
     {
-      header: "Estado",
+      header: 'Estado',
       render: (c) => (
         <StatusBadge
           config={
             c.active
-              ? { label: "Activa", cls: "badge-green", outlineCls: "badge-green-outline" }
-              : { label: "Inactiva", cls: "badge-red", outlineCls: "badge-red-outline" }
+              ? { label: 'Activa', cls: 'badge-green', outlineCls: 'badge-green-outline' }
+              : { label: 'Inactiva', cls: 'badge-red', outlineCls: 'badge-red-outline' }
           }
         />
       ),
     },
     {
-      header: "Acciones",
-      headerClassName: "text-right",
-      className: "text-right",
+      header: 'Acciones',
+      headerClassName: 'text-right',
+      className: 'text-right',
       render: (c) => (
         <div className="flex gap-1.5 justify-end">
           <Button
             variant="icon"
             size="sm"
-            onClick={(e) => { e.stopPropagation(); setIsNew(false); setEditingCollection(c); }}
+            onClick={(e) => {
+              e.stopPropagation()
+              crud.openEdit(c)
+            }}
             title="Editar"
           >
             <Pencil size={14} />
@@ -112,7 +103,10 @@ export function CollectionsTableClient({ collections, total }: CollectionsTableC
             size="sm"
             destructive
             disabled={isPending}
-            onClick={(e) => { e.stopPropagation(); handleDelete(c); }}
+            onClick={(e) => {
+              e.stopPropagation()
+              setPendingDelete(c)
+            }}
             title="Eliminar"
           >
             <Trash2 size={14} />
@@ -120,54 +114,57 @@ export function CollectionsTableClient({ collections, total }: CollectionsTableC
         </div>
       ),
     },
-  ];
+  ]
 
   return (
     <div className="px-8 pt-7 pb-12">
       <PanelHeader
         label="Catálogo"
-        title={`${total} colección${total !== 1 ? "es" : ""}`}
+        title={`${total} colección${total !== 1 ? 'es' : ''}`}
         align="center"
         side={
-          <Button
-            variant="accent"
-            size="md"
-            onClick={() => { setEditingCollection(null); setIsNew(true); }}
-          >
+          <Button variant="accent" size="md" onClick={crud.openNew}>
             <Plus size={15} className="mr-2" /> Nueva colección
           </Button>
         }
       />
 
       {collections.length === 0 ? (
-        <div className="text-center py-16 text-muted text-sm">
-          No se encontraron colecciones.
-        </div>
+        <div className="text-center py-16 text-muted text-sm">No se encontraron colecciones.</div>
       ) : (
         <AdminTable
           columns={columns}
           data={collections}
           keyExtractor={(c) => c.id}
-          onRowClick={(c) => { setEditingCollection(null); setViewingId(c.id); }}
+          onRowClick={(c) => crud.openViewing(c.id)}
         />
       )}
 
-      {drawerOpen && (
+      <ConfirmModal
+        open={!!pendingDelete}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={handleDelete}
+        title="¿Eliminar colección?"
+        description={`"${pendingDelete?.name}" se eliminará permanentemente.`}
+        isPending={isPending}
+      />
+
+      {crud.drawerOpen && (
         <CollectionCrudDrawer
-          collection={editingCollection}
-          isNew={isNew}
-          onClose={closeDrawer}
+          collection={crud.editing}
+          isNew={crud.isNew}
+          onClose={crud.closeDrawer}
         />
       )}
 
-      {viewingId && (
+      {crud.viewingId && (
         <EntityProductsDrawer
-          entityId={viewingId}
-          entityName={collections.find((c) => c.id === viewingId)?.name ?? ""}
+          entityId={crud.viewingId}
+          entityName={collections.find((c) => c.id === crud.viewingId)?.name ?? ''}
           entityType="collection"
-          onClose={() => setViewingId(null)}
+          onClose={crud.closeViewing}
         />
       )}
     </div>
-  );
+  )
 }

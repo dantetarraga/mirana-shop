@@ -1,6 +1,4 @@
-﻿'use client'
-
-import { cls } from '@/shared/lib/admin-classes'
+﻿import { cls } from '@/shared/lib/admin-classes'
 import { cn } from '@/shared/lib/utils'
 
 export interface Column<T> {

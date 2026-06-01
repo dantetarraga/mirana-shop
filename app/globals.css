@@ -395,16 +395,4 @@
   .pie-dot-1 { background: #5f9eff; }
   .pie-dot-2 { background: #7b5fff; }
 
-  /* ── Sonner toast — colores por tipo ── */
-  .mirana-toast-success [data-icon]  { color: #3fcf7f; }
-  .mirana-toast-success              { border-left: 3px solid #3fcf7f !important; }
-
-  .mirana-toast-error [data-icon]    { color: #ff6644; }
-  .mirana-toast-error                { border-left: 3px solid #ff6644 !important; }
-
-  .mirana-toast-warning [data-icon]  { color: #ffb84a; }
-  .mirana-toast-warning              { border-left: 3px solid #ffb84a !important; }
-
-  .mirana-toast-info [data-icon]     { color: #58aaff; }
-  .mirana-toast-info                 { border-left: 3px solid #58aaff !important; }
 }

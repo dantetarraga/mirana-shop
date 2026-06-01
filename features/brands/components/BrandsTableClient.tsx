@@ -1,52 +1,42 @@
-"use client";
+'use client'
 
-import { useState, useTransition } from "react";
-import { toast } from "sonner";
-import { Plus, Pencil, Trash2 } from "lucide-react";
-import { AdminTable, type Column } from "@/shared/components/AdminTable";
-import { Button } from "@/shared/components/ui/Button";
-import { PanelHeader } from "@/shared/components/PanelHeader";
-import { BrandCrudDrawer } from "@/features/brands/components/BrandCrudDrawer";
-import { EntityProductsDrawer } from "@/shared/components/EntityProductsDrawer";
-import { deleteBrand } from "@/features/brands/actions/brand.actions";
-import { cls } from "@/shared/lib/admin-classes";
-import type { BrandRow } from "@/modules/catalog/repositories/brand.repo";
+import { deleteBrand } from '@/features/brands/actions/brand.actions'
+import { BrandCrudDrawer } from '@/features/brands/components/BrandCrudDrawer'
+import type { BrandRow } from '@/modules/catalog/repositories/brand.repo'
+import { AdminTable, type Column } from '@/shared/components/AdminTable'
+import { EntityProductsDrawer } from '@/shared/components/EntityProductsDrawer'
+import { PanelHeader } from '@/shared/components/PanelHeader'
+import { Button } from '@/shared/components/ui/Button'
+import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
+import { useCrudState, useServerAction } from '@/shared/hooks'
+import { cls } from '@/shared/lib/admin-classes'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { useState } from 'react'
 
 interface BrandsTableClientProps {
-  brands: BrandRow[];
-  total: number;
-  allBrands: BrandRow[];
+  brands: BrandRow[]
+  total: number
+  allBrands: BrandRow[]
 }
 
 export function BrandsTableClient({ brands, total, allBrands }: BrandsTableClientProps) {
-  const [editingBrand, setEditingBrand] = useState<BrandRow | null>(null);
-  const [viewingId, setViewingId] = useState<string | null>(null);
-  const [isNew, setIsNew] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const crud = useCrudState<BrandRow>()
+  const { isPending, run } = useServerAction()
+  const [pendingDelete, setPendingDelete] = useState<BrandRow | null>(null)
 
-  const drawerOpen = isNew || editingBrand !== null;
-
-  const closeDrawer = () => {
-    setEditingBrand(null);
-    setIsNew(false);
-  };
-
-  const handleDelete = (brand: BrandRow) => {
-    if (!confirm(`¿Eliminar la marca "${brand.name}"?`)) return;
-    startTransition(async () => {
-      const result = await deleteBrand(brand.id);
-      if (result.success) {
-        toast.success(`"${brand.name}" eliminada`);
-        window.location.reload();
-      } else {
-        toast.error(result.error);
-      }
-    });
-  };
+  const handleDelete = () => {
+    if (!pendingDelete) return
+    const brand = pendingDelete
+    setPendingDelete(null)
+    run(() => deleteBrand(brand.id), {
+      successMsg: `"${brand.name}" eliminada`,
+      refresh: true,
+    })
+  }
 
   const columns: Column<BrandRow>[] = [
     {
-      header: "Marca",
+      header: 'Marca',
       render: (b) => (
         <div className="flex items-center gap-3">
           {b.imageUrl ? (
@@ -68,31 +58,30 @@ export function BrandsTableClient({ brands, total, allBrands }: BrandsTableClien
       ),
     },
     {
-      header: "Descripción",
+      header: 'Descripción',
       render: (b) => (
-        <span className="text-[13px] text-muted line-clamp-1 max-w-xs">
-          {b.description ?? "—"}
-        </span>
+        <span className="text-[13px] text-muted line-clamp-1 max-w-xs">{b.description ?? '—'}</span>
       ),
     },
     {
-      header: "Productos",
-      headerClassName: "text-right",
-      className: "text-right",
-      render: (b) => (
-        <span className={cls.val}>{b.productCount}</span>
-      ),
+      header: 'Productos',
+      headerClassName: 'text-right',
+      className: 'text-right',
+      render: (b) => <span className={cls.val}>{b.productCount}</span>,
     },
     {
-      header: "Acciones",
-      headerClassName: "text-right",
-      className: "text-right",
+      header: 'Acciones',
+      headerClassName: 'text-right',
+      className: 'text-right',
       render: (b) => (
         <div className="flex gap-1.5 justify-end">
           <Button
             variant="icon"
             size="sm"
-            onClick={(e) => { e.stopPropagation(); setIsNew(false); setEditingBrand(b); }}
+            onClick={(e) => {
+              e.stopPropagation()
+              crud.openEdit(b)
+            }}
             title="Editar"
           >
             <Pencil size={14} />
@@ -102,7 +91,10 @@ export function BrandsTableClient({ brands, total, allBrands }: BrandsTableClien
             size="sm"
             destructive
             disabled={isPending}
-            onClick={(e) => { e.stopPropagation(); handleDelete(b); }}
+            onClick={(e) => {
+              e.stopPropagation()
+              setPendingDelete(b)
+            }}
             title="Eliminar"
           >
             <Trash2 size={14} />
@@ -110,55 +102,54 @@ export function BrandsTableClient({ brands, total, allBrands }: BrandsTableClien
         </div>
       ),
     },
-  ];
+  ]
 
   return (
     <div className="px-8 pt-7 pb-12">
       <PanelHeader
         label="Catálogo"
-        title={`${total} marca${total !== 1 ? "s" : ""}`}
+        title={`${total} marca${total !== 1 ? 's' : ''}`}
         align="center"
         side={
-          <Button
-            variant="accent"
-            size="md"
-            onClick={() => { setEditingBrand(null); setIsNew(true); }}
-          >
+          <Button variant="accent" size="md" onClick={crud.openNew}>
             <Plus size={15} className="mr-2" /> Nueva marca
           </Button>
         }
       />
 
       {brands.length === 0 ? (
-        <div className="text-center py-16 text-muted text-sm">
-          No se encontraron marcas.
-        </div>
+        <div className="text-center py-16 text-muted text-sm">No se encontraron marcas.</div>
       ) : (
         <AdminTable
           columns={columns}
           data={brands}
           keyExtractor={(b) => b.id}
-          onRowClick={(b) => { setEditingBrand(null); setViewingId(b.id); }}
+          onRowClick={(b) => crud.openViewing(b.id)}
         />
       )}
 
-      {drawerOpen && (
-        <BrandCrudDrawer
-          brand={editingBrand}
-          isNew={isNew}
-          onClose={closeDrawer}
-        />
+      <ConfirmModal
+        open={!!pendingDelete}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={handleDelete}
+        title="¿Eliminar marca?"
+        description={`"${pendingDelete?.name}" se eliminará permanentemente.`}
+        isPending={isPending}
+      />
+
+      {crud.drawerOpen && (
+        <BrandCrudDrawer brand={crud.editing} isNew={crud.isNew} onClose={crud.closeDrawer} />
       )}
 
-      {viewingId && (
+      {crud.viewingId && (
         <EntityProductsDrawer
-          entityId={viewingId}
-          entityName={brands.find((b) => b.id === viewingId)?.name ?? ""}
+          entityId={crud.viewingId}
+          entityName={brands.find((b) => b.id === crud.viewingId)?.name ?? ''}
           entityType="brand"
           allBrands={allBrands.map((b) => ({ id: b.id, name: b.name }))}
-          onClose={() => setViewingId(null)}
+          onClose={crud.closeViewing}
         />
       )}
     </div>
-  );
+  )
 }
