@@ -51,183 +51,187 @@ export default function CartPage() {
 
   return (
     <>
-    <div className="px-6 py-12 max-w-360 mx-auto">
-      {/* ── Page header ── */}
-      <div className="flex items-center gap-4 mb-10">
-        <button
-          onClick={() => router.back()}
-          className="text-muted hover:text-(--gold) transition-colors duration-200"
-          aria-label="Volver"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <h1 className="font-display text-[32px] font-black uppercase tracking-tight">
-          Mi Carrito <span className="text-(--gold)">({itemCount})</span>
-        </h1>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start">
-        {/* ── Items list ──────────────────────────────── */}
-        <div className="flex flex-col gap-4">
-          {cart.map((item) => {
-            const stripe = getCategoryStripe(item.product.category.slug)
-            const catLabel = getCategoryLabel(item.product.category.slug)
-            const lineTotal = item.product.price * item.qty
-
-            return (
-              <div
-                key={item.product.id}
-                className="flex gap-5 p-5 bg-(--surf) border border-(--bd) items-center"
-              >
-                {/* Image / stripe */}
-                <Link
-                  href={`/catalogo/${item.product.slug}`}
-                  className="shrink-0 block w-24 h-24 overflow-hidden"
-                >
-                  {item.product.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={item.product.imageUrl}
-                      alt={item.product.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className={`${stripe} w-full h-full`} />
-                  )}
-                </Link>
-
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="text-[10px] tracking-[2px] uppercase text-muted mb-1">
-                    {catLabel} · {item.product.brand.name}
-                  </div>
-                  <Link href={`/catalogo/${item.product.slug}`}>
-                    <div className="font-display text-[18px] font-black uppercase leading-tight hover:text-(--gold) transition-colors duration-150 truncate">
-                      {item.product.name}
-                    </div>
-                  </Link>
-                  <div className="text-(--gold) font-display text-[15px] font-bold mt-0.5">
-                    {formatCurrency(item.product.price)} c/u
-                  </div>
-
-                  {/* Qty controls */}
-                  <div className="flex items-center gap-3 mt-3">
-                    <div className="flex items-center border border-(--bd) bg-background">
-                      <button
-                        onClick={() => updateQty(item.product.id, -1)}
-                        disabled={item.qty <= 1}
-                        className="px-3 py-2 text-muted hover:text-white disabled:opacity-30 transition-colors duration-150"
-                        aria-label="Disminuir cantidad"
-                      >
-                        <Minus size={13} />
-                      </button>
-                      <span className="font-display font-extrabold text-[15px] min-w-8 text-center">
-                        {item.qty}
-                      </span>
-                      <button
-                        onClick={() => updateQty(item.product.id, 1)}
-                        className="px-3 py-2 text-muted hover:text-white transition-colors duration-150"
-                        aria-label="Aumentar cantidad"
-                      >
-                        <Plus size={13} />
-                      </button>
-                    </div>
-                    <button
-                      onClick={() => setPendingRemove({ id: item.product.id, name: item.product.name })}
-                      className="text-muted hover:text-red-400 transition-colors duration-200"
-                      aria-label="Eliminar producto"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Line total */}
-                <div className="shrink-0 text-right">
-                  <div className="font-display text-[22px] font-black text-(--gold)">
-                    {formatCurrency(lineTotal)}
-                  </div>
-                  {item.qty > 1 && (
-                    <div className="text-[11px] text-muted mt-0.5">
-                      {item.qty} × {formatCurrency(item.product.price)}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )
-          })}
+      <div className="px-6 py-12 max-w-360 mx-auto">
+        {/* ── Page header ── */}
+        <div className="flex items-center gap-4 mb-10">
+          <button
+            onClick={() => router.back()}
+            className="text-muted hover:text-(--gold) transition-colors duration-200"
+            aria-label="Volver"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <h1 className="font-display text-[32px] font-black uppercase tracking-tight">
+            Mi Carrito <span className="text-(--gold)">({itemCount})</span>
+          </h1>
         </div>
 
-        {/* ── Order summary ────────────────────────────── */}
-        <div className="lg:sticky lg:top-24 bg-(--surf) border border-(--bd) p-7 flex flex-col gap-5">
-          <h2 className="font-display text-[20px] font-black uppercase tracking-tight">
-            Resumen del pedido
-          </h2>
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start">
+          {/* ── Items list ──────────────────────────────── */}
+          <div className="flex flex-col gap-4">
+            {cart.map((item) => {
+              const stripe = getCategoryStripe(item.product.category.slug)
+              const catLabel = getCategoryLabel(item.product.category.slug)
+              const lineTotal = item.product.price * item.qty
 
-          <div className="flex flex-col gap-3.5 text-[14px]">
-            <div className="flex justify-between items-baseline">
-              <span className="text-muted">
-                Subtotal{' '}
-                <span className="text-white/50">
-                  ({itemCount} {itemCount === 1 ? 'producto' : 'productos'})
-                </span>
-              </span>
-              <span className="font-semibold">{formatCurrency(subtotal)}</span>
-            </div>
+              return (
+                <div
+                  key={item.product.id}
+                  className="flex gap-5 p-5 bg-(--surf) border border-(--bd) items-center"
+                >
+                  {/* Image / stripe */}
+                  <Link
+                    href={`/catalogo/${item.product.slug}`}
+                    className="shrink-0 block w-24 h-24 overflow-hidden"
+                  >
+                    {item.product.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={item.product.imageUrl}
+                        alt={item.product.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className={`${stripe} w-full h-full`} />
+                    )}
+                  </Link>
 
-            <div className="flex justify-between items-baseline">
-              <span className="text-muted">Envío</span>
-              {shippingFree ? (
-                <span className="text-green-400 font-semibold text-[13px]">Gratis</span>
-              ) : (
-                <span className="font-semibold">{formatCurrency(SHIPPING_COST)}</span>
-              )}
-            </div>
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[10px] tracking-[2px] uppercase text-muted mb-1">
+                      {catLabel} · {item.product.brand.name}
+                    </div>
+                    <Link href={`/catalogo/${item.product.slug}`}>
+                      <div className="font-display text-[18px] font-black uppercase leading-tight hover:text-(--gold) transition-colors duration-150 truncate">
+                        {item.product.name}
+                      </div>
+                    </Link>
+                    <div className="text-(--gold) font-display text-[15px] font-bold mt-0.5">
+                      {formatCurrency(item.product.price)} c/u
+                    </div>
 
-            {!shippingFree && (
-              <div className="text-[12px] text-muted border border-(--bd) px-3.5 py-2.5 leading-relaxed">
-                Agrega{' '}
-                <span className="text-(--gold) font-semibold">
-                  {formatCurrency(SHIPPING_THRESHOLD - subtotal)}
-                </span>{' '}
-                más para obtener envío gratis.
-              </div>
-            )}
+                    {/* Qty controls */}
+                    <div className="flex items-center gap-3 mt-3">
+                      <div className="flex items-center border border-(--bd) bg-background">
+                        <button
+                          onClick={() => updateQty(item.product.id, -1)}
+                          disabled={item.qty <= 1}
+                          className="px-3 py-2 text-muted hover:text-white disabled:opacity-30 transition-colors duration-150"
+                          aria-label="Disminuir cantidad"
+                        >
+                          <Minus size={13} />
+                        </button>
+                        <span className="font-display font-extrabold text-[15px] min-w-8 text-center">
+                          {item.qty}
+                        </span>
+                        <button
+                          onClick={() => updateQty(item.product.id, 1)}
+                          className="px-3 py-2 text-muted hover:text-white transition-colors duration-150"
+                          aria-label="Aumentar cantidad"
+                        >
+                          <Plus size={13} />
+                        </button>
+                      </div>
+                      <button
+                        onClick={() =>
+                          setPendingRemove({ id: item.product.id, name: item.product.name })
+                        }
+                        className="text-muted hover:text-red-400 transition-colors duration-200"
+                        aria-label="Eliminar producto"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </div>
 
-            <div className="border-t border-(--bd) pt-3.5 flex justify-between items-baseline">
-              <span className="text-[12px] uppercase tracking-[1.5px] text-muted">Total</span>
-              <span className="font-display text-[34px] font-black text-(--gold) leading-none">
-                {formatCurrency(total)}
-              </span>
-            </div>
+                  {/* Line total */}
+                  <div className="shrink-0 text-right">
+                    <div className="font-display text-[22px] font-black text-(--gold)">
+                      {formatCurrency(lineTotal)}
+                    </div>
+                    {item.qty > 1 && (
+                      <div className="text-[11px] text-muted mt-0.5">
+                        {item.qty} × {formatCurrency(item.product.price)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
           </div>
 
-          <Button variant="accent" size="lg" full onClick={() => router.push('/checkout')}>
-            <CreditCard size={16} className="mr-2" />
-            Proceder al pago
-          </Button>
+          {/* ── Order summary ────────────────────────────── */}
+          <div className="lg:sticky lg:top-24 bg-(--surf) border border-(--bd) p-7 flex flex-col gap-5">
+            <h2 className="font-display text-[20px] font-black uppercase tracking-tight">
+              Resumen del pedido
+            </h2>
 
-          <Button variant="outline" size="md" full onClick={() => router.push('/catalogo')}>
-            <ArrowLeft size={15} className="mr-2" /> Seguir comprando
-          </Button>
+            <div className="flex flex-col gap-3.5 text-[14px]">
+              <div className="flex justify-between items-baseline">
+                <span className="text-muted">
+                  Subtotal{' '}
+                  <span className="text-white/50">
+                    ({itemCount} {itemCount === 1 ? 'producto' : 'productos'})
+                  </span>
+                </span>
+                <span className="font-semibold">{formatCurrency(subtotal)}</span>
+              </div>
+
+              <div className="flex justify-between items-baseline">
+                <span className="text-muted">Envío</span>
+                {shippingFree ? (
+                  <span className="text-green-400 font-semibold text-[13px]">Gratis</span>
+                ) : (
+                  <span className="font-semibold">{formatCurrency(SHIPPING_COST)}</span>
+                )}
+              </div>
+
+              {!shippingFree && (
+                <div className="text-[12px] text-muted border border-(--bd) px-3.5 py-2.5 leading-relaxed">
+                  Agrega{' '}
+                  <span className="text-(--gold) font-semibold">
+                    {formatCurrency(SHIPPING_THRESHOLD - subtotal)}
+                  </span>{' '}
+                  más para obtener envío gratis.
+                </div>
+              )}
+
+              <div className="border-t border-(--bd) pt-3.5 flex justify-between items-baseline">
+                <span className="text-[12px] uppercase tracking-[1.5px] text-muted">Total</span>
+                <span className="font-display text-[34px] font-black text-(--gold) leading-none">
+                  {formatCurrency(total)}
+                </span>
+              </div>
+            </div>
+
+            <Button variant="accent" size="lg" full onClick={() => router.push('/checkout')}>
+              <CreditCard size={16} className="mr-2" />
+              Proceder al pago
+            </Button>
+
+            <Button variant="outline" size="md" full onClick={() => router.push('/catalogo')}>
+              <ArrowLeft size={15} className="mr-2" /> Seguir comprando
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <ConfirmModal
-      open={pendingRemove !== null}
-      onClose={() => setPendingRemove(null)}
-      onConfirm={() => {
-        if (!pendingRemove) return
-        removeItem(pendingRemove.id)
-        toast.success(`"${pendingRemove.name}" eliminado del carrito`)
-        setPendingRemove(null)
-      }}
-      title="¿Eliminar producto?"
-      description={pendingRemove ? `"${pendingRemove.name}" será eliminado de tu carrito.` : undefined}
-      confirmLabel="Eliminar"
-      cancelLabel="Cancelar"
-    />
-  </>
+      <ConfirmModal
+        open={pendingRemove !== null}
+        onClose={() => setPendingRemove(null)}
+        onConfirm={() => {
+          if (!pendingRemove) return
+          removeItem(pendingRemove.id)
+          toast.success(`"${pendingRemove.name}" eliminado del carrito`)
+          setPendingRemove(null)
+        }}
+        title="¿Eliminar producto?"
+        description={
+          pendingRemove ? `"${pendingRemove.name}" será eliminado de tu carrito.` : undefined
+        }
+        confirmLabel="Eliminar"
+        cancelLabel="Cancelar"
+      />
+    </>
   )
 }

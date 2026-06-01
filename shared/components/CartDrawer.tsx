@@ -99,21 +99,23 @@ export function CartDrawer() {
         </div>
 
         <ConfirmModal
-        open={pendingRemove !== null}
-        onClose={() => setPendingRemove(null)}
-        onConfirm={() => {
-          if (!pendingRemove) return
-          removeItem(pendingRemove.id)
-          toast.success(`"${pendingRemove.name}" eliminado del carrito`)
-          setPendingRemove(null)
-        }}
-        title="¿Eliminar producto?"
-        description={pendingRemove ? `"${pendingRemove.name}" será eliminado de tu carrito.` : undefined}
-        confirmLabel="Eliminar"
-        cancelLabel="Cancelar"
-      />
+          open={pendingRemove !== null}
+          onClose={() => setPendingRemove(null)}
+          onConfirm={() => {
+            if (!pendingRemove) return
+            removeItem(pendingRemove.id)
+            toast.success(`"${pendingRemove.name}" eliminado del carrito`)
+            setPendingRemove(null)
+          }}
+          title="¿Eliminar producto?"
+          description={
+            pendingRemove ? `"${pendingRemove.name}" será eliminado de tu carrito.` : undefined
+          }
+          confirmLabel="Eliminar"
+          cancelLabel="Cancelar"
+        />
 
-      {/* Footer */}
+        {/* Footer */}
         {cart.length > 0 && (
           <div className="px-7 py-6 border-t border-(--bd)">
             <div className="flex justify-between items-baseline mb-5">
