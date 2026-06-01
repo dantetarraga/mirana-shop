@@ -4,6 +4,7 @@ import { createCategory, updateCategory } from '@/features/categories/actions/ca
 import type { CategoryRow } from '@/modules/catalog/repositories/category.repo'
 import { AdminDrawer } from '@/shared/components/AdminDrawer'
 import { EntityProductsPanel } from '@/shared/components/EntityProductsPanel'
+import { FilterMultiSelect } from '@/shared/components/FilterMultiSelect'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
 import { useAutoSlug, useFormEntity, useServerAction } from '@/shared/hooks'
@@ -117,14 +118,17 @@ export function CategoryCrudDrawer({
         </FormField>
 
         <FormField label="Categoría padre (opcional)" error={errors.parentId?.message}>
-          <select {...register('parentId')} className={cls.input}>
-            <option value="">Sin categoría padre</option>
-            {parentOptions.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          <FilterMultiSelect
+            singleSelect
+            label="Categoría padre"
+            className="w-full"
+            options={[
+              { label: 'Sin categoría padre', value: '' },
+              ...parentOptions.map((c) => ({ label: c.name, value: c.id })),
+            ]}
+            selected={watch('parentId') ? [watch('parentId')!] : []}
+            onToggle={(val) => setValue('parentId', val, { shouldValidate: true })}
+          />
         </FormField>
 
         <FormField label="Descripción" error={errors.description?.message}>

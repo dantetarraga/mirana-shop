@@ -16,6 +16,8 @@ import type { CategoryRow } from '@/modules/catalog/repositories/category.repo'
 import type { CollectionRow } from '@/modules/catalog/repositories/collection.repo'
 import { AdminTable, type Column } from '@/shared/components/AdminTable'
 import { ExcelImportDrawer } from '@/shared/components/ExcelImportDrawer'
+import { FilterMultiSelect } from '@/shared/components/FilterMultiSelect'
+import { PanelHeader } from '@/shared/components/PanelHeader'
 import { ServerSearchForm } from '@/shared/components/ServerSearchForm'
 import { StockBadge } from '@/shared/components/StockBadge'
 import { Button } from '@/shared/components/ui/Button'
@@ -25,9 +27,9 @@ import { cls } from '@/shared/lib/admin-classes'
 import type { ImportProductRow } from '@/shared/lib/schemas'
 import { productDbSchema } from '@/shared/lib/schemas'
 import { cn } from '@/shared/lib/utils'
-import { ChevronDown, FileSpreadsheet, Pencil, Trash2, X } from 'lucide-react'
+import { FileSpreadsheet, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
 type ProductFormValues = z.input<typeof productDbSchema>
@@ -59,77 +61,6 @@ function buildUrl(params: Record<string, string | string[] | undefined>) {
   }
   const qs = p.toString()
   return qs ? `/admin/products?${qs}` : '/admin/products'
-}
-
-interface FilterMultiSelectProps {
-  label: string
-  options: { label: string; value: string }[]
-  selected: string[]
-  onToggle: (value: string) => void
-}
-
-function FilterMultiSelect({ label, options, selected, onToggle }: FilterMultiSelectProps) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [])
-
-  const isActive = selected.length > 0
-
-  return (
-    <div className="relative" ref={ref}>
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className={cn(
-          'flex items-center gap-1.5 px-3.5 py-2 text-[11px] tracking-[1px] uppercase font-display font-extrabold border transition-colors',
-          isActive
-            ? 'bg-(--gold) border-(--gold) text-black'
-            : 'border-(--bd) text-muted hover:text-text',
-        )}
-      >
-        {label}
-        {selected.length > 0 && (
-          <span
-            className={cn(
-              'flex items-center justify-center min-w-4 h-4 px-1 text-[9px] font-black',
-              isActive ? 'bg-black/25 text-black' : 'bg-(--sub) text-muted',
-            )}
-          >
-            {selected.length}
-          </span>
-        )}
-        <ChevronDown
-          size={9}
-          className={cn('transition-transform shrink-0', open && 'rotate-180')}
-        />
-      </button>
-      {open && (
-        <div className="absolute top-full left-0 z-50 mt-1 bg-card border border-(--bd) min-w-48 max-h-60 overflow-y-auto shadow-lg">
-          {options.map((opt) => (
-            <label
-              key={opt.value}
-              className="flex items-center gap-2.5 px-3 py-2 hover:bg-(--sub) cursor-pointer"
-            >
-              <input
-                type="checkbox"
-                checked={selected.includes(opt.value)}
-                onChange={() => onToggle(opt.value)}
-                className="accent-(--gold) w-3.5 h-3.5 shrink-0"
-              />
-              <span className="text-[13px] text-text leading-none">{opt.label}</span>
-            </label>
-          ))}
-        </div>
-      )}
-    </div>
-  )
 }
 
 interface ProductsClientProps {
@@ -324,10 +255,26 @@ export function ProductsClient({
 
   return (
     <div className="px-8 pt-7 pb-12">
-      {/* ── Filtros ── */}
-      <div className="flex flex-col gap-2.5 mb-4">
-        {/* Fila 1: Búsqueda + acciones */}
-        <div className="flex items-center gap-3 flex-wrap">
+      <PanelHeader
+        label="Catálogo"
+        title={`${total} producto${total !== 1 ? 's' : ''}`}
+        align="center"
+        side={
+          <div className="flex gap-2">
+            <Button variant="outline" size="md" onClick={() => setShowImport(true)}>
+              <FileSpreadsheet size={15} className="mr-1.5" /> Importar Excel
+            </Button>
+            <Button variant="accent" size="md" onClick={crud.openNew}>
+              <Plus size={15} className="mr-1.5" /> Nuevo producto
+            </Button>
+          </div>
+        }
+      />
+
+      {/* Filtros */}
+      <div className="flex flex-col gap-2.5 mb-4.5">
+        {/* Fila: búsqueda + selects + limpiar */}
+        <div className="flex items-center gap-1.5 flex-wrap">
           <ServerSearchForm
             placeholder="Buscar producto o SKU..."
             defaultValue={currentQ}
@@ -338,18 +285,6 @@ export function ProductsClient({
               ...(currentCollections.length > 0 && { collection: currentCollections.join(',') }),
             }}
           />
-          <div className="flex gap-2 ml-auto">
-            <Button variant="outline" size="md" onClick={() => setShowImport(true)}>
-              <FileSpreadsheet size={15} /> Importar Excel
-            </Button>
-            <Button variant="accent" size="md" onClick={crud.openNew}>
-              + Nuevo producto
-            </Button>
-          </div>
-        </div>
-
-        {/* Fila 2: Multi-selects */}
-        <div className="flex items-center gap-1.5 flex-wrap">
           <FilterMultiSelect
             label="Categoría"
             options={categories.map((c) => ({ label: c.name, value: c.slug }))}

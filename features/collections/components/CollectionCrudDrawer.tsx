@@ -6,6 +6,8 @@ import {
 } from '@/features/collections/actions/collection.actions'
 import type { CollectionRow } from '@/modules/catalog/repositories/collection.repo'
 import { AdminDrawer } from '@/shared/components/AdminDrawer'
+import { EntityProductsPanel } from '@/shared/components/EntityProductsPanel'
+import { FilterMultiSelect } from '@/shared/components/FilterMultiSelect'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
 import { useAutoSlug, useFormEntity, useServerAction } from '@/shared/hooks'
@@ -123,15 +125,17 @@ export function CollectionCrudDrawer({ collection, isNew, onClose }: CollectionC
         </FormField>
 
         <FormField label="Estado" error={errors.active?.message}>
-          <select
-            {...register('active', {
-              setValueAs: (v) => v === 'true' || v === true,
-            })}
-            className={cls.input}
-          >
-            <option value="true">Activa</option>
-            <option value="false">Inactiva</option>
-          </select>
+          <FilterMultiSelect
+            singleSelect
+            label="Estado"
+            className="w-full"
+            options={[
+              { label: 'Inactiva', value: 'false' },
+              { label: 'Activa', value: 'true' },
+            ]}
+            selected={[String(watch('active'))]}
+            onToggle={(val) => setValue('active', val === 'true', { shouldValidate: true })}
+          />
         </FormField>
 
         <div className="flex gap-2.5 pt-1">
