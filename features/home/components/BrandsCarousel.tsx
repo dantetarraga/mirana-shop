@@ -1,4 +1,4 @@
-import type { BrandRow } from "@/modules/catalog/repositories/brand.repo";
+import type { BrandRow } from '@/modules/catalog/repositories/brand.repo'
 
 interface BrandsCarouselProps {
   brands: BrandRow[]
@@ -32,11 +32,7 @@ export function BrandsCarousel({ brands }: BrandsCarouselProps) {
             className="brand-item shrink-0 w-[240px] h-[120px] flex items-center justify-center border-r border-(--bd) px-8"
           >
             {b.imageUrl ? (
-              <img
-                src={b.imageUrl}
-                alt={b.name}
-                className="max-h-[60px] max-w-[160px] object-contain"
-              />
+              <img src={b.imageUrl} alt={b.name} className="max-h-15 max-w-40 object-contain" />
             ) : (
               <div className="text-center">
                 <div className="font-display font-black uppercase tracking-[1px] leading-none text-text text-[24px]">

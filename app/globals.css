@@ -573,4 +573,14 @@
   .pie-dot-2 {
     background: #7b5fff;
   }
+
+  /* ── Form input ── */
+  .adm-input {
+    @apply w-full font-sans text-sm text-text bg-card border border-border
+           outline-none placeholder:text-muted/50 transition-colors duration-200;
+    padding: 10px 14px;
+  }
+  .adm-input:focus {
+    border-color: var(--bdh);
+  }
 }

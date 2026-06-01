@@ -1,13 +1,13 @@
-import { productRepo } from "@/modules/catalog/repositories/product.repo";
-import { toProductCards } from "@/modules/catalog/mappers/product.mapper";
-import { ProductCard } from "@/shared/components/ProductCard";
+import { toProductCards } from '@/modules/catalog/mappers/product.mapper'
+import { productRepo } from '@/modules/catalog/repositories/product.repo'
+import { ProductCard } from '@/shared/components/ProductCard'
 
 // Server Component — no necesita "use client"
 export async function NewArrivals() {
-  const products = await productRepo.findNew(6);
-  const items = toProductCards(products);
+  const products = await productRepo.findNew(6)
+  const items = toProductCards(products)
 
-  if (items.length === 0) return null;
+  if (items.length === 0) return null
 
   return (
     <section className="px-12 py-20">
@@ -28,13 +28,11 @@ export async function NewArrivals() {
         </a>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-3 [scrollbar-width:none]">
+      <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(260px,1fr))]">
         {items.map((p) => (
-          <div key={p.id} className="shrink-0 w-[260px]">
-            <ProductCard product={p} />
-          </div>
+          <ProductCard key={p.id} product={p} />
         ))}
       </div>
     </section>
-  );
+  )
 }

@@ -82,6 +82,9 @@ model User {
   image         String?
   role          Role      @default(CUSTOMER)
 
+  termsAcceptedAt DateTime? // Fecha en que aceptó los Términos y Condiciones
+  termsVersion    String?   // Versión del documento aceptado, e.g. "v1.0"
+
   profile  Profile?
   accounts  Account[]
   sessions  Session[]

@@ -1,20 +1,20 @@
-import { productRepo } from "@/modules/catalog/repositories/product.repo";
-import { Button } from "@/shared/components/ui/Button";
+import { productRepo } from '@/modules/catalog/repositories/product.repo'
+import { Button } from '@/shared/components/ui/Button'
 
 const STRIPE_MAP: Record<string, string> = {
-  "figuras-accion": "stripe-fig",
-  lego:             "stripe-lego",
-  "modelos-escala": "stripe-veh",
-  anime:            "stripe-fig",
-};
+  'figuras-accion': 'stripe-fig',
+  lego: 'stripe-lego',
+  'modelos-escala': 'stripe-veh',
+  anime: 'stripe-fig',
+}
 
 export async function PreorderSection() {
   const preorders = await productRepo.findMany({
-    status:     "PREORDER",
-    take:       6,
-  });
+    status: 'PREORDER',
+    take: 6,
+  })
 
-  if (preorders.length === 0) return null;
+  if (preorders.length === 0) return null
 
   return (
     <section className="px-12 py-20">
@@ -32,15 +32,15 @@ export async function PreorderSection() {
 
       <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4">
         {preorders.map((p) => {
-          const imageUrl   = p.images[0]?.url ?? null;
-          const stripe     = STRIPE_MAP[p.category.slug] ?? "stripe-fig";
-          const price      = Number(p.price);
-          const salePrice  = p.compareAtPrice ? Number(p.compareAtPrice) : null;
+          const imageUrl = p.images[0]?.url ?? null
+          const stripe = STRIPE_MAP[p.category.slug] ?? 'stripe-fig'
+          const price = Number(p.price)
+          const salePrice = p.compareAtPrice ? Number(p.compareAtPrice) : null
 
           return (
             <div key={p.id} className="bg-card border border-(--bd) cursor-pointer">
               {/* Visual */}
-              <div className={`${stripe} h-[200px] relative flex items-center justify-center`}>
+              <div className={`${stripe} h-50 relative flex items-center justify-center`}>
                 {imageUrl ? (
                   <img
                     src={imageUrl}
@@ -52,7 +52,7 @@ export async function PreorderSection() {
                     preventa
                   </span>
                 )}
-                <div className="absolute top-3 left-0 bg-(--gold) text-black text-[9px] font-extrabold tracking-[2px] uppercase px-2.5 py-[5px]">
+                <div className="absolute top-3 left-0 bg-(--gold) text-black text-[9px] font-extrabold tracking-[2px] uppercase px-2.5 py-1.25">
                   PREVENTA
                 </div>
               </div>
@@ -80,9 +80,9 @@ export async function PreorderSection() {
                 </Button>
               </div>
             </div>
-          );
+          )
         })}
       </div>
     </section>
-  );
+  )
 }
