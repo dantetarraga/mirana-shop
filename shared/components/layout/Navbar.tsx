@@ -2,7 +2,7 @@
 
 import { Button } from '@/shared/components/ui/Button'
 import { useStore } from '@/shared/lib/store-context'
-import { LayoutGrid, LogOut, Search, ShoppingBag } from 'lucide-react'
+import { LayoutGrid, LogOut, Package, Search, ShoppingBag, User } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 
@@ -105,13 +105,18 @@ export function Navbar() {
               </div>
 
               {[
-                ['Mi perfil', '👤'],
-                ['Mis pedidos', '📦'],
-                ['Favoritos', '♡'],
-              ].map(([label, icon]) => (
-                <Button key={label} variant="ghost" size="sm" full className="justify-start px-4.5">
-                  <span>{icon}</span> {label}
-                </Button>
+                { label: 'Mi perfil', icon: User, href: '/cuenta/perfil' },
+                { label: 'Mis pedidos', icon: Package, href: '/cuenta/pedidos' },
+              ].map(({ label, icon: Icon, href }) => (
+                <Link
+                  key={label}
+                  href={href}
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-2.5 px-4.5 py-2.75 text-[13px] no-underline font-sans font-semibold text-text hover:bg-card transition-colors duration-150"
+                >
+                  <Icon size={14} className="text-muted shrink-0" />
+                  {label}
+                </Link>
               ))}
 
               {user.role === 'admin' && (

@@ -21,6 +21,7 @@ export type OrderListItem = {
   code: string
   status: OrderStatus
   paymentStatus: PaymentStatus
+  paymentMethod: PaymentMethod
   total: Decimal
   subtotal: Decimal
   shippingCost: Decimal
@@ -109,6 +110,7 @@ const listSelect = {
   code: true,
   status: true,
   paymentStatus: true,
+  paymentMethod: true,
   total: true,
   subtotal: true,
   shippingCost: true,
@@ -194,6 +196,20 @@ export const orderRepo = {
       where: { code },
       select: detailSelect,
     }) as Promise<OrderDetail | null>
+  },
+
+  async findByEmail(email: string, take = 20): Promise<OrderListItem[]> {
+    return db.order.findMany({
+      where: {
+        OR: [
+          { guestEmail: { equals: email, mode: 'insensitive' } },
+          { user: { email: { equals: email, mode: 'insensitive' } } },
+        ],
+      },
+      select: listSelect,
+      orderBy: { createdAt: 'desc' },
+      take,
+    }) as Promise<OrderListItem[]>
   },
 
   async count(filters: Omit<OrderFilters, 'take' | 'skip'> = {}): Promise<number> {

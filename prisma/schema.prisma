@@ -87,6 +87,7 @@ model User {
   sessions  Session[]
   orders    Order[]
   preorders Preorder[]
+  addresses UserAddress[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -102,13 +103,31 @@ model Profile {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   phone     String?
-  address   String?
-  district  String?
-  reference String?
-  city      String?
-  country   String  @default("PE")
+  dni       String?
+  hasKids   Boolean @default(false)
+  kidsCount Int?
 
   updatedAt DateTime @updatedAt
+}
+
+model UserAddress {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  label     String  @default("Casa") // "Casa", "Trabajo", "Otro"
+  fullName  String
+  phone     String
+  address   String
+  district  String
+  city      String  @default("Lima")
+  reference String?
+  isDefault Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model Account {

@@ -58,9 +58,19 @@ const PAYMENT_METHODS = [
 // Types
 // ---------------------------------------------------------------------------
 
+type SuccessItem = {
+  name: string
+  qty: number
+  unitPrice: number
+}
+
 type SuccessData = {
   code: string
   paymentMethod: string
+  items: SuccessItem[]
+  subtotal: number
+  shippingCost: number
+  total: number
   culqi?:
     | {
         orderId: string
@@ -152,11 +162,22 @@ export default function CheckoutPage() {
       return
     }
 
+    // Capturamos resumen antes de limpiar el carrito
+    const successItems = cart.map((i) => ({
+      name: i.product.name,
+      qty: i.qty,
+      unitPrice: i.product.price,
+    }))
+
     // Clear cart items
     cart.forEach((i) => _removeItem(i.product.id))
     setSuccess({
       code: result.data.code,
       paymentMethod: result.data.paymentMethod,
+      items: successItems,
+      subtotal,
+      shippingCost,
+      total,
       culqi: result.data.culqi,
     })
   }
@@ -419,6 +440,48 @@ function SuccessScreen({ data }: { data: SuccessData }) {
           <p className="text-[12px] text-muted mt-1">
             Guarda este código para hacer seguimiento de tu pedido.
           </p>
+        </div>
+
+        {/* Resumen de productos */}
+        <div className="bg-card border border-(--bd) w-full">
+          <div className="px-6 py-4 border-b border-(--bd)">
+            <p className="text-[10px] tracking-[3px] uppercase text-(--gold)">Resumen del pedido</p>
+          </div>
+          <ul className="flex flex-col divide-y divide-(--bd)">
+            {data.items.map((item, i) => (
+              <li key={i} className="flex justify-between items-center px-6 py-3 gap-4">
+                <div className="flex-1 min-w-0">
+                  <p className="font-display font-bold text-[13px] uppercase leading-tight truncate">
+                    {item.name}
+                  </p>
+                  <p className="text-[11px] text-muted">
+                    {item.qty} × {formatCurrency(item.unitPrice)}
+                  </p>
+                </div>
+                <span className="font-semibold text-[13px] shrink-0">
+                  {formatCurrency(item.unitPrice * item.qty)}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <div className="px-6 py-4 border-t border-(--bd) flex flex-col gap-2">
+            <div className="flex justify-between text-[13px]">
+              <span className="text-muted">Subtotal</span>
+              <span>{formatCurrency(data.subtotal)}</span>
+            </div>
+            <div className="flex justify-between text-[13px]">
+              <span className="text-muted">Envío</span>
+              {data.shippingCost === 0 ? (
+                <span className="text-emerald-400 font-semibold text-[12px] uppercase">Gratis</span>
+              ) : (
+                <span>{formatCurrency(data.shippingCost)}</span>
+              )}
+            </div>
+            <div className="flex justify-between font-display font-black text-[17px] uppercase tracking-tight border-t border-(--bd) pt-2 mt-1">
+              <span>Total pagado</span>
+              <span className="text-(--gold)">{formatCurrency(data.total)}</span>
+            </div>
+          </div>
         </div>
 
         {/* Yape QR */}
