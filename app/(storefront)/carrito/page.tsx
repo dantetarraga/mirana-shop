@@ -4,7 +4,7 @@ import { Button } from '@/shared/components/ui/Button'
 import { useStore } from '@/shared/lib/store-context'
 import { formatCurrency } from '@/shared/lib/utils'
 import { getCategoryLabel, getCategoryStripe } from '@/shared/types/catalog.types'
-import { ArrowLeft, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
+import { ArrowLeft, CreditCard, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -202,7 +202,8 @@ export default function CartPage() {
           </div>
 
           <Button variant="accent" size="lg" full onClick={() => router.push('/checkout')}>
-            Proceder al pago →
+            <CreditCard size={16} className="mr-2" />
+            Proceder al pago
           </Button>
 
           <Button variant="outline" size="md" full onClick={() => router.push('/catalogo')}>
