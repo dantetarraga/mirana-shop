@@ -6,39 +6,28 @@ import {
   importProducts,
   updateProduct,
 } from '@/features/products/actions/product.actions'
+import {
+  ProductCrudDrawer,
+  type SerializedProduct,
+} from '@/features/products/components/ProductCrudDrawer'
 import type { BrandRow } from '@/modules/catalog/repositories/brand.repo'
 import type { CategoryRow } from '@/modules/catalog/repositories/category.repo'
-import type { ProductListItem } from '@/modules/catalog/repositories/product.repo'
-import { AdminDrawer } from '@/shared/components/AdminDrawer'
 import { AdminTable, type Column } from '@/shared/components/AdminTable'
 import { ExcelImportDrawer } from '@/shared/components/ExcelImportDrawer'
 import { ServerSearchForm } from '@/shared/components/ServerSearchForm'
 import { StockBadge } from '@/shared/components/StockBadge'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
-import { FormField } from '@/shared/components/ui/FormField'
-import { useServerAction } from '@/shared/hooks'
+import { useCrudState, useServerAction } from '@/shared/hooks'
 import { cls } from '@/shared/lib/admin-classes'
 import type { ImportProductRow } from '@/shared/lib/schemas'
 import { productDbSchema } from '@/shared/lib/schemas'
 import { cn } from '@/shared/lib/utils'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { FileSpreadsheet, Pencil, X } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
 type ProductFormValues = z.input<typeof productDbSchema>
-
-// ---------------------------------------------------------------------------
-// Tipos serializados
-// ---------------------------------------------------------------------------
-
-type SerializedProduct = Omit<ProductListItem, 'price' | 'compareAtPrice'> & {
-  price: number
-  compareAtPrice: number | null
-  collections: { collection: { id: string; name: string; slug: string } }[]
-}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -86,19 +75,6 @@ interface ProductsClientProps {
   currentCat: string
 }
 
-const EMPTY_FORM: ProductFormValues = {
-  name: '',
-  slug: '',
-  sku: '',
-  description: '',
-  price: 0,
-  stock: 0,
-  categoryId: '',
-  brandId: '',
-  status: 'AVAILABLE',
-  featured: false,
-}
-
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -113,8 +89,7 @@ export function ProductsClient({
   currentQ,
   currentCat,
 }: ProductsClientProps) {
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [isNew, setIsNew] = useState(false)
+  const crud = useCrudState<SerializedProduct>()
   const [showImport, setShowImport] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<SerializedProduct | null>(null)
   const [products, setProducts] = useState<SerializedProduct[]>(initialProducts)
@@ -122,65 +97,15 @@ export function ProductsClient({
 
   const totalPages = Math.ceil(total / perPage)
 
-  const form = useForm<ProductFormValues>({
-    resolver: zodResolver(productDbSchema),
-    defaultValues: EMPTY_FORM,
-  })
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = form
-
-  const editingProduct = useMemo(
-    () => products.find((p) => p.id === editingId) ?? null,
-    [products, editingId],
-  )
-
-  useEffect(() => {
-    if (editingProduct) {
-      reset({
-        name: editingProduct.name,
-        slug: editingProduct.slug,
-        sku: editingProduct.sku,
-        description: (editingProduct as { description?: string }).description ?? '',
-        price: editingProduct.price,
-        compareAtPrice: editingProduct.compareAtPrice ?? undefined,
-        stock: editingProduct.inventory?.availableStock ?? 0,
-        categoryId: editingProduct.category.id,
-        brandId: editingProduct.brand.id,
-        status: editingProduct.status,
-        featured: editingProduct.featured,
-      })
-    } else if (isNew) {
-      reset({ ...EMPTY_FORM, categoryId: categories[0]?.id ?? '', brandId: brands[0]?.id ?? '' })
-    }
-  }, [editingProduct, isNew, reset, categories, brands])
-
-  const openEdit = (p: SerializedProduct) => {
-    setIsNew(false)
-    setEditingId(p.id)
-  }
-  const openNew = () => {
-    setEditingId(null)
-    setIsNew(true)
-  }
-  const closeDrawer = () => {
-    setEditingId(null)
-    setIsNew(false)
-    reset(EMPTY_FORM)
-  }
-
   const onSubmit = (data: ProductFormValues) => {
-    if (isNew) {
+    if (crud.isNew) {
       run(() => createProduct(data), {
         successMsg: 'Producto creado',
-        onSuccess: () => closeDrawer(),
+        onSuccess: () => crud.closeDrawer(),
         refresh: true,
       })
-    } else if (editingId) {
-      const id = editingId
+    } else if (crud.editing) {
+      const id = crud.editing.id
       run(() => updateProduct(id, data), {
         successMsg: 'Producto actualizado',
         onSuccess: () => {
@@ -200,7 +125,7 @@ export function ProductsClient({
                 : p,
             ),
           )
-          closeDrawer()
+          crud.closeDrawer()
         },
       })
     }
@@ -281,7 +206,7 @@ export function ProductsClient({
               size="sm"
               onClick={(e) => {
                 e.stopPropagation()
-                openEdit(p)
+                crud.openEdit(p)
               }}
             >
               <Pencil size={14} />
@@ -301,10 +226,8 @@ export function ProductsClient({
         ),
       },
     ],
-    [],
-  ) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const drawerOpen = isNew || editingId !== null
+    [], // eslint-disable-line react-hooks/exhaustive-deps
+  )
 
   return (
     <div className="px-8 pt-7 pb-12">
@@ -349,7 +272,7 @@ export function ProductsClient({
           <Button variant="outline" size="md" onClick={() => setShowImport(true)}>
             <FileSpreadsheet size={15} /> Importar Excel
           </Button>
-          <Button variant="accent" size="md" onClick={openNew}>
+          <Button variant="accent" size="md" onClick={crud.openNew}>
             + Nuevo producto
           </Button>
         </div>
@@ -359,7 +282,7 @@ export function ProductsClient({
         columns={columns}
         data={products}
         keyExtractor={(p) => p.id}
-        onRowClick={openEdit}
+        onRowClick={crud.openEdit}
       />
 
       {/* Paginación */}
@@ -399,106 +322,16 @@ export function ProductsClient({
         <ExcelImportDrawer onClose={() => setShowImport(false)} onImport={handleImport} />
       )}
 
-      {drawerOpen && (
-        <AdminDrawer
-          title={isNew ? 'Nuevo producto' : (editingProduct?.name ?? 'Editar producto')}
-          sub={isNew ? 'Crear producto' : 'Editar producto'}
-          onClose={closeDrawer}
-        >
-          <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4.5">
-            <FormField label="Nombre" error={errors.name?.message}>
-              <input
-                {...register('name')}
-                className={cls.input}
-                placeholder="Nombre del producto"
-              />
-            </FormField>
-            <div className="grid grid-cols-2 gap-3.5">
-              <FormField label="SKU" error={errors.sku?.message}>
-                <input {...register('sku')} className={cls.input} placeholder="FIG-MAR-001" />
-              </FormField>
-              <FormField label="Slug" error={errors.slug?.message}>
-                <input
-                  {...register('slug')}
-                  className={cls.input}
-                  placeholder="nombre-del-producto"
-                />
-              </FormField>
-              <FormField label="Precio base (S/)" error={errors.price?.message}>
-                <input
-                  {...register('price', { valueAsNumber: true })}
-                  type="number"
-                  step="0.01"
-                  className={cls.input}
-                  placeholder="0.00"
-                />
-              </FormField>
-              <FormField label="Stock" error={errors.stock?.message}>
-                <input
-                  {...register('stock', { valueAsNumber: true })}
-                  type="number"
-                  className={cls.input}
-                  placeholder="0"
-                />
-              </FormField>
-            </div>
-            <div className="grid grid-cols-2 gap-3.5">
-              <FormField label="Categoría" error={errors.categoryId?.message}>
-                <select {...register('categoryId')} className={cls.input}>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </FormField>
-              <FormField label="Marca" error={errors.brandId?.message}>
-                <select {...register('brandId')} className={cls.input}>
-                  {brands.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name}
-                    </option>
-                  ))}
-                </select>
-              </FormField>
-            </div>
-            <div className="grid grid-cols-2 gap-3.5">
-              <FormField label="Estado" error={errors.status?.message}>
-                <select {...register('status')} className={cls.input}>
-                  <option value="AVAILABLE">Disponible</option>
-                  <option value="PREORDER">Preventa</option>
-                  <option value="SOLD_OUT">Agotado</option>
-                  <option value="COMING_SOON">Próximamente</option>
-                  <option value="ARCHIVED">Archivado</option>
-                </select>
-              </FormField>
-              <FormField label="Destacado">
-                <select
-                  {...register('featured', { setValueAs: (v) => v === 'true' || v === true })}
-                  className={cls.input}
-                >
-                  <option value="false">No</option>
-                  <option value="true">Sí</option>
-                </select>
-              </FormField>
-            </div>
-            <FormField label="Descripción" error={errors.description?.message}>
-              <textarea
-                {...register('description')}
-                rows={3}
-                className={cn(cls.input, 'resize-y')}
-              />
-            </FormField>
-            <div className="flex gap-2.5">
-              <Button type="submit" variant="accent" size="md" full disabled={isPending}>
-                {isPending ? 'Guardando...' : 'Guardar'}
-              </Button>
-              <Button type="button" variant="outline" size="md" full onClick={closeDrawer}>
-                Cancelar
-              </Button>
-            </div>
-          </form>
-        </AdminDrawer>
+      {crud.drawerOpen && (
+        <ProductCrudDrawer
+          product={crud.editing}
+          isNew={crud.isNew}
+          categories={categories}
+          brands={brands}
+          onClose={crud.closeDrawer}
+          onSubmit={onSubmit}
+          isPending={isPending}
+        />
       )}
     </div>
   )
