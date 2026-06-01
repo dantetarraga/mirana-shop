@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 interface ProductCardProps {
   product: CatalogProduct
   showBadge?: boolean
+  noAnimation?: boolean
 }
 
 function Stars({ r }: { r: number }) {
@@ -21,7 +22,11 @@ function Stars({ r }: { r: number }) {
   )
 }
 
-export function ProductCard({ product: p, showBadge = true }: ProductCardProps) {
+export function ProductCard({
+  product: p,
+  showBadge = true,
+  noAnimation = false,
+}: ProductCardProps) {
   const { openProductModal, addToCart } = useStore()
   const stripe = getCategoryStripe(p.category.slug)
   const catLabel = getCategoryLabel(p.category.slug)
@@ -29,7 +34,10 @@ export function ProductCard({ product: p, showBadge = true }: ProductCardProps) 
   const isNew = p.status === 'AVAILABLE' && p.stock > 0
 
   return (
-    <div className="pcard animate-fade-up" onClick={() => openProductModal(p)}>
+    <div
+      className={`pcard${noAnimation ? '' : ' animate-fade-up'}`}
+      onClick={() => openProductModal(p)}
+    >
       <div className="relative">
         <div className={`${stripe} h-55 flex items-center justify-center`}>
           {p.imageUrl ? (
