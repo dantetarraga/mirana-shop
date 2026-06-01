@@ -1,10 +1,11 @@
 ﻿'use client'
 
-import { getCategoryStripe } from '@/shared/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
 import { useStore } from '@/shared/lib/store-context'
+import { getCategoryStripe } from '@/shared/types/catalog.types'
 import { Minus, Plus, X } from 'lucide-react'
 import { useEffect } from 'react'
+import { toast } from 'sonner'
 
 export function CartDrawer() {
   const { cart, cartOpen, setCartOpen, updateQty, removeItem } = useStore()
@@ -53,7 +54,9 @@ export function CartDrawer() {
                 key={item.product.id}
                 className="flex gap-3.5 items-center pb-3.5 border-b border-(--bd)"
               >
-                <div className={`${getCategoryStripe(item.product.category.slug)} w-17.5 h-17.5 shrink-0`} />
+                <div
+                  className={`${getCategoryStripe(item.product.category.slug)} w-17.5 h-17.5 shrink-0`}
+                />
                 <div className="flex-1 min-w-0">
                   <div className="font-display text-[17px] font-extrabold uppercase whitespace-nowrap overflow-hidden text-ellipsis">
                     {item.product.name}
@@ -77,7 +80,10 @@ export function CartDrawer() {
                   variant="icon"
                   size="sm"
                   destructive
-                  onClick={() => removeItem(item.product.id)}
+                  onClick={() => {
+                    removeItem(item.product.id)
+                    toast.success(`"${item.product.name}" eliminado del carrito`)
+                  }}
                   className="self-start"
                 >
                   <X size={14} />

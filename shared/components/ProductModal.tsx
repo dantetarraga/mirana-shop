@@ -1,10 +1,12 @@
 ﻿'use client'
 
-import { getCategoryStripe } from '@/shared/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
 import { useStore } from '@/shared/lib/store-context'
+import { getCategoryStripe } from '@/shared/types/catalog.types'
 import { Minus, Plus, X } from 'lucide-react'
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 export function ProductModal() {
   const { activeProduct: p, closeProductModal, addToCart } = useStore()
@@ -31,13 +33,26 @@ export function ProductModal() {
         className="bg-surf border border-(--bd) max-w-220 w-full max-h-[92vh] overflow-y-auto grid grid-cols-2 relative"
       >
         {/* Image */}
-        <div className={`${getCategoryStripe(p.category.slug)} min-h-110 flex items-center justify-center relative`}>
+        <div
+          className={`${getCategoryStripe(p.category.slug)} min-h-110 flex items-center justify-center relative`}
+        >
           {p.imageUrl ? (
-            <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover absolute inset-0" />
+            <img
+              src={p.imageUrl}
+              alt={p.name}
+              className="w-full h-full object-cover absolute inset-0"
+            />
           ) : (
-            <div className="font-mono text-[12px] tracking-[2px] text-muted uppercase">{p.name.toUpperCase()}</div>
+            <div className="font-mono text-[12px] tracking-[2px] text-muted uppercase">
+              {p.name.toUpperCase()}
+            </div>
           )}
-          <Button variant="icon" size="md" onClick={closeProductModal} className="absolute top-4 right-4 z-10">
+          <Button
+            variant="icon"
+            size="md"
+            onClick={closeProductModal}
+            className="absolute top-4 right-4 z-10"
+          >
             <X size={16} />
           </Button>
         </div>
@@ -78,13 +93,22 @@ export function ProductModal() {
             full
             onClick={() => {
               addToCart(p, qty)
+              toast.success(`"${p.name}" agregado al carrito`)
               closeProductModal()
             }}
           >
-            Agregar al carrito · ${(p.price * qty).toFixed(2)}
+            Agregar al carrito · S/ {(p.price * qty).toFixed(2)}
           </Button>
 
-          <Button variant="outline" size="lg" full onClick={closeProductModal}>
+          <Link
+            href={`/catalogo/${p.slug}`}
+            onClick={closeProductModal}
+            className="block w-full text-center border border-(--bd) px-6 py-3 text-[12px] tracking-[2px] uppercase font-display font-extrabold hover:border-(--gold) hover:text-(--gold) transition-colors"
+          >
+            Ver detalles del producto →
+          </Link>
+
+          <Button variant="ghost" size="lg" full onClick={closeProductModal}>
             Seguir explorando
           </Button>
         </div>

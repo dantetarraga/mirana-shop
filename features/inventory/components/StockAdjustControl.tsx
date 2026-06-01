@@ -18,7 +18,9 @@ export function StockAdjustControl({ productId, productName, stock }: Props) {
   const adjust = (next: number) => {
     if (next < 0) return
     run(() => adjustStock({ productId, newStock: next }), {
-      onSuccess: (data) => toast.success(`Stock de "${productName}" → ${data.newStock}`),
+      onSuccess: (data) => {
+        toast.success(`Stock de "${productName}" → ${data.newStock}`)
+      },
       refresh: true,
     })
   }

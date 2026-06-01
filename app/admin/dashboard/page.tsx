@@ -1,8 +1,8 @@
-import { orderRepo } from "@/modules/orders/repositories/order.repo";
-import { productRepo } from "@/modules/catalog/repositories/product.repo";
-import { inventoryRepo } from "@/modules/inventory/repositories/inventory.repo";
-import { userRepo } from "@/modules/users/repositories/user.repo";
-import { DashboardClient } from "@/features/dashboard/components/DashboardClient";
+import { DashboardClient } from '@/features/dashboard/components/DashboardClient'
+import { productRepo } from '@/modules/catalog/repositories/product.repo'
+import { inventoryRepo } from '@/modules/inventory/repositories/inventory.repo'
+import { orderRepo } from '@/modules/orders/repositories/order.repo'
+import { userRepo } from '@/modules/users/repositories/user.repo'
 
 export default async function DashboardPage() {
   const [
@@ -23,20 +23,21 @@ export default async function DashboardPage() {
     orderRepo.getRevenueByMonth(),
     orderRepo.getOrdersByDay(14),
     orderRepo.getOrdersByCategory(),
-  ]);
+  ])
 
   const serializedOrders = recentOrders.map((o) => ({
     ...o,
-    total:        Number(o.total),
-    subtotal:     Number(o.subtotal),
+    total: Number(o.total),
+    subtotal: Number(o.subtotal),
     shippingCost: Number(o.shippingCost),
-  }));
+  }))
 
   const serializedProducts = products.map((p) => ({
     ...p,
-    price:          Number(p.price),
+    price: Number(p.price),
     compareAtPrice: p.compareAtPrice != null ? Number(p.compareAtPrice) : null,
-  }));
+    salePrice: p.salePrice != null ? Number(p.salePrice) : null,
+  }))
 
   return (
     <DashboardClient
@@ -49,5 +50,5 @@ export default async function DashboardPage() {
       ordersByDay={ordersByDay}
       ordersByCategory={ordersByCategory}
     />
-  );
+  )
 }
