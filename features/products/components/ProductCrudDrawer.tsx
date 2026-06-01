@@ -6,7 +6,7 @@ import type { ProductListItem } from '@/modules/catalog/repositories/product.rep
 import { AdminDrawer } from '@/shared/components/AdminDrawer'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
-import { useFormEntity } from '@/shared/hooks'
+import { useAutoSlug, useFormEntity } from '@/shared/hooks'
 import { cls } from '@/shared/lib/admin-classes'
 import { productDbSchema } from '@/shared/lib/schemas'
 import { cn } from '@/shared/lib/utils'
@@ -16,9 +16,10 @@ import { z } from 'zod'
 
 type ProductFormValues = z.input<typeof productDbSchema>
 
-export type SerializedProduct = Omit<ProductListItem, 'price' | 'compareAtPrice'> & {
+export type SerializedProduct = Omit<ProductListItem, 'price' | 'compareAtPrice' | 'salePrice'> & {
   price: number
   compareAtPrice: number | null
+  salePrice: number | null
   collections: { collection: { id: string; name: string; slug: string } }[]
 }
 
@@ -28,6 +29,7 @@ const EMPTY_FORM: ProductFormValues = {
   sku: '',
   description: '',
   price: 0,
+  salePrice: undefined,
   stock: 0,
   categoryId: '',
   brandId: '',
@@ -58,6 +60,8 @@ export function ProductCrudDrawer({
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productDbSchema),
@@ -79,6 +83,7 @@ export function ProductCrudDrawer({
       description: (p as SerializedProduct & { description?: string }).description ?? '',
       price: p.price,
       compareAtPrice: p.compareAtPrice ?? undefined,
+      salePrice: p.salePrice ?? undefined,
       stock: p.inventory?.availableStock ?? 0,
       categoryId: p.category.id,
       brandId: p.brand.id,
@@ -86,6 +91,17 @@ export function ProductCrudDrawer({
       featured: p.featured,
     }),
   })
+
+  const watchedPrice = watch('price')
+  const watchedSalePrice = watch('salePrice')
+
+  useAutoSlug({ name: watch('name'), isNew, setValue })
+  const discount =
+    typeof watchedSalePrice === 'number' &&
+    watchedPrice > 0 &&
+    watchedSalePrice < watchedPrice
+      ? Math.round(((watchedPrice - watchedSalePrice) / watchedPrice) * 100)
+      : null
 
   return (
     <AdminDrawer
@@ -114,6 +130,20 @@ export function ProductCrudDrawer({
               placeholder="0.00"
             />
           </FormField>
+          <div className="flex flex-col gap-1">
+            <FormField label="Precio de venta (S/)" error={errors.salePrice?.message}>
+              <input
+                {...register('salePrice', { valueAsNumber: true })}
+                type="number"
+                step="0.01"
+                className={cls.input}
+                placeholder="Opcional"
+              />
+            </FormField>
+            {discount !== null && (
+              <p className="text-xs font-medium text-green-600">−{discount}% de descuento</p>
+            )}
+          </div>
           <FormField label="Stock" error={errors.stock?.message}>
             <input
               {...register('stock', { valueAsNumber: true })}

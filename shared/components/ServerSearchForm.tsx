@@ -4,7 +4,6 @@ interface ServerSearchFormProps {
   placeholder?: string
   defaultValue?: string
   paramName?: string
-  /** Parámetros extra a preservar como hidden inputs (ej: { status: 'active' }) */
   extraParams?: Record<string, string>
 }
 
@@ -20,7 +19,10 @@ export function ServerSearchForm({
   extraParams = {},
 }: ServerSearchFormProps) {
   return (
-    <form method="GET" className="flex items-center gap-2.25 px-3.5 h-10.5 flex-1 min-w-50 max-w-85 bg-card border border-(--bd)">
+    <form
+      method="GET"
+      className="flex items-center gap-2.25 px-3.5 h-10.5 flex-1 min-w-50 max-w-85 bg-card border border-(--bd)"
+    >
       <Search size={13} className="text-muted shrink-0" />
       <input
         type="search"

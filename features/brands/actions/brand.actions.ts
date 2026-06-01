@@ -24,11 +24,11 @@ const slugSchema = z
   .regex(/^[a-z0-9-]+$/, "Solo minúsculas, números y guiones");
 
 const createBrandSchema = z.object({
-  name: z.string().min(1, "Nombre requerido").max(100),
-  slug: slugSchema,
+  name:        z.string().min(1, "Nombre requerido").max(100),
+  slug:        slugSchema,
+  tagline:     z.string().max(80).optional(),
   description: z.string().max(500).optional(),
-  imageUrl: z.string().url("URL de imagen inválida").optional().or(z.literal("")),
-  logoUrl: z.string().url("URL de logo inválida").optional().or(z.literal("")),
+  imageUrl:    z.string().url("URL de imagen inválida").optional().or(z.literal("")),
 });
 
 const updateBrandSchema = createBrandSchema.partial().extend({
@@ -59,7 +59,7 @@ export async function createBrand(
     return { success: false, error: parsed.error.issues[0]?.message ?? "Datos inválidos" };
   }
 
-  const { name, slug, description, imageUrl, logoUrl } = parsed.data;
+  const { name, slug, tagline, description, imageUrl } = parsed.data;
 
   try {
     const existing = await brandRepo.findBySlug(slug);
@@ -70,9 +70,9 @@ export async function createBrand(
     const brand = await brandRepo.create({
       name,
       slug,
+      tagline:     tagline     || undefined,
       description: description || undefined,
-      imageUrl: imageUrl || undefined,
-      logoUrl: logoUrl || undefined,
+      imageUrl:    imageUrl    || undefined,
     });
 
     invalidateBrandCaches();
@@ -107,8 +107,8 @@ export async function updateBrand(
 
     const brand = await brandRepo.update(id, {
       ...fields,
-      imageUrl: fields.imageUrl || undefined,
-      logoUrl: fields.logoUrl || undefined,
+      tagline:     fields.tagline     || undefined,
+      imageUrl:    fields.imageUrl    || undefined,
       description: fields.description || undefined,
     });
 

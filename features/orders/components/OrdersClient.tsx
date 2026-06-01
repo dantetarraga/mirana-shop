@@ -90,18 +90,17 @@ export function OrdersClient({
   currentGroup,
 }: OrdersClientProps) {
   const [detail, setDetail] = useState<SerializedOrder | null>(null)
-  const [localOrders, setLocalOrders] = useState(orders)
   const { isPending, run } = useServerAction()
 
   const totalPages = Math.ceil(total / perPage)
 
   const handleStatusChange = (orderId: string, status: OrderStatus) => {
     run(() => updateOrderStatus({ orderId, status }), {
-      onSuccess: () => {
-        setLocalOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status } : o)))
-        setDetail((d) => (d?.id === orderId ? { ...d, status } : d))
-        toast.success(`Estado: ${UI_STATUS_LABELS[status]}`)
-      },
+      successMsg: `Estado: ${UI_STATUS_LABELS[status]}`,
+      // Actualización optimista del drawer — el toast sobrevive al refresh
+      onSuccess: () => setDetail((d) => (d?.id === orderId ? { ...d, status } : d)),
+      // router.refresh() trae los pedidos actualizados del servidor
+      refresh: true,
     })
   }
 
@@ -194,7 +193,7 @@ export function OrdersClient({
 
       <AdminTable
         columns={columns}
-        data={localOrders}
+        data={orders}
         keyExtractor={(o) => o.id}
         onRowClick={setDetail}
       />

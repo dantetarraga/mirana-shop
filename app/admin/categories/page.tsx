@@ -13,8 +13,9 @@ export default async function CategoriesPage({ searchParams }: PageProps) {
   const currentPage = Math.max(1, Number(page ?? 1))
   const perPage = 30
 
-  const [categories, total] = await Promise.all([
+  const [categories, allCategories, total] = await Promise.all([
     categoryRepo.findAll({ search: q, page: currentPage, perPage }),
+    categoryRepo.findAll({ perPage: 500 }), // para el dropdown de reasignación en EntityProductsDrawer
     categoryRepo.count({ search: q }),
   ])
 
@@ -34,7 +35,7 @@ export default async function CategoriesPage({ searchParams }: PageProps) {
         )}
       </div>
 
-      <CategoriesTableClient categories={categories} total={total} allCategories={categories} />
+      <CategoriesTableClient categories={categories} total={total} allCategories={allCategories} />
 
       {/* Paginación server-side */}
       {totalPages > 1 && (

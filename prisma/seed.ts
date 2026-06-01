@@ -171,13 +171,10 @@ async function main() {
   // ── Brands ─────────────────────────────────────────────────────────────────
   const hasbro = await prisma.brand.upsert({
     where: { slug: 'hasbro' },
-    update: {
-      description: 'Fabricante estadounidense de juguetes y figuras de acción. Creadores de Marvel Legends, Star Wars Black Series y G.I. Joe.',
-      imageUrl: img(IMGS.brandHasbro, 400, 400),
-    },
+    update: { tagline: 'MARVEL LEGENDS SERIES', imageUrl: img(IMGS.brandHasbro, 400, 400) },
     create: {
-      name: 'Hasbro',
-      slug: 'hasbro',
+      name: 'Hasbro', slug: 'hasbro',
+      tagline: 'MARVEL LEGENDS SERIES',
       description: 'Fabricante estadounidense de juguetes y figuras de acción. Creadores de Marvel Legends, Star Wars Black Series y G.I. Joe.',
       imageUrl: img(IMGS.brandHasbro, 400, 400),
     },
@@ -185,13 +182,10 @@ async function main() {
 
   const bandai = await prisma.brand.upsert({
     where: { slug: 'bandai' },
-    update: {
-      description: 'Casa japonesa líder en figuras de anime y mecha. Creadores de la línea Robot Spirits, S.H.Figuarts y Dragon Stars.',
-      imageUrl: img(IMGS.brandBandai, 400, 400),
-    },
+    update: { tagline: 'TAMASHII NATIONS', imageUrl: img(IMGS.brandBandai, 400, 400) },
     create: {
-      name: 'Bandai',
-      slug: 'bandai',
+      name: 'Bandai', slug: 'bandai',
+      tagline: 'TAMASHII NATIONS',
       description: 'Casa japonesa líder en figuras de anime y mecha. Creadores de la línea Robot Spirits, S.H.Figuarts y Dragon Stars.',
       imageUrl: img(IMGS.brandBandai, 400, 400),
     },
@@ -199,13 +193,10 @@ async function main() {
 
   const legoGroup = await prisma.brand.upsert({
     where: { slug: 'lego-group' },
-    update: {
-      description: 'La marca de construcción más reconocida del mundo. Desde Dinamarca, con sets para todas las edades y niveles de habilidad.',
-      imageUrl: img(IMGS.brandLego, 400, 400),
-    },
+    update: { tagline: 'OFFICIAL PARTNER', imageUrl: img(IMGS.brandLego, 400, 400) },
     create: {
-      name: 'LEGO Group',
-      slug: 'lego-group',
+      name: 'LEGO Group', slug: 'lego-group',
+      tagline: 'OFFICIAL PARTNER',
       description: 'La marca de construcción más reconocida del mundo. Desde Dinamarca, con sets para todas las edades y niveles de habilidad.',
       imageUrl: img(IMGS.brandLego, 400, 400),
     },
@@ -213,13 +204,10 @@ async function main() {
 
   const goodSmile = await prisma.brand.upsert({
     where: { slug: 'good-smile-company' },
-    update: {
-      description: 'Fabricante japonés premium de figuras de anime. Creadores de las líneas Nendoroid, Figma y Pop Up Parade.',
-      imageUrl: img(IMGS.brandGsc, 400, 400),
-    },
+    update: { tagline: 'NENDOROID · FIGMA', imageUrl: img(IMGS.brandGsc, 400, 400) },
     create: {
-      name: 'Good Smile Company',
-      slug: 'good-smile-company',
+      name: 'Good Smile Company', slug: 'good-smile-company',
+      tagline: 'NENDOROID · FIGMA',
       description: 'Fabricante japonés premium de figuras de anime. Creadores de las líneas Nendoroid, Figma y Pop Up Parade.',
       imageUrl: img(IMGS.brandGsc, 400, 400),
     },
@@ -227,13 +215,10 @@ async function main() {
 
   const kotobukiya = await prisma.brand.upsert({
     where: { slug: 'kotobukiya' },
-    update: {
-      description: 'Fabricante japonés especializado en kits de modelos y figuras ARTFX. Detalles escultóricos excepcionales en cada pieza.',
-      imageUrl: img(IMGS.brandKotobukiya, 400, 400),
-    },
+    update: { tagline: 'ARTFX SERIES', imageUrl: img(IMGS.brandKotobukiya, 400, 400) },
     create: {
-      name: 'Kotobukiya',
-      slug: 'kotobukiya',
+      name: 'Kotobukiya', slug: 'kotobukiya',
+      tagline: 'ARTFX SERIES',
       description: 'Fabricante japonés especializado en kits de modelos y figuras ARTFX. Detalles escultóricos excepcionales en cada pieza.',
       imageUrl: img(IMGS.brandKotobukiya, 400, 400),
     },
@@ -241,13 +226,10 @@ async function main() {
 
   const funko = await prisma.brand.upsert({
     where: { slug: 'funko' },
-    update: {
-      description: 'Creadores de los icónicos Funko POP! con más de 15,000 diseños de pop culture: anime, películas, videojuegos y más.',
-      imageUrl: img(IMGS.brandFunko, 400, 400),
-    },
+    update: { tagline: 'POP! AUTHORIZED', imageUrl: img(IMGS.brandFunko, 400, 400) },
     create: {
-      name: 'Funko',
-      slug: 'funko',
+      name: 'Funko', slug: 'funko',
+      tagline: 'POP! AUTHORIZED',
       description: 'Creadores de los icónicos Funko POP! con más de 15,000 diseños de pop culture: anime, películas, videojuegos y más.',
       imageUrl: img(IMGS.brandFunko, 400, 400),
     },
@@ -255,13 +237,10 @@ async function main() {
 
   const hotWheels = await prisma.brand.upsert({
     where: { slug: 'hot-wheels' },
-    update: {
-      description: 'La marca de autos a escala más popular del mundo. Desde modelos básicos hasta la línea Premium de coleccionistas en metal fundido.',
-      imageUrl: img(IMGS.brandHotWheels, 400, 400),
-    },
+    update: { tagline: 'PREMIUM COLLECTION', imageUrl: img(IMGS.brandHotWheels, 400, 400) },
     create: {
-      name: 'Hot Wheels',
-      slug: 'hot-wheels',
+      name: 'Hot Wheels', slug: 'hot-wheels',
+      tagline: 'PREMIUM COLLECTION',
       description: 'La marca de autos a escala más popular del mundo. Desde modelos básicos hasta la línea Premium de coleccionistas en metal fundido.',
       imageUrl: img(IMGS.brandHotWheels, 400, 400),
     },

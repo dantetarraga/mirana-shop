@@ -26,6 +26,7 @@ export function useCrudState<T>() {
   const [editing, setEditing] = useState<T | null>(null)
   const [viewingId, setViewingId] = useState<string | null>(null)
   const [isNew, setIsNew] = useState(false)
+  const [pendingDelete, setPendingDelete] = useState<T | null>(null)
 
   const drawerOpen = isNew || editing !== null
 
@@ -34,6 +35,7 @@ export function useCrudState<T>() {
     viewingId,
     isNew,
     drawerOpen,
+    pendingDelete,
     openNew: () => {
       setEditing(null)
       setIsNew(true)
@@ -51,5 +53,7 @@ export function useCrudState<T>() {
       setViewingId(id)
     },
     closeViewing: () => setViewingId(null),
+    openDelete: (item: T) => setPendingDelete(item),
+    closeDelete: () => setPendingDelete(null),
   }
 }

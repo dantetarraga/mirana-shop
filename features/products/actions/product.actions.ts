@@ -1,21 +1,19 @@
-"use server";
+'use server'
 
-import { revalidatePath, revalidateTag } from "next/cache";
-import { productRepo } from "@/modules/catalog/repositories/product.repo";
-import { categoryRepo } from "@/modules/catalog/repositories/category.repo";
-import { brandRepo } from "@/modules/catalog/repositories/brand.repo";
-import { productDbSchema, importProductRowSchema } from "@/shared/lib/schemas";
-import { z } from "zod";
-import { db } from "@/shared/lib/db";
-import type { DrawerProduct } from "@/shared/types/entity-products.types";
+import { brandRepo } from '@/modules/catalog/repositories/brand.repo'
+import { categoryRepo } from '@/modules/catalog/repositories/category.repo'
+import { productRepo } from '@/modules/catalog/repositories/product.repo'
+import { db } from '@/shared/lib/db'
+import { importProductRowSchema, productDbSchema } from '@/shared/lib/schemas'
+import type { DrawerProduct } from '@/shared/types/entity-products.types'
+import { revalidatePath, revalidateTag } from 'next/cache'
+import { z } from 'zod'
 
 // ---------------------------------------------------------------------------
 // Tipos de resultado
 // ---------------------------------------------------------------------------
 
-type ActionResult<T = void> =
-  | { success: true; data: T }
-  | { success: false; error: string };
+type ActionResult<T = void> = { success: true; data: T } | { success: false; error: string }
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -24,21 +22,21 @@ type ActionResult<T = void> =
 function slugify(text: string): string {
   return text
     .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9\s-]/g, "")
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
     .trim()
-    .replace(/\s+/g, "-");
+    .replace(/\s+/g, '-')
 }
 
 function invalidateProductCaches() {
-  revalidatePath("/admin/products");
-  revalidatePath("/admin/inventory");
-  revalidatePath("/admin/dashboard");
-  revalidatePath("/catalogo");
-  revalidatePath("/");
-  revalidateTag("products");
-  revalidateTag("catalog");
+  revalidatePath('/admin/products')
+  revalidatePath('/admin/inventory')
+  revalidatePath('/admin/dashboard')
+  revalidatePath('/catalogo')
+  revalidatePath('/')
+  revalidateTag('products')
+  revalidateTag('catalog')
 }
 
 // ---------------------------------------------------------------------------
@@ -46,43 +44,42 @@ function invalidateProductCaches() {
 // ---------------------------------------------------------------------------
 
 export async function createProduct(
-  rawInput: unknown
+  rawInput: unknown,
 ): Promise<ActionResult<{ id: string; slug: string }>> {
-  const parsed = productDbSchema.safeParse(rawInput);
+  const parsed = productDbSchema.safeParse(rawInput)
   if (!parsed.success) {
-    const firstError = parsed.error.issues[0]?.message ?? "Datos inválidos";
-    return { success: false, error: firstError };
+    const firstError = parsed.error.issues[0]?.message ?? 'Datos inválidos'
+    return { success: false, error: firstError }
   }
 
-  const input = parsed.data;
+  const input = parsed.data
 
   try {
     const product = await productRepo.create({
       sku: input.sku,
       slug: input.slug || slugify(input.name),
       name: input.name,
-      description: input.description ?? "",
+      description: input.description ?? '',
       price: input.price,
       compareAtPrice: input.compareAtPrice,
+      salePrice: input.salePrice,
       status: input.status,
       featured: input.featured,
       categoryId: input.categoryId,
       brandId: input.brandId,
       stock: input.stock,
-      images: input.imageUrl
-        ? [{ url: input.imageUrl, alt: input.name, position: 0 }]
-        : [],
-    });
+      images: input.imageUrl ? [{ url: input.imageUrl, alt: input.name, position: 0 }] : [],
+    })
 
-    invalidateProductCaches();
-    return { success: true, data: { id: product.id, slug: product.slug } };
+    invalidateProductCaches()
+    return { success: true, data: { id: product.id, slug: product.slug } }
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Error al crear producto";
+    const message = err instanceof Error ? err.message : 'Error al crear producto'
     // SKU duplicado es el caso más común
-    if (message.includes("Unique constraint") || message.includes("unique")) {
-      return { success: false, error: "El SKU o slug ya existe" };
+    if (message.includes('Unique constraint') || message.includes('unique')) {
+      return { success: false, error: 'El SKU o slug ya existe' }
     }
-    return { success: false, error: message };
+    return { success: false, error: message }
   }
 }
 
@@ -92,17 +89,17 @@ export async function createProduct(
 
 export async function updateProduct(
   id: string,
-  rawInput: unknown
+  rawInput: unknown,
 ): Promise<ActionResult<{ id: string }>> {
-  if (!id) return { success: false, error: "ID de producto requerido" };
+  if (!id) return { success: false, error: 'ID de producto requerido' }
 
-  const parsed = productDbSchema.partial().safeParse(rawInput);
+  const parsed = productDbSchema.partial().safeParse(rawInput)
   if (!parsed.success) {
-    const firstError = parsed.error.issues[0]?.message ?? "Datos inválidos";
-    return { success: false, error: firstError };
+    const firstError = parsed.error.issues[0]?.message ?? 'Datos inválidos'
+    return { success: false, error: firstError }
   }
 
-  const input = parsed.data;
+  const input = parsed.data
 
   try {
     const updated = await productRepo.update({
@@ -113,18 +110,19 @@ export async function updateProduct(
       ...(input.description !== undefined && { description: input.description }),
       ...(input.price !== undefined && { price: input.price }),
       ...(input.compareAtPrice !== undefined && { compareAtPrice: input.compareAtPrice }),
+      ...(input.salePrice !== undefined && { salePrice: input.salePrice }),
       ...(input.status !== undefined && { status: input.status }),
       ...(input.featured !== undefined && { featured: input.featured }),
       ...(input.categoryId !== undefined && { categoryId: input.categoryId }),
       ...(input.brandId !== undefined && { brandId: input.brandId }),
       ...(input.stock !== undefined && { stock: input.stock }),
-    });
+    })
 
-    invalidateProductCaches();
-    return { success: true, data: { id: updated.id } };
+    invalidateProductCaches()
+    return { success: true, data: { id: updated.id } }
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Error al actualizar producto";
-    return { success: false, error: message };
+    const message = err instanceof Error ? err.message : 'Error al actualizar producto'
+    return { success: false, error: message }
   }
 }
 
@@ -133,15 +131,15 @@ export async function updateProduct(
 // ---------------------------------------------------------------------------
 
 export async function deleteProduct(id: string): Promise<ActionResult> {
-  if (!id) return { success: false, error: "ID de producto requerido" };
+  if (!id) return { success: false, error: 'ID de producto requerido' }
 
   try {
-    await productRepo.delete(id);
-    invalidateProductCaches();
-    return { success: true, data: undefined };
+    await productRepo.delete(id)
+    invalidateProductCaches()
+    return { success: true, data: undefined }
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Error al eliminar producto";
-    return { success: false, error: message };
+    const message = err instanceof Error ? err.message : 'Error al eliminar producto'
+    return { success: false, error: message }
   }
 }
 
@@ -151,89 +149,86 @@ export async function deleteProduct(id: string): Promise<ActionResult> {
 // Estrategia: upsert por SKU (update si existe, create si no).
 // ---------------------------------------------------------------------------
 
-const importRowSchema = z.array(importProductRowSchema);
+const importRowSchema = z.array(importProductRowSchema)
 
-type ImportRow = z.infer<typeof importProductRowSchema>;
+type ImportRow = z.infer<typeof importProductRowSchema>
 
 export async function importProducts(
-  rawRows: unknown
+  rawRows: unknown,
 ): Promise<ActionResult<{ created: number; updated: number; errors: string[] }>> {
-  const parsed = importRowSchema.safeParse(rawRows);
+  const parsed = importRowSchema.safeParse(rawRows)
   if (!parsed.success) {
-    return { success: false, error: "Formato de importación inválido" };
+    return { success: false, error: 'Formato de importación inválido' }
   }
 
-  const rows = parsed.data;
-  const errors: string[] = [];
-  let created = 0;
-  let updated = 0;
+  const rows = parsed.data
+  const errors: string[] = []
+  let created = 0
+  let updated = 0
 
   // Mapas para resolver categoryId y brandId por nombre/slug
-  const [categories, brands] = await Promise.all([
-    categoryRepo.findAll(),
-    brandRepo.findAll(),
-  ]);
+  const [categories, brands] = await Promise.all([categoryRepo.findAll(), brandRepo.findAll()])
 
   const catMap: Record<string, string> = {
-    figures: categories.find((c) => c.slug === "figuras-accion")?.id ?? "",
-    lego: categories.find((c) => c.slug === "lego")?.id ?? "",
-    vehicles: categories.find((c) => c.slug === "modelos-escala")?.id ?? "",
-  };
+    figures: categories.find((c) => c.slug === 'figuras-accion')?.id ?? '',
+    lego: categories.find((c) => c.slug === 'lego')?.id ?? '',
+    vehicles: categories.find((c) => c.slug === 'modelos-escala')?.id ?? '',
+  }
 
   for (const row of rows) {
     try {
-      const categoryId = catMap[row.cat];
+      const categoryId = catMap[row.cat]
       if (!categoryId) {
-        errors.push(`Fila "${row.name}": categoría "${row.cat}" no encontrada`);
-        continue;
+        errors.push(`Fila "${row.name}": categoría "${row.cat}" no encontrada`)
+        continue
       }
 
       // Resolución de marca: busca por nombre case-insensitive
-      const brandName = (row.brand ?? "").toLowerCase();
-      const brand = brands.find((b) => b.name.toLowerCase() === brandName);
-      const brandId = brand?.id ?? brands[0]?.id;
+      const brandName = (row.brand ?? '').toLowerCase()
+      const brand = brands.find((b) => b.name.toLowerCase() === brandName)
+      const brandId = brand?.id ?? brands[0]?.id
 
       if (!brandId) {
-        errors.push(`Fila "${row.name}": no se encontró marca`);
-        continue;
+        errors.push(`Fila "${row.name}": no se encontró marca`)
+        continue
       }
 
-      const slug = slugify(row.name) + "-" + row.sku.toLowerCase();
-      const existing = await productRepo.findMany({ search: row.sku, take: 1 });
-      const match = existing.find((p) => p.sku === row.sku);
+      const slug = slugify(row.name) + '-' + row.sku.toLowerCase()
+      const existing = await productRepo.findMany({ search: row.sku, take: 1 })
+      const match = existing.find((p) => p.sku === row.sku)
 
       if (match) {
         await productRepo.update({
           id: match.id,
           name: row.name,
           price: row.price,
-          description: row.desc ?? "",
+          description: row.desc ?? '',
           stock: row.stock,
-        });
-        updated++;
+        })
+        updated++
       } else {
         await productRepo.create({
           sku: row.sku,
           slug,
           name: row.name,
-          description: row.desc ?? "",
+          description: row.desc ?? '',
           price: row.price,
           categoryId,
           brandId,
           stock: row.stock,
-          status: "AVAILABLE",
+          status: 'AVAILABLE',
           featured: false,
-        });
-        created++;
+        })
+        created++
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Error desconocido";
-      errors.push(`Fila "${(row as ImportRow).name}": ${msg}`);
+      const msg = err instanceof Error ? err.message : 'Error desconocido'
+      errors.push(`Fila "${(row as ImportRow).name}": ${msg}`)
     }
   }
 
-  invalidateProductCaches();
-  return { success: true, data: { created, updated, errors } };
+  invalidateProductCaches()
+  return { success: true, data: { created, updated, errors } }
 }
 
 // ---------------------------------------------------------------------------
@@ -244,10 +239,10 @@ export async function importProducts(
 
 export async function searchAvailableProducts(
   query: string,
-  excludeIds: string[] = []
+  excludeIds: string[] = [],
 ): Promise<{ success: true; data: DrawerProduct[] } | { success: false; error: string }> {
   if (!query || query.trim().length < 2) {
-    return { success: true, data: [] };
+    return { success: true, data: [] }
   }
 
   try {
@@ -256,8 +251,8 @@ export async function searchAvailableProducts(
         deletedAt: null,
         id: excludeIds.length > 0 ? { notIn: excludeIds } : undefined,
         OR: [
-          { name: { contains: query.trim(), mode: "insensitive" } },
-          { sku: { contains: query.trim(), mode: "insensitive" } },
+          { name: { contains: query.trim(), mode: 'insensitive' } },
+          { sku: { contains: query.trim(), mode: 'insensitive' } },
         ],
       },
       select: {
@@ -268,16 +263,16 @@ export async function searchAvailableProducts(
         status: true,
         images: {
           select: { url: true },
-          orderBy: { position: "asc" },
+          orderBy: { position: 'asc' },
           take: 1,
         },
         category: { select: { name: true } },
         brand: { select: { name: true } },
         inventory: { select: { availableStock: true } },
       },
-      orderBy: { name: "asc" },
+      orderBy: { name: 'asc' },
       take: 20,
-    });
+    })
 
     return {
       success: true,
@@ -292,8 +287,8 @@ export async function searchAvailableProducts(
         brand: p.brand.name,
         stock: p.inventory?.availableStock ?? 0,
       })),
-    };
+    }
   } catch {
-    return { success: false, error: "Error al buscar productos" };
+    return { success: false, error: 'Error al buscar productos' }
   }
 }

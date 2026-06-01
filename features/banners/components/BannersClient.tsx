@@ -10,7 +10,6 @@ import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
 import { useCrudState, useServerAction } from '@/shared/hooks'
 import { bannerDbSchema } from '@/shared/lib/schemas'
 import { Plus } from 'lucide-react'
-import { useState } from 'react'
 import { z } from 'zod'
 
 type BannerFormValues = z.input<typeof bannerDbSchema>
@@ -28,7 +27,6 @@ interface BannersClientProps {
 
 export function BannersClient({ banners }: BannersClientProps) {
   const crud = useCrudState<BannerRow>()
-  const [pendingDelete, setPendingDelete] = useState<BannerRow | null>(null)
   const { isPending, run } = useServerAction()
 
   const editingBanner = crud.editing
@@ -49,9 +47,9 @@ export function BannersClient({ banners }: BannersClientProps) {
   }
 
   const handleDelete = () => {
-    if (!pendingDelete) return
-    const b = pendingDelete
-    setPendingDelete(null)
+    if (!crud.pendingDelete) return
+    const b = crud.pendingDelete
+    crud.closeDelete()
     run(() => deleteBanner(b.id), {
       successMsg: `"${b.title}" eliminado`,
       refresh: true,
@@ -80,18 +78,18 @@ export function BannersClient({ banners }: BannersClientProps) {
             banner={banner}
             onEdit={() => crud.openEdit(banner)}
             onToggle={() => handleToggle(banner)}
-            onDelete={() => setPendingDelete(banner)}
+            onDelete={() => crud.openDelete(banner)}
             isPending={isPending}
           />
         ))}
       </div>
 
       <ConfirmModal
-        open={!!pendingDelete}
-        onClose={() => setPendingDelete(null)}
+        open={!!crud.pendingDelete}
+        onClose={crud.closeDelete}
         onConfirm={handleDelete}
         title="¿Eliminar banner?"
-        description={`"${pendingDelete?.title}" se eliminará permanentemente.`}
+        description={`"${crud.pendingDelete?.title}" se eliminará permanentemente.`}
         isPending={isPending}
       />
 

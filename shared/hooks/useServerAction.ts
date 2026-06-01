@@ -1,29 +1,11 @@
 'use client'
 
-import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTransition } from 'react'
 import { toast } from 'sonner'
 
 type ActionResult<T> = { success: true; data: T } | { success: false; error: string }
 
-/**
- * Encapsula el patrón `useTransition + toast` para Server Actions.
- *
- * @example
- * const { isPending, run } = useServerAction()
- *
- * // Con refresh automático (soft refresh — el toast sobrevive)
- * run(() => deleteItem(id), {
- *   successMsg: 'Elemento eliminado',
- *   refresh: true,
- * })
- *
- * // Con actualización optimista local (sin reload)
- * run(() => updateItem(id, data), {
- *   successMsg: 'Actualizado',
- *   onSuccess: (data) => setItems(prev => prev.map(...)),
- * })
- */
 export function useServerAction() {
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
@@ -32,9 +14,8 @@ export function useServerAction() {
     action: () => Promise<ActionResult<T>>,
     options?: {
       successMsg?: string
-      onSuccess?: (data: T) => void
-      /** Llama router.refresh() tras el éxito — re-ejecuta el Server Component
-       *  sin destruir el estado de React. El toast sobrevive. */
+      /** Puede ser async — se awaita antes del refresh */
+      onSuccess?: (data: T) => void | Promise<void>
       refresh?: boolean
     },
   ) {
@@ -42,7 +23,7 @@ export function useServerAction() {
       const result = await action()
       if (result.success) {
         if (options?.successMsg) toast.success(options.successMsg)
-        options?.onSuccess?.(result.data)
+        await options?.onSuccess?.(result.data)
         if (options?.refresh) router.refresh()
       } else {
         toast.error(result.error)

@@ -23,15 +23,11 @@ import { cls } from '@/shared/lib/admin-classes'
 import type { ImportProductRow } from '@/shared/lib/schemas'
 import { productDbSchema } from '@/shared/lib/schemas'
 import { cn } from '@/shared/lib/utils'
-import { FileSpreadsheet, Pencil, X } from 'lucide-react'
+import { FileSpreadsheet, Pencil, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
 type ProductFormValues = z.input<typeof productDbSchema>
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
 
 function getCategoryStripe(slug: string): string {
   const map: Record<string, string> = {
@@ -60,10 +56,6 @@ function buildUrl(params: Record<string, string | undefined>) {
   return qs ? `/admin/products?${qs}` : '/admin/products'
 }
 
-// ---------------------------------------------------------------------------
-// Props
-// ---------------------------------------------------------------------------
-
 interface ProductsClientProps {
   initialProducts: SerializedProduct[]
   categories: CategoryRow[]
@@ -74,10 +66,6 @@ interface ProductsClientProps {
   currentQ: string
   currentCat: string
 }
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
 
 export function ProductsClient({
   initialProducts,
@@ -91,7 +79,6 @@ export function ProductsClient({
 }: ProductsClientProps) {
   const crud = useCrudState<SerializedProduct>()
   const [showImport, setShowImport] = useState(false)
-  const [pendingDelete, setPendingDelete] = useState<SerializedProduct | null>(null)
   const [products, setProducts] = useState<SerializedProduct[]>(initialProducts)
   const { isPending, run } = useServerAction()
 
@@ -132,9 +119,9 @@ export function ProductsClient({
   }
 
   const handleDelete = () => {
-    if (!pendingDelete) return
-    const p = pendingDelete
-    setPendingDelete(null)
+    if (!crud.pendingDelete) return
+    const p = crud.pendingDelete
+    crud.closeDelete()
     run(() => deleteProduct(p.id), {
       onSuccess: () => {
         setProducts((prev) => prev.filter((x) => x.id !== p.id))
@@ -217,10 +204,10 @@ export function ProductsClient({
               destructive
               onClick={(e) => {
                 e.stopPropagation()
-                setPendingDelete(p)
+                crud.openDelete(p)
               }}
             >
-              <X size={14} />
+              <Trash2 size={14} />
             </Button>
           </div>
         ),
@@ -310,11 +297,11 @@ export function ProductsClient({
       )}
 
       <ConfirmModal
-        open={!!pendingDelete}
-        onClose={() => setPendingDelete(null)}
+        open={!!crud.pendingDelete}
+        onClose={crud.closeDelete}
         onConfirm={handleDelete}
         title="¿Eliminar producto?"
-        description={`"${pendingDelete?.name}" se eliminará permanentemente. Esta acción no se puede deshacer.`}
+        description={`"${crud.pendingDelete?.name}" se eliminará permanentemente. Esta acción no se puede deshacer.`}
         isPending={isPending}
       />
 
