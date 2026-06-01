@@ -10,7 +10,7 @@ export function BrandsCarousel({ brands }: BrandsCarouselProps) {
   const doubled = [...brands, ...brands]
 
   return (
-    <section className="py-[60px] border-t border-(--bd) border-b border-b-(--bd) overflow-hidden">
+    <section className="py-15 border-t border-(--bd) border-b border-b-(--bd) overflow-hidden">
       <div className="px-12 pb-8 flex justify-between items-baseline">
         <div>
           <div className="text-[10px] font-bold tracking-[3px] uppercase text-(--gold) mb-2.5">
@@ -29,7 +29,7 @@ export function BrandsCarousel({ brands }: BrandsCarouselProps) {
         {doubled.map((b, i) => (
           <div
             key={`${b.id}-${i}`}
-            className="brand-item shrink-0 w-[240px] h-[120px] flex items-center justify-center border-r border-(--bd) px-8"
+            className="brand-item shrink-0 w-60 h-30 flex items-center justify-center border-r border-(--bd) px-8"
           >
             {b.imageUrl ? (
               <img src={b.imageUrl} alt={b.name} className="max-h-15 max-w-40 object-contain" />
