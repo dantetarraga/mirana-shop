@@ -4,67 +4,54 @@ import type { BannerRow } from '@/modules/catalog/repositories/banner.repo'
 import { AdminDrawer } from '@/shared/components/AdminDrawer'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
+import { useFormEntity } from '@/shared/hooks'
 import { cls } from '@/shared/lib/admin-classes'
 import { bannerDbSchema } from '@/shared/lib/schemas'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 type BannerFormValues = z.input<typeof bannerDbSchema>
 
 const EMPTY_FORM = {
-  title: '',
+  title:    '',
   subtitle: '',
   ctaLabel: '',
-  ctaHref: '',
+  ctaHref:  '',
   imageUrl: 'https://placehold.co/1200x400/111111/FFFFFF?text=Banner',
   position: 0,
-  active: false,
+  active:   false,
 } satisfies BannerFormValues
 
 interface BannerFormDrawerProps {
-  banner: BannerRow | null
-  isNew: boolean
-  onClose: () => void
-  onSubmit: (data: BannerFormValues) => void
+  banner:    BannerRow | null
+  isNew:     boolean
+  onClose:   () => void
+  onSubmit:  (data: BannerFormValues) => void
   isPending: boolean
 }
 
-export function BannerFormDrawer({
-  banner,
-  isNew,
-  onClose,
-  onSubmit,
-  isPending,
-}: BannerFormDrawerProps) {
-  const form = useForm<BannerFormValues>({
+export function BannerFormDrawer({ banner, isNew, onClose, onSubmit, isPending }: BannerFormDrawerProps) {
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<BannerFormValues>({
     resolver: zodResolver(bannerDbSchema),
     defaultValues: EMPTY_FORM,
   })
 
-  const {
-    register,
-    handleSubmit,
+  // useFormEntity reemplaza el useEffect manual de sincronización
+  useFormEntity({
+    entity:        banner,
     reset,
-    formState: { errors },
-  } = form
-
-  useEffect(() => {
-    if (banner) {
-      reset({
-        title: banner.title,
-        subtitle: banner.subtitle ?? '',
-        ctaLabel: banner.ctaLabel ?? '',
-        ctaHref: banner.ctaHref ?? '',
-        imageUrl: banner.imageUrl,
-        position: banner.position,
-        active: banner.active,
-      })
-    } else if (isNew) {
-      reset(EMPTY_FORM)
-    }
-  }, [banner, isNew, reset])
+    defaultValues: EMPTY_FORM,
+    mapToForm:     (b) => ({
+      title:    b.title,
+      subtitle: b.subtitle  ?? '',
+      ctaLabel: b.ctaLabel  ?? '',
+      ctaHref:  b.ctaHref   ?? '',
+      imageUrl: b.imageUrl,
+      position: b.position,
+      active:   b.active,
+    }),
+  })
 
   return (
     <AdminDrawer
@@ -78,11 +65,7 @@ export function BannerFormDrawer({
         </FormField>
 
         <FormField label="Subtítulo" error={errors.subtitle?.message}>
-          <input
-            {...register('subtitle')}
-            className={cls.input}
-            placeholder="Descripción breve..."
-          />
+          <input {...register('subtitle')} className={cls.input} placeholder="Descripción breve..." />
         </FormField>
 
         <FormField label="URL de imagen" error={errors.imageUrl?.message}>
@@ -100,19 +83,10 @@ export function BannerFormDrawer({
 
         <div className="grid grid-cols-2 gap-3.5">
           <FormField label="Posición (orden)" error={errors.position?.message}>
-            <input
-              {...register('position', { valueAsNumber: true })}
-              type="number"
-              min="0"
-              className={cls.input}
-              placeholder="0"
-            />
+            <input {...register('position', { valueAsNumber: true })} type="number" min="0" className={cls.input} placeholder="0" />
           </FormField>
           <FormField label="Estado" error={errors.active?.message}>
-            <select
-              {...register('active', { setValueAs: (v) => v === 'true' || v === true })}
-              className={cls.input}
-            >
+            <select {...register('active', { setValueAs: (v) => v === 'true' || v === true })} className={cls.input}>
               <option value="false">Inactivo</option>
               <option value="true">Activo</option>
             </select>

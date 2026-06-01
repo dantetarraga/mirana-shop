@@ -4,7 +4,6 @@ import { adjustStock } from '@/features/inventory/actions/inventory.actions'
 import { Button } from '@/shared/components/ui/Button'
 import { useServerAction } from '@/shared/hooks'
 import { Minus, Plus } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
 interface Props {
@@ -15,15 +14,12 @@ interface Props {
 
 export function StockAdjustControl({ productId, productName, stock }: Props) {
   const { isPending, run } = useServerAction()
-  const router = useRouter()
 
   const adjust = (next: number) => {
     if (next < 0) return
     run(() => adjustStock({ productId, newStock: next }), {
-      onSuccess: (data) => {
-        toast.success(`Stock de "${productName}" → ${data.newStock}`)
-        router.refresh()
-      },
+      onSuccess: (data) => toast.success(`Stock de "${productName}" → ${data.newStock}`),
+      refresh: true,
     })
   }
 

@@ -1,5 +1,3 @@
-'use client'
-
 import type { BannerRow } from '@/modules/catalog/repositories/banner.repo'
 import { StatusBadge } from '@/shared/components/StatusBadge'
 import { Button } from '@/shared/components/ui/Button'
