@@ -1,12 +1,12 @@
 'use client'
 
+import { syncProductCollections } from '@/features/collections/actions/collection.actions'
 import {
   createProduct,
   deleteProduct,
   importProducts,
   updateProduct,
 } from '@/features/products/actions/product.actions'
-import { syncProductCollections } from '@/features/collections/actions/collection.actions'
 import {
   ProductCrudDrawer,
   type SerializedProduct,
@@ -25,9 +25,9 @@ import { cls } from '@/shared/lib/admin-classes'
 import type { ImportProductRow } from '@/shared/lib/schemas'
 import { productDbSchema } from '@/shared/lib/schemas'
 import { cn } from '@/shared/lib/utils'
-import { FileSpreadsheet, ChevronDown, Pencil, Trash2, X } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { ChevronDown, FileSpreadsheet, Pencil, Trash2, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
 type ProductFormValues = z.input<typeof productDbSchema>
@@ -134,15 +134,15 @@ function FilterMultiSelect({ label, options, selected, onToggle }: FilterMultiSe
 
 interface ProductsClientProps {
   initialProducts: SerializedProduct[]
-  categories:      CategoryRow[]
-  brands:          BrandRow[]
-  collections:     CollectionRow[]
-  total:           number
-  currentPage:        number
-  perPage:            number
-  currentQ:           string
-  currentCats:        string[]
-  currentBrands:      string[]
+  categories: CategoryRow[]
+  brands: BrandRow[]
+  collections: CollectionRow[]
+  total: number
+  currentPage: number
+  perPage: number
+  currentQ: string
+  currentCats: string[]
+  currentBrands: string[]
   currentCollections: string[]
 }
 
@@ -167,7 +167,11 @@ export function ProductsClient({
 
   const totalPages = Math.ceil(total / perPage)
 
-  const onSubmit = (data: ProductFormValues, collectionIds: string[], images: { url: string; alt: string }[]) => {
+  const onSubmit = (
+    data: ProductFormValues,
+    collectionIds: string[],
+    images: { url: string; alt: string }[],
+  ) => {
     if (crud.isNew) {
       // Para create: pasar imágenes directamente al action via imageUrl (primera) + sync resto después
       run(() => createProduct({ ...data, imageUrl: images[0]?.url }), {
@@ -197,12 +201,12 @@ export function ProductsClient({
               p.id === id
                 ? {
                     ...p,
-                    name:      data.name,
-                    sku:       data.sku,
-                    slug:      data.slug,
-                    price:     data.price    ?? p.price,
-                    status:    data.status   ?? p.status,
-                    featured:  data.featured ?? p.featured,
+                    name: data.name,
+                    sku: data.sku,
+                    slug: data.slug,
+                    price: data.price ?? p.price,
+                    status: data.status ?? p.status,
+                    featured: data.featured ?? p.featured,
                     inventory: { availableStock: data.stock ?? p.inventory?.availableStock ?? 0 },
                   }
                 : p,
@@ -322,7 +326,6 @@ export function ProductsClient({
     <div className="px-8 pt-7 pb-12">
       {/* ── Filtros ── */}
       <div className="flex flex-col gap-2.5 mb-4">
-
         {/* Fila 1: Búsqueda + acciones */}
         <div className="flex items-center gap-3 flex-wrap">
           <ServerSearchForm
@@ -330,8 +333,8 @@ export function ProductsClient({
             defaultValue={currentQ}
             paramName="q"
             extraParams={{
-              ...(currentCats.length        > 0 && { cat:        currentCats.join(',') }),
-              ...(currentBrands.length      > 0 && { brand:      currentBrands.join(',') }),
+              ...(currentCats.length > 0 && { cat: currentCats.join(',') }),
+              ...(currentBrands.length > 0 && { brand: currentBrands.join(',') }),
               ...(currentCollections.length > 0 && { collection: currentCollections.join(',') }),
             }}
           />
@@ -355,12 +358,14 @@ export function ProductsClient({
               const next = currentCats.includes(val)
                 ? currentCats.filter((v) => v !== val)
                 : [...currentCats, val]
-              router.push(buildUrl({
-                q:          currentQ || undefined,
-                cat:        next.length > 0 ? next : undefined,
-                brand:      currentBrands.length      > 0 ? currentBrands      : undefined,
-                collection: currentCollections.length > 0 ? currentCollections : undefined,
-              }))
+              router.push(
+                buildUrl({
+                  q: currentQ || undefined,
+                  cat: next.length > 0 ? next : undefined,
+                  brand: currentBrands.length > 0 ? currentBrands : undefined,
+                  collection: currentCollections.length > 0 ? currentCollections : undefined,
+                }),
+              )
             }}
           />
           <FilterMultiSelect
@@ -371,12 +376,14 @@ export function ProductsClient({
               const next = currentBrands.includes(val)
                 ? currentBrands.filter((v) => v !== val)
                 : [...currentBrands, val]
-              router.push(buildUrl({
-                q:          currentQ || undefined,
-                cat:        currentCats.length        > 0 ? currentCats        : undefined,
-                brand:      next.length > 0 ? next : undefined,
-                collection: currentCollections.length > 0 ? currentCollections : undefined,
-              }))
+              router.push(
+                buildUrl({
+                  q: currentQ || undefined,
+                  cat: currentCats.length > 0 ? currentCats : undefined,
+                  brand: next.length > 0 ? next : undefined,
+                  collection: currentCollections.length > 0 ? currentCollections : undefined,
+                }),
+              )
             }}
           />
           <FilterMultiSelect
@@ -387,12 +394,14 @@ export function ProductsClient({
               const next = currentCollections.includes(val)
                 ? currentCollections.filter((v) => v !== val)
                 : [...currentCollections, val]
-              router.push(buildUrl({
-                q:          currentQ || undefined,
-                cat:        currentCats.length   > 0 ? currentCats   : undefined,
-                brand:      currentBrands.length > 0 ? currentBrands : undefined,
-                collection: next.length > 0 ? next : undefined,
-              }))
+              router.push(
+                buildUrl({
+                  q: currentQ || undefined,
+                  cat: currentCats.length > 0 ? currentCats : undefined,
+                  brand: currentBrands.length > 0 ? currentBrands : undefined,
+                  collection: next.length > 0 ? next : undefined,
+                }),
+              )
             }}
           />
           {hasFilters && (
@@ -414,8 +423,8 @@ export function ProductsClient({
             {currentQ && (
               <a
                 href={buildUrl({
-                  cat:        currentCats.length        > 0 ? currentCats        : undefined,
-                  brand:      currentBrands.length      > 0 ? currentBrands      : undefined,
+                  cat: currentCats.length > 0 ? currentCats : undefined,
+                  brand: currentBrands.length > 0 ? currentBrands : undefined,
                   collection: currentCollections.length > 0 ? currentCollections : undefined,
                 })}
                 className="group flex items-center gap-1.5 px-2.5 py-1 bg-(--sub) border border-(--bd) hover:border-(--gold) transition-colors"
@@ -432,9 +441,9 @@ export function ProductsClient({
                 <a
                   key={`cat-${slug}`}
                   href={buildUrl({
-                    q:          currentQ || undefined,
-                    cat:        remaining.length > 0 ? remaining : undefined,
-                    brand:      currentBrands.length      > 0 ? currentBrands      : undefined,
+                    q: currentQ || undefined,
+                    cat: remaining.length > 0 ? remaining : undefined,
+                    brand: currentBrands.length > 0 ? currentBrands : undefined,
                     collection: currentCollections.length > 0 ? currentCollections : undefined,
                   })}
                   className="group flex items-center gap-1.5 px-2.5 py-1 bg-(--sub) border border-(--bd) hover:border-(--gold) transition-colors"
@@ -452,9 +461,9 @@ export function ProductsClient({
                 <a
                   key={`brd-${slug}`}
                   href={buildUrl({
-                    q:          currentQ || undefined,
-                    cat:        currentCats.length        > 0 ? currentCats        : undefined,
-                    brand:      remaining.length > 0 ? remaining : undefined,
+                    q: currentQ || undefined,
+                    cat: currentCats.length > 0 ? currentCats : undefined,
+                    brand: remaining.length > 0 ? remaining : undefined,
                     collection: currentCollections.length > 0 ? currentCollections : undefined,
                   })}
                   className="group flex items-center gap-1.5 px-2.5 py-1 bg-(--sub) border border-(--bd) hover:border-(--gold) transition-colors"
@@ -472,9 +481,9 @@ export function ProductsClient({
                 <a
                   key={`col-${slug}`}
                   href={buildUrl({
-                    q:          currentQ || undefined,
-                    cat:        currentCats.length   > 0 ? currentCats   : undefined,
-                    brand:      currentBrands.length > 0 ? currentBrands : undefined,
+                    q: currentQ || undefined,
+                    cat: currentCats.length > 0 ? currentCats : undefined,
+                    brand: currentBrands.length > 0 ? currentBrands : undefined,
                     collection: remaining.length > 0 ? remaining : undefined,
                   })}
                   className="group flex items-center gap-1.5 px-2.5 py-1 bg-(--sub) border border-(--bd) hover:border-(--gold) transition-colors"
@@ -487,7 +496,6 @@ export function ProductsClient({
             })}
           </div>
         )}
-
       </div>
 
       <AdminTable
@@ -504,9 +512,9 @@ export function ProductsClient({
             <a
               key={p}
               href={buildUrl({
-                q:          currentQ          || undefined,
-                cat:        currentCats.length        > 0 ? currentCats        : undefined,
-                brand:      currentBrands.length      > 0 ? currentBrands      : undefined,
+                q: currentQ || undefined,
+                cat: currentCats.length > 0 ? currentCats : undefined,
+                brand: currentBrands.length > 0 ? currentBrands : undefined,
                 collection: currentCollections.length > 0 ? currentCollections : undefined,
                 page: String(p),
               })}

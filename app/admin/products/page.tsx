@@ -21,15 +21,15 @@ export default async function ProductsPage({ searchParams }: PageProps) {
   const page = Math.max(1, Number(rawPage ?? 1))
   const skip = (page - 1) * PER_PAGE
 
-  const categorySlugs  = cat        ? cat.split(',').filter(Boolean)        : []
-  const brandSlugs     = brand      ? brand.split(',').filter(Boolean)      : []
+  const categorySlugs = cat ? cat.split(',').filter(Boolean) : []
+  const brandSlugs = brand ? brand.split(',').filter(Boolean) : []
   const collectionSlugs = collection ? collection.split(',').filter(Boolean) : []
 
   const [products, categories, brands, collections, total] = await Promise.all([
     productRepo.findMany({
       search: q,
-      categorySlug:  categorySlugs.length  > 0 ? categorySlugs  : undefined,
-      brandSlug:     brandSlugs.length     > 0 ? brandSlugs     : undefined,
+      categorySlug: categorySlugs.length > 0 ? categorySlugs : undefined,
+      brandSlug: brandSlugs.length > 0 ? brandSlugs : undefined,
       collectionSlug: collectionSlugs.length > 0 ? collectionSlugs : undefined,
       status: undefined,
       take: PER_PAGE,
@@ -40,8 +40,8 @@ export default async function ProductsPage({ searchParams }: PageProps) {
     collectionRepo.findAll({ perPage: 200 }),
     productRepo.count({
       search: q,
-      categorySlug:  categorySlugs.length  > 0 ? categorySlugs  : undefined,
-      brandSlug:     brandSlugs.length     > 0 ? brandSlugs     : undefined,
+      categorySlug: categorySlugs.length > 0 ? categorySlugs : undefined,
+      brandSlug: brandSlugs.length > 0 ? brandSlugs : undefined,
       collectionSlug: collectionSlugs.length > 0 ? collectionSlugs : undefined,
       status: undefined,
     }),

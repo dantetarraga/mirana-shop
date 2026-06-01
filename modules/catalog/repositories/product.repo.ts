@@ -43,8 +43,8 @@ export type StockFilter = 'all' | 'low' | 'out'
 const LOW_STOCK_THRESHOLD = 8
 
 export type ProductFilters = {
-  categorySlug?:  string | string[]
-  brandSlug?:     string | string[]
+  categorySlug?: string | string[]
+  brandSlug?: string | string[]
   collectionSlug?: string | string[]
   search?: string
   featured?: boolean
@@ -133,13 +133,15 @@ export const productRepo = {
     } = filters
 
     const catSlugs = categorySlug
-      ? Array.isArray(categorySlug) ? categorySlug : [categorySlug]
+      ? Array.isArray(categorySlug)
+        ? categorySlug
+        : [categorySlug]
       : undefined
-    const brdSlugs = brandSlug
-      ? Array.isArray(brandSlug) ? brandSlug : [brandSlug]
-      : undefined
+    const brdSlugs = brandSlug ? (Array.isArray(brandSlug) ? brandSlug : [brandSlug]) : undefined
     const colSlugs = collectionSlug
-      ? Array.isArray(collectionSlug) ? collectionSlug : [collectionSlug]
+      ? Array.isArray(collectionSlug)
+        ? collectionSlug
+        : [collectionSlug]
       : undefined
 
     const inventoryWhere =
@@ -155,7 +157,7 @@ export const productRepo = {
         status: status ?? undefined,
         featured: featured ?? undefined,
         category: catSlugs?.length ? { slug: { in: catSlugs } } : undefined,
-        brand:    brdSlugs?.length ? { slug: { in: brdSlugs } } : undefined,
+        brand: brdSlugs?.length ? { slug: { in: brdSlugs } } : undefined,
         collections: colSlugs?.length
           ? { some: { collection: { slug: { in: colSlugs } } } }
           : undefined,
@@ -213,13 +215,15 @@ export const productRepo = {
     } = filters
 
     const catSlugs = categorySlug
-      ? Array.isArray(categorySlug) ? categorySlug : [categorySlug]
+      ? Array.isArray(categorySlug)
+        ? categorySlug
+        : [categorySlug]
       : undefined
-    const brdSlugs = brandSlug
-      ? Array.isArray(brandSlug) ? brandSlug : [brandSlug]
-      : undefined
+    const brdSlugs = brandSlug ? (Array.isArray(brandSlug) ? brandSlug : [brandSlug]) : undefined
     const colSlugs = collectionSlug
-      ? Array.isArray(collectionSlug) ? collectionSlug : [collectionSlug]
+      ? Array.isArray(collectionSlug)
+        ? collectionSlug
+        : [collectionSlug]
       : undefined
 
     const inventoryWhere =
@@ -234,7 +238,7 @@ export const productRepo = {
         status: status ?? undefined,
         featured: featured ?? undefined,
         category: catSlugs?.length ? { slug: { in: catSlugs } } : undefined,
-        brand:    brdSlugs?.length ? { slug: { in: brdSlugs } } : undefined,
+        brand: brdSlugs?.length ? { slug: { in: brdSlugs } } : undefined,
         collections: colSlugs?.length
           ? { some: { collection: { slug: { in: colSlugs } } } }
           : undefined,
