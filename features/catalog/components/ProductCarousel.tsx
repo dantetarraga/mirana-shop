@@ -25,6 +25,7 @@ export function ProductCarousel({ items }: Props) {
 
   const [canPrev, setCanPrev] = useState(false)
   const [canNext, setCanNext] = useState(false)
+  const [isScrolling, setIsScrolling] = useState(false)
 
   const updateButtons = useCallback(() => {
     if (!emblaApi) return
@@ -37,11 +38,15 @@ export function ProductCarousel({ items }: Props) {
     emblaApi.on('init', updateButtons)
     emblaApi.on('reInit', updateButtons)
     emblaApi.on('select', updateButtons)
+    emblaApi.on('scroll', () => setIsScrolling(true))
+    emblaApi.on('settle', () => setIsScrolling(false))
     updateButtons()
     return () => {
       emblaApi.off('init', updateButtons)
       emblaApi.off('reInit', updateButtons)
       emblaApi.off('select', updateButtons)
+      emblaApi.off('scroll', () => setIsScrolling(true))
+      emblaApi.off('settle', () => setIsScrolling(false))
     }
   }, [emblaApi, updateButtons])
 
@@ -64,6 +69,7 @@ export function ProductCarousel({ items }: Props) {
             <div
               key={p.id}
               style={{ flex: `0 0 calc((100% - ${GAP * (VISIBLE - 1)}px) / ${VISIBLE})` }}
+              className={isScrolling ? 'pointer-events-none' : ''}
             >
               <ProductCard product={p} noAnimation />
             </div>

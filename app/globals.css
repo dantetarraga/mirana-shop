@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -10,109 +10,138 @@
 
 /* Fuentes: @theme inline porque referencian CSS vars de next/font */
 @theme inline {
-  --font-display: var(--font-barlow-condensed), "Barlow Condensed", system-ui, sans-serif;
-  --font-sans:    var(--font-plus-jakarta), "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-display: var(--font-barlow-condensed), 'Barlow Condensed', system-ui, sans-serif;
+  --font-sans: var(--font-plus-jakarta), 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
 @theme {
   /* ── Gold (marca) ──────────────────────────────────────────
      Genera: bg-gold-500, text-gold-500, border-gold-500, etc. */
-  --color-gold-50:  oklch(98%   0.02  76);
-  --color-gold-100: oklch(95%   0.05  76);
-  --color-gold-200: oklch(90%   0.09  76);
-  --color-gold-300: oklch(84%   0.12  76);
-  --color-gold-400: oklch(78%   0.14  76);
+  --color-gold-50: oklch(98% 0.02 76);
+  --color-gold-100: oklch(95% 0.05 76);
+  --color-gold-200: oklch(90% 0.09 76);
+  --color-gold-300: oklch(84% 0.12 76);
+  --color-gold-400: oklch(78% 0.14 76);
   --color-gold-500: oklch(72.3% 0.147 75.7); /* main gold #c9a840 */
-  --color-gold-600: oklch(63%   0.14  76);
-  --color-gold-700: oklch(52%   0.12  76);
-  --color-gold-800: oklch(40%   0.09  76);
-  --color-gold-900: oklch(28%   0.06  76);
-  --color-gold-950: oklch(16%   0.04  76);
+  --color-gold-600: oklch(63% 0.14 76);
+  --color-gold-700: oklch(52% 0.12 76);
+  --color-gold-800: oklch(40% 0.09 76);
+  --color-gold-900: oklch(28% 0.06 76);
+  --color-gold-950: oklch(16% 0.04 76);
 
   /* ── Superficies (dark-first) ──────────────────────────────
      Genera: bg-surface-950, text-surface-50, etc. */
-  --color-surface-0:   oklch(100%  0      0);
-  --color-surface-50:  oklch(97%   0.005  270);
-  --color-surface-100: oklch(94%   0.008  270);
-  --color-surface-200: oklch(88%   0.008  270);
-  --color-surface-300: oklch(76%   0.01   270);
-  --color-surface-400: oklch(62%   0.01   270);
-  --color-surface-500: oklch(50%   0.01   270);
-  --color-surface-600: oklch(38%   0.01   270);
-  --color-surface-700: oklch(30%   0.01   270);
-  --color-surface-800: oklch(22%   0.01   270);
-  --color-surface-900: oklch(14%   0.01   270);
-  --color-surface-950: oklch(8%    0.015  270);
+  --color-surface-0: oklch(100% 0 0);
+  --color-surface-50: oklch(97% 0.005 270);
+  --color-surface-100: oklch(94% 0.008 270);
+  --color-surface-200: oklch(88% 0.008 270);
+  --color-surface-300: oklch(76% 0.01 270);
+  --color-surface-400: oklch(62% 0.01 270);
+  --color-surface-500: oklch(50% 0.01 270);
+  --color-surface-600: oklch(38% 0.01 270);
+  --color-surface-700: oklch(30% 0.01 270);
+  --color-surface-800: oklch(22% 0.01 270);
+  --color-surface-900: oklch(14% 0.01 270);
+  --color-surface-950: oklch(8% 0.015 270);
 
   /* ── Tokens de diseño exactos ──────────────────────────────
      Genera: bg-bg, bg-card, text-muted, border-border, etc. */
-  --color-bg:           oklch(5%   0.015 270);   /* #07090f — fondo base */
-  --color-surf:         oklch(8%   0.018 270);   /* #0d1019 — superficies elevadas */
-  --color-card:         oklch(11%  0.018 270);   /* #12151f — tarjetas */
-  --color-card-hover:   oklch(13%  0.018 270);   /* #181c2b — tarjeta :hover */
-  --color-text:         oklch(95%  0.008 80);    /* #f0eee8 — texto principal */
-  --color-muted:        oklch(95%  0.008 80 / 0.42); /* texto secundario */
-  --color-subtle:       oklch(95%  0.008 80 / 0.07); /* fondo sutil */
-  --color-border:       oklch(100% 0     0 / 0.06);  /* borde default */
-  --color-border-gold:  oklch(72.3% 0.147 75.7 / 0.35); /* borde gold hover */
-  --color-gold-glow:    oklch(72.3% 0.147 75.7 / 0.12); /* fondo pill gold */
+  --color-bg: oklch(5% 0.015 270); /* #07090f — fondo base */
+  --color-surf: oklch(8% 0.018 270); /* #0d1019 — superficies elevadas */
+  --color-card: oklch(11% 0.018 270); /* #12151f — tarjetas */
+  --color-card-hover: oklch(13% 0.018 270); /* #181c2b — tarjeta :hover */
+  --color-text: oklch(95% 0.008 80); /* #f0eee8 — texto principal */
+  --color-muted: oklch(95% 0.008 80 / 0.42); /* texto secundario */
+  --color-subtle: oklch(95% 0.008 80 / 0.07); /* fondo sutil */
+  --color-border: oklch(100% 0 0 / 0.06); /* borde default */
+  --color-border-gold: oklch(72.3% 0.147 75.7 / 0.35); /* borde gold hover */
+  --color-gold-glow: oklch(72.3% 0.147 75.7 / 0.12); /* fondo pill gold */
 
   /* ── Semánticos ────────────────────────────────────────────
      Genera: bg-success, text-danger, etc. */
   --color-success: oklch(72% 0.17 150);
   --color-warning: oklch(80% 0.17 80);
-  --color-danger:  oklch(65% 0.22 25);
-  --color-info:    oklch(70% 0.15 230);
+  --color-danger: oklch(65% 0.22 25);
+  --color-info: oklch(70% 0.15 230);
 
   /* ── Radios ────────────────────────────────────────────────
      Genera: rounded-xs, rounded-sm, rounded-md, etc. */
-  --radius-xs:   0.25rem;
-  --radius-sm:   0.375rem;
-  --radius-md:   0.5rem;
-  --radius-lg:   0.75rem;
-  --radius-xl:   1rem;
-  --radius-2xl:  1.5rem;
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
   --radius-full: 9999px;
 
   /* ── Sombras ────────────────────────────────────────────────
      Genera: shadow-premium, shadow-card, shadow-gold */
   --shadow-premium: 0 25px 50px -12px oklch(0% 0 0 / 0.5);
-  --shadow-card:    0 4px 24px -4px oklch(0% 0 0 / 0.4);
-  --shadow-gold:    0 8px 24px oklch(72.3% 0.147 75.7 / 0.25);
+  --shadow-card: 0 4px 24px -4px oklch(0% 0 0 / 0.4);
+  --shadow-gold: 0 8px 24px oklch(72.3% 0.147 75.7 / 0.25);
 
   /* ── Animaciones ────────────────────────────────────────────
      Genera: animate-marquee, animate-fade-in, etc. */
-  --animate-marquee:      marquee 22s linear infinite;
+  --animate-marquee: marquee 22s linear infinite;
   --animate-marquee-slow: marquee 32s linear infinite;
-  --animate-fade-in:      fade-in .2s ease both;
-  --animate-slide-up:     slide-up .25s cubic-bezier(.4,0,.2,1) both;
-  --animate-slide-right:  slide-right .28s cubic-bezier(.4,0,.2,1) both;
-  --animate-pulse-dot:    pulse-dot 2s infinite;
-  --animate-fade-up:      fade-up .5s ease both;
+  --animate-fade-in: fade-in 0.2s ease both;
+  --animate-slide-up: slide-up 0.25s cubic-bezier(0.4, 0, 0.2, 1) both;
+  --animate-slide-right: slide-right 0.28s cubic-bezier(0.4, 0, 0.2, 1) both;
+  --animate-pulse-dot: pulse-dot 2s infinite;
+  --animate-fade-up: fade-up 0.5s ease both;
 
   @keyframes marquee {
-    from { transform: translateX(0); }
-    to   { transform: translateX(-50%); }
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
   }
   @keyframes fade-in {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
   @keyframes slide-up {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
   @keyframes slide-right {
-    from { transform: translateX(100%); }
-    to   { transform: translateX(0); }
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
   }
   @keyframes pulse-dot {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: .4; }
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.4;
+    }
   }
   @keyframes fade-up {
-    from { opacity: 0; transform: translateY(18px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
 
@@ -125,49 +154,65 @@
   /* Altura navbar (usada en calc() — no tiene equivalente en @theme) */
   --nh: 68px;
   /* Glow neon (gradiente radial dinámico — no tiene equivalente en @theme) */
-  --gd: rgba(80, 150, 255, 0.10);
+  --gd: rgba(80, 150, 255, 0.1);
 
   /* ── Aliases legacy — apuntan a los tokens @theme ──────────
      Mantener para retrocompatibilidad con componentes no migrados */
-  --bg:     var(--color-bg);
-  --surf:   var(--color-surf);
-  --card:   var(--color-card);
+  --bg: var(--color-bg);
+  --surf: var(--color-surf);
+  --card: var(--color-card);
   --card-h: var(--color-card-hover);
-  --gold:   #58aaff;   /* Midnight Neon override — el @theme tiene el gold original */
-  --gl:     #88ccff;
-  --bd:     rgba(80, 150, 255, 0.12);
-  --bdh:    rgba(80, 150, 255, 0.50);
-  --text:   var(--color-text);
-  --mt:     var(--color-muted);
-  --sub:    rgba(80, 150, 255, 0.05);
+  --gold: #58aaff; /* Midnight Neon override — el @theme tiene el gold original */
+  --gl: #88ccff;
+  --bd: rgba(80, 150, 255, 0.12);
+  --bdh: rgba(80, 150, 255, 0.5);
+  --text: var(--color-text);
+  --mt: var(--color-muted);
+  --sub: rgba(80, 150, 255, 0.05);
 }
 
 /* =============================================================
    Base
    ============================================================= */
 @layer base {
-  html { color-scheme: dark; }
+  html {
+    color-scheme: dark;
+  }
 
   body {
     background: var(--bg);
     color: var(--text);
     @apply font-sans antialiased overflow-x-hidden;
-    transition: background .3s, color .3s;
+    transition:
+      background 0.3s,
+      color 0.3s;
   }
 
-  h1, h2, h3, h4 { @apply font-display; }
-  button { @apply cursor-pointer; }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display;
+  }
+  button {
+    @apply cursor-pointer;
+  }
 
-  ::-webkit-scrollbar { width: 5px; }
-  ::-webkit-scrollbar-track { @apply bg-bg; }
-  ::-webkit-scrollbar-thumb { @apply bg-border rounded; }
+  ::-webkit-scrollbar {
+    width: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-bg;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded;
+  }
 }
 
 /* =============================================================
    Componentes reutilizables (usar @apply con Tailwind)
    ============================================================= */
 @layer components {
-
   /* =============================================================
      UI BUTTON — componente unificado <Button />
      Variantes: accent | outline | ghost | dark | tab | icon
@@ -202,7 +247,9 @@
     border: 1px solid var(--bd);
     color: var(--text);
   }
-  .ui-btn--outline:hover:not(:disabled) { border-color: var(--mt); }
+  .ui-btn--outline:hover:not(:disabled) {
+    border-color: var(--mt);
+  }
 
   /* ghost: sin borde, texto muted — para acciones secundarias */
   .ui-btn--ghost {
@@ -221,7 +268,9 @@
     background: #000;
     color: var(--gold);
   }
-  .ui-btn--dark:hover:not(:disabled) { background: #111; }
+  .ui-btn--dark:hover:not(:disabled) {
+    background: #111;
+  }
 
   /* tab: filtro activo/inactivo */
   .ui-btn--tab {
@@ -256,19 +305,55 @@
   }
 
   /* ── Tamaños (no aplica a icon — tiene su propia lógica) ── */
-  .ui-btn--sm { font-size: 13px; padding: 8px 18px; }
-  .ui-btn--md { font-size: 14px; padding: 11px 22px; }
-  .ui-btn--lg { font-size: 15px; padding: 14px 36px; }
+  .ui-btn--sm {
+    font-size: 13px;
+    padding: 8px 18px;
+  }
+  .ui-btn--md {
+    font-size: 14px;
+    padding: 11px 22px;
+  }
+  .ui-btn--lg {
+    font-size: 15px;
+    padding: 14px 36px;
+  }
 
   /* Tamaños para icon */
-  .ui-btn--icon.ui-btn--sm { width: 28px; height: 28px; font-size: 13px; }
-  .ui-btn--icon.ui-btn--md { width: 36px; height: 36px; font-size: 15px; }
-  .ui-btn--icon.ui-btn--lg { width: 44px; height: 44px; font-size: 18px; }
+  .ui-btn--icon.ui-btn--sm {
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+  }
+  .ui-btn--icon.ui-btn--md {
+    width: 36px;
+    height: 36px;
+    font-size: 15px;
+  }
+  .ui-btn--icon.ui-btn--lg {
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+  }
 
   /* ── Modificadores ── */
-  .ui-btn--full   { @apply w-full; }
-  .ui-btn--clip   { clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px)); }
-  .ui-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+  .ui-btn--full {
+    @apply w-full;
+  }
+  .ui-btn--clip {
+    clip-path: polygon(
+      0 0,
+      calc(100% - 10px) 0,
+      100% 10px,
+      100% 100%,
+      10px 100%,
+      0 calc(100% - 10px)
+    );
+  }
+  .ui-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none !important;
+  }
 
   /* ── Botones legacy (mantener retrocompatibilidad) ── */
   .btn-gold {
@@ -278,7 +363,14 @@
     letter-spacing: 2px;
     padding: 14px 36px;
     border: none;
-    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+    clip-path: polygon(
+      0 0,
+      calc(100% - 10px) 0,
+      100% 10px,
+      100% 100%,
+      10px 100%,
+      0 calc(100% - 10px)
+    );
   }
   .btn-gold:hover {
     @apply bg-gold-400 -translate-y-0.5 shadow-gold;
@@ -291,7 +383,9 @@
     letter-spacing: 2px;
     padding: 13px 32px;
   }
-  .btn-outline-mirana:hover { @apply border-muted; }
+  .btn-outline-mirana:hover {
+    @apply border-muted;
+  }
 
   .btn-dark {
     @apply bg-black text-gold-500 font-display font-extrabold uppercase
@@ -301,7 +395,9 @@
     padding: 14px 32px;
     border: none;
   }
-  .btn-dark:hover { @apply bg-[#111]; }
+  .btn-dark:hover {
+    @apply bg-[#111];
+  }
 
   /* ── Product card ── */
   .pcard {
@@ -311,7 +407,9 @@
   .pcard:hover {
     @apply bg-card-hover -translate-y-1.5;
     border-color: var(--bdh);
-    box-shadow: 0 20px 48px oklch(0% 0 0 / 0.35), 0 0 0 1px var(--bdh);
+    box-shadow:
+      0 20px 48px oklch(0% 0 0 / 0.35),
+      0 0 0 1px var(--bdh);
   }
   .pcard .add-btn {
     @apply w-full bg-gold-500 text-black border-none font-display font-extrabold
@@ -326,7 +424,9 @@
     opacity: 1;
     transform: translateY(0);
   }
-  .pcard .add-btn:hover { @apply bg-gold-400; }
+  .pcard .add-btn:hover {
+    @apply bg-gold-400;
+  }
 
   /* ── Stripe placeholders ── */
   .stripe-fig {
@@ -347,52 +447,130 @@
     letter-spacing: 1px;
     padding: 8px 20px;
   }
-  .filt:hover { @apply border-muted text-text; }
-  .filt.active { @apply bg-gold-500 text-black border-gold-500; }
+  .filt:hover {
+    @apply border-muted text-text;
+  }
+  .filt.active {
+    @apply bg-gold-500 text-black border-gold-500;
+  }
 
   /* ── Footer links ── */
   .footer-link {
     @apply transition-opacity duration-200;
     opacity: 0.55;
   }
-  .footer-link:hover { opacity: 1; }
+  .footer-link:hover {
+    opacity: 1;
+  }
 
   /* ── Brand carousel item ── */
   .brand-item {
-    filter: grayscale(.7);
-    opacity: .55;
-    transition: filter .3s, opacity .3s, background .3s;
+    filter: grayscale(0.7);
+    opacity: 0.55;
+    transition:
+      filter 0.3s,
+      opacity 0.3s,
+      background 0.3s;
   }
-  .brand-item:hover { filter: none; opacity: 1; background: var(--sub); }
+  .brand-item:hover {
+    filter: none;
+    opacity: 1;
+    background: var(--sub);
+  }
 
   /* ── Stock badges ── */
-  .stock-ok  { color: #3fcf7f; border-color: rgba(63,207,127,.3); }
-  .stock-low { color: #ffb84a; border-color: rgba(255,184,74,.3); }
-  .stock-out { color: #ff6644; border-color: rgba(255,102,68,.3); }
+  .stock-ok {
+    color: #3fcf7f;
+    border-color: rgba(63, 207, 127, 0.3);
+  }
+  .stock-low {
+    color: #ffb84a;
+    border-color: rgba(255, 184, 74, 0.3);
+  }
+  .stock-out {
+    color: #ff6644;
+    border-color: rgba(255, 102, 68, 0.3);
+  }
 
   /* ── Status badge — filled (color + bg) ── */
-  .badge-amber { color: #ffb84a; background: rgba(255,184,74,.12);  }
-  .badge-blue  { color: #5f9eff; background: rgba(95,158,255,.12);  }
-  .badge-green { color: #3fcf7f; background: rgba(63,207,127,.12);  }
-  .badge-red   { color: #ff6644; background: rgba(255,102,68,.12);  }
-  .badge-gold  { color: var(--gold); background: var(--sub); }
+  .badge-amber {
+    color: #ffb84a;
+    background: rgba(255, 184, 74, 0.12);
+  }
+  .badge-blue {
+    color: #5f9eff;
+    background: rgba(95, 158, 255, 0.12);
+  }
+  .badge-green {
+    color: #3fcf7f;
+    background: rgba(63, 207, 127, 0.12);
+  }
+  .badge-red {
+    color: #ff6644;
+    background: rgba(255, 102, 68, 0.12);
+  }
+  .badge-gold {
+    color: var(--gold);
+    background: var(--sub);
+  }
 
   /* ── Status badge — outlined (color + borde) ── */
-  .badge-amber-outline { color: #ffb84a; background: var(--sub); border: 1px solid rgba(255,184,74,.3);  }
-  .badge-blue-outline  { color: #5f9eff; background: var(--sub); border: 1px solid rgba(95,158,255,.3);  }
-  .badge-green-outline { color: #3fcf7f; background: var(--sub); border: 1px solid rgba(63,207,127,.3);  }
-  .badge-red-outline   { color: #ff6644; background: var(--sub); border: 1px solid rgba(255,102,68,.3);  }
-  .badge-gold-outline  { color: var(--gold); background: var(--sub); border: 1px solid rgba(88,170,255,.3); }
+  .badge-amber-outline {
+    color: #ffb84a;
+    background: var(--sub);
+    border: 1px solid rgba(255, 184, 74, 0.3);
+  }
+  .badge-blue-outline {
+    color: #5f9eff;
+    background: var(--sub);
+    border: 1px solid rgba(95, 158, 255, 0.3);
+  }
+  .badge-green-outline {
+    color: #3fcf7f;
+    background: var(--sub);
+    border: 1px solid rgba(63, 207, 127, 0.3);
+  }
+  .badge-red-outline {
+    color: #ff6644;
+    background: var(--sub);
+    border: 1px solid rgba(255, 102, 68, 0.3);
+  }
+  .badge-gold-outline {
+    color: var(--gold);
+    background: var(--sub);
+    border: 1px solid rgba(88, 170, 255, 0.3);
+  }
 
   /* ── Button activo por estado (border + bg + text) ── */
-  .btn-status-amber { border-color: #ffb84a; background: rgba(255,184,74,.12);  color: #ffb84a; }
-  .btn-status-blue  { border-color: #5f9eff; background: rgba(95,158,255,.12);  color: #5f9eff; }
-  .btn-status-green { border-color: #3fcf7f; background: rgba(63,207,127,.12);  color: #3fcf7f; }
-  .btn-status-red   { border-color: #ff6644; background: rgba(255,102,68,.12);  color: #ff6644; }
+  .btn-status-amber {
+    border-color: #ffb84a;
+    background: rgba(255, 184, 74, 0.12);
+    color: #ffb84a;
+  }
+  .btn-status-blue {
+    border-color: #5f9eff;
+    background: rgba(95, 158, 255, 0.12);
+    color: #5f9eff;
+  }
+  .btn-status-green {
+    border-color: #3fcf7f;
+    background: rgba(63, 207, 127, 0.12);
+    color: #3fcf7f;
+  }
+  .btn-status-red {
+    border-color: #ff6644;
+    background: rgba(255, 102, 68, 0.12);
+    color: #ff6644;
+  }
 
   /* ── Pie chart dot colors ── */
-  .pie-dot-0 { background: #58aaff; }
-  .pie-dot-1 { background: #5f9eff; }
-  .pie-dot-2 { background: #7b5fff; }
-
+  .pie-dot-0 {
+    background: #58aaff;
+  }
+  .pie-dot-1 {
+    background: #5f9eff;
+  }
+  .pie-dot-2 {
+    background: #7b5fff;
+  }
 }
