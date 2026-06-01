@@ -3,6 +3,7 @@
 import { createBrand, updateBrand } from '@/features/brands/actions/brand.actions'
 import type { BrandRow } from '@/modules/catalog/repositories/brand.repo'
 import { AdminDrawer } from '@/shared/components/AdminDrawer'
+import { EntityProductsPanel } from '@/shared/components/EntityProductsPanel'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
 import { useAutoSlug, useFormEntity, useServerAction } from '@/shared/hooks'
@@ -12,11 +13,14 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 const formSchema = z.object({
-  name:        z.string().min(1, 'Nombre requerido').max(100),
-  slug:        z.string().min(1, 'Slug requerido').regex(/^[a-z0-9-]+$/, 'Solo minúsculas, números y guiones'),
-  tagline:     z.string().max(80).optional(),
+  name: z.string().min(1, 'Nombre requerido').max(100),
+  slug: z
+    .string()
+    .min(1, 'Slug requerido')
+    .regex(/^[a-z0-9-]+$/, 'Solo minúsculas, números y guiones'),
+  tagline: z.string().max(80).optional(),
   description: z.string().max(500).optional(),
-  imageUrl:    z.string().url('URL inválida').optional().or(z.literal('')),
+  imageUrl: z.string().url('URL inválida').optional().or(z.literal('')),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -24,15 +28,22 @@ type FormValues = z.infer<typeof formSchema>
 const DEFAULTS: FormValues = { name: '', slug: '', tagline: '', description: '', imageUrl: '' }
 
 interface BrandCrudDrawerProps {
-  brand:   BrandRow | null
-  isNew:   boolean
+  brand: BrandRow | null
+  isNew: boolean
   onClose: () => void
 }
 
 export function BrandCrudDrawer({ brand, isNew, onClose }: BrandCrudDrawerProps) {
   const { isPending, run } = useServerAction()
 
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<FormValues>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: DEFAULTS,
   })
@@ -40,15 +51,15 @@ export function BrandCrudDrawer({ brand, isNew, onClose }: BrandCrudDrawerProps)
   useAutoSlug({ name: watch('name'), isNew, setValue })
 
   useFormEntity({
-    entity:        brand,
+    entity: brand,
     reset,
     defaultValues: DEFAULTS,
-    mapToForm:     (b) => ({
-      name:        b.name,
-      slug:        b.slug,
-      tagline:     b.tagline      ?? '',
-      description: b.description  ?? '',
-      imageUrl:    b.imageUrl     ?? '',
+    mapToForm: (b) => ({
+      name: b.name,
+      slug: b.slug,
+      tagline: b.tagline ?? '',
+      description: b.description ?? '',
+      imageUrl: b.imageUrl ?? '',
     }),
   })
 
@@ -56,8 +67,8 @@ export function BrandCrudDrawer({ brand, isNew, onClose }: BrandCrudDrawerProps)
     const payload = { ...data, ...(brand && { id: brand.id }) }
     run(brand ? () => updateBrand(payload) : () => createBrand(payload), {
       successMsg: isNew ? 'Marca creada' : 'Marca actualizada',
-      onSuccess:  () => onClose(),
-      refresh:    true,
+      onSuccess: () => onClose(),
+      refresh: true,
     })
   }
 
@@ -77,11 +88,20 @@ export function BrandCrudDrawer({ brand, isNew, onClose }: BrandCrudDrawerProps)
         </FormField>
 
         <FormField label="Tagline del carrusel" error={errors.tagline?.message}>
-          <input {...register('tagline')} className={cls.input} placeholder="OFFICIAL PARTNER · SET COLLECTIONS" />
+          <input
+            {...register('tagline')}
+            className={cls.input}
+            placeholder="OFFICIAL PARTNER · SET COLLECTIONS"
+          />
         </FormField>
 
         <FormField label="Descripción" error={errors.description?.message}>
-          <textarea {...register('description')} className={cls.input} rows={3} placeholder="Descripción de la marca..." />
+          <textarea
+            {...register('description')}
+            className={cls.input}
+            rows={3}
+            placeholder="Descripción de la marca..."
+          />
         </FormField>
 
         <FormField label="URL de imagen" error={errors.imageUrl?.message}>
@@ -97,6 +117,8 @@ export function BrandCrudDrawer({ brand, isNew, onClose }: BrandCrudDrawerProps)
           </Button>
         </div>
       </form>
+
+      {!isNew && brand?.id && <EntityProductsPanel entityId={brand.id} entityType="brand" />}
     </AdminDrawer>
   )
 }

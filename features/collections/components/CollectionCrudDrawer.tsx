@@ -143,6 +143,10 @@ export function CollectionCrudDrawer({ collection, isNew, onClose }: CollectionC
           </Button>
         </div>
       </form>
+
+      {!isNew && collection?.id && (
+        <EntityProductsPanel entityId={collection.id} entityType="collection" />
+      )}
     </AdminDrawer>
   )
 }

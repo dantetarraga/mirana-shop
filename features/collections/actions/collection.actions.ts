@@ -137,6 +137,50 @@ export async function deleteCollection(id: string): Promise<ActionResult> {
 }
 
 // ---------------------------------------------------------------------------
+// syncProductCollections — diff y aplica en una sola llamada
+// ---------------------------------------------------------------------------
+
+export async function syncProductCollections(
+  productId: string,
+  desiredIds: string[]
+): Promise<ActionResult> {
+  if (!productId) return { success: false, error: 'ID de producto requerido' }
+
+  try {
+    const current = await db.productCollection.findMany({
+      where:  { productId },
+      select: { collectionId: true },
+    })
+    const currentIds = new Set(current.map((r) => r.collectionId))
+    const desiredSet = new Set(desiredIds)
+
+    const toAdd    = desiredIds.filter((id) => !currentIds.has(id))
+    const toRemove = [...currentIds].filter((id) => !desiredSet.has(id))
+
+    await Promise.all([
+      ...toAdd.map((collectionId) =>
+        db.productCollection.upsert({
+          where:  { productId_collectionId: { productId, collectionId } },
+          create: { productId, collectionId },
+          update: {},
+        })
+      ),
+      ...toRemove.map((collectionId) =>
+        db.productCollection.deleteMany({ where: { productId, collectionId } })
+      ),
+    ])
+
+    revalidatePath('/admin/products')
+    revalidateTag('products')
+    revalidateTag('collections')
+    return { success: true, data: undefined }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Error al sincronizar colecciones'
+    return { success: false, error: message }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // addProductToCollection
 // ---------------------------------------------------------------------------
 

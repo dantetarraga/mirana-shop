@@ -43,8 +43,9 @@ export type StockFilter = 'all' | 'low' | 'out'
 const LOW_STOCK_THRESHOLD = 8
 
 export type ProductFilters = {
-  categorySlug?: string
-  brandSlug?: string
+  categorySlug?:  string | string[]
+  brandSlug?:     string | string[]
+  collectionSlug?: string | string[]
   search?: string
   featured?: boolean
   status?: ProductStatus
@@ -90,7 +91,7 @@ const listSelect = {
   images: {
     select: { id: true, url: true, alt: true, position: true },
     orderBy: { position: 'asc' as const },
-    take: 1,
+    // Sin take: 1 — necesitamos todas las imágenes para el form de edición
   },
   inventory: { select: { availableStock: true } },
   collections: {
@@ -122,6 +123,7 @@ export const productRepo = {
     const {
       categorySlug,
       brandSlug,
+      collectionSlug,
       search,
       featured,
       status = 'AVAILABLE',
@@ -129,6 +131,16 @@ export const productRepo = {
       take = 50,
       skip = 0,
     } = filters
+
+    const catSlugs = categorySlug
+      ? Array.isArray(categorySlug) ? categorySlug : [categorySlug]
+      : undefined
+    const brdSlugs = brandSlug
+      ? Array.isArray(brandSlug) ? brandSlug : [brandSlug]
+      : undefined
+    const colSlugs = collectionSlug
+      ? Array.isArray(collectionSlug) ? collectionSlug : [collectionSlug]
+      : undefined
 
     const inventoryWhere =
       stockFilter === 'low'
@@ -142,8 +154,11 @@ export const productRepo = {
         deletedAt: null,
         status: status ?? undefined,
         featured: featured ?? undefined,
-        category: categorySlug ? { slug: categorySlug } : undefined,
-        brand: brandSlug ? { slug: brandSlug } : undefined,
+        category: catSlugs?.length ? { slug: { in: catSlugs } } : undefined,
+        brand:    brdSlugs?.length ? { slug: { in: brdSlugs } } : undefined,
+        collections: colSlugs?.length
+          ? { some: { collection: { slug: { in: colSlugs } } } }
+          : undefined,
         name: search ? { contains: search, mode: 'insensitive' } : undefined,
         ...inventoryWhere,
       },
@@ -187,7 +202,26 @@ export const productRepo = {
   },
 
   async count(filters: Omit<ProductFilters, 'take' | 'skip'> = {}): Promise<number> {
-    const { categorySlug, brandSlug, search, featured, status = 'AVAILABLE', stockFilter } = filters
+    const {
+      categorySlug,
+      brandSlug,
+      collectionSlug,
+      search,
+      featured,
+      status = 'AVAILABLE',
+      stockFilter,
+    } = filters
+
+    const catSlugs = categorySlug
+      ? Array.isArray(categorySlug) ? categorySlug : [categorySlug]
+      : undefined
+    const brdSlugs = brandSlug
+      ? Array.isArray(brandSlug) ? brandSlug : [brandSlug]
+      : undefined
+    const colSlugs = collectionSlug
+      ? Array.isArray(collectionSlug) ? collectionSlug : [collectionSlug]
+      : undefined
+
     const inventoryWhere =
       stockFilter === 'low'
         ? { inventory: { availableStock: { gt: 0, lte: LOW_STOCK_THRESHOLD } } }
@@ -199,8 +233,11 @@ export const productRepo = {
         deletedAt: null,
         status: status ?? undefined,
         featured: featured ?? undefined,
-        category: categorySlug ? { slug: categorySlug } : undefined,
-        brand: brandSlug ? { slug: brandSlug } : undefined,
+        category: catSlugs?.length ? { slug: { in: catSlugs } } : undefined,
+        brand:    brdSlugs?.length ? { slug: { in: brdSlugs } } : undefined,
+        collections: colSlugs?.length
+          ? { some: { collection: { slug: { in: colSlugs } } } }
+          : undefined,
         ...inventoryWhere,
         name: search ? { contains: search, mode: 'insensitive' } : undefined,
       },
@@ -255,6 +292,21 @@ export const productRepo = {
           update: { availableStock: stock },
           create: { productId: id, availableStock: stock },
         })
+      }
+
+      // Sincroniza imágenes: elimina las existentes y crea las nuevas
+      if (images !== undefined) {
+        await tx.productImage.deleteMany({ where: { productId: id } })
+        if (images.length > 0) {
+          await tx.productImage.createMany({
+            data: images.map((img, i) => ({
+              productId: id,
+              url: img.url,
+              alt: img.alt ?? null,
+              position: img.position ?? i,
+            })),
+          })
+        }
       }
 
       return updated

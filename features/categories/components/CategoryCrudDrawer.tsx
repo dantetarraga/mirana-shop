@@ -3,6 +3,7 @@
 import { createCategory, updateCategory } from '@/features/categories/actions/category.actions'
 import type { CategoryRow } from '@/modules/catalog/repositories/category.repo'
 import { AdminDrawer } from '@/shared/components/AdminDrawer'
+import { EntityProductsPanel } from '@/shared/components/EntityProductsPanel'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
 import { useAutoSlug, useFormEntity, useServerAction } from '@/shared/hooks'
@@ -148,6 +149,10 @@ export function CategoryCrudDrawer({
           </Button>
         </div>
       </form>
+
+      {!isNew && category?.id && (
+        <EntityProductsPanel entityId={category.id} entityType="category" />
+      )}
     </AdminDrawer>
   )
 }

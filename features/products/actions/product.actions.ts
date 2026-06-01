@@ -90,6 +90,7 @@ export async function createProduct(
 export async function updateProduct(
   id: string,
   rawInput: unknown,
+  images?: { url: string; alt?: string }[],
 ): Promise<ActionResult<{ id: string }>> {
   if (!id) return { success: false, error: 'ID de producto requerido' }
 
@@ -104,18 +105,20 @@ export async function updateProduct(
   try {
     const updated = await productRepo.update({
       id,
-      ...(input.sku !== undefined && { sku: input.sku }),
-      ...(input.name !== undefined && { name: input.name }),
-      ...(input.slug !== undefined && { slug: input.slug }),
-      ...(input.description !== undefined && { description: input.description }),
-      ...(input.price !== undefined && { price: input.price }),
+      ...(input.sku          !== undefined && { sku:          input.sku }),
+      ...(input.name         !== undefined && { name:         input.name }),
+      ...(input.slug         !== undefined && { slug:         input.slug }),
+      ...(input.description  !== undefined && { description:  input.description }),
+      ...(input.price        !== undefined && { price:        input.price }),
       ...(input.compareAtPrice !== undefined && { compareAtPrice: input.compareAtPrice }),
-      ...(input.salePrice !== undefined && { salePrice: input.salePrice }),
-      ...(input.status !== undefined && { status: input.status }),
-      ...(input.featured !== undefined && { featured: input.featured }),
-      ...(input.categoryId !== undefined && { categoryId: input.categoryId }),
-      ...(input.brandId !== undefined && { brandId: input.brandId }),
-      ...(input.stock !== undefined && { stock: input.stock }),
+      ...(input.salePrice    !== undefined && { salePrice:    input.salePrice }),
+      ...(input.status       !== undefined && { status:       input.status }),
+      ...(input.featured     !== undefined && { featured:     input.featured }),
+      ...(input.categoryId   !== undefined && { categoryId:   input.categoryId }),
+      ...(input.brandId      !== undefined && { brandId:      input.brandId }),
+      ...(input.stock        !== undefined && { stock:        input.stock }),
+      // images: si se pasan, se sincronizan en la transacción del repo
+      ...(images !== undefined && { images }),
     })
 
     invalidateProductCaches()
