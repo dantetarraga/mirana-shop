@@ -7,7 +7,15 @@ import { SavedAddressSelector } from '@/features/checkout/components/SavedAddres
 import { SuccessScreen } from '@/features/checkout/components/SuccessScreen'
 import type { SuccessData } from '@/features/checkout/types'
 import { placeOrder } from '@/features/orders/actions/checkout.actions'
-import { getMyAddresses, type AddressData } from '@/features/users/actions/account-profile.actions'
+import {
+  createAddress,
+  getMyAddresses,
+  type AddressData,
+} from '@/features/users/actions/account-profile.actions'
+import {
+  AddressFormPanel,
+  type AddressFormValues,
+} from '@/features/users/components/AddressFormPanel'
 import { Button } from '@/shared/components/ui/Button'
 import { checkoutSchema, type CheckoutInput } from '@/shared/lib/schemas'
 import { useStore } from '@/shared/lib/store-context'
@@ -58,6 +66,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false)
   const [savedAddresses, setSavedAddresses] = useState<AddressData[]>([])
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
+  const [showNewAddressForm, setShowNewAddressForm] = useState(false)
   // Card form state
   const [cardNumber, setCardNumber] = useState('')
   const [cardExpiry, setCardExpiry] = useState('')
@@ -129,6 +138,21 @@ export default function CheckoutPage() {
     setValue('district', '')
     setValue('city', 'Lima')
     setValue('reference', '')
+  }
+
+  const handleSaveNewAddress = async (data: AddressFormValues) => {
+    if (!user) return
+    const result = await createAddress(user.email, data)
+    if (result.success && result.id) {
+      toast.success('Dirección guardada en tu cuenta')
+      const updatedAddrs = await getMyAddresses(user.email)
+      setSavedAddresses(updatedAddrs)
+      const newAddr = updatedAddrs.find((a) => a.id === result.id)
+      if (newAddr) applyAddress(newAddr)
+      setShowNewAddressForm(false)
+    } else {
+      toast.error(result.error ?? 'Error al guardar la dirección')
+    }
   }
 
   // Redirect to cart if empty (and not in success state)
@@ -264,12 +288,22 @@ export default function CheckoutPage() {
           {/* ── Left column ──────────────────────────────── */}
           <div className="flex flex-col gap-6">
             {savedAddresses.length > 0 && (
-              <SavedAddressSelector
-                addresses={savedAddresses}
-                selectedId={selectedAddressId}
-                onSelect={applyAddress}
-                onClearManual={clearSavedAddress}
-              />
+              <>
+                <SavedAddressSelector
+                  addresses={savedAddresses}
+                  selectedId={selectedAddressId}
+                  onSelect={applyAddress}
+                  onClearManual={clearSavedAddress}
+                  onAddNew={user ? () => setShowNewAddressForm(true) : undefined}
+                />
+                {showNewAddressForm && (
+                  <AddressFormPanel
+                    title="Agregar y guardar dirección"
+                    onSave={handleSaveNewAddress}
+                    onCancel={() => setShowNewAddressForm(false)}
+                  />
+                )}
+              </>
             )}
 
             <DeliveryForm register={register} errors={errors} />

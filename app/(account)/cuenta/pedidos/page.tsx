@@ -1,6 +1,7 @@
 'use client'
 
 import { getMyOrders } from '@/features/orders/actions/account.actions'
+import { OrdersSkeleton } from '@/features/orders/components/OrdersSkeleton'
 import type { OrderListItem } from '@/modules/orders/repositories/order.repo'
 import { Button } from '@/shared/components/ui/Button'
 import { useStore } from '@/shared/lib/store-context'
@@ -152,37 +153,24 @@ function OrderRow({ order }: { order: OrderListItem }) {
 // Página principal
 // ---------------------------------------------------------------------------
 export default function MisPedidosPage() {
-  const { user, openAuth } = useStore()
+  const { user, _hasHydrated, openAuth } = useStore()
   const [orders, setOrders] = useState<OrderListItem[] | null>(null)
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (user === null) {
-      setLoading(false)
+    if (!_hasHydrated) return
+
+    if (!user) {
       const t = setTimeout(() => openAuth('login'), 300)
       return () => clearTimeout(t)
     }
 
     getMyOrders(user.email).then((data) => {
       setOrders(data as OrderListItem[])
-      setLoading(false)
     })
-  }, [user, openAuth])
+  }, [_hasHydrated, user, openAuth])
 
-  if (loading) {
-    return (
-      <div className="min-h-[70vh] flex items-center justify-center">
-        <p className="text-muted text-[14px]">Cargando pedidos…</p>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-[70vh] flex items-center justify-center">
-        <p className="text-muted text-[14px]">Inicia sesión para ver tus pedidos.</p>
-      </div>
-    )
+  if (!_hasHydrated || (!user && _hasHydrated)) {
+    return <OrdersSkeleton />
   }
 
   return (
@@ -195,7 +183,13 @@ export default function MisPedidosPage() {
         </h1>
       </div>
 
-      {!orders || orders.length === 0 ? (
+      {orders === null ? (
+        <div className="flex flex-col gap-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="animate-pulse bg-card border border-(--bd) px-5 py-4 h-14" />
+          ))}
+        </div>
+      ) : !orders || orders.length === 0 ? (
         <div className="flex flex-col items-center gap-6 py-20">
           <Package size={72} strokeWidth={1} className="opacity-15" />
           <p className="text-[15px] text-muted">Aún no tienes pedidos.</p>

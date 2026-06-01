@@ -100,8 +100,18 @@ export const useStore = create<StoreState>()(
       authenticate: (u) => {
         const isAdmin = ADMIN_EMAILS.some((e) => u.email.toLowerCase().includes(e))
         set({ user: { ...u, role: isAdmin ? 'admin' : 'customer' }, authOpen: false })
+        // Set session cookie so middleware can protect /cuenta/* routes
+        if (typeof document !== 'undefined') {
+          document.cookie = 'm-auth=1; path=/; max-age=604800; samesite=lax'
+        }
       },
-      logout: () => set({ user: null }),
+      logout: () => {
+        set({ user: null })
+        // Clear session cookie
+        if (typeof document !== 'undefined') {
+          document.cookie = 'm-auth=; path=/; max-age=0; samesite=lax'
+        }
+      },
 
       // product modal
       activeProduct: null,
@@ -115,6 +125,10 @@ export const useStore = create<StoreState>()(
       partialize: (s) => ({ cart: s.cart, cartCount: s.cartCount, user: s.user }),
       onRehydrateStorage: () => (state) => {
         state?._setHasHydrated(true)
+        // Re-sync cookie on hydration (covers existing sessions)
+        if (state?.user && typeof document !== 'undefined') {
+          document.cookie = 'm-auth=1; path=/; max-age=604800; samesite=lax'
+        }
       },
     },
   ),

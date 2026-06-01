@@ -2,21 +2,40 @@
 
 import type { AddressData } from '@/features/users/actions/account-profile.actions'
 import { cn } from '@/shared/lib/utils'
-import { Check, MapPin } from 'lucide-react'
+import { Check, MapPin, Plus } from 'lucide-react'
 
 type Props = {
   addresses: AddressData[]
   selectedId: string | null
   onSelect: (addr: AddressData) => void
   onClearManual: () => void
+  onAddNew?: () => void
 }
 
-export function SavedAddressSelector({ addresses, selectedId, onSelect, onClearManual }: Props) {
+export function SavedAddressSelector({
+  addresses,
+  selectedId,
+  onSelect,
+  onClearManual,
+  onAddNew,
+}: Props) {
   return (
     <section className="bg-card border border-(--bd) p-6">
-      <h2 className="font-display font-black uppercase text-[14px] tracking-[2px] text-(--gold) mb-4">
-        Mis direcciones guardadas
-      </h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-display font-black uppercase text-[14px] tracking-[2px] text-(--gold)">
+          Mis direcciones guardadas
+        </h2>
+        {onAddNew && (
+          <button
+            type="button"
+            onClick={onAddNew}
+            className="flex items-center gap-1.5 text-[11px] font-semibold text-muted hover:text-(--gold) transition-colors duration-150"
+          >
+            <Plus size={13} />
+            Nueva
+          </button>
+        )}
+      </div>
       <div className="flex flex-col gap-2.5">
         {addresses.map((addr) => (
           <button

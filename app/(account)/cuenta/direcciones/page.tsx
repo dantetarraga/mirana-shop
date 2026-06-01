@@ -8,221 +8,27 @@ import {
   updateAddress,
   type AddressData,
 } from '@/features/users/actions/account-profile.actions'
+import {
+  AddressFormPanel,
+  type AddressFormValues,
+} from '@/features/users/components/AddressFormPanel'
+import { AddressesSkeleton } from '@/features/users/components/AddressesSkeleton'
 import { Button } from '@/shared/components/ui/Button'
 import { useStore } from '@/shared/lib/store-context'
 import { cn } from '@/shared/lib/utils'
-import { Check, Home, Loader2, MapPin, Pencil, Plus, Star, Trash2, X } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { Home, MapPin, Pencil, Plus, Star, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 // ---------------------------------------------------------------------------
-// Helpers
+// Address card
 // ---------------------------------------------------------------------------
-const LABELS = ['Casa', 'Trabajo', 'Otro']
-
 const LABEL_ICON: Record<string, React.ReactNode> = {
   Casa: <Home size={13} />,
   Trabajo: <MapPin size={13} />,
   Otro: <MapPin size={13} />,
 }
 
-const inputCls =
-  'w-full bg-surf border border-(--bd) text-text font-sans text-[14px] px-[13px] py-[10px] outline-none focus:border-(--gold)/50 transition-colors duration-150 placeholder:text-muted/50'
-
-const selectCls =
-  'w-full bg-surf border border-(--bd) text-text font-sans text-[14px] px-[13px] py-[10px] outline-none focus:border-(--gold)/50 transition-colors duration-150'
-
-// ---------------------------------------------------------------------------
-// Address form
-// ---------------------------------------------------------------------------
-type AddressForm = Omit<AddressData, 'id'>
-
-const emptyForm: AddressForm = {
-  label: 'Casa',
-  fullName: '',
-  phone: '',
-  address: '',
-  district: '',
-  city: 'Lima',
-  reference: '',
-  isDefault: false,
-}
-
-function AddressFormPanel({
-  initial,
-  onSave,
-  onCancel,
-}: {
-  initial?: AddressForm
-  onSave: (data: AddressForm) => Promise<void>
-  onCancel: () => void
-}) {
-  const [form, setForm] = useState<AddressForm>(initial ?? emptyForm)
-  const [saving, setSaving] = useState(false)
-
-  const set = (k: keyof AddressForm, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }))
-
-  const handleSubmit = async () => {
-    if (
-      !form.fullName.trim() ||
-      !form.phone.trim() ||
-      !form.address.trim() ||
-      !form.district.trim()
-    ) {
-      toast.error('Completa los campos obligatorios')
-      return
-    }
-    setSaving(true)
-    await onSave(form)
-    setSaving(false)
-  }
-
-  return (
-    <div className="bg-card border border-(--bd) p-6 flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <p className="text-[10px] tracking-[3px] uppercase text-(--gold)">
-          {initial ? 'Editar dirección' : 'Nueva dirección'}
-        </p>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="text-muted hover:text-text transition-colors duration-150"
-        >
-          <X size={16} />
-        </button>
-      </div>
-
-      {/* Etiqueta */}
-      <div>
-        <label className="label-xs">Etiqueta</label>
-        <div className="flex gap-2 mt-1.5">
-          {LABELS.map((l) => (
-            <button
-              key={l}
-              type="button"
-              onClick={() => set('label', l)}
-              className={cn(
-                'flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold border transition-colors duration-150',
-                form.label === l
-                  ? 'bg-(--gold) text-black border-(--gold)'
-                  : 'bg-surf border-(--bd) text-muted hover:border-(--gold)/40',
-              )}
-            >
-              {LABEL_ICON[l]}
-              {l}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Nombre completo */}
-      <div>
-        <label className="label-xs">Nombre completo *</label>
-        <input
-          value={form.fullName}
-          onChange={(e) => set('fullName', e.target.value)}
-          placeholder="Nombre de quien recibe"
-          className={inputCls}
-        />
-      </div>
-
-      {/* Teléfono */}
-      <div>
-        <label className="label-xs">Teléfono *</label>
-        <input
-          value={form.phone}
-          onChange={(e) => set('phone', e.target.value)}
-          placeholder="+51 999 999 999"
-          type="tel"
-          className={inputCls}
-        />
-      </div>
-
-      {/* Dirección */}
-      <div>
-        <label className="label-xs">Dirección *</label>
-        <input
-          value={form.address}
-          onChange={(e) => set('address', e.target.value)}
-          placeholder="Av. / Jr. / Calle, número, piso, dpto."
-          className={inputCls}
-        />
-      </div>
-
-      {/* Distrito / Ciudad */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="label-xs">Distrito *</label>
-          <input
-            value={form.district}
-            onChange={(e) => set('district', e.target.value)}
-            placeholder="Ej: Miraflores"
-            className={inputCls}
-          />
-        </div>
-        <div>
-          <label className="label-xs">Ciudad</label>
-          <input
-            value={form.city}
-            onChange={(e) => set('city', e.target.value)}
-            placeholder="Lima"
-            className={inputCls}
-          />
-        </div>
-      </div>
-
-      {/* Referencia */}
-      <div>
-        <label className="label-xs">Referencia</label>
-        <input
-          value={form.reference ?? ''}
-          onChange={(e) => set('reference', e.target.value)}
-          placeholder="Frente al parque, casa azul…"
-          className={inputCls}
-        />
-      </div>
-
-      {/* Default */}
-      <label className="flex items-center gap-2.5 cursor-pointer select-none">
-        <div
-          onClick={() => set('isDefault', !form.isDefault)}
-          className={cn(
-            'w-5 h-5 border flex items-center justify-center transition-colors duration-150',
-            form.isDefault ? 'bg-(--gold) border-(--gold)' : 'bg-surf border-(--bd)',
-          )}
-        >
-          {form.isDefault && <Check size={12} className="text-black" />}
-        </div>
-        <span className="text-[13px] text-text">Usar como dirección predeterminada</span>
-      </label>
-
-      <div className="flex gap-3 pt-1">
-        <Button
-          variant="accent"
-          size="md"
-          onClick={handleSubmit}
-          disabled={saving}
-          className="flex-1"
-        >
-          {saving ? (
-            <Loader2 size={14} className="mr-2 animate-spin" />
-          ) : (
-            <Check size={14} className="mr-2" />
-          )}
-          Guardar
-        </Button>
-        <Button variant="outline" size="md" onClick={onCancel} className="flex-1">
-          Cancelar
-        </Button>
-      </div>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Address card
-// ---------------------------------------------------------------------------
 function AddressCard({
   address,
   onEdit,
@@ -298,15 +104,13 @@ function AddressCard({
 }
 
 // ---------------------------------------------------------------------------
-// Página principal
+// Page
 // ---------------------------------------------------------------------------
 export default function DireccionesPage() {
-  const { user, openAuth } = useStore()
-  const router = useRouter()
+  const { user, _hasHydrated, openAuth } = useStore()
   const [addresses, setAddresses] = useState<AddressData[] | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
 
   const loadAddresses = async (email: string) => {
     const data = await getMyAddresses(email)
@@ -314,26 +118,23 @@ export default function DireccionesPage() {
   }
 
   useEffect(() => {
-    if (user === null) {
-      setLoading(false)
+    if (!_hasHydrated) return
+
+    if (!user) {
       const t = setTimeout(() => openAuth('login'), 300)
       return () => clearTimeout(t)
     }
-    loadAddresses(user.email).then(() => setLoading(false))
-  }, [user, openAuth])
 
-  if (loading || !user) {
-    return (
-      <div className="min-h-[70vh] flex items-center justify-center">
-        <p className="text-muted text-[14px]">Cargando…</p>
-      </div>
-    )
-  }
+    loadAddresses(user.email)
+  }, [_hasHydrated, user, openAuth])
 
-  const handleCreate = async (data: AddressForm) => {
+  if (!_hasHydrated) return <AddressesSkeleton />
+  if (!user) return <AddressesSkeleton />
+
+  const handleCreate = async (data: AddressFormValues) => {
     const result = await createAddress(user.email, data)
     if (result.success) {
-      toast.success('Dirección guardada')
+      toast.success('Direccion guardada')
       setShowForm(false)
       await loadAddresses(user.email)
     } else {
@@ -341,10 +142,10 @@ export default function DireccionesPage() {
     }
   }
 
-  const handleUpdate = async (id: string, data: AddressForm) => {
+  const handleUpdate = async (id: string, data: AddressFormValues) => {
     const result = await updateAddress(id, user.email, data)
     if (result.success) {
-      toast.success('Dirección actualizada')
+      toast.success('Direccion actualizada')
       setEditingId(null)
       await loadAddresses(user.email)
     } else {
@@ -355,7 +156,7 @@ export default function DireccionesPage() {
   const handleDelete = async (id: string) => {
     const result = await deleteAddress(id, user.email)
     if (result.success) {
-      toast.success('Dirección eliminada')
+      toast.success('Direccion eliminada')
       setAddresses((prev) => (prev ?? []).filter((a) => a.id !== id))
     } else {
       toast.error(result.error ?? 'Error al eliminar')
@@ -365,7 +166,7 @@ export default function DireccionesPage() {
   const handleSetDefault = async (id: string) => {
     const result = await setDefaultAddress(id, user.email)
     if (result.success) {
-      toast.success('Dirección predeterminada actualizada')
+      toast.success('Direccion predeterminada actualizada')
       await loadAddresses(user.email)
     } else {
       toast.error(result.error ?? 'Error')
@@ -385,12 +186,12 @@ export default function DireccionesPage() {
         {!showForm && editingId === null && (
           <Button variant="accent" size="md" onClick={() => setShowForm(true)}>
             <Plus size={14} className="mr-2" />
-            Nueva dirección
+            Nueva direccion
           </Button>
         )}
       </div>
 
-      {/* Formulario nuevo */}
+      {/* Formulario nueva direccion */}
       {showForm && (
         <div className="mb-6">
           <AddressFormPanel onSave={handleCreate} onCancel={() => setShowForm(false)} />
@@ -398,14 +199,20 @@ export default function DireccionesPage() {
       )}
 
       {/* Lista */}
-      {addresses === null || addresses.length === 0 ? (
+      {addresses === null ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {[1, 2].map((i) => (
+            <div key={i} className="animate-pulse bg-card border border-(--bd) p-5 h-36" />
+          ))}
+        </div>
+      ) : addresses.length === 0 ? (
         !showForm && (
           <div className="bg-card border border-(--bd) p-12 flex flex-col items-center gap-4 text-center">
             <MapPin size={32} className="text-muted" />
-            <p className="text-[14px] text-muted">Aún no tienes direcciones guardadas.</p>
+            <p className="text-[14px] text-muted">Aun no tienes direcciones guardadas.</p>
             <Button variant="accent" size="md" onClick={() => setShowForm(true)}>
               <Plus size={14} className="mr-2" />
-              Agregar primera dirección
+              Agregar primera direccion
             </Button>
           </div>
         )
