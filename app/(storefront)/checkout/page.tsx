@@ -43,14 +43,14 @@ const PAYMENT_METHODS = [
     label: 'Yape',
     desc: 'Pago con Yape escaneando el código QR.',
     icon: Smartphone,
-    available: false,
+    available: true,
   },
   {
     value: 'CULQI_CARD',
     label: 'Tarjeta de crédito / débito',
     desc: 'Visa, Mastercard — pago seguro con Culqi.',
     icon: CreditCard,
-    available: false,
+    available: true,
   },
 ] as const
 
@@ -58,7 +58,18 @@ const PAYMENT_METHODS = [
 // Types
 // ---------------------------------------------------------------------------
 
-type SuccessData = { code: string; paymentMethod: string }
+type SuccessData = {
+  code: string
+  paymentMethod: string
+  culqi?:
+    | {
+        orderId: string
+        qrUrl: string | null
+        peUrl: string | null
+        paymentCode: string | null
+      }
+    | undefined
+}
 
 // ---------------------------------------------------------------------------
 // Page
@@ -143,7 +154,11 @@ export default function CheckoutPage() {
 
     // Clear cart items
     cart.forEach((i) => _removeItem(i.product.id))
-    setSuccess({ code: result.data.code, paymentMethod: result.data.paymentMethod })
+    setSuccess({
+      code: result.data.code,
+      paymentMethod: result.data.paymentMethod,
+      culqi: result.data.culqi,
+    })
   }
 
   return (
@@ -375,6 +390,7 @@ export default function CheckoutPage() {
 
 function SuccessScreen({ data }: { data: SuccessData }) {
   const isTransfer = data.paymentMethod === 'WHATSAPP_TRANSFER'
+  const isYape = data.paymentMethod === 'CULQI_YAPE'
 
   return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center px-4 py-16">
@@ -405,27 +421,72 @@ function SuccessScreen({ data }: { data: SuccessData }) {
           </p>
         </div>
 
-        {/* Instructions */}
-        <div className="bg-surf border border-(--bd) w-full px-6 py-5">
-          <p className="text-[10px] tracking-[3px] uppercase text-(--gold) mb-3">Próximos pasos</p>
-          {isTransfer ? (
-            <div className="flex flex-col gap-2.5 text-[13px] leading-snug">
-              <Step n={1}>Realiza tu transferencia o depósito al número de cuenta indicado.</Step>
-              <Step n={2}>
-                Envía tu comprobante de pago por WhatsApp al{' '}
-                <span className="font-semibold text-white">+51 987 654 321</span> junto con tu
-                código <span className="font-mono text-(--gold)">{data.code}</span>.
-              </Step>
-              <Step n={3}>Una vez confirmado el pago, prepararemos y enviaremos tu pedido.</Step>
-            </div>
-          ) : (
-            <div className="text-[13px] leading-snug text-muted">
-              Te contactaremos al correo registrado con las instrucciones de pago.
-              <br />
-              Código de referencia: <span className="font-mono text-(--gold)">{data.code}</span>
-            </div>
-          )}
-        </div>
+        {/* Yape QR */}
+        {isYape && data.culqi && (
+          <div className="bg-surf border border-(--bd) w-full px-6 py-5 flex flex-col items-center gap-4">
+            <p className="text-[10px] tracking-[3px] uppercase text-(--gold)">Paga con Yape</p>
+
+            {data.culqi.qrUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={data.culqi.qrUrl}
+                alt="Código QR para pagar con Yape"
+                className="w-44 h-44 object-contain border border-(--bd) p-2"
+              />
+            ) : null}
+
+            {data.culqi.paymentCode && (
+              <div className="text-center">
+                <p className="text-[11px] text-muted mb-1">Código de pago</p>
+                <p className="font-mono font-bold text-[22px] tracking-widest text-white">
+                  {data.culqi.paymentCode}
+                </p>
+              </div>
+            )}
+
+            <p className="text-[12px] text-muted text-center">
+              Abre Yape, escanea el QR o ingresa el código de pago. El pedido se confirmará
+              automáticamente.
+            </p>
+
+            {data.culqi.peUrl && (
+              <a
+                href={data.culqi.peUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[12px] underline text-(--gold) hover:opacity-80"
+              >
+                También puedes pagar con PagoEfectivo
+              </a>
+            )}
+          </div>
+        )}
+
+        {/* Instructions (transfer y otros) */}
+        {!isYape && (
+          <div className="bg-surf border border-(--bd) w-full px-6 py-5">
+            <p className="text-[10px] tracking-[3px] uppercase text-(--gold) mb-3">
+              Próximos pasos
+            </p>
+            {isTransfer ? (
+              <div className="flex flex-col gap-2.5 text-[13px] leading-snug">
+                <Step n={1}>Realiza tu transferencia o depósito al número de cuenta indicado.</Step>
+                <Step n={2}>
+                  Envía tu comprobante de pago por WhatsApp al{' '}
+                  <span className="font-semibold text-white">+51 987 654 321</span> junto con tu
+                  código <span className="font-mono text-(--gold)">{data.code}</span>.
+                </Step>
+                <Step n={3}>Una vez confirmado el pago, prepararemos y enviaremos tu pedido.</Step>
+              </div>
+            ) : (
+              <div className="text-[13px] leading-snug text-muted">
+                Te contactaremos al correo registrado con las instrucciones de pago.
+                <br />
+                Código de referencia: <span className="font-mono text-(--gold)">{data.code}</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-3 w-full">

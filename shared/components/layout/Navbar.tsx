@@ -1,33 +1,36 @@
-﻿"use client";
+﻿'use client'
 
-import { Button } from "@/shared/components/ui/Button";
-import { useStore } from "@/shared/lib/store-context";
-import { LayoutGrid, LogOut, Search, ShoppingBag } from "lucide-react";
-import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { Button } from '@/shared/components/ui/Button'
+import { useStore } from '@/shared/lib/store-context'
+import { LayoutGrid, LogOut, Search, ShoppingBag } from 'lucide-react'
+import Link from 'next/link'
+import { useEffect, useRef, useState } from 'react'
 
 export function Navbar() {
-  const { cartCount, setCartOpen, user, openAuth, logout } = useStore();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [searchVal, setSearchVal] = useState("");
-  const menuRef = useRef<HTMLDivElement>(null);
+  const { cartCount, setCartOpen, user, openAuth, logout } = useStore()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [searchVal, setSearchVal] = useState('')
+  const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   const initials = user
-    ? user.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
-    : "";
+    ? user.name
+        .split(' ')
+        .map((w) => w[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
+    : ''
 
   return (
-    <nav
-      className="fixed top-0 left-0 right-0 z-[200] flex items-center justify-between px-12 transition-[background] duration-300 h-(--nh) bg-[rgba(3,4,9,.92)] backdrop-blur-[28px] border-b border-(--bd)"
-    >
+    <nav className="fixed top-0 left-0 right-0 z-200 flex items-center justify-between px-12 transition-[background] duration-300 h-(--nh) bg-[rgba(3,4,9,.92)] backdrop-blur-[28px] border-b border-(--bd)">
       <Link
         href="/"
         className="font-display font-black text-[26px] tracking-[5px] no-underline uppercase text-text"
@@ -37,10 +40,10 @@ export function Navbar() {
 
       <ul className="flex gap-7 list-none">
         {[
-          ["Inicio", "/"],
-          ["Catálogo", "/catalogo"],
-          ["Novedades", "/catalogo?cat=figures"],
-          ["Preventas", "/catalogo?cat=preorder"],
+          ['Inicio', '/'],
+          ['Catálogo', '/catalogo'],
+          ['Novedades', '/catalogo?cat=figures'],
+          ['Preventas', '/catalogo?cat=preorder'],
         ].map(([label, href]) => (
           <li key={label}>
             <Link
@@ -55,30 +58,21 @@ export function Navbar() {
 
       <div className="flex items-center gap-3">
         {/* Search */}
-        <div
-          className="flex items-center gap-2 px-3.5 h-10 bg-surf border border-(--bd)"
-        >
+        <div className="flex items-center gap-2 px-3.5 h-10 bg-surf border border-(--bd)">
           <Search size={13} className="shrink-0 text-muted" />
           <input
             value={searchVal}
             onChange={(e) => setSearchVal(e.target.value)}
             placeholder="Buscar..."
-            className="bg-transparent border-none outline-none font-sans text-[13px] w-[140px] text-text"
+            className="bg-transparent border-none outline-none font-sans text-[13px] w-35 text-text"
           />
         </div>
 
         {/* Cart */}
-        <Button
-          variant="icon"
-          size="md"
-          onClick={() => setCartOpen(true)}
-          className="relative"
-        >
+        <Button variant="icon" size="md" onClick={() => setCartOpen(true)} className="relative">
           <ShoppingBag size={17} />
           {cartCount > 0 && (
-            <span
-              className="absolute top-[-6px] right-[-6px] w-4.5 h-4.5 rounded-full flex items-center justify-center text-[10px] font-bold font-display bg-(--gold) text-black"
-            >
+            <span className="absolute top-1.5 -right-1.5 w-4.5 h-4.5 rounded-full flex items-center justify-center text-[10px] font-bold font-display bg-(--gold) text-black">
               {cartCount}
             </span>
           )}
@@ -95,20 +89,14 @@ export function Navbar() {
               {initials}
             </Button>
           ) : (
-            <Button
-              variant="accent"
-              size="md"
-              onClick={() => openAuth("login")}
-            >
+            <Button variant="accent" size="md" onClick={() => openAuth('login')}>
               Ingresar
             </Button>
           )}
 
           {/* Dropdown */}
           {menuOpen && user && (
-            <div
-              className="absolute top-[calc(100%+8px)] right-0 min-w-[220px] z-[250] bg-surf border border-(--bd) shadow-[0_16px_48px_rgba(0,0,0,.4)]"
-            >
+            <div className="absolute top-[calc(100%+8px)] right-0 min-w-55 z-250 bg-surf border border-(--bd) shadow-[0_16px_48px_rgba(0,0,0,.4)]">
               <div className="px-4.5 py-4 border-b border-(--bd)">
                 <div className="font-display text-[16px] font-extrabold uppercase tracking-[0.5px]">
                   {user.name}
@@ -117,21 +105,20 @@ export function Navbar() {
               </div>
 
               {[
-                ["Mi perfil", "👤"],
-                ["Mis pedidos", "📦"],
-                ["Favoritos", "♡"],
+                ['Mi perfil', '👤'],
+                ['Mis pedidos', '📦'],
+                ['Favoritos', '♡'],
               ].map(([label, icon]) => (
                 <Button key={label} variant="ghost" size="sm" full className="justify-start px-4.5">
                   <span>{icon}</span> {label}
                 </Button>
               ))}
 
-              {/* Panel Admin — SOLO rol admin */}
-              {user.role === "admin" && (
+              {user.role === 'admin' && (
                 <Link
                   href="/admin/dashboard"
                   onClick={() => setMenuOpen(false)}
-                  className="px-4.5 py-[11px] flex items-center gap-2.5 text-[13px] no-underline font-sans font-semibold text-(--gold) border-t border-(--bd)"
+                  className="px-4.5 py-2.75 flex items-center gap-2.5 text-[13px] no-underline font-sans font-semibold text-(--gold) border-t border-(--bd)"
                 >
                   <LayoutGrid size={14} />
                   Panel Admin
@@ -142,7 +129,10 @@ export function Navbar() {
                 variant="ghost"
                 size="sm"
                 full
-                onClick={() => { logout(); setMenuOpen(false); }}
+                onClick={() => {
+                  logout()
+                  setMenuOpen(false)
+                }}
                 className="justify-start px-4.5 border-t border-(--bd)"
               >
                 <LogOut size={14} />
@@ -153,5 +143,5 @@ export function Navbar() {
         </div>
       </div>
     </nav>
-  );
+  )
 }

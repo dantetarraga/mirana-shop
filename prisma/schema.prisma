@@ -317,8 +317,11 @@ model Payment {
   amount   Decimal       @db.Decimal(10, 2)
   currency String        @default("PEN")
 
+  culqiOrderId  String? @unique
   culqiChargeId String? @unique
   culqiEventId  String? @unique
+  culqiQrUrl    String?
+  culqiPeUrl    String?
   proofUrl      String?
   rawResponse   Json?
 

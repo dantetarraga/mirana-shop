@@ -13,9 +13,8 @@ import { StatusBadge } from '@/shared/components/StatusBadge'
 import { useServerAction } from '@/shared/hooks'
 import { cls } from '@/shared/lib/admin-classes'
 import { ORDER_STATUS, fmt } from '@/shared/lib/admin-constants'
-import { cn } from '@/shared/lib/utils'
+import { cn, formatDate } from '@/shared/lib/utils'
 import { useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -33,7 +32,7 @@ const DB_TO_UI_STATUS: Record<string, string> = {
 }
 
 function fmtDate(d: Date): string {
-  return new Date(d).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' })
+  return formatDate(d, 'd MMM')
 }
 
 function buildUrl(base: string, params: Record<string, string | undefined>) {

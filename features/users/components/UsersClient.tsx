@@ -8,7 +8,7 @@ import { ServerSearchForm } from '@/shared/components/ServerSearchForm'
 import { StatusBadge } from '@/shared/components/StatusBadge'
 import { cls } from '@/shared/lib/admin-classes'
 import { USER_STATUS } from '@/shared/lib/admin-constants'
-import { cn } from '@/shared/lib/utils'
+import { cn, formatDate } from '@/shared/lib/utils'
 import { useMemo, useState } from 'react'
 
 // ---------------------------------------------------------------------------
@@ -102,8 +102,7 @@ export function UsersClient({
       {
         header: 'Desde',
         className: 'text-[13px] text-muted',
-        render: (u) =>
-          new Date(u.createdAt).toLocaleDateString('es-PE', { year: 'numeric', month: 'short' }),
+        render: (u) => formatDate(new Date(u.createdAt), 'MMM yyyy'),
       },
       {
         header: 'Segmento',
@@ -222,14 +221,7 @@ export function UsersClient({
               [
                 ['Email', detail.email],
                 ['Rol', ROLE_LABELS[detail.role] ?? detail.role],
-                [
-                  'Cliente desde',
-                  new Date(detail.createdAt).toLocaleDateString('es-PE', {
-                    day: '2-digit',
-                    month: 'long',
-                    year: 'numeric',
-                  }),
-                ],
+                ['Cliente desde', formatDate(new Date(detail.createdAt), "d 'de' MMMM 'de' yyyy")],
                 ['Segmento', USER_STATUS[getSegment(detail)]?.label ?? '—'],
               ] as [string, string][]
             ).map(([l, v]) => (

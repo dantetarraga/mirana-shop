@@ -1,5 +1,12 @@
-"use client";
+'use client'
 
+import type { ProductListItem } from '@/modules/catalog/repositories/product.repo'
+import type { OrderListItem } from '@/modules/orders/repositories/order.repo'
+import { KpiCard } from '@/shared/components/KpiCard'
+import { PanelHeader } from '@/shared/components/PanelHeader'
+import { cls } from '@/shared/lib/admin-classes'
+import { cn, formatDate } from '@/shared/lib/utils'
+import Link from 'next/link'
 import {
   Area,
   AreaChart,
@@ -13,16 +20,8 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from "recharts";
-import Link from "next/link";
-import { KpiCard } from "@/shared/components/KpiCard";
-import { PanelHeader } from "@/shared/components/PanelHeader";
-import { cls } from "@/shared/lib/admin-classes";
-import { fmt } from "@/shared/lib/admin-constants";
-import { cn } from "@/shared/lib/utils";
-const PIE_COLORS = ["#58aaff", "#5f9eff", "#7b5fff", "#3fcf7f", "#ffb84a"];
-import type { ProductListItem } from "@/modules/catalog/repositories/product.repo";
-import type { OrderListItem } from "@/modules/orders/repositories/order.repo";
+} from 'recharts'
+const PIE_COLORS = ['#58aaff', '#5f9eff', '#7b5fff', '#3fcf7f', '#ffb84a']
 
 // ---------------------------------------------------------------------------
 // Sparkline reutilizable
@@ -30,17 +29,17 @@ import type { OrderListItem } from "@/modules/orders/repositories/order.repo";
 
 function Sparkline({
   data,
-  color = "#58aaff",
+  color = '#58aaff',
   w = 160,
   h = 40,
 }: {
-  data: number[];
-  color?: string;
-  w?: number;
-  h?: number;
+  data: number[]
+  color?: string
+  w?: number
+  h?: number
 }) {
-  const chartData = data.map((v) => ({ v }));
-  const gradId = "spark-" + color.replace(/[^a-z0-9]/gi, "");
+  const chartData = data.map((v) => ({ v }))
+  const gradId = 'spark-' + color.replace(/[^a-z0-9]/gi, '')
   return (
     <AreaChart
       width={w}
@@ -70,26 +69,20 @@ function Sparkline({
         activeDot={false}
       />
     </AreaChart>
-  );
+  )
 }
 
 interface ChartTooltipProps {
-  active?: boolean;
-  payload?: readonly unknown[];
-  label?: string | number;
-  prefix?: string;
-  suffix?: string;
+  active?: boolean
+  payload?: readonly unknown[]
+  label?: string | number
+  prefix?: string
+  suffix?: string
 }
 
-function ChartTooltip({
-  active,
-  payload,
-  label,
-  prefix = "S/",
-  suffix = "K",
-}: ChartTooltipProps) {
-  if (!active || !payload?.length) return null;
-  const value = (payload[0] as { value?: number | string })?.value;
+function ChartTooltip({ active, payload, label, prefix = 'S/', suffix = 'K' }: ChartTooltipProps) {
+  if (!active || !payload?.length) return null
+  const value = (payload[0] as { value?: number | string })?.value
   return (
     <div className="px-3.5 py-2 bg-card-hover border border-(--gold)">
       <div className="font-display font-extrabold text-[16px] text-(--gold)">
@@ -99,7 +92,7 @@ function ChartTooltip({
       </div>
       <div className="text-[10px] tracking-[1px] uppercase text-muted">{label}</div>
     </div>
-  );
+  )
 }
 
 // ---------------------------------------------------------------------------
@@ -107,53 +100,53 @@ function ChartTooltip({
 // ---------------------------------------------------------------------------
 
 interface OrderStats {
-  total: number;
-  pending: number;
-  shipped: number;
-  delivered: number;
-  cancelled: number;
-  revenue: number;
+  total: number
+  pending: number
+  shipped: number
+  delivered: number
+  cancelled: number
+  revenue: number
 }
 
 interface InventoryStats {
-  totalUnits: number;
-  totalValue: number;
-  lowStockCount: number;
-  outOfStockCount: number;
+  totalUnits: number
+  totalValue: number
+  lowStockCount: number
+  outOfStockCount: number
 }
 
 // Versión serializable de OrderListItem — Decimals ya convertidos a number
-type SerializedOrder = Omit<OrderListItem, "total" | "subtotal" | "shippingCost"> & {
-  total: number;
-  subtotal: number;
-  shippingCost: number;
-};
+type SerializedOrder = Omit<OrderListItem, 'total' | 'subtotal' | 'shippingCost'> & {
+  total: number
+  subtotal: number
+  shippingCost: number
+}
 
 // Versión serializable de ProductListItem — Decimals ya convertidos a number
-type SerializedProduct = Omit<ProductListItem, "price" | "compareAtPrice"> & {
-  price: number;
-  compareAtPrice: number | null;
-};
+type SerializedProduct = Omit<ProductListItem, 'price' | 'compareAtPrice'> & {
+  price: number
+  compareAtPrice: number | null
+}
 
 interface DashboardClientProps {
-  orderStats:        OrderStats;
-  topProducts:       SerializedProduct[];
-  inventoryStats:    InventoryStats;
-  userCount:         number;
-  recentOrders:      SerializedOrder[];
-  revenueByMonth:    { m: string; v: number }[];
-  ordersByDay:       { d: string; v: number }[];
-  ordersByCategory:  { name: string; value: number }[];
+  orderStats: OrderStats
+  topProducts: SerializedProduct[]
+  inventoryStats: InventoryStats
+  userCount: number
+  recentOrders: SerializedOrder[]
+  revenueByMonth: { m: string; v: number }[]
+  ordersByDay: { d: string; v: number }[]
+  ordersByCategory: { name: string; value: number }[]
 }
 
 function getCategoryStripe(slug: string): string {
   const map: Record<string, string> = {
-    "figuras-accion": "stripe-fig",
-    lego: "stripe-lego",
-    "modelos-escala": "stripe-veh",
-    anime: "stripe-fig",
-  };
-  return map[slug] ?? "stripe-fig";
+    'figuras-accion': 'stripe-fig',
+    lego: 'stripe-lego',
+    'modelos-escala': 'stripe-veh',
+    anime: 'stripe-fig',
+  }
+  return map[slug] ?? 'stripe-fig'
 }
 
 // ---------------------------------------------------------------------------
@@ -161,18 +154,18 @@ function getCategoryStripe(slug: string): string {
 // ---------------------------------------------------------------------------
 
 const ORDER_STATUS_CFG: Record<string, { label: string; color: string }> = {
-  PENDING:        { label: "Pendiente",    color: "text-[#ffb84a]" },
-  AWAITING_PROOF: { label: "Esp. comprobante", color: "text-[#ff9933]" },
-  PAID:           { label: "Pagado",       color: "text-[#3fcf7f]" },
-  PREPARING:      { label: "Preparando",   color: "text-[#58aaff]" },
-  SHIPPED:        { label: "Enviado",      color: "text-[#5f9eff]" },
-  DELIVERED:      { label: "Entregado",    color: "text-[#3fcf7f]" },
-  CANCELLED:      { label: "Cancelado",    color: "text-[#ff6644]" },
-  REFUNDED:       { label: "Reembolsado",  color: "text-muted" },
-};
+  PENDING: { label: 'Pendiente', color: 'text-[#ffb84a]' },
+  AWAITING_PROOF: { label: 'Esp. comprobante', color: 'text-[#ff9933]' },
+  PAID: { label: 'Pagado', color: 'text-[#3fcf7f]' },
+  PREPARING: { label: 'Preparando', color: 'text-[#58aaff]' },
+  SHIPPED: { label: 'Enviado', color: 'text-[#5f9eff]' },
+  DELIVERED: { label: 'Entregado', color: 'text-[#3fcf7f]' },
+  CANCELLED: { label: 'Cancelado', color: 'text-[#ff6644]' },
+  REFUNDED: { label: 'Reembolsado', color: 'text-muted' },
+}
 
 function orderCustomer(o: SerializedOrder): string {
-  return o.shipping?.fullName ?? o.user?.name ?? o.user?.email ?? o.guestEmail ?? "—";
+  return o.shipping?.fullName ?? o.user?.name ?? o.user?.email ?? o.guestEmail ?? '—'
 }
 
 export function DashboardClient({
@@ -185,14 +178,14 @@ export function DashboardClient({
   ordersByDay,
   ordersByCategory,
 }: DashboardClientProps) {
-  const revenueNum = orderStats.revenue;
+  const revenueNum = orderStats.revenue
   // Sparklines: extraemos los últimos 14 puntos de los datos reales
-  const sparkRevenue = revenueByMonth.slice(-14).map((r) => r.v);
-  const sparkOrders  = ordersByDay.map((r) => r.v);
+  const sparkRevenue = revenueByMonth.slice(-14).map((r) => r.v)
+  const sparkOrders = ordersByDay.map((r) => r.v)
   const topByStock = [...topProducts]
     .sort((a, b) => (b.inventory?.availableStock ?? 0) - (a.inventory?.availableStock ?? 0))
-    .slice(0, 5);
-  const maxStock = Math.max(...topByStock.map((p) => p.inventory?.availableStock ?? 0), 1);
+    .slice(0, 5)
+  const maxStock = Math.max(...topByStock.map((p) => p.inventory?.availableStock ?? 0), 1)
 
   return (
     <div className="px-8 pt-7 pb-12">
@@ -200,32 +193,32 @@ export function DashboardClient({
       <div className="grid grid-cols-4 gap-4 mb-5">
         {[
           {
-            label: "Ingresos (total)",
+            label: 'Ingresos (total)',
             value: `S/ ${(revenueNum / 1000).toFixed(1)}K`,
-            delta: "acumulado sin cancelados",
+            delta: 'acumulado sin cancelados',
             data: sparkRevenue.length ? sparkRevenue : [0],
-            color: "#58aaff",
+            color: '#58aaff',
           },
           {
-            label: "Pedidos",
+            label: 'Pedidos',
             value: String(orderStats.total),
             delta: `${orderStats.pending} pendientes`,
             data: sparkOrders.length ? sparkOrders : [0],
-            color: "#5f9eff",
+            color: '#5f9eff',
           },
           {
-            label: "Clientes",
+            label: 'Clientes',
             value: String(userCount),
-            delta: "Total registrados",
+            delta: 'Total registrados',
             data: [userCount],
-            color: "#7b5fff",
+            color: '#7b5fff',
           },
           {
-            label: "Inventario",
+            label: 'Inventario',
             value: `S/ ${(inventoryStats.totalValue / 1000).toFixed(1)}K`,
             delta: `${inventoryStats.lowStockCount} en stock bajo`,
             data: [inventoryStats.totalValue / 1000],
-            color: "#3fcf7f",
+            color: '#3fcf7f',
           },
         ].map((k) => (
           <KpiCard key={k.label} label={k.label} value={k.value}>
@@ -256,35 +249,29 @@ export function DashboardClient({
             }
           />
           <ResponsiveContainer width="100%" height={260}>
-            <AreaChart
-              data={revenueByMonth}
-              margin={{ top: 5, right: 10, left: -10, bottom: 5 }}
-            >
+            <AreaChart data={revenueByMonth} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
               <defs>
                 <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#58aaff" stopOpacity={0.28} />
                   <stop offset="100%" stopColor="#58aaff" stopOpacity={0.02} />
                 </linearGradient>
               </defs>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="rgba(80,150,255,.1)"
-              />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(80,150,255,.1)" />
               <XAxis
                 dataKey="m"
                 tick={{
-                  fill: "rgba(240,238,232,.42)",
+                  fill: 'rgba(240,238,232,.42)',
                   fontSize: 10,
-                  fontFamily: "monospace",
+                  fontFamily: 'monospace',
                 }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
                 tick={{
-                  fill: "rgba(240,238,232,.42)",
+                  fill: 'rgba(240,238,232,.42)',
                   fontSize: 10,
-                  fontFamily: "monospace",
+                  fontFamily: 'monospace',
                 }}
                 axisLine={false}
                 tickLine={false}
@@ -300,8 +287,8 @@ export function DashboardClient({
                 dot={false}
                 activeDot={{
                   r: 5,
-                  fill: "#58aaff",
-                  stroke: "var(--surf)",
+                  fill: '#58aaff',
+                  stroke: 'var(--surf)',
                   strokeWidth: 2,
                 }}
               />
@@ -310,11 +297,7 @@ export function DashboardClient({
         </div>
 
         <div className={cls.panel}>
-          <PanelHeader
-            label="Distribución"
-            title="Ventas por categoría"
-            mb="mb-5"
-          />
+          <PanelHeader label="Distribución" title="Ventas por categoría" mb="mb-5" />
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie
@@ -331,27 +314,32 @@ export function DashboardClient({
                 ))}
               </Pie>
               <Tooltip
-                formatter={(v) => [`${v}%`, "Ventas"]}
+                formatter={(v) => [`${v}%`, 'Ventas']}
                 contentStyle={{
-                  background: "var(--card-h)",
-                  border: "1px solid var(--gold)",
+                  background: 'var(--card-h)',
+                  border: '1px solid var(--gold)',
                   borderRadius: 0,
                 }}
-                labelStyle={{ color: "var(--mt)" }}
-                itemStyle={{ color: "var(--text)" }}
+                labelStyle={{ color: 'var(--mt)' }}
+                itemStyle={{ color: 'var(--text)' }}
               />
             </PieChart>
           </ResponsiveContainer>
           <div className="flex flex-col gap-2.5 mt-1">
             {ordersByCategory.length === 0 ? (
               <p className="text-[12px] text-muted text-center py-2">Sin datos de pedidos aún</p>
-            ) : ordersByCategory.map((d, i) => (
-              <div key={d.name} className="flex items-center gap-2.5">
-                <span className="w-2.5 h-2.5 shrink-0 rounded-full" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
-                <span className="text-[13px] flex-1">{d.name}</span>
-                <span className="font-display font-extrabold text-[16px]">{d.value}%</span>
-              </div>
-            ))}
+            ) : (
+              ordersByCategory.map((d, i) => (
+                <div key={d.name} className="flex items-center gap-2.5">
+                  <span
+                    className="w-2.5 h-2.5 shrink-0 rounded-full"
+                    style={{ background: PIE_COLORS[i % PIE_COLORS.length] }}
+                  />
+                  <span className="text-[13px] flex-1">{d.name}</span>
+                  <span className="font-display font-extrabold text-[16px]">{d.value}%</span>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -373,38 +361,29 @@ export function DashboardClient({
             }
           />
           <ResponsiveContainer width="100%" height={180}>
-            <BarChart
-              data={ordersByDay}
-              margin={{ top: 5, right: 10, left: -20, bottom: 5 }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="rgba(80,150,255,.1)"
-                vertical={false}
-              />
+            <BarChart data={ordersByDay} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(80,150,255,.1)" vertical={false} />
               <XAxis
                 dataKey="d"
                 tick={{
-                  fill: "rgba(240,238,232,.42)",
+                  fill: 'rgba(240,238,232,.42)',
                   fontSize: 9,
-                  fontFamily: "monospace",
+                  fontFamily: 'monospace',
                 }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis hide />
               <Tooltip
-                content={(props) => (
-                  <ChartTooltip {...props} prefix="" suffix=" pedidos" />
-                )}
+                content={(props) => <ChartTooltip {...props} prefix="" suffix=" pedidos" />}
               />
               <Bar
                 dataKey="v"
                 fill="var(--card-h)"
                 radius={[2, 2, 0, 0]}
                 activeBar={{
-                  fill: "#58aaff",
-                  stroke: "#58aaff",
+                  fill: '#58aaff',
+                  stroke: '#58aaff',
                   strokeWidth: 1,
                 }}
               />
@@ -427,20 +406,18 @@ export function DashboardClient({
           />
           <div className="flex flex-col gap-3.5">
             {topByStock.map((p, i) => {
-              const stock = p.inventory?.availableStock ?? 0;
+              const stock = p.inventory?.availableStock ?? 0
               return (
                 <div key={p.id} className="flex items-center gap-3.5">
                   <span className="font-display font-black text-[18px] w-4.5 text-muted">
                     {i + 1}
                   </span>
-                  <div
-                    className={`${getCategoryStripe(p.category.slug)} w-10 h-10 shrink-0`}
-                  />
+                  <div className={`${getCategoryStripe(p.category.slug)} w-10 h-10 shrink-0`} />
                   <div className="flex-1 min-w-0">
                     <div
                       className={cn(
                         cls.rowName,
-                        "text-[15px] whitespace-nowrap overflow-hidden text-ellipsis mb-1.25"
+                        'text-[15px] whitespace-nowrap overflow-hidden text-ellipsis mb-1.25',
                       )}
                     >
                       {p.name}
@@ -459,7 +436,7 @@ export function DashboardClient({
                     </span>
                   </div>
                 </div>
-              );
+              )
             })}
           </div>
         </div>
@@ -485,8 +462,10 @@ export function DashboardClient({
         <table className="w-full">
           <thead>
             <tr>
-              {["Código", "Cliente", "Productos", "Total", "Estado", "Fecha"].map((h) => (
-                <th key={h} className={cls.th}>{h}</th>
+              {['Código', 'Cliente', 'Productos', 'Total', 'Estado', 'Fecha'].map((h) => (
+                <th key={h} className={cls.th}>
+                  {h}
+                </th>
               ))}
             </tr>
           </thead>
@@ -499,7 +478,7 @@ export function DashboardClient({
               </tr>
             ) : (
               recentOrders.map((o) => {
-                const cfg = ORDER_STATUS_CFG[o.status] ?? { label: o.status, color: "text-muted" };
+                const cfg = ORDER_STATUS_CFG[o.status] ?? { label: o.status, color: 'text-muted' }
                 return (
                   <tr key={o.id} className="hover:bg-white/2 transition-colors">
                     <td className={cn(cls.td, cls.monoGold)}>{o.code}</td>
@@ -510,30 +489,24 @@ export function DashboardClient({
                       )}
                     </td>
                     <td className={cn(cls.td, cls.mono)}>
-                      {o._count.items} {o._count.items === 1 ? "ítem" : "ítems"}
+                      {o._count.items} {o._count.items === 1 ? 'ítem' : 'ítems'}
                     </td>
-                    <td className={cn(cls.td, cls.valGold)}>
-                      S/ {o.total.toFixed(2)}
-                    </td>
+                    <td className={cn(cls.td, cls.valGold)}>S/ {o.total.toFixed(2)}</td>
                     <td className={cls.td}>
-                      <span className={cn("text-[12px] font-semibold tracking-wide", cfg.color)}>
+                      <span className={cn('text-[12px] font-semibold tracking-wide', cfg.color)}>
                         {cfg.label}
                       </span>
                     </td>
-                    <td className={cn(cls.td, cls.mono, "text-muted")}>
-                      {new Date(o.createdAt).toLocaleDateString("es-PE", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })}
+                    <td className={cn(cls.td, cls.mono, 'text-muted')}>
+                      {formatDate(new Date(o.createdAt), 'd MMM yyyy')}
                     </td>
                   </tr>
-                );
+                )
               })
             )}
           </tbody>
         </table>
       </div>
     </div>
-  );
+  )
 }

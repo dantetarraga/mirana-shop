@@ -2,6 +2,7 @@
 
 import type { PaymentMethod } from '@/generated/prisma/client'
 import { orderRepo } from '@/modules/orders/repositories/order.repo'
+import { createCulqiOrder, culqiExpiration, toCulqiAmount } from '@/shared/lib/culqi'
 import { checkoutSchema } from '@/shared/lib/schemas'
 import { revalidatePath } from 'next/cache'
 
@@ -26,8 +27,31 @@ export type PlaceOrderInput = {
 }
 
 type PlaceOrderResult =
-  | { success: true; data: { code: string; paymentMethod: string } }
+  | {
+      success: true
+      data: {
+        code: string
+        paymentMethod: string
+        culqi?: {
+          orderId: string
+          qrUrl: string | null
+          peUrl: string | null
+          paymentCode: string | null
+        }
+      }
+    }
   | { success: false; error: string }
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function splitName(fullName: string): { first_name: string; last_name: string } {
+  const parts = fullName.trim().split(/\s+/)
+  const first_name = parts[0] ?? fullName
+  const last_name = parts.slice(1).join(' ') || first_name
+  return { first_name, last_name }
+}
 
 // ---------------------------------------------------------------------------
 // placeOrder — valida, crea la orden y retorna el código
@@ -47,6 +71,47 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   const d = parsed.data
 
   try {
+    // ------------------------------------------------------------------
+    // 1. Para CULQI_YAPE: crear la orden en Culqi antes que en nuestra BD
+    //    para obtener el QR y el código de pago.
+    // ------------------------------------------------------------------
+    let culqiData:
+      | { orderId: string; qrUrl: string | null; peUrl: string | null; paymentCode: string | null }
+      | undefined
+
+    if (d.paymentMethod === 'CULQI_YAPE') {
+      const { first_name, last_name } = splitName(d.fullName)
+
+      // Generamos un order_number provisional con timestamp para que sea único
+      const provisionalNumber = `MIR-${Date.now()}`
+
+      const culqiOrder = await createCulqiOrder({
+        amount: toCulqiAmount(input.total),
+        currency_code: 'PEN',
+        description: `Pedido Mirana Shop — ${d.fullName}`,
+        order_number: provisionalNumber,
+        expiration_date: culqiExpiration(24),
+        client_details: {
+          first_name,
+          last_name,
+          email: d.email,
+          phone_number: d.phone,
+        },
+        confirm: true,
+        metadata: { channel: 'storefront' },
+      })
+
+      culqiData = {
+        orderId: culqiOrder.id,
+        qrUrl: culqiOrder.qr,
+        peUrl: culqiOrder.url_pe,
+        paymentCode: culqiOrder.payment_code,
+      }
+    }
+
+    // ------------------------------------------------------------------
+    // 2. Crear la orden interna en nuestra BD
+    // ------------------------------------------------------------------
     const order = await orderRepo.create({
       guestEmail: d.email,
       paymentMethod: d.paymentMethod as PaymentMethod,
@@ -62,12 +127,22 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
         city: d.city,
         reference: d.reference || undefined,
       },
+      culqi: culqiData
+        ? {
+            orderId: culqiData.orderId,
+            qrUrl: culqiData.qrUrl ?? undefined,
+            peUrl: culqiData.peUrl ?? undefined,
+          }
+        : undefined,
     })
 
     revalidatePath('/admin/orders')
     revalidatePath('/admin/dashboard')
 
-    return { success: true, data: { code: order.code, paymentMethod: d.paymentMethod } }
+    return {
+      success: true,
+      data: { code: order.code, paymentMethod: d.paymentMethod, culqi: culqiData },
+    }
   } catch (err) {
     return {
       success: false,

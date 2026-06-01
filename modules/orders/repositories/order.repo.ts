@@ -1,6 +1,7 @@
 import type { OrderStatus, PaymentMethod, PaymentStatus } from '@/generated/prisma/client'
 import type { Decimal } from '@/generated/prisma/internal/prismaNamespace'
 import { db } from '@/shared/lib/db'
+import { formatDate } from '@/shared/lib/utils'
 
 // ---------------------------------------------------------------------------
 // Tipos de retorno del dominio Orders
@@ -73,6 +74,13 @@ export type CreateOrderInput = {
     district: string
     city: string
     reference?: string
+  }
+  // Campos opcionales de Culqi — se rellenan después de llamar al API
+  culqi?: {
+    orderId?: string
+    chargeId?: string
+    qrUrl?: string
+    peUrl?: string
   }
 }
 
@@ -272,7 +280,7 @@ export const orderRepo = {
       ORDER BY month ASC
     `
     return rows.map((r) => ({
-      m: new Date(r.month).toLocaleDateString('es-PE', { month: 'short' }),
+      m: formatDate(new Date(r.month), 'MMM'),
       v: Math.round((Number(r.revenue) / 1000) * 10) / 10, // en miles con 1 decimal
     }))
   },
@@ -363,6 +371,10 @@ export const orderRepo = {
             status: 'UNPAID',
             amount: input.total,
             currency: 'PEN',
+            culqiOrderId: input.culqi?.orderId,
+            culqiChargeId: input.culqi?.chargeId,
+            culqiQrUrl: input.culqi?.qrUrl,
+            culqiPeUrl: input.culqi?.peUrl,
           },
         },
         shipping: {

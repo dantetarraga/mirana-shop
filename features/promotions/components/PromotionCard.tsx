@@ -1,7 +1,7 @@
 import type { PromotionRow } from '@/modules/catalog/repositories/promotion.repo'
 import { StatusBadge } from '@/shared/components/StatusBadge'
 import { Button } from '@/shared/components/ui/Button'
-import { formatCurrency } from '@/shared/lib/utils'
+import { formatCurrency, formatDate } from '@/shared/lib/utils'
 import { BadgePercent, Package, Truck } from 'lucide-react'
 
 interface Props {
@@ -89,8 +89,8 @@ export function PromotionCard({ promotion, onEdit, onToggle, onDelete, isPending
           <div className="flex justify-between text-[13px]">
             <span className="text-muted">Vigencia</span>
             <span className="font-mono text-[11px]">
-              {promotion.startsAt ? new Date(promotion.startsAt).toLocaleDateString('es-PE') : '—'}{' '}
-              → {promotion.endsAt ? new Date(promotion.endsAt).toLocaleDateString('es-PE') : '∞'}
+              {promotion.startsAt ? formatDate(promotion.startsAt, 'P') : '—'} →{' '}
+              {promotion.endsAt ? formatDate(promotion.endsAt, 'P') : '∞'}
             </span>
           </div>
         )}
