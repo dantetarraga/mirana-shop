@@ -1,46 +1,46 @@
-"use client";
+'use client'
 
-import { useSearchParams } from "next/navigation";
-import { useState, useMemo } from "react";
-import { ProductCard } from "@/shared/components/ProductCard";
-import { Button } from "@/shared/components/ui/Button";
-import { Search } from "lucide-react";
-import type { CatalogProduct } from "@/shared/types/catalog.types";
-import type { CategoryRow } from "@/modules/catalog/repositories/category.repo";
+import type { CategoryRow } from '@/modules/catalog/repositories/category.repo'
+import { ProductCard } from '@/shared/components/ProductCard'
+import { Button } from '@/shared/components/ui/Button'
+import type { CatalogProduct } from '@/shared/types/catalog.types'
+import { Search } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
+import { useMemo, useState } from 'react'
 
 interface CatalogClientProps {
-  initialProducts: CatalogProduct[];
-  categories: CategoryRow[];
+  initialProducts: CatalogProduct[]
+  categories: CategoryRow[]
 }
 
 export function CatalogClient({ initialProducts, categories }: CatalogClientProps) {
-  const params = useSearchParams();
-  const catParam = params.get("cat") ?? "";
-  const qParam = params.get("q") ?? "";
+  const params = useSearchParams()
+  const catParam = params.get('cat') ?? ''
+  const qParam = params.get('q') ?? ''
 
-  const [filter, setFilter] = useState<string>(catParam || "all");
-  const [search, setSearch] = useState(qParam);
+  const [filter, setFilter] = useState<string>(catParam || 'all')
+  const [search, setSearch] = useState(qParam)
 
   // Tabs dinámicos desde BD
   const FILTERS = useMemo(
     () => [
-      { key: "all", label: "Todos" },
+      { key: 'all', label: 'Todos' },
       ...categories.map((c) => ({ key: c.slug, label: c.name })),
     ],
-    [categories]
-  );
+    [categories],
+  )
 
   const filtered = useMemo(
     () =>
       initialProducts.filter(
         (p) =>
-          (filter === "all" || p.category.slug === filter) &&
-          (search === "" ||
+          (filter === 'all' || p.category.slug === filter) &&
+          (search === '' ||
             p.name.toLowerCase().includes(search.toLowerCase()) ||
-            p.sku.toLowerCase().includes(search.toLowerCase()))
+            p.sku.toLowerCase().includes(search.toLowerCase())),
       ),
-    [initialProducts, filter, search]
-  );
+    [initialProducts, filter, search],
+  )
 
   return (
     <section className="px-12 pb-20 pt-[calc(var(--nh)+36px)]">
@@ -69,22 +69,20 @@ export function CatalogClient({ initialProducts, categories }: CatalogClientProp
             {label}
           </Button>
         ))}
-        <div className="ml-auto flex items-center gap-2 px-3.5 h-10 bg-surf border border-(--bd) transition-[border-color] duration-[.2s] focus-within:border-(--gold)">
+        <div className="ml-auto flex items-center gap-2 px-3.5 h-10 bg-surf border border-(--bd) transition-[border-color] duration-200 focus-within:border-(--gold)">
           <Search size={13} className="shrink-0 text-muted" />
           <input
             placeholder="Buscar..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="bg-transparent border-none outline-none font-sans text-[13px] w-[160px] text-text"
+            className="bg-transparent border-none outline-none font-sans text-[13px] w-40 text-text"
           />
         </div>
       </div>
 
       {filtered.length === 0 ? (
         <div className="text-center py-20 px-5 text-muted">
-          <div className="font-display text-[28px] font-black uppercase mb-2">
-            Sin resultados
-          </div>
+          <div className="font-display text-[28px] font-black uppercase mb-2">Sin resultados</div>
           <div className="text-[14px]">Prueba con otro término de búsqueda</div>
         </div>
       ) : (
@@ -95,5 +93,5 @@ export function CatalogClient({ initialProducts, categories }: CatalogClientProp
         </div>
       )}
     </section>
-  );
+  )
 }
