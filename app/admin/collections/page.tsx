@@ -1,6 +1,6 @@
 import { collectionRepo } from "@/modules/catalog/repositories/collection.repo";
-import { CollectionsTableClient } from "@/features/collections/components/CollectionsTableClient";
-import { ServerSearchForm } from "@/shared/components/ServerSearchForm";
+import { CollectionsTableClient } from "@/features/admin/collections/components/CollectionsTableClient";
+import { ServerSearchForm } from "@/shared/components/admin/ServerSearchForm";
 
 interface PageProps {
   searchParams: Promise<{ q?: string; page?: string; active?: string }>;

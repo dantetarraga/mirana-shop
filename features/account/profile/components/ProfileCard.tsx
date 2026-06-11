@@ -1,6 +1,6 @@
 'use client'
 
-import type { User } from '@/shared/stores/store'
+import type { SessionUser } from '@/shared/hooks/useUser'
 import { Baby, CreditCard, Mail, Phone, User as UserIcon } from 'lucide-react'
 
 export interface ProfileDisplayData {
@@ -10,7 +10,13 @@ export interface ProfileDisplayData {
   kidsCount?: number | null
 }
 
-export function ProfileCard({ user, profile }: { user: User; profile: ProfileDisplayData | null }) {
+export function ProfileCard({
+  user,
+  profile,
+}: {
+  user: SessionUser
+  profile: ProfileDisplayData | null
+}) {
   const initials = user.name
     .split(' ')
     .map((w) => w[0])

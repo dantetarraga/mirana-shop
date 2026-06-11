@@ -2,10 +2,10 @@
 
 import type { OrderStatus } from '@/generated/prisma/client'
 import type { OrderListItem } from '@/modules/orders/repositories/order.repo'
-import { AdminDrawer } from '@/shared/components/AdminDrawer'
-import { DrawerSection } from '@/shared/components/DrawerSection'
+import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
+import { DrawerSection } from '@/shared/components/admin/DrawerSection'
 import { Button } from '@/shared/components/ui/Button'
-import { ORDER_STATUS, fmt } from '@/shared/lib/admin-constants'
+import { ORDER_STATUS, fmt } from '@/shared/lib/admin/admin-constants'
 
 // ---------------------------------------------------------------------------
 // Tipo serializado exportado

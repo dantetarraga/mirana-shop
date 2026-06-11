@@ -1,8 +1,8 @@
-﻿'use client'
+'use client'
 
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
-import { useStore } from '@/shared/lib/store-context'
+import { useStore } from '@/shared/stores/store'
 import { formatCurrency } from '@/shared/lib/utils'
 import { getCategoryStripe } from '@/shared/types/catalog.types'
 import { Minus, Plus, X } from 'lucide-react'

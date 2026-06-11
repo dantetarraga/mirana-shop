@@ -3,15 +3,15 @@
 import {
   createCollection,
   updateCollection,
-} from '@/features/collections/actions/collection.actions'
+} from '@/features/admin/collections/actions/collection.actions'
 import type { CollectionRow } from '@/modules/catalog/repositories/collection.repo'
-import { AdminDrawer } from '@/shared/components/AdminDrawer'
-import { EntityProductsPanel } from '@/shared/components/EntityProductsPanel'
-import { FilterMultiSelect } from '@/shared/components/FilterMultiSelect'
+import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
+import { EntityProductsPanel } from '@/shared/components/admin/EntityProductsPanel'
+import { FilterMultiSelect } from '@/shared/components/admin/FilterMultiSelect'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
-import { useAutoSlug, useFormEntity, useServerAction } from '@/shared/hooks'
-import { cls } from '@/shared/lib/admin-classes'
+import { useAutoSlug, useFormEntity, useServerAction } from '@/shared/hooks/admin'
+import { cls } from '@/shared/lib/admin/admin-classes'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'

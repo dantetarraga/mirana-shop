@@ -4,14 +4,14 @@ import {
   deletePromotion,
   savePromotion,
   togglePromotion,
-} from '@/features/promotions/actions/promotion.actions'
-import { PromotionCard } from '@/features/promotions/components/PromotionCard'
-import { PromotionFormDrawer } from '@/features/promotions/components/PromotionFormDrawer'
+} from '@/features/admin/promotions/actions/promotion.actions'
+import { PromotionCard } from '@/features/admin/promotions/components/PromotionCard'
+import { PromotionFormDrawer } from '@/features/admin/promotions/components/PromotionFormDrawer'
 import type { PromotionRow } from '@/modules/catalog/repositories/promotion.repo'
-import { PanelHeader } from '@/shared/components/PanelHeader'
+import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
-import { useCrudState, useServerAction } from '@/shared/hooks'
+import { useCrudState, useServerAction } from '@/shared/hooks/admin'
 import { promotionDbSchema } from '@/shared/lib/schemas'
 import { Plus } from 'lucide-react'
 import type { z } from 'zod'

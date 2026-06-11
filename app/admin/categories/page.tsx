@@ -1,6 +1,6 @@
-import { CategoriesTableClient } from '@/features/categories/components/CategoriesTableClient'
+import { CategoriesTableClient } from '@/features/admin/categories/components/CategoriesTableClient'
 import { categoryRepo } from '@/modules/catalog/repositories/category.repo'
-import { ServerSearchForm } from '@/shared/components/ServerSearchForm'
+import { ServerSearchForm } from '@/shared/components/admin/ServerSearchForm'
 
 interface PageProps {
   searchParams: Promise<{ q?: string; page?: string }>

@@ -1,29 +1,29 @@
 'use client'
 
-import { syncProductCollections } from '@/features/collections/actions/collection.actions'
+import { syncProductCollections } from '@/features/admin/collections/actions/collection.actions'
 import {
   createProduct,
   deleteProduct,
   importProducts,
   updateProduct,
-} from '@/features/products/actions/product.actions'
+} from '@/features/admin/products/actions/product.actions'
 import {
   ProductCrudDrawer,
   type SerializedProduct,
-} from '@/features/products/components/ProductCrudDrawer'
+} from '@/features/admin/products/components/ProductCrudDrawer'
 import type { BrandRow } from '@/modules/catalog/repositories/brand.repo'
 import type { CategoryRow } from '@/modules/catalog/repositories/category.repo'
 import type { CollectionRow } from '@/modules/catalog/repositories/collection.repo'
-import { AdminTable, type Column } from '@/shared/components/AdminTable'
-import { ExcelImportDrawer } from '@/shared/components/ExcelImportDrawer'
-import { FilterMultiSelect } from '@/shared/components/FilterMultiSelect'
-import { PanelHeader } from '@/shared/components/PanelHeader'
-import { ServerSearchForm } from '@/shared/components/ServerSearchForm'
-import { StockBadge } from '@/shared/components/StockBadge'
+import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
+import { ExcelImportDrawer } from '@/shared/components/admin/ExcelImportDrawer'
+import { FilterMultiSelect } from '@/shared/components/admin/FilterMultiSelect'
+import { PanelHeader } from '@/shared/components/admin/PanelHeader'
+import { ServerSearchForm } from '@/shared/components/admin/ServerSearchForm'
+import { StockBadge } from '@/shared/components/admin/StockBadge'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
-import { useCrudState, useServerAction } from '@/shared/hooks'
-import { cls } from '@/shared/lib/admin-classes'
+import { useCrudState, useServerAction } from '@/shared/hooks/admin'
+import { cls } from '@/shared/lib/admin/admin-classes'
 import type { ImportProductRow } from '@/shared/lib/schemas'
 import { productDbSchema } from '@/shared/lib/schemas'
 import { cn } from '@/shared/lib/utils'

@@ -1,16 +1,16 @@
 'use client'
 
-import { getBrandProducts, reassignProductBrand } from '@/features/brands/actions/brand.actions'
+import { getBrandProducts, reassignProductBrand } from '@/features/admin/brands/actions/brand.actions'
 import {
   getCategoryProducts,
   reassignProductCategory,
-} from '@/features/categories/actions/category.actions'
+} from '@/features/admin/categories/actions/category.actions'
 import {
   addProductToCollection,
   getCollectionProducts,
   removeProductFromCollection,
-} from '@/features/collections/actions/collection.actions'
-import { searchAvailableProducts } from '@/features/products/actions/product.actions'
+} from '@/features/admin/collections/actions/collection.actions'
+import { searchAvailableProducts } from '@/features/admin/products/actions/product.actions'
 import type { DrawerProduct } from '@/shared/types/entity-products.types'
 import { Loader2, Package, Plus, Search, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'

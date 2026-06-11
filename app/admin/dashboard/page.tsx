@@ -1,4 +1,4 @@
-import { DashboardClient } from '@/features/dashboard/components/DashboardClient'
+import { DashboardClient } from '@/features/admin/dashboard/components/DashboardClient'
 import { productRepo } from '@/modules/catalog/repositories/product.repo'
 import { inventoryRepo } from '@/modules/inventory/repositories/inventory.repo'
 import { orderRepo } from '@/modules/orders/repositories/order.repo'

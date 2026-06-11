@@ -1,5 +1,5 @@
-﻿import { Button } from '@/shared/components/ui/Button'
-import { cls } from '@/shared/lib/admin-classes'
+import { Button } from '@/shared/components/ui/Button'
+import { cls } from '@/shared/lib/admin/admin-classes'
 import { X } from 'lucide-react'
 import React from 'react'
 

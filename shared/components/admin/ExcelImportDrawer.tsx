@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from '@/shared/components/ui/Button'
-import { cls } from '@/shared/lib/admin-classes'
+import { cls } from '@/shared/lib/admin/admin-classes'
 import type { ImportProductRow } from '@/shared/lib/schemas'
 import { cn } from '@/shared/lib/utils'
 import { AlertCircle, CheckCircle2, FileSpreadsheet, Upload, X } from 'lucide-react'

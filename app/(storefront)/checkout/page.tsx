@@ -1,25 +1,25 @@
 'use client'
 
-import { DeliveryForm } from '@/features/checkout/components/DeliveryForm'
-import { OrderSummary } from '@/features/checkout/components/OrderSummary'
-import { PaymentSection } from '@/features/checkout/components/PaymentSection'
-import { SavedAddressSelector } from '@/features/checkout/components/SavedAddressSelector'
-import { SuccessScreen } from '@/features/checkout/components/SuccessScreen'
-import type { SuccessData } from '@/features/checkout/types'
-import { placeOrder } from '@/features/orders/actions/checkout.actions'
+import { DeliveryForm } from '@/features/storefront/checkout/components/DeliveryForm'
+import { OrderSummary } from '@/features/storefront/checkout/components/OrderSummary'
+import { PaymentSection } from '@/features/storefront/checkout/components/PaymentSection'
+import { SavedAddressSelector } from '@/features/storefront/checkout/components/SavedAddressSelector'
+import { SuccessScreen } from '@/features/storefront/checkout/components/SuccessScreen'
+import type { SuccessData } from '@/features/storefront/checkout/types'
+import { placeOrder } from '@/features/storefront/checkout/actions/checkout.actions'
 import {
   createAddress,
   getMyAddresses,
   type AddressData,
-} from '@/features/users/actions/account-profile.actions'
+} from '@/features/account/profile/actions/account-profile.actions'
 import {
   AddressFormPanel,
   type AddressFormValues,
-} from '@/features/users/components/AddressFormPanel'
+} from '@/features/account/profile/components/AddressFormPanel'
 import { Button } from '@/shared/components/ui/Button'
 import { useUser } from '@/shared/hooks'
 import { checkoutSchema, type CheckoutInput } from '@/shared/lib/schemas'
-import { useStore } from '@/shared/lib/store-context'
+import { useStore } from '@/shared/stores/store'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ShoppingBag, ShoppingCart } from 'lucide-react'
 import Link from 'next/link'

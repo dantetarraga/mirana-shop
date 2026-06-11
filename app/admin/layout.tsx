@@ -1,5 +1,5 @@
-﻿import { AdminSidebar } from '@/shared/components/AdminSidebar'
-import { AdminTopbar } from '@/shared/components/AdminTopbar'
+import { AdminSidebar } from '@/shared/components/admin/AdminSidebar'
+import { AdminTopbar } from '@/shared/components/admin/AdminTopbar'
 import React from 'react'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

@@ -1,11 +1,11 @@
-import { StockAdjustControl } from '@/features/inventory/components/StockAdjustControl'
+import { StockAdjustControl } from '@/features/admin/inventory/components/StockAdjustControl'
 import type { ProductListItem } from '@/modules/catalog/repositories/product.repo'
 import { productRepo, type StockFilter } from '@/modules/catalog/repositories/product.repo'
 import { inventoryRepo } from '@/modules/inventory/repositories/inventory.repo'
-import { AdminTable, type Column } from '@/shared/components/AdminTable'
-import { KpiCard } from '@/shared/components/KpiCard'
-import { StockBadge } from '@/shared/components/StockBadge'
-import { cls } from '@/shared/lib/admin-classes'
+import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
+import { KpiCard } from '@/shared/components/admin/KpiCard'
+import { StockBadge } from '@/shared/components/admin/StockBadge'
+import { cls } from '@/shared/lib/admin/admin-classes'
 import { cn } from '@/shared/lib/utils'
 
 type SerializedProduct = Omit<ProductListItem, 'price' | 'compareAtPrice' | 'salePrice'> & {

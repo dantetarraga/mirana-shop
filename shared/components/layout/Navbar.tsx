@@ -1,8 +1,8 @@
-﻿'use client'
+'use client'
 
 import { Button } from '@/shared/components/ui/Button'
 import { useUser } from '@/shared/hooks'
-import { useStore } from '@/shared/lib/store-context'
+import { useStore } from '@/shared/stores/store'
 import { cn } from '@/shared/lib/utils'
 import { LayoutGrid, LogOut, MapPin, Package, Search, ShoppingBag, User } from 'lucide-react'
 import { signOut } from 'next-auth/react'

@@ -1,5 +1,5 @@
-import { AddToCartPanel } from '@/features/catalog/components/AddToCartPanel'
-import { RelatedProducts } from '@/features/catalog/components/RelatedProducts'
+import { AddToCartPanel } from '@/features/storefront/catalog/components/AddToCartPanel'
+import { RelatedProducts } from '@/features/storefront/catalog/components/RelatedProducts'
 import { productRepo } from '@/modules/catalog/repositories/product.repo'
 import type { CatalogProduct } from '@/shared/types/catalog.types'
 import { getCategoryLabel, getCategoryStripe } from '@/shared/types/catalog.types'

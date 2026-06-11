@@ -1,6 +1,6 @@
-import { BrandsTableClient } from '@/features/brands/components/BrandsTableClient'
+import { BrandsTableClient } from '@/features/admin/brands/components/BrandsTableClient'
 import { brandRepo } from '@/modules/catalog/repositories/brand.repo'
-import { ServerSearchForm } from '@/shared/components/ServerSearchForm'
+import { ServerSearchForm } from '@/shared/components/admin/ServerSearchForm'
 
 interface PageProps {
   searchParams: Promise<{ q?: string; page?: string }>

@@ -1,4 +1,4 @@
-import { AdminPageSkeleton } from '@/shared/components/AdminPageSkeleton'
+import { AdminPageSkeleton } from '@/shared/components/admin/AdminPageSkeleton'
 
 export default function Loading() {
   return <AdminPageSkeleton cols={5} />

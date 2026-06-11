@@ -2,9 +2,9 @@
 
 import type { ProductListItem } from '@/modules/catalog/repositories/product.repo'
 import type { OrderListItem } from '@/modules/orders/repositories/order.repo'
-import { KpiCard } from '@/shared/components/KpiCard'
-import { PanelHeader } from '@/shared/components/PanelHeader'
-import { cls } from '@/shared/lib/admin-classes'
+import { KpiCard } from '@/shared/components/admin/KpiCard'
+import { PanelHeader } from '@/shared/components/admin/PanelHeader'
+import { cls } from '@/shared/lib/admin/admin-classes'
 import { cn, formatDate } from '@/shared/lib/utils'
 import Link from 'next/link'
 import {

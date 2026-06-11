@@ -1,4 +1,4 @@
-﻿import { cls } from '@/shared/lib/admin-classes'
+import { cls } from '@/shared/lib/admin/admin-classes'
 
 interface FormFieldProps {
   label:    string

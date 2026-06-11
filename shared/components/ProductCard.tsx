@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from '@/shared/components/ui/Button'
-import { useStore } from '@/shared/lib/store-context'
+import { useStore } from '@/shared/stores/store'
 import type { CatalogProduct } from '@/shared/types/catalog.types'
 import { getCategoryLabel, getCategoryStripe } from '@/shared/types/catalog.types'
 import { toast } from 'sonner'

@@ -1,15 +1,17 @@
 import { Footer } from '@/shared/components/layout/Footer'
 import { Navbar } from '@/shared/components/layout/Navbar'
 import { StoreOverlays } from '@/shared/components/StoreOverlays'
-import { StoreProvider } from '@/shared/lib/store-context'
+import { getAccountUser } from '@/shared/lib/get-account-user'
 
-export default function AccountLayout({ children }: { children: React.ReactNode }) {
+export default async function AccountLayout({ children }: { children: React.ReactNode }) {
+  await getAccountUser()
+
   return (
-    <StoreProvider>
+    <>
       <Navbar />
       <main className="flex-1">{children}</main>
       <Footer />
       <StoreOverlays />
-    </StoreProvider>
+    </>
   )
 }

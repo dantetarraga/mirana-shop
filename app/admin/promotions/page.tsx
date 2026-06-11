@@ -1,4 +1,4 @@
-import { PromotionsClient } from '@/features/promotions/components/PromotionsClient'
+import { PromotionsClient } from '@/features/admin/promotions/components/PromotionsClient'
 import { promotionRepo } from '@/modules/catalog/repositories/promotion.repo'
 
 export const metadata = { title: 'Promociones | Mirana Admin' }

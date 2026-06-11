@@ -1,8 +1,8 @@
 'use client'
 
-import { adjustStock } from '@/features/inventory/actions/inventory.actions'
+import { adjustStock } from '@/features/admin/inventory/actions/inventory.actions'
 import { Button } from '@/shared/components/ui/Button'
-import { useServerAction } from '@/shared/hooks'
+import { useServerAction } from '@/shared/hooks/admin'
 import { Minus, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 

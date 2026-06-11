@@ -3,25 +3,25 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { X, Search, Loader2 } from "lucide-react";
-import { AdminDrawer } from "@/shared/components/AdminDrawer";
+import { AdminDrawer } from "@/shared/components/admin/AdminDrawer";
 import { Button } from "@/shared/components/ui/Button";
-import { StockBadge } from "@/shared/components/StockBadge";
-import { cls } from "@/shared/lib/admin-classes";
+import { StockBadge } from "@/shared/components/admin/StockBadge";
+import { cls } from "@/shared/lib/admin/admin-classes";
 import type { DrawerProduct } from "@/shared/types/entity-products.types";
 import {
   getCollectionProducts,
   addProductToCollection,
   removeProductFromCollection,
-} from "@/features/collections/actions/collection.actions";
+} from "@/features/admin/collections/actions/collection.actions";
 import {
   getBrandProducts,
   reassignProductBrand,
-} from "@/features/brands/actions/brand.actions";
+} from "@/features/admin/brands/actions/brand.actions";
 import {
   getCategoryProducts,
   reassignProductCategory,
-} from "@/features/categories/actions/category.actions";
-import { searchAvailableProducts } from "@/features/products/actions/product.actions";
+} from "@/features/admin/categories/actions/category.actions";
+import { searchAvailableProducts } from "@/features/admin/products/actions/product.actions";
 
 // ---------------------------------------------------------------------------
 // Tipos

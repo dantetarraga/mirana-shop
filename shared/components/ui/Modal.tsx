@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from '@/shared/components/ui/Button'
-import { cls } from '@/shared/lib/admin-classes'
+import { cls } from '@/shared/lib/admin/admin-classes'
 import { cn } from '@/shared/lib/utils'
 import { X } from 'lucide-react'
 import { useEffect, useRef } from 'react'

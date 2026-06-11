@@ -1,5 +1,5 @@
 import type { PromotionRow } from '@/modules/catalog/repositories/promotion.repo'
-import { StatusBadge } from '@/shared/components/StatusBadge'
+import { StatusBadge } from '@/shared/components/admin/StatusBadge'
 import { Button } from '@/shared/components/ui/Button'
 import { formatCurrency, formatDate } from '@/shared/lib/utils'
 import { BadgePercent, Package, Truck } from 'lucide-react'
