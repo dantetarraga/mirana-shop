@@ -2,29 +2,27 @@
 
 import { getMyOrders } from '@/features/orders/actions/account.actions'
 import { OrdersCarousel } from '@/features/orders/components/OrdersCarousel'
-import {
-  getMyProfile,
-  type ProfileData,
-} from '@/features/users/actions/account-profile.actions'
+import { getMyProfile, type ProfileData } from '@/features/users/actions/account-profile.actions'
 import { ProfileCard } from '@/features/users/components/ProfileCard'
 import { ProfileEditForm } from '@/features/users/components/ProfileEditForm'
 import { ProfileSkeleton } from '@/features/users/components/ProfileSkeleton'
 import type { OrderListItem } from '@/modules/orders/repositories/order.repo'
 import { Button } from '@/shared/components/ui/Button'
+import { useUser } from '@/shared/hooks'
 import { useStore } from '@/shared/lib/store-context'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
 import { LogOut } from 'lucide-react'
+import { signOut } from 'next-auth/react'
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
 
 export default function PerfilPage() {
-  const { user, _hasHydrated, logout, openAuth } = useStore()
-  const router = useRouter()
+  const { user, isLoading } = useUser()
+  const { openAuth } = useStore()
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [orders, setOrders] = useState<OrderListItem[] | null>(null)
 
   useEffect(() => {
-    if (!_hasHydrated) return
+    if (isLoading) return
 
     if (!user) {
       const t = setTimeout(() => openAuth('login'), 300)
@@ -46,15 +44,14 @@ export default function PerfilPage() {
         setOrders((ordersData as OrderListItem[]).slice(0, 6))
       },
     )
-  }, [_hasHydrated, user, openAuth])
+  }, [isLoading, user, openAuth])
 
-  if (!_hasHydrated || (!user && _hasHydrated)) {
+  if (isLoading || !user) {
     return <ProfileSkeleton />
   }
 
   const handleLogout = () => {
-    logout()
-    router.push('/')
+    signOut({ callbackUrl: '/' })
   }
 
   return (

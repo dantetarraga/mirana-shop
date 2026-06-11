@@ -1,7 +1,8 @@
 'use client'
 
 import type { CheckoutInput } from '@/shared/lib/schemas'
-import { CreditCard, MessageCircle, Smartphone } from 'lucide-react'
+import { MessageCircle } from 'lucide-react'
+// import { CreditCard, Smartphone } from 'lucide-react' // próximamente
 import type { FieldErrors, UseFormRegister } from 'react-hook-form'
 
 const PAYMENT_METHODS = [
@@ -12,20 +13,20 @@ const PAYMENT_METHODS = [
     icon: MessageCircle,
     available: true,
   },
-  {
-    value: 'CULQI_YAPE',
-    label: 'Yape',
-    desc: 'Pago con Yape escaneando el código QR.',
-    icon: Smartphone,
-    available: true,
-  },
-  {
-    value: 'CULQI_CARD',
-    label: 'Tarjeta de crédito / débito',
-    desc: 'Visa, Mastercard — pago seguro con Culqi.',
-    icon: CreditCard,
-    available: true,
-  },
+  // {
+  //   value: 'CULQI_YAPE',
+  //   label: 'Yape',
+  //   desc: 'Pago con Yape escaneando el código QR.',
+  //   icon: Smartphone,
+  //   available: true,
+  // },
+  // {
+  //   value: 'CULQI_CARD',
+  //   label: 'Tarjeta de crédito / débito',
+  //   desc: 'Visa, Mastercard — pago seguro con Culqi.',
+  //   icon: CreditCard,
+  //   available: true,
+  // },
 ] as const
 
 export type CardState = {
@@ -95,8 +96,8 @@ export function PaymentSection({ register, errors, selectedPayment, card }: Prop
         <p className="text-red-500 text-[12px] mt-2">{errors.paymentMethod.message}</p>
       )}
 
-      {/* Formulario de tarjeta */}
-      {selectedPayment === 'CULQI_CARD' && (
+      {/* Formulario de tarjeta — próximamente */}
+      {/* selectedPayment === 'CULQI_CARD' && (
         <div className="mt-4 bg-surf border border-(--bd) p-4 flex flex-col gap-4">
           <p className="text-[10px] tracking-[3px] uppercase text-(--gold)">Datos de tarjeta</p>
 
@@ -157,7 +158,7 @@ export function PaymentSection({ register, errors, selectedPayment, card }: Prop
 
           {card.cardError && <p className="text-red-500 text-[12px]">{card.cardError}</p>}
         </div>
-      )}
+      ) */}
     </section>
   )
 }

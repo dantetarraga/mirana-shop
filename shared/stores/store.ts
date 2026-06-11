@@ -6,9 +6,7 @@ import { createJSONStorage, persist } from 'zustand/middleware'
 // Types
 // ---------------------------------------------------------------------------
 
-export type UserRole = 'admin' | 'customer'
 export type CartItem = { product: CatalogProduct; qty: number }
-export type User = { name: string; email: string; role: UserRole }
 
 interface StoreState {
   // --- Hydration ---
@@ -24,14 +22,11 @@ interface StoreState {
   removeItem: (id: string) => void
   setCartOpen: (open: boolean) => void
 
-  // --- Auth ---
-  user: User | null
+  // --- Auth modal (UI only) ---
   authOpen: boolean
   authMode: 'login' | 'register'
   openAuth: (mode: 'login' | 'register') => void
   closeAuth: () => void
-  authenticate: (user: Omit<User, 'role'>) => void
-  logout: () => void
 
   // --- Product modal ---
   activeProduct: CatalogProduct | null
@@ -42,8 +37,6 @@ interface StoreState {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-const ADMIN_EMAILS = ['admin@mirana.com', 'admin']
 
 function countCart(cart: CartItem[]) {
   return cart.reduce((s, i) => s + i.qty, 0)
@@ -90,28 +83,12 @@ export const useStore = create<StoreState>()(
 
       setCartOpen: (open) => set({ cartOpen: open }),
 
-      // auth
-      user: null,
+      // auth modal (solo UI)
       authOpen: false,
       authMode: 'login',
 
       openAuth: (mode) => set({ authMode: mode, authOpen: true }),
       closeAuth: () => set({ authOpen: false }),
-      authenticate: (u) => {
-        const isAdmin = ADMIN_EMAILS.some((e) => u.email.toLowerCase().includes(e))
-        set({ user: { ...u, role: isAdmin ? 'admin' : 'customer' }, authOpen: false })
-        // Set session cookie so middleware can protect /cuenta/* routes
-        if (typeof document !== 'undefined') {
-          document.cookie = 'm-auth=1; path=/; max-age=604800; samesite=lax'
-        }
-      },
-      logout: () => {
-        set({ user: null })
-        // Clear session cookie
-        if (typeof document !== 'undefined') {
-          document.cookie = 'm-auth=; path=/; max-age=0; samesite=lax'
-        }
-      },
 
       // product modal
       activeProduct: null,
@@ -121,14 +98,10 @@ export const useStore = create<StoreState>()(
     {
       name: 'm-store',
       storage: createJSONStorage(() => localStorage),
-      // Solo persistir cart + user, no estado de UI
-      partialize: (s) => ({ cart: s.cart, cartCount: s.cartCount, user: s.user }),
+      // Solo persistir cart — la sesión de usuario viene de NextAuth (cookie JWT)
+      partialize: (s) => ({ cart: s.cart, cartCount: s.cartCount }),
       onRehydrateStorage: () => (state) => {
         state?._setHasHydrated(true)
-        // Re-sync cookie on hydration (covers existing sessions)
-        if (state?.user && typeof document !== 'undefined') {
-          document.cookie = 'm-auth=1; path=/; max-age=604800; samesite=lax'
-        }
       },
     },
   ),

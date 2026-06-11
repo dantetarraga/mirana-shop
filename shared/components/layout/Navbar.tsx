@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { Button } from '@/shared/components/ui/Button'
+import { useUser } from '@/shared/hooks'
 import { useStore } from '@/shared/lib/store-context'
 import { cn } from '@/shared/lib/utils'
 import { LayoutGrid, LogOut, MapPin, Package, Search, ShoppingBag, User } from 'lucide-react'
@@ -10,7 +11,8 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
 export function Navbar() {
-  const { cartCount, setCartOpen, user, openAuth, logout } = useStore()
+  const { cartCount, setCartOpen, openAuth } = useStore()
+  const { user } = useUser()
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchVal, setSearchVal] = useState('')
   const menuRef = useRef<HTMLDivElement>(null)
@@ -150,7 +152,6 @@ export function Navbar() {
                 size="sm"
                 full
                 onClick={() => {
-                  logout()
                   signOut({ callbackUrl: '/' })
                   setMenuOpen(false)
                 }}

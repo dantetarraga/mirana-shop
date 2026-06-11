@@ -17,6 +17,7 @@ import {
   type AddressFormValues,
 } from '@/features/users/components/AddressFormPanel'
 import { Button } from '@/shared/components/ui/Button'
+import { useUser } from '@/shared/hooks'
 import { checkoutSchema, type CheckoutInput } from '@/shared/lib/schemas'
 import { useStore } from '@/shared/lib/store-context'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -61,7 +62,8 @@ const SHIPPING_COST = 15
 // ---------------------------------------------------------------------------
 
 export default function CheckoutPage() {
-  const { cart, user, removeItem: _removeItem } = useStore()
+  const { cart, removeItem: _removeItem } = useStore()
+  const { user } = useUser()
   const [success, setSuccess] = useState<SuccessData | null>(null)
   const [loading, setLoading] = useState(false)
   const [savedAddresses, setSavedAddresses] = useState<AddressData[]>([])

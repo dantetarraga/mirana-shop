@@ -45,7 +45,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Toaster
             theme="dark"
             position="bottom-right"
-            /* Iconos coloreados — API oficial de Sonner */
             icons={{
               success: <CheckCircle2 size={16} color="#3fcf7f" />,
               error: <XCircle size={16} color="#ff6644" />,
@@ -58,7 +57,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 border: '1px solid rgba(80,150,255,0.15)',
                 color: 'var(--color-text)',
               },
-              /* classNames con ! (Tailwind !important) sobreescriben los estilos de Sonner */
               classNames: {
                 success: '!border-l-[3px] ![border-left-color:#3fcf7f]',
                 error: '!border-l-[3px] ![border-left-color:#ff6644]',

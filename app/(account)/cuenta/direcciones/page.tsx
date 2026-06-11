@@ -14,6 +14,7 @@ import {
 } from '@/features/users/components/AddressFormPanel'
 import { AddressesSkeleton } from '@/features/users/components/AddressesSkeleton'
 import { Button } from '@/shared/components/ui/Button'
+import { useUser } from '@/shared/hooks'
 import { useStore } from '@/shared/lib/store-context'
 import { cn } from '@/shared/lib/utils'
 import { Home, MapPin, Pencil, Plus, Star, Trash2 } from 'lucide-react'
@@ -107,7 +108,8 @@ function AddressCard({
 // Page
 // ---------------------------------------------------------------------------
 export default function DireccionesPage() {
-  const { user, _hasHydrated, openAuth } = useStore()
+  const { user, isLoading } = useUser()
+  const { openAuth } = useStore()
   const [addresses, setAddresses] = useState<AddressData[] | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -118,7 +120,7 @@ export default function DireccionesPage() {
   }
 
   useEffect(() => {
-    if (!_hasHydrated) return
+    if (isLoading) return
 
     if (!user) {
       const t = setTimeout(() => openAuth('login'), 300)
@@ -126,10 +128,9 @@ export default function DireccionesPage() {
     }
 
     loadAddresses(user.email)
-  }, [_hasHydrated, user, openAuth])
+  }, [isLoading, user, openAuth])
 
-  if (!_hasHydrated) return <AddressesSkeleton />
-  if (!user) return <AddressesSkeleton />
+  if (isLoading || !user) return <AddressesSkeleton />
 
   const handleCreate = async (data: AddressFormValues) => {
     const result = await createAddress(user.email, data)

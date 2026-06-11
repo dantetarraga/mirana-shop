@@ -1,18 +1,81 @@
+import { db } from '@/shared/lib/db'
+import bcrypt from 'bcryptjs'
 import NextAuth from 'next-auth'
+import Credentials from 'next-auth/providers/credentials'
 import Google from 'next-auth/providers/google'
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  providers: [Google],
+  providers: [
+    Google,
+    Credentials({
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Contraseña', type: 'password' },
+      },
+      async authorize(credentials) {
+        const email = credentials?.email as string | undefined
+        const password = credentials?.password as string | undefined
+        if (!email || !password) return null
+
+        const user = await db.user.findUnique({ where: { email } })
+        if (!user?.passwordHash) return null
+
+        const valid = await bcrypt.compare(password, user.passwordHash)
+        if (!valid) return null
+
+        return { id: user.id, name: user.name, email: user.email, role: user.role }
+      },
+    }),
+  ],
+
+  session: { strategy: 'jwt' },
+
   callbacks: {
     /**
-     * Controla el acceso a rutas protegidas.
-     * El proxy (proxy.ts) llama a esto para cada request que coincide con el matcher.
+     * Añade el role al token JWT en cada login.
+     * - Credentials: llega en `user.role` desde authorize().
+     * - Google: busca en DB o crea el usuario con role CUSTOMER.
      */
-    authorized({ auth: session, request: { nextUrl } }) {
-      if (!session?.user) {
-        return Response.redirect(new URL('/?requireAuth=1', nextUrl))
+    async jwt({ token, user, account }) {
+      if (user) {
+        // Primer login: `user` está presente
+        if (account?.provider === 'google') {
+          const dbUser = await db.user.upsert({
+            where: { email: token.email! },
+            update: {},
+            create: {
+              email: token.email!,
+              name: token.name ?? null,
+              image: token.picture ?? null,
+              role: 'CUSTOMER',
+            },
+          })
+          token.role = dbUser.role === 'ADMIN' ? 'admin' : 'customer'
+        } else {
+          // Credentials: el role viene del authorize()
+          const u = user as typeof user & { role?: string }
+          token.role = u.role === 'ADMIN' ? 'admin' : 'customer'
+        }
       }
-      return true
+      return token
     },
+
+    /** Expone el role en el objeto session.user */
+    session({ session, token }) {
+      if (session.user) {
+        session.user.role = (token.role ?? 'customer') as 'admin' | 'customer'
+      }
+      return session
+    },
+
+    /** Protección de rutas: redirige a home si no hay sesión */
+    authorized({ auth: session }) {
+      return !!session?.user
+    },
+  },
+
+  pages: {
+    signIn: '/', // Modal propio, no ruta /auth/signin de NextAuth
+    error: '/',
   },
 })

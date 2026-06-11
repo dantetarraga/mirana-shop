@@ -4,6 +4,7 @@ import { getMyOrders } from '@/features/orders/actions/account.actions'
 import { OrdersSkeleton } from '@/features/orders/components/OrdersSkeleton'
 import type { OrderListItem } from '@/modules/orders/repositories/order.repo'
 import { Button } from '@/shared/components/ui/Button'
+import { useUser } from '@/shared/hooks'
 import { useStore } from '@/shared/lib/store-context'
 import { formatCurrency, formatDate } from '@/shared/lib/utils'
 import { ChevronDown, ChevronUp, Package, ShoppingCart } from 'lucide-react'
@@ -153,11 +154,12 @@ function OrderRow({ order }: { order: OrderListItem }) {
 // Página principal
 // ---------------------------------------------------------------------------
 export default function MisPedidosPage() {
-  const { user, _hasHydrated, openAuth } = useStore()
+  const { user, isLoading } = useUser()
+  const { openAuth } = useStore()
   const [orders, setOrders] = useState<OrderListItem[] | null>(null)
 
   useEffect(() => {
-    if (!_hasHydrated) return
+    if (isLoading) return
 
     if (!user) {
       const t = setTimeout(() => openAuth('login'), 300)
@@ -167,9 +169,9 @@ export default function MisPedidosPage() {
     getMyOrders(user.email).then((data) => {
       setOrders(data as OrderListItem[])
     })
-  }, [_hasHydrated, user, openAuth])
+  }, [isLoading, user, openAuth])
 
-  if (!_hasHydrated || (!user && _hasHydrated)) {
+  if (isLoading || !user) {
     return <OrdersSkeleton />
   }
 

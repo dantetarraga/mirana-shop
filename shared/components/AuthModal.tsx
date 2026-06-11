@@ -1,6 +1,7 @@
 'use client'
 
 import { acceptTerms } from '@/features/users/actions/accept-terms.actions'
+import { registerUser } from '@/features/users/actions/register.actions'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
 import { Modal } from '@/shared/components/ui/Modal'
@@ -21,7 +22,7 @@ import { toast } from 'sonner'
 type FormValues = LoginInput & Partial<Pick<RegisterInput, 'name' | 'confirm'>>
 
 export function AuthModal() {
-  const { authOpen, authMode, closeAuth, authenticate, openAuth } = useStore()
+  const { authOpen, authMode, closeAuth, openAuth } = useStore()
   const mode = authMode
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [termsError, setTermsError] = useState(false)
@@ -48,21 +49,34 @@ export function AuthModal() {
       setTermsError(true)
       return
     }
-    try {
-      authenticate({ name: data.name || data.email.split('@')[0], email: data.email })
-      if (mode === 'register') {
-        await acceptTerms(data.email)
+
+    if (mode === 'register') {
+      const result = await registerUser({
+        name: data.name!,
+        email: data.email,
+        password: data.password,
+      })
+      if (!result.success) {
+        toast.error(result.error)
+        return
       }
-      toast.success(mode === 'login' ? 'Sesión iniciada' : 'Cuenta creada')
-      form.reset()
-      closeAuth()
-    } catch {
-      if (mode === 'login') {
-        toast.warning('Usuario o contraseña incorrectos')
-      } else {
-        toast.error('No se pudo crear la cuenta. Inténtalo de nuevo.')
-      }
+      await acceptTerms(data.email)
     }
+
+    const res = await signIn('credentials', {
+      email: data.email,
+      password: data.password,
+      redirect: false,
+    })
+
+    if (res?.error) {
+      toast.warning('Correo o contraseña incorrectos')
+      return
+    }
+
+    toast.success(mode === 'login' ? 'Sesión iniciada' : 'Cuenta creada')
+    form.reset()
+    closeAuth()
   }
 
   return (

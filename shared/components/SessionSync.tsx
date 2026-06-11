@@ -1,32 +1,27 @@
 'use client'
 
-import { useStore } from '@/shared/lib/store-context'
 import { useSession } from 'next-auth/react'
 import { useEffect } from 'react'
 
 /**
- * Sincroniza la sesión de NextAuth con el store de Zustand.
- * Debe estar dentro de <SessionProvider> y <StoreProvider>.
+ * Sincroniza la sesión de NextAuth con la cookie `m-auth` que el middleware
+ * puede usar para proteger rutas fuera del matcher de NextAuth.
+ *
+ * La fuente de verdad de sesión es la cookie JWT de NextAuth
+ * (`next-auth.session-token`), NO Zustand.
  */
 export function SessionSync() {
-  const { data: session, status } = useSession()
-  const { authenticate, logout, user, _hasHydrated } = useStore()
+  const { status } = useSession()
 
   useEffect(() => {
-    if (!_hasHydrated) return
+    if (typeof document === 'undefined') return
 
-    if (status === 'authenticated' && session?.user?.email) {
-      if (!user) {
-        authenticate({
-          name: session.user.name ?? session.user.email.split('@')[0],
-          email: session.user.email,
-        })
-      }
-    } else if (status === 'unauthenticated' && user) {
-      logout()
+    if (status === 'authenticated') {
+      document.cookie = 'm-auth=1; path=/; max-age=604800; samesite=lax'
+    } else if (status === 'unauthenticated') {
+      document.cookie = 'm-auth=; path=/; max-age=0; samesite=lax'
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, session, _hasHydrated])
+  }, [status])
 
   return null
 }
