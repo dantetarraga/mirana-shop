@@ -1,4 +1,6 @@
-﻿const REVIEWS = [
+﻿import { StarRating } from '@/shared/components/ui/StarRating'
+
+const REVIEWS = [
   {
     name: 'Carlos M.',
     role: 'Coleccionista · 3 años',
@@ -61,7 +63,7 @@ export function ReviewsSection() {
               4.9
             </span>
             <div>
-              <span className="text-(--gold) text-[14px]">★★★★★</span>
+              <StarRating value={5} size={14} className="text-(--gold)" />
               <div className="text-[11px] text-muted tracking-[1px] uppercase mt-1">
                 Basado en 2,847 reseñas
               </div>
@@ -79,9 +81,8 @@ export function ReviewsSection() {
             <div className="absolute top-3.5 right-4.5 font-display text-[72px] font-black text-(--gold) opacity-[.15] leading-[0.8] italic">
               "
             </div>
-            <div className="text-(--gold) text-[13px] tracking-[2px] mb-3.5">
-              {'★'.repeat(r.stars)}
-              {'☆'.repeat(5 - r.stars)}
+            <div className="text-(--gold) mb-3.5">
+              <StarRating value={r.stars} size={13} />
             </div>
             <p className="text-[14px] leading-[1.7] text-text mb-5 font-light min-h-21">{r.text}</p>
             <div className="flex items-center gap-3 pt-4.5 border-t border-(--bd)">

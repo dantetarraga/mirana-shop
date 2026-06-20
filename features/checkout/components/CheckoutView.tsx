@@ -39,7 +39,7 @@ const SHIPPING_COST = 15
 // ---------------------------------------------------------------------------
 
 export function CheckoutView() {
-  const { cart, removeItem: _removeItem } = useCartStore()
+  const { cart, clearCart } = useCartStore()
   const { user } = useUser()
   const [success, setSuccess] = useState<SuccessData | null>(null)
   const [loading, setLoading] = useState(false)
@@ -129,7 +129,7 @@ export function CheckoutView() {
   // Redirect to cart if empty (and not in success state)
   if (cart.length === 0 && !success) {
     return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-6 px-6">
+      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-6 px-6 pt-[calc(var(--nh)+36px)]">
         <ShoppingBag size={80} strokeWidth={1} className="opacity-15" />
         <p className="text-[15px] text-muted">Tu carrito está vacío.</p>
         <Link href="/catalogo">
@@ -187,8 +187,7 @@ export function CheckoutView() {
       unitPrice: i.product.price,
     }))
 
-    // Clear cart items
-    cart.forEach((i) => _removeItem(i.product.id))
+    clearCart()
     setSuccess({
       code: result.data.code,
       paymentMethod: result.data.paymentMethod,

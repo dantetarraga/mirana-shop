@@ -1,6 +1,7 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
+import { useMemo } from 'react'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -23,15 +24,25 @@ export type SessionUser = { name: string; email: string; role: UserRole }
 export function useUser(): { user: SessionUser | null; isLoading: boolean } {
   const { data: session, status } = useSession()
 
-  if (status === 'loading') return { user: null, isLoading: true }
-  if (status !== 'authenticated' || !session?.user?.email) return { user: null, isLoading: false }
+  const name = session?.user?.name
+  const email = session?.user?.email
+  const role = session?.user?.role
 
-  return {
-    user: {
-      name: session.user.name ?? session.user.email.split('@')[0],
-      email: session.user.email,
-      role: session.user.role ?? 'customer',
-    },
-    isLoading: false,
-  }
+  // Memoizado por valores primitivos: useSession() puede devolver un objeto
+  // `session` con nueva referencia en cada render sin que los datos cambien,
+  // y un `user` inestable rompe los useEffect que dependen de él (loop de
+  // fetch en CheckoutView).
+  const user = useMemo<SessionUser | null>(() => {
+    if (!email) return null
+    return {
+      name: name ?? email.split('@')[0],
+      email,
+      role: role ?? 'customer',
+    }
+  }, [name, email, role])
+
+  if (status === 'loading') return { user: null, isLoading: true }
+  if (status !== 'authenticated' || !email) return { user: null, isLoading: false }
+
+  return { user, isLoading: false }
 }

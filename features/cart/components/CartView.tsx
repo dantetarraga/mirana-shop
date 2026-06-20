@@ -28,7 +28,7 @@ export function CartView() {
   /* ── Empty state ─────────────────────────────────── */
   if (cart.length === 0) {
     return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-6 px-6">
+      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-6 px-6 pt-[calc(var(--nh)+36px)]">
         <div className="text-[72px] opacity-20 select-none">
           <ShoppingBag size={96} strokeWidth={1} />
         </div>
@@ -51,7 +51,7 @@ export function CartView() {
 
   return (
     <>
-      <div className="px-6 py-12 max-w-360 mx-auto">
+      <div className="px-6 pt-[calc(var(--nh)+36px)] pb-12 max-w-360 mx-auto">
         {/* ── Page header ── */}
         <div className="flex items-center gap-4 mb-10">
           <button

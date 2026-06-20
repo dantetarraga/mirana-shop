@@ -45,6 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Toaster
             theme="dark"
             position="top-center"
+            gap={10}
             icons={{
               success: <CheckCircle2 size={16} color="#3fcf7f" />,
               error: <XCircle size={16} color="#ff6644" />,
@@ -54,10 +55,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             toastOptions={{
               style: {
                 background: 'var(--color-surf)',
-                border: '1px solid rgba(0,200,255,0.15)',
-                color: 'var(--color-text)',
+                border: '1px solid var(--bd)',
+                borderRadius: '0',
+                boxShadow: '0 16px 40px oklch(0% 0 0 / 0.4), 0 0 0 1px var(--bd)',
+                padding: '14px 16px',
               },
               classNames: {
+                title:
+                  'font-display font-extrabold uppercase tracking-[0.5px] text-[13px] text-text',
+                description: '!text-muted text-[12px] normal-case tracking-normal font-sans mt-1',
                 success: '!border-l-[3px] ![border-left-color:#3fcf7f]',
                 error: '!border-l-[3px] ![border-left-color:#ff6644]',
                 warning: '!border-l-[3px] ![border-left-color:#ffb84a]',

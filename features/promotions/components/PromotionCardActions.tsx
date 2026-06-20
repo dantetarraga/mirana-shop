@@ -3,6 +3,7 @@
 import { usePromotionCrud } from '@/features/promotions/components/PromotionCrudProvider'
 import type { PromotionRow } from '@/features/promotions/types'
 import { Button } from '@/shared/components/ui/Button'
+import { Trash2 } from 'lucide-react'
 
 interface PromotionCardActionsProps {
   promotion: PromotionRow
@@ -32,7 +33,7 @@ export function PromotionCardActions({ promotion }: PromotionCardActionsProps) {
         onClick={() => openDelete(promotion)}
         disabled={isPending}
       >
-        ×
+        <Trash2 size={14} />
       </Button>
     </div>
   )

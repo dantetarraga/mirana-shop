@@ -89,6 +89,7 @@ model User {
   orders    Order[]
   preorders Preorder[]
   addresses UserAddress[]
+  cart      Cart?
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -225,6 +226,7 @@ model Product {
   images      ProductImage[]
   inventory   ProductInventory?
   orderItems  OrderItem[]
+  cartItems   CartItem[]
   movements   InventoryMovement[]
   preorders   Preorder[]
   collections ProductCollection[]
@@ -267,6 +269,44 @@ model ProductImage {
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId, position])
+}
+
+// ---------------------------------------------------------------------------
+// Cart — persistido en servidor, ligado a una cookie de sesión anónima
+// (`sessionId`). Si el visitante inicia sesión, su carrito anónimo se
+// fusiona con el carrito de su cuenta (`userId`) y se descarta el anónimo.
+// ---------------------------------------------------------------------------
+
+model Cart {
+  id String @id @default(cuid())
+  // Carrito anónimo: sessionId set, userId null. Carrito de cuenta: userId
+  // set, sessionId null — nunca ambos a la vez (ver mergeAnonymousCartIntoUser),
+  // así un dispositivo compartido no hereda el carrito de otra cuenta tras logout.
+  sessionId String? @unique
+  userId    String? @unique
+  user      User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  items CartItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model CartItem {
+  id        String @id @default(cuid())
+  cartId    String
+  cart      Cart   @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int    @default(1)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId])
+  @@index([productId])
 }
 
 // ---------------------------------------------------------------------------

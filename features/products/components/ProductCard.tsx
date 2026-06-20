@@ -6,7 +6,8 @@ import type { CatalogProduct } from '@/features/products/types/catalog.types'
 import { getCategoryLabel, getCategoryStripe } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
-import { Minus, Plus, Trash2 } from 'lucide-react'
+import { StarRating } from '@/shared/components/ui/StarRating'
+import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
@@ -14,16 +15,6 @@ interface ProductCardProps {
   product: CatalogProduct
   showBadge?: boolean
   noAnimation?: boolean
-}
-
-function Stars({ r }: { r: number }) {
-  const full = Math.floor(r)
-  return (
-    <span className="text-(--gold)">
-      {'★'.repeat(full)}
-      {'☆'.repeat(5 - full)}
-    </span>
-  )
 }
 
 export function ProductCard({
@@ -75,7 +66,7 @@ export function ProductCard({
 
       <div className="px-4 pt-4 pb-3.5">
         <div className="text-[10px] tracking-[2px] uppercase mb-1.25 text-muted">{catLabel}</div>
-        <div className="font-display text-[21px] font-black uppercase leading-[1.05] mb-3 tracking-[-0.5px]">
+        <div className="font-display text-[21px] font-black uppercase leading-[1.05] mb-3 tracking-[-0.5px] line-clamp-2 min-h-[44px]">
           {p.name}
         </div>
         <div className="flex items-center justify-between mb-3">
@@ -88,7 +79,7 @@ export function ProductCard({
             )}
           </div>
           <div className="text-[11px] text-muted">
-            <Stars r={isNew ? 4.5 : 4.0} />
+            <StarRating value={isNew ? 4.5 : 4.0} size={11} className="text-(--gold)" />
           </div>
         </div>
         {qtyInCart > 0 && !isOutOfStock ? (
@@ -148,7 +139,14 @@ export function ProductCard({
               }
             }}
           >
-            {isOutOfStock ? 'Sin stock' : '+ Agregar al carrito'}
+            {isOutOfStock ? (
+              'Sin stock'
+            ) : (
+              <>
+                <ShoppingCart size={15} />
+                Agregar al carrito
+              </>
+            )}
           </Button>
         )}
       </div>

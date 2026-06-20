@@ -328,7 +328,7 @@
   }
   .ui-btn--icon.ui-btn--md {
     width: 36px;
-    height: 36px;
+    height: 42px;
     font-size: 15px;
   }
   .ui-btn--icon.ui-btn--lg {
@@ -419,12 +419,6 @@
     font-size: 14px;
     letter-spacing: 1.5px;
     padding: 10px;
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  .pcard:hover .add-btn {
-    opacity: 1;
-    transform: translateY(0);
   }
   .pcard .add-btn:hover {
     @apply bg-gold-400;

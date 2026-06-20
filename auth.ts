@@ -1,3 +1,4 @@
+import { mergeAnonymousCartIntoUser } from '@/features/cart/lib/cart-resolve'
 import { db } from '@/shared/lib/db'
 import bcrypt from 'bcryptjs'
 import NextAuth from 'next-auth'
@@ -77,5 +78,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   pages: {
     signIn: '/', // Modal propio, no ruta /auth/signin de NextAuth
     error: '/',
+  },
+
+  events: {
+    /**
+     * Fusiona el carrito anónimo (cookie) hacia la cuenta en cada login.
+     * Cubre Google (redirect completo, sin punto de hook en el cliente) y
+     * Credentials (también cubierto explícitamente en AuthModal porque ahí
+     * no hay recarga de página tras el login).
+     */
+    async signIn({ user }) {
+      if (user?.email) await mergeAnonymousCartIntoUser(user.email)
+    },
   },
 })

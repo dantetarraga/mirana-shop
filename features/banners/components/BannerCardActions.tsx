@@ -3,6 +3,7 @@
 import { useBannerCrud } from '@/features/banners/components/BannerCrudProvider'
 import type { BannerRow } from '@/features/banners/types'
 import { Button } from '@/shared/components/ui/Button'
+import { Trash2 } from 'lucide-react'
 
 interface BannerCardActionsProps {
   banner: BannerRow
@@ -32,7 +33,7 @@ export function BannerCardActions({ banner }: BannerCardActionsProps) {
         onClick={() => openDelete(banner)}
         disabled={isPending}
       >
-        ×
+        <Trash2 size={14} />
       </Button>
     </div>
   )

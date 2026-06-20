@@ -3,6 +3,8 @@
 import { acceptTerms } from '@/features/auth/actions/accept-terms.actions'
 import { registerUser } from '@/features/auth/actions/register.actions'
 import { useAuthModalStore } from '@/features/auth/stores/auth-modal.store'
+import { mergeCartOnLoginAction } from '@/features/cart/actions/cart.actions'
+import { useCartStore } from '@/features/cart/stores/cart.store'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
 import { Modal } from '@/shared/components/ui/Modal'
@@ -76,6 +78,12 @@ export function AuthModal() {
     toast.success(mode === 'login' ? 'Sesión iniciada' : 'Cuenta creada')
     form.reset()
     closeAuth()
+
+    // No hay recarga de página (signIn con redirect:false) — fusiona el
+    // carrito anónimo a la cuenta y refresca el store manualmente.
+    mergeCartOnLoginAction()
+      .then((cart) => useCartStore.getState().hydrateCart(cart))
+      .catch(() => {})
   }
 
   return (

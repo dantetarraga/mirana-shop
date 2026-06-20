@@ -1,5 +1,3 @@
-'use client'
-
 import type { SessionUser } from '@/shared/hooks/useUser'
 import { Baby, CreditCard, Mail, Phone, User as UserIcon } from 'lucide-react'
 

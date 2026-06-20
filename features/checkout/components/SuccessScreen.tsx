@@ -12,7 +12,7 @@ export function SuccessScreen({ data }: { data: SuccessData }) {
   const whatsappUrl = buildWhatsappOrderUrl(data)
 
   return (
-    <div className="min-h-[70vh] flex flex-col items-center justify-center px-4 py-16">
+    <div className="min-h-[70vh] flex flex-col items-center justify-center px-4 pt-[calc(var(--nh)+36px)] pb-16">
       <div className="max-w-130 w-full flex flex-col items-center gap-6">
         {/* Icon */}
         <div className="w-20 h-20 bg-(--gold)/10 border border-(--gold)/30 flex items-center justify-center">
