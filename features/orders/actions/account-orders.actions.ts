@@ -1,8 +1,8 @@
 'use server'
 
-import { orderRepo } from '@/features/orders/services/order.service'
+import { getOrdersByEmail } from '@/features/orders/queries/order.queries'
 
 export async function getMyOrders(email: string) {
   if (!email) return []
-  return orderRepo.findByEmail(email)
+  return getOrdersByEmail(email)
 }

@@ -1,5 +1,5 @@
-import { toProductCards } from '@/features/products/services/product.mapper'
-import { productRepo } from '@/features/products/services/product.service'
+import { toProductCards } from '@/features/products/lib/product-card'
+import { getProducts } from '@/features/products/queries/product.queries'
 import { ProductCarousel } from './ProductCarousel'
 
 interface Props {
@@ -19,10 +19,10 @@ export async function RelatedProducts({
   // Hacemos las 3 queries y combinamos, deduplificando y excluyendo el producto actual
 
   const [byCat, byBrand, byCollection] = await Promise.all([
-    productRepo.findMany({ categorySlug, take: 12 }),
-    productRepo.findMany({ brandSlug, take: 12 }),
+    getProducts({ categorySlug, take: 12 }),
+    getProducts({ brandSlug, take: 12 }),
     collectionSlugs.length > 0
-      ? productRepo.findMany({ collectionSlug: collectionSlugs, take: 12 })
+      ? getProducts({ collectionSlug: collectionSlugs, take: 12 })
       : Promise.resolve([]),
   ])
 

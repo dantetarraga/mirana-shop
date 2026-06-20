@@ -1,5 +1,5 @@
-import type { ProductListItem } from "./product.service";
-import type { CatalogProduct } from "@/features/products/types/catalog.types";
+import type { CatalogProduct } from '@/features/products/types/catalog.types'
+import type { ProductListItem } from '@/features/products/types'
 
 /**
  * Convierte un ProductListItem (con Decimal de Prisma) a un CatalogProduct
@@ -20,9 +20,9 @@ export function toProductCard(product: ProductListItem): CatalogProduct {
     brand: product.brand,
     imageUrl: product.images[0]?.url ?? null,
     stock: product.inventory?.availableStock ?? 0,
-  };
+  }
 }
 
 export function toProductCards(products: ProductListItem[]): CatalogProduct[] {
-  return products.map(toProductCard);
+  return products.map(toProductCard)
 }

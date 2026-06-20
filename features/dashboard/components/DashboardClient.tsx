@@ -1,7 +1,7 @@
 'use client'
 
-import type { ProductListItem } from '@/features/products/services/product.service'
-import type { OrderListItem } from '@/features/orders/services/order.service'
+import type { ProductListItem } from '@/features/products/types'
+import type { OrderListItem } from '@/features/orders/types'
 import { KpiCard } from '@/features/dashboard/components/KpiCard'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { cls } from '@/shared/lib/admin/admin-classes'

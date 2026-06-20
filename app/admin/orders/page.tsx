@@ -1,4 +1,5 @@
-import { orderRepo, type OrderStatusGroup } from "@/features/orders/services/order.service";
+import { countOrders, getOrders, getOrderStats } from "@/features/orders/queries/order.queries";
+import type { OrderStatusGroup } from "@/features/orders/types";
 import { OrdersClient } from "@/features/orders/components/OrdersClient";
 
 const PER_PAGE = 30;
@@ -20,9 +21,9 @@ export default async function OrdersPage({ searchParams }: PageProps) {
   const skip = (page - 1) * PER_PAGE;
 
   const [orders, stats, total] = await Promise.all([
-    orderRepo.findMany({ search: q, statusGroup, take: PER_PAGE, skip }),
-    orderRepo.getStats(),
-    orderRepo.count({ search: q, statusGroup }),
+    getOrders({ search: q, statusGroup, take: PER_PAGE, skip }),
+    getOrderStats(),
+    countOrders({ search: q, statusGroup }),
   ]);
 
   // Serializar Decimals antes de pasar al Client Component

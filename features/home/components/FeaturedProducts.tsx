@@ -1,13 +1,13 @@
-import { productRepo } from "@/features/products/services/product.service";
-import { toProductCards } from "@/features/products/services/product.mapper";
+import { getFeaturedProducts, getProducts } from "@/features/products/queries/product.queries";
+import { toProductCards } from "@/features/products/lib/product-card";
 import { ProductCard } from "@/features/products/components/ProductCard";
 
 // Server Component — fetcha directamente desde el repo
 export async function FeaturedProducts() {
   // Primero busca destacados, si no hay suficientes completa con recientes
   const [featured, recent] = await Promise.all([
-    productRepo.findFeatured(8),
-    productRepo.findMany({ take: 8 }),
+    getFeaturedProducts(8),
+    getProducts({ take: 8 }),
   ]);
 
   const source = featured.length >= 4 ? featured : recent;

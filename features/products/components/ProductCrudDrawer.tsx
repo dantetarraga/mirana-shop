@@ -3,7 +3,7 @@
 import type { BrandRow } from '@/features/brands/types'
 import type { CategoryRow } from '@/features/categories/types'
 import type { CollectionRow } from '@/features/collections/types'
-import type { ProductListItem } from '@/features/products/services/product.service'
+import type { ProductListItem } from '@/features/products/types'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { FilterMultiSelect } from '@/shared/components/admin/FilterMultiSelect'
 import { Button } from '@/shared/components/ui/Button'

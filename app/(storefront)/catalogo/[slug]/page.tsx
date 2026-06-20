@@ -1,6 +1,6 @@
 import { AddToCartPanel } from '@/features/products/components/AddToCartPanel'
 import { RelatedProducts } from '@/features/products/components/RelatedProducts'
-import { productRepo } from '@/features/products/services/product.service'
+import { getProductBySlug } from '@/features/products/queries/product.queries'
 import type { CatalogProduct } from '@/features/products/types/catalog.types'
 import { getCategoryLabel, getCategoryStripe } from '@/features/products/types/catalog.types'
 import { ChevronRight } from 'lucide-react'
@@ -14,7 +14,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
-  const product = await productRepo.findBySlug(slug)
+  const product = await getProductBySlug(slug)
   if (!product) return { title: 'Producto no encontrado' }
   return {
     title: product.name,
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ProductDetailPage({ params }: PageProps) {
   const { slug } = await params
-  const raw = await productRepo.findBySlug(slug)
+  const raw = await getProductBySlug(slug)
 
   if (!raw) notFound()
 

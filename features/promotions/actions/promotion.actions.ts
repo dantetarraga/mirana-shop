@@ -1,8 +1,9 @@
 'use server'
 
 import type { PromotionType } from '@/generated/prisma/client'
-import { promotionRepo } from '@/features/promotions/services/promotion.service'
+import { serializePromotion } from '@/features/promotions/queries/promotion.queries'
 import { promotionDbSchema } from '@/features/promotions/schemas/promotion.schema'
+import { db } from '@/shared/lib/db'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import { revalidatePath } from 'next/cache'
 
@@ -37,11 +38,38 @@ export async function savePromotion(
 
   try {
     if (id) {
-      const updated = await promotionRepo.update({ id, ...input })
+      const row = await db.promotion.update({
+        where: { id },
+        data: {
+          ...(input.name !== undefined && { name: input.name }),
+          ...(input.description !== undefined && { description: input.description }),
+          ...(input.type !== undefined && { type: input.type }),
+          ...(input.active !== undefined && { active: input.active }),
+          ...(input.minAmount !== undefined && { minAmount: input.minAmount }),
+          ...(input.discountAmount !== undefined && { discountAmount: input.discountAmount }),
+          ...(input.discountPercent !== undefined && { discountPercent: input.discountPercent }),
+          ...(input.startsAt !== undefined && { startsAt: input.startsAt }),
+          ...(input.endsAt !== undefined && { endsAt: input.endsAt }),
+        },
+      })
+      const updated = serializePromotion(row)
       invalidateCaches()
       return { success: true, data: { id: updated.id } }
     } else {
-      const created = await promotionRepo.create(input)
+      const row = await db.promotion.create({
+        data: {
+          name: input.name,
+          description: input.description,
+          type: input.type,
+          active: input.active ?? true,
+          minAmount: input.minAmount,
+          discountAmount: input.discountAmount,
+          discountPercent: input.discountPercent,
+          startsAt: input.startsAt,
+          endsAt: input.endsAt,
+        },
+      })
+      const created = serializePromotion(row)
       invalidateCaches()
       return { success: true, data: { id: created.id } }
     }
@@ -56,7 +84,7 @@ export async function savePromotion(
 
 export async function togglePromotion(id: string, active: boolean): Promise<ActionResult> {
   try {
-    await promotionRepo.toggle(id, active)
+    await db.promotion.update({ where: { id }, data: { active: !active } })
     invalidateCaches()
     return { success: true, data: undefined }
   } catch (err) {
@@ -70,7 +98,7 @@ export async function togglePromotion(id: string, active: boolean): Promise<Acti
 
 export async function deletePromotion(id: string): Promise<ActionResult> {
   try {
-    await promotionRepo.delete(id)
+    await db.promotion.delete({ where: { id } })
     invalidateCaches()
     return { success: true, data: undefined }
   } catch (err) {

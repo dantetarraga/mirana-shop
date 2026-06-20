@@ -2,7 +2,7 @@
 
 import { getBrands } from '@/features/brands/queries/brand.queries'
 import { getCategories } from '@/features/categories/queries/category.queries'
-import { productRepo } from '@/features/products/services/product.service'
+import { PRODUCT_DETAIL_SELECT, getProducts } from '@/features/products/queries/product.queries'
 import { db } from '@/shared/lib/db'
 import { importProductRowSchema, productDbBaseSchema, productDbSchema } from '@/features/products/schemas/product.schema'
 import type { ActionResult } from '@/shared/types/action-result.types'
@@ -50,20 +50,26 @@ export async function createProduct(
   const input = parsed.data
 
   try {
-    const product = await productRepo.create({
-      sku: input.sku,
-      slug: input.slug || slugify(input.name),
-      name: input.name,
-      description: input.description ?? '',
-      price: input.price,
-      compareAtPrice: input.compareAtPrice,
-      salePrice: input.salePrice,
-      status: input.status,
-      featured: input.featured,
-      categoryId: input.categoryId,
-      brandId: input.brandId,
-      stock: input.stock,
-      images: input.imageUrl ? [{ url: input.imageUrl, alt: input.name, position: 0 }] : [],
+    const images = input.imageUrl ? [{ url: input.imageUrl, alt: input.name, position: 0 }] : []
+    const stock = input.stock ?? 0
+
+    const product = await db.product.create({
+      data: {
+        sku: input.sku,
+        slug: input.slug || slugify(input.name),
+        name: input.name,
+        description: input.description ?? '',
+        price: input.price,
+        compareAtPrice: input.compareAtPrice ?? null,
+        salePrice: input.salePrice ?? null,
+        status: input.status ?? 'AVAILABLE',
+        featured: input.featured,
+        categoryId: input.categoryId,
+        brandId: input.brandId,
+        images: { create: images.map((img, i) => ({ ...img, position: img.position ?? i })) },
+        inventory: { create: { availableStock: stock } },
+      },
+      select: PRODUCT_DETAIL_SELECT,
     })
 
     invalidateProductCaches()
@@ -98,22 +104,49 @@ export async function updateProduct(
   const input = parsed.data
 
   try {
-    const updated = await productRepo.update({
-      id,
-      ...(input.sku !== undefined && { sku: input.sku }),
-      ...(input.name !== undefined && { name: input.name }),
-      ...(input.slug !== undefined && { slug: input.slug }),
-      ...(input.description !== undefined && { description: input.description }),
-      ...(input.price !== undefined && { price: input.price }),
-      ...(input.compareAtPrice !== undefined && { compareAtPrice: input.compareAtPrice }),
-      ...(input.salePrice !== undefined && { salePrice: input.salePrice }),
-      ...(input.status !== undefined && { status: input.status }),
-      ...(input.featured !== undefined && { featured: input.featured }),
-      ...(input.categoryId !== undefined && { categoryId: input.categoryId }),
-      ...(input.brandId !== undefined && { brandId: input.brandId }),
-      ...(input.stock !== undefined && { stock: input.stock }),
-      // images: si se pasan, se sincronizan en la transacción del repo
-      ...(images !== undefined && { images }),
+    const updated = await db.$transaction(async (tx) => {
+      const product = await tx.product.update({
+        where: { id },
+        data: {
+          ...(input.sku !== undefined && { sku: input.sku }),
+          ...(input.name !== undefined && { name: input.name }),
+          ...(input.slug !== undefined && { slug: input.slug }),
+          ...(input.description !== undefined && { description: input.description }),
+          ...(input.price !== undefined && { price: input.price }),
+          ...(input.compareAtPrice !== undefined && { compareAtPrice: input.compareAtPrice ?? null }),
+          ...(input.salePrice !== undefined && { salePrice: input.salePrice ?? null }),
+          ...(input.status !== undefined && { status: input.status }),
+          ...(input.featured !== undefined && { featured: input.featured }),
+          ...(input.categoryId !== undefined && { categoryId: input.categoryId }),
+          ...(input.brandId !== undefined && { brandId: input.brandId }),
+        },
+        select: PRODUCT_DETAIL_SELECT,
+      })
+
+      if (input.stock !== undefined) {
+        await tx.productInventory.upsert({
+          where: { productId: id },
+          update: { availableStock: input.stock },
+          create: { productId: id, availableStock: input.stock },
+        })
+      }
+
+      // Sincroniza imágenes: elimina las existentes y crea las nuevas
+      if (images !== undefined) {
+        await tx.productImage.deleteMany({ where: { productId: id } })
+        if (images.length > 0) {
+          await tx.productImage.createMany({
+            data: images.map((img, i) => ({
+              productId: id,
+              url: img.url,
+              alt: img.alt ?? null,
+              position: i,
+            })),
+          })
+        }
+      }
+
+      return product
     })
 
     invalidateProductCaches()
@@ -132,7 +165,7 @@ export async function deleteProduct(id: string): Promise<ActionResult> {
   if (!id) return { success: false, error: 'ID de producto requerido' }
 
   try {
-    await productRepo.delete(id)
+    await db.product.update({ where: { id }, data: { deletedAt: new Date() } })
     invalidateProductCaches()
     return { success: true, data: undefined }
   } catch (err) {
@@ -192,30 +225,36 @@ export async function importProducts(
       }
 
       const slug = slugify(row.name) + '-' + row.sku.toLowerCase()
-      const existing = await productRepo.findMany({ search: row.sku, take: 1 })
+      const existing = await getProducts({ search: row.sku, take: 1 })
       const match = existing.find((p) => p.sku === row.sku)
 
       if (match) {
-        await productRepo.update({
-          id: match.id,
-          name: row.name,
-          price: row.price,
-          description: row.desc ?? '',
-          stock: row.stock,
+        await db.$transaction(async (tx) => {
+          await tx.product.update({
+            where: { id: match.id },
+            data: { name: row.name, price: row.price, description: row.desc ?? '' },
+          })
+          await tx.productInventory.upsert({
+            where: { productId: match.id },
+            update: { availableStock: row.stock },
+            create: { productId: match.id, availableStock: row.stock },
+          })
         })
         updated++
       } else {
-        await productRepo.create({
-          sku: row.sku,
-          slug,
-          name: row.name,
-          description: row.desc ?? '',
-          price: row.price,
-          categoryId,
-          brandId,
-          stock: row.stock,
-          status: 'AVAILABLE',
-          featured: false,
+        await db.product.create({
+          data: {
+            sku: row.sku,
+            slug,
+            name: row.name,
+            description: row.desc ?? '',
+            price: row.price,
+            categoryId,
+            brandId,
+            status: 'AVAILABLE',
+            featured: false,
+            inventory: { create: { availableStock: row.stock } },
+          },
         })
         created++
       }

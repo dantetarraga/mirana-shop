@@ -1,6 +1,6 @@
 'use client'
 
-import type { OrderListItem } from '@/features/orders/services/order.service'
+import type { OrderListItem } from '@/features/orders/types'
 import { Button } from '@/shared/components/ui/Button'
 import { formatCurrency, formatDate } from '@/shared/lib/utils'
 import { ChevronDown, ChevronUp, Package, ShoppingCart } from 'lucide-react'

@@ -1,7 +1,7 @@
 import { StockAdjustControl } from '@/features/inventory/components/StockAdjustControl'
-import type { ProductListItem } from '@/features/products/services/product.service'
-import { productRepo, type StockFilter } from '@/features/products/services/product.service'
-import { inventoryRepo } from '@/features/inventory/services/inventory.service'
+import type { ProductListItem, StockFilter } from '@/features/products/types'
+import { getProducts } from '@/features/products/queries/product.queries'
+import { getInventoryStats } from '@/features/inventory/queries/inventory.queries'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
 import { KpiCard } from '@/features/dashboard/components/KpiCard'
 import { StockBadge } from '@/features/inventory/components/StockBadge'
@@ -87,8 +87,8 @@ export default async function InventoryPage({ searchParams }: PageProps) {
     rawFilter && VALID_FILTERS.has(rawFilter as StockFilter) ? (rawFilter as StockFilter) : 'all'
 
   const [rawProducts, stats] = await Promise.all([
-    productRepo.findMany({ stockFilter, status: undefined, take: 500 }),
-    inventoryRepo.getStats(),
+    getProducts({ stockFilter, status: undefined, take: 500 }),
+    getInventoryStats(),
   ])
 
   const products = rawProducts.map((p) => ({

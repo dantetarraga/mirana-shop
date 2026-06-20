@@ -1,13 +1,13 @@
 import { Suspense } from "react";
-import { productRepo } from "@/features/products/services/product.service";
+import { getProducts } from "@/features/products/queries/product.queries";
 import { getCategories } from "@/features/categories/queries/category.queries";
-import { toProductCards } from "@/features/products/services/product.mapper";
+import { toProductCards } from "@/features/products/lib/product-card";
 import { CatalogClient } from "@/features/products/components/CatalogClient";
 
 // Server Component — fetcha categorías y productos iniciales
 export default async function CatalogPage() {
   const [products, categories] = await Promise.all([
-    productRepo.findMany({ take: 200 }),
+    getProducts({ take: 200 }),
     getCategories(),
   ]);
 

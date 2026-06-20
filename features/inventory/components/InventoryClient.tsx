@@ -1,7 +1,7 @@
 'use client'
 
 import { adjustStock } from '@/features/inventory/actions/inventory.actions'
-import type { ProductListItem, StockFilter } from '@/features/products/services/product.service'
+import type { ProductListItem, StockFilter } from '@/features/products/types'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
 import { KpiCard } from '@/features/dashboard/components/KpiCard'
 import { StockBadge } from '@/features/inventory/components/StockBadge'

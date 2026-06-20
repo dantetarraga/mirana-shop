@@ -1,7 +1,8 @@
 'use server'
 
-import { inventoryRepo, OptimisticLockError } from '@/features/inventory/services/inventory.service'
+import { OptimisticLockError } from '@/features/inventory/lib/stock'
 import { adjustStockSchema } from '@/features/inventory/schemas/inventory.schema'
+import { db } from '@/shared/lib/db'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import { revalidatePath } from 'next/cache'
 
@@ -19,12 +20,47 @@ export async function adjustStock(rawInput: unknown): Promise<ActionResult<{ new
 
   while (attempts < MAX_RETRIES) {
     try {
-      const result = await inventoryRepo.adjustStock({
-        productId,
-        delta: 0,
-        newStock,
-        type: 'ADJUSTMENT',
-        reason: reason ?? 'Ajuste manual desde admin',
+      const result = await db.$transaction(async (tx) => {
+        const current = await tx.productInventory.findUnique({
+          where: { productId },
+          select: { id: true, availableStock: true, version: true },
+        })
+
+        if (!current) {
+          throw new Error(`No existe inventario para el producto ${productId}`)
+        }
+
+        if (newStock < 0) {
+          throw new Error('El stock no puede ser negativo')
+        }
+
+        const updated = await tx.productInventory.updateMany({
+          where: { productId, version: current.version },
+          data: {
+            availableStock: newStock,
+            version: { increment: 1 },
+          },
+        })
+
+        if (updated.count === 0) {
+          throw new OptimisticLockError()
+        }
+
+        await tx.inventoryMovement.create({
+          data: {
+            productId,
+            type: 'ADJUSTMENT',
+            stockType: 'NORMAL',
+            quantity: newStock - current.availableStock,
+            balanceAfter: newStock,
+            reason: reason ?? 'Ajuste manual desde admin',
+          },
+        })
+
+        return tx.productInventory.findUniqueOrThrow({
+          where: { productId },
+          select: { availableStock: true },
+        })
       })
 
       revalidatePath('/admin/inventory')

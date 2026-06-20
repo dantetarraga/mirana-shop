@@ -1,6 +1,6 @@
 'use client'
 
-import type { UserRow } from '@/app/admin/users/page'
+import type { UserRow } from '@/features/users/types'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
 import { DrawerSection } from '@/shared/components/admin/DrawerSection'

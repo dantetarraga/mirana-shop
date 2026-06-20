@@ -1,8 +1,14 @@
 import { DashboardClient } from '@/features/dashboard/components/DashboardClient'
-import { productRepo } from '@/features/products/services/product.service'
-import { inventoryRepo } from '@/features/inventory/services/inventory.service'
-import { orderRepo } from '@/features/orders/services/order.service'
-import { userRepo } from '@/features/users/services/user.service'
+import { getProducts } from '@/features/products/queries/product.queries'
+import { getInventoryStats } from '@/features/inventory/queries/inventory.queries'
+import {
+  getOrders,
+  getOrderStats,
+  getOrdersByCategory,
+  getOrdersByDay,
+  getRevenueByMonth,
+} from '@/features/orders/queries/order.queries'
+import { countUsers } from '@/features/users/queries/user.queries'
 
 export default async function DashboardPage() {
   const [
@@ -15,14 +21,14 @@ export default async function DashboardPage() {
     ordersByDay,
     ordersByCategory,
   ] = await Promise.all([
-    orderRepo.getStats(),
-    productRepo.findMany({ take: 10 }),
-    inventoryRepo.getStats(),
-    userRepo.count(),
-    orderRepo.findMany({ take: 6 }),
-    orderRepo.getRevenueByMonth(),
-    orderRepo.getOrdersByDay(14),
-    orderRepo.getOrdersByCategory(),
+    getOrderStats(),
+    getProducts({ take: 10 }),
+    getInventoryStats(),
+    countUsers(),
+    getOrders({ take: 6 }),
+    getRevenueByMonth(),
+    getOrdersByDay(14),
+    getOrdersByCategory(),
   ])
 
   const serializedOrders = recentOrders.map((o) => ({

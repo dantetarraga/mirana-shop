@@ -1,10 +1,10 @@
-import { toProductCards } from '@/features/products/services/product.mapper'
-import { productRepo } from '@/features/products/services/product.service'
+import { toProductCards } from '@/features/products/lib/product-card'
+import { getNewProducts } from '@/features/products/queries/product.queries'
 import { ProductCard } from '@/features/products/components/ProductCard'
 
 // Server Component — no necesita "use client"
 export async function NewArrivals() {
-  const products = await productRepo.findNew(6)
+  const products = await getNewProducts(6)
   const items = toProductCards(products)
 
   if (items.length === 0) return null

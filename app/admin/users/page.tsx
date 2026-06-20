@@ -1,7 +1,6 @@
-import { userRepo, type UserSegment, type UserRow } from "@/features/users/services/user.service";
+import { countUsers, getUsers } from "@/features/users/queries/user.queries";
+import type { UserSegment } from "@/features/users/types";
 import { UsersClient } from "@/features/users/components/UsersClient";
-
-export type { UserRow };
 
 const VALID_SEGMENTS = new Set<UserSegment>(["todos", "vip", "activo", "nuevo"]);
 
@@ -22,8 +21,8 @@ export default async function UsersPage({ searchParams }: PageProps) {
   const skip = (page - 1) * PER_PAGE;
 
   const [users, total] = await Promise.all([
-    userRepo.findMany({ search: q, segment, take: PER_PAGE, skip }),
-    userRepo.count({ search: q, segment }),
+    getUsers({ search: q, segment, take: PER_PAGE, skip }),
+    countUsers({ search: q, segment }),
   ]);
 
   return (

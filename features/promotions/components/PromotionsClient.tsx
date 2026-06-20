@@ -7,7 +7,7 @@ import {
 } from '@/features/promotions/actions/promotion.actions'
 import { PromotionCard } from '@/features/promotions/components/PromotionCard'
 import { PromotionFormDrawer } from '@/features/promotions/components/PromotionFormDrawer'
-import type { PromotionRow } from '@/features/promotions/services/promotion.service'
+import type { PromotionRow } from '@/features/promotions/types'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'

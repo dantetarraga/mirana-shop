@@ -1,4 +1,4 @@
-import { productRepo } from '@/features/products/services/product.service'
+import { getProducts } from '@/features/products/queries/product.queries'
 import { Button } from '@/shared/components/ui/Button'
 
 const STRIPE_MAP: Record<string, string> = {
@@ -9,7 +9,7 @@ const STRIPE_MAP: Record<string, string> = {
 }
 
 export async function PreorderSection() {
-  const preorders = await productRepo.findMany({
+  const preorders = await getProducts({
     status: 'PREORDER',
     take: 6,
   })

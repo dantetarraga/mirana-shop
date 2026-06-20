@@ -1,4 +1,5 @@
 import { PrismaPg } from '@prisma/adapter-pg'
+import bcrypt from 'bcryptjs'
 import 'dotenv/config'
 import {
   InventoryMovementType,
@@ -77,15 +78,24 @@ const IMGS = {
 async function main() {
   console.log('Seeding database...')
 
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? 'Admin123456*'
+  const adminPasswordHash = await bcrypt.hash(adminPassword, 12)
+
   // ── Admin user ─────────────────────────────────────────────────────────────
   const admin = await prisma.user.upsert({
     where: { email: 'admin@mirana.com' },
-    update: {},
+    update: {
+      name: 'Admin Mirana',
+      role: 'ADMIN',
+      emailVerified: new Date(),
+      passwordHash: adminPasswordHash,
+    },
     create: {
       email: 'admin@mirana.com',
       name: 'Admin Mirana',
       role: 'ADMIN',
       emailVerified: new Date(),
+      passwordHash: adminPasswordHash,
     },
   })
 
@@ -117,6 +127,7 @@ async function main() {
   })
 
   console.log(`Users: ${admin.email}, ${customer.email}`)
+  console.log(`Admin credentials: ${admin.email} / ${adminPassword}`)
 
   // ── Categories ─────────────────────────────────────────────────────────────
   const catFiguras = await prisma.category.upsert({

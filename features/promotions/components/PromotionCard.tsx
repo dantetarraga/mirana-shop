@@ -1,4 +1,4 @@
-import type { PromotionRow } from '@/features/promotions/services/promotion.service'
+import type { PromotionRow } from '@/features/promotions/types'
 import { StatusBadge } from '@/features/orders/components/StatusBadge'
 import { Button } from '@/shared/components/ui/Button'
 import { formatCurrency, formatDate } from '@/shared/lib/utils'

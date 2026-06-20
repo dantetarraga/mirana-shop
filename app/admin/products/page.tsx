@@ -2,7 +2,7 @@ import { ProductsClient } from '@/features/products/components/ProductsClient'
 import { getBrands } from '@/features/brands/queries/brand.queries'
 import { getCategories } from '@/features/categories/queries/category.queries'
 import { getCollections } from '@/features/collections/queries/collection.queries'
-import { productRepo } from '@/features/products/services/product.service'
+import { countProducts, getProducts } from '@/features/products/queries/product.queries'
 
 const PER_PAGE = 30
 
@@ -26,7 +26,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
   const collectionSlugs = collection ? collection.split(',').filter(Boolean) : []
 
   const [products, categories, brands, collections, total] = await Promise.all([
-    productRepo.findMany({
+    getProducts({
       search: q,
       categorySlug: categorySlugs.length > 0 ? categorySlugs : undefined,
       brandSlug: brandSlugs.length > 0 ? brandSlugs : undefined,
@@ -38,7 +38,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
     getCategories(),
     getBrands(),
     getCollections({ perPage: 200 }),
-    productRepo.count({
+    countProducts({
       search: q,
       categorySlug: categorySlugs.length > 0 ? categorySlugs : undefined,
       brandSlug: brandSlugs.length > 0 ? brandSlugs : undefined,

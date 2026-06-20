@@ -1,8 +1,9 @@
 'use server'
 
 import type { PaymentMethod } from '@/generated/prisma/client'
-import { orderRepo } from '@/features/orders/services/order.service'
 import { checkoutSchema } from '@/features/checkout/schemas/checkout.schema'
+import { reserveStockForOrder } from '@/features/inventory/lib/stock'
+import { db } from '@/shared/lib/db'
 import { revalidatePath } from 'next/cache'
 
 // ---------------------------------------------------------------------------
@@ -50,21 +51,63 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   const d = parsed.data
 
   try {
-    const order = await orderRepo.create({
-      guestEmail: d.email,
-      paymentMethod: d.paymentMethod as PaymentMethod,
-      items: input.items,
-      subtotal: input.subtotal,
-      shippingCost: input.shippingCost,
-      total: input.total,
-      shipping: {
-        fullName: d.fullName,
-        phone: d.phone,
-        address: d.address,
-        district: d.district,
-        city: d.city,
-        reference: d.reference || undefined,
-      },
+    const order = await db.$transaction(async (tx) => {
+      const year = new Date().getFullYear()
+      const count = await tx.order.count()
+      const code = `MIR-${year}-${String(count + 1).padStart(4, '0')}`
+
+      const created = await tx.order.create({
+        data: {
+          code,
+          guestEmail: d.email,
+          paymentMethod: d.paymentMethod as PaymentMethod,
+          status: 'AWAITING_PROOF',
+          paymentStatus: 'UNPAID',
+          subtotal: input.subtotal,
+          shippingCost: input.shippingCost,
+          total: input.total,
+          currency: 'PEN',
+          items: {
+            create: input.items.map((item) => ({
+              productId: item.productId,
+              productName: item.productName,
+              productSku: item.productSku,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+            })),
+          },
+          payment: {
+            create: {
+              method: d.paymentMethod as PaymentMethod,
+              status: 'UNPAID',
+              amount: input.total,
+              currency: 'PEN',
+            },
+          },
+          shipping: {
+            create: {
+              fullName: d.fullName,
+              phone: d.phone,
+              address: d.address,
+              district: d.district,
+              city: d.city,
+              reference: d.reference || undefined,
+            },
+          },
+        },
+        select: { id: true, code: true },
+      })
+
+      for (const item of input.items) {
+        await reserveStockForOrder(tx, {
+          productId: item.productId,
+          quantity: item.quantity,
+          orderId: created.id,
+          reason: `Reserva por pedido ${code}`,
+        })
+      }
+
+      return created
     })
 
     revalidatePath('/admin/orders')
