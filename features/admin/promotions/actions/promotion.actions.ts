@@ -3,9 +3,8 @@
 import type { PromotionType } from '@/generated/prisma/client'
 import { promotionRepo } from '@/modules/catalog/repositories/promotion.repo'
 import { promotionDbSchema } from '@/shared/lib/schemas'
+import type { ActionResult } from '@/shared/types/action-result.types'
 import { revalidatePath } from 'next/cache'
-
-type ActionResult<T = void> = { success: true; data: T } | { success: false; error: string }
 
 function invalidateCaches() {
   revalidatePath('/admin/promotions')
@@ -19,7 +18,7 @@ export async function savePromotion(
   const parsed = promotionDbSchema.safeParse(rawInput)
   if (!parsed.success) {
     const firstError = parsed.error.issues[0]?.message ?? 'Datos inválidos'
-    return { success: false, error: firstError }
+    return { success: false, error: firstError, code: 400 }
   }
 
   const d = parsed.data
@@ -47,7 +46,11 @@ export async function savePromotion(
       return { success: true, data: { id: created.id } }
     }
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Error al guardar' }
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Error al guardar',
+      code: 500,
+    }
   }
 }
 
@@ -57,7 +60,11 @@ export async function togglePromotion(id: string, active: boolean): Promise<Acti
     invalidateCaches()
     return { success: true, data: undefined }
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Error al cambiar estado' }
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Error al cambiar estado',
+      code: 500,
+    }
   }
 }
 
@@ -67,6 +74,10 @@ export async function deletePromotion(id: string): Promise<ActionResult> {
     invalidateCaches()
     return { success: true, data: undefined }
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Error al eliminar' }
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Error al eliminar',
+      code: 500,
+    }
   }
 }

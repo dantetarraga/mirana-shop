@@ -2,15 +2,14 @@
 
 import { inventoryRepo, OptimisticLockError } from '@/modules/inventory/repositories/inventory.repo'
 import { adjustStockSchema } from '@/shared/lib/schemas'
+import type { ActionResult } from '@/shared/types/action-result.types'
 import { revalidatePath } from 'next/cache'
-
-type ActionResult<T = void> = { success: true; data: T } | { success: false; error: string }
 
 export async function adjustStock(rawInput: unknown): Promise<ActionResult<{ newStock: number }>> {
   const parsed = adjustStockSchema.safeParse(rawInput)
   if (!parsed.success) {
     const firstError = parsed.error.issues[0]?.message ?? 'Datos inválidos'
-    return { success: false, error: firstError }
+    return { success: false, error: firstError, code: 400 }
   }
 
   const { productId, newStock, reason } = parsed.data
@@ -41,6 +40,7 @@ export async function adjustStock(rawInput: unknown): Promise<ActionResult<{ new
           return {
             success: false,
             error: 'El inventario fue modificado concurrentemente. Intenta de nuevo.',
+            code: 409,
           }
         }
         await new Promise((r) => setTimeout(r, 50 * attempts))
@@ -48,9 +48,9 @@ export async function adjustStock(rawInput: unknown): Promise<ActionResult<{ new
       }
 
       const message = err instanceof Error ? err.message : 'Error al ajustar stock'
-      return { success: false, error: message }
+      return { success: false, error: message, code: 500 }
     }
   }
 
-  return { success: false, error: 'No se pudo completar el ajuste de inventario' }
+  return { success: false, error: 'No se pudo completar el ajuste de inventario', code: 500 }
 }

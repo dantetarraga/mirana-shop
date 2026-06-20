@@ -8,10 +8,9 @@ import { EntityProductsDrawer } from '@/shared/components/admin/EntityProductsDr
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
-import { useCrudState, useServerAction } from '@/shared/hooks/admin'
+import { useEntityCrud } from '@/shared/hooks/admin'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
-import { useState } from 'react'
 
 interface CategoriesTableClientProps {
   categories: CategoryRow[]
@@ -24,19 +23,7 @@ export function CategoriesTableClient({
   total,
   allCategories,
 }: CategoriesTableClientProps) {
-  const crud = useCrudState<CategoryRow>()
-  const { isPending, run } = useServerAction()
-  const [pendingDelete, setPendingDelete] = useState<CategoryRow | null>(null)
-
-  const handleDelete = () => {
-    if (!pendingDelete) return
-    const category = pendingDelete
-    setPendingDelete(null)
-    run(() => deleteCategory(category.id), {
-      successMsg: `"${category.name}" eliminada`,
-      refresh: true,
-    })
-  }
+  const crud = useEntityCrud<CategoryRow>(deleteCategory, (c) => `"${c.name}" eliminada`)
 
   const nameById = Object.fromEntries(categories.map((c) => [c.id, c.name]))
 
@@ -104,10 +91,10 @@ export function CategoriesTableClient({
             variant="icon"
             size="sm"
             destructive
-            disabled={isPending}
+            disabled={crud.isPending}
             onClick={(e) => {
               e.stopPropagation()
-              setPendingDelete(c)
+              crud.openDelete(c)
             }}
             title="Eliminar"
           >
@@ -143,12 +130,12 @@ export function CategoriesTableClient({
       )}
 
       <ConfirmModal
-        open={!!pendingDelete}
-        onClose={() => setPendingDelete(null)}
-        onConfirm={handleDelete}
+        open={!!crud.pendingDelete}
+        onClose={crud.closeDelete}
+        onConfirm={crud.handleDelete}
         title="¿Eliminar categoría?"
-        description={`"${pendingDelete?.name}" se eliminará permanentemente.`}
-        isPending={isPending}
+        description={`"${crud.pendingDelete?.name}" se eliminará permanentemente.`}
+        isPending={crud.isPending}
       />
 
       {crud.drawerOpen && (

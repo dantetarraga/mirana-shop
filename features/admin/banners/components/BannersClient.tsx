@@ -1,13 +1,17 @@
 'use client'
 
-import { deleteBanner, saveBanner, toggleBanner } from '@/features/admin/banners/actions/banner.actions'
+import {
+  deleteBanner,
+  saveBanner,
+  toggleBanner,
+} from '@/features/admin/banners/actions/banner.actions'
 import { BannerCard } from '@/features/admin/banners/components/BannerCard'
 import { BannerFormDrawer } from '@/features/admin/banners/components/BannerFormDrawer'
 import type { BannerRow } from '@/modules/catalog/repositories/banner.repo'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
-import { useCrudState, useServerAction } from '@/shared/hooks/admin'
+import { useEntityCrud } from '@/shared/hooks/admin'
 import { bannerDbSchema } from '@/shared/lib/schemas'
 import { Plus } from 'lucide-react'
 import { z } from 'zod'
@@ -26,13 +30,12 @@ interface BannersClientProps {
 }
 
 export function BannersClient({ banners }: BannersClientProps) {
-  const crud = useCrudState<BannerRow>()
-  const { isPending, run } = useServerAction()
+  const crud = useEntityCrud<BannerRow>(deleteBanner, (b) => `"${b.title}" eliminado`)
 
   const editingBanner = crud.editing
 
   const onSubmit = (data: BannerFormValues) => {
-    run(() => saveBanner(editingBanner?.id ?? null, data), {
+    crud.run(() => saveBanner(editingBanner?.id ?? null, data), {
       successMsg: crud.isNew ? 'Banner creado' : 'Banner actualizado',
       onSuccess: () => crud.closeDrawer(),
       refresh: true,
@@ -40,18 +43,8 @@ export function BannersClient({ banners }: BannersClientProps) {
   }
 
   const handleToggle = (b: BannerRow) => {
-    run(() => toggleBanner(b.id, b.active), {
+    crud.run(() => toggleBanner(b.id, b.active), {
       successMsg: b.active ? `"${b.title}" pausado` : `"${b.title}" activado`,
-      refresh: true,
-    })
-  }
-
-  const handleDelete = () => {
-    if (!crud.pendingDelete) return
-    const b = crud.pendingDelete
-    crud.closeDelete()
-    run(() => deleteBanner(b.id), {
-      successMsg: `"${b.title}" eliminado`,
       refresh: true,
     })
   }
@@ -79,7 +72,7 @@ export function BannersClient({ banners }: BannersClientProps) {
             onEdit={() => crud.openEdit(banner)}
             onToggle={() => handleToggle(banner)}
             onDelete={() => crud.openDelete(banner)}
-            isPending={isPending}
+            isPending={crud.isPending}
           />
         ))}
       </div>
@@ -87,10 +80,10 @@ export function BannersClient({ banners }: BannersClientProps) {
       <ConfirmModal
         open={!!crud.pendingDelete}
         onClose={crud.closeDelete}
-        onConfirm={handleDelete}
+        onConfirm={crud.handleDelete}
         title="¿Eliminar banner?"
         description={`"${crud.pendingDelete?.title}" se eliminará permanentemente.`}
-        isPending={isPending}
+        isPending={crud.isPending}
       />
 
       {crud.drawerOpen && (
@@ -99,7 +92,7 @@ export function BannersClient({ banners }: BannersClientProps) {
           isNew={crud.isNew}
           onClose={crud.closeDrawer}
           onSubmit={onSubmit}
-          isPending={isPending}
+          isPending={crud.isPending}
         />
       )}
     </div>

@@ -13,7 +13,6 @@ import {
 } from '@/shared/lib/schemas'
 import { useStore } from '@/shared/stores/store'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { X } from 'lucide-react'
 import { signIn } from 'next-auth/react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -81,18 +80,7 @@ export function AuthModal() {
 
   return (
     <Modal open={authOpen} onClose={closeAuth} size="md" hideClose={true}>
-      {/* Fila 1: botón cerrar (cuadrado con borde propio, alineado a la derecha) */}
-      <div className="flex justify-end -mx-8 -mt-6 px-4 pt-3 pb-2">
-        <button
-          onClick={closeAuth}
-          className="border border-(--bd) px-3.5 py-2.5 text-muted hover:text-white transition-colors"
-          aria-label="Cerrar"
-        >
-          <X size={14} />
-        </button>
-      </div>
-
-      {/* Fila 2: tabs */}
+      {/* Tabs */}
       <div className="flex border border-(--bd) mb-6 -mx-8">
         {(['login', 'register'] as const).map((m) => (
           <Button
@@ -209,6 +197,10 @@ export function AuthModal() {
 
         <Button type="submit" variant="accent" size="lg" full disabled={isSubmitting}>
           {mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
+        </Button>
+
+        <Button type="button" variant="ghost" size="md" full onClick={closeAuth}>
+          Cancelar
         </Button>
       </form>
 

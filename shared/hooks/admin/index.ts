@@ -1,4 +1,5 @@
 export { toSlug, useAutoSlug } from './useAutoSlug'
 export { useCrudState } from './useCrudState'
+export { useEntityCrud } from './useEntityCrud'
 export { useFormEntity } from './useFormEntity'
 export { useServerAction } from './useServerAction'

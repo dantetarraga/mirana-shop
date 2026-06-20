@@ -9,10 +9,9 @@ import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { StatusBadge } from '@/shared/components/admin/StatusBadge'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
-import { useCrudState, useServerAction } from '@/shared/hooks/admin'
+import { useEntityCrud } from '@/shared/hooks/admin'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
-import { useState } from 'react'
 
 interface CollectionsTableClientProps {
   collections: CollectionRow[]
@@ -20,19 +19,7 @@ interface CollectionsTableClientProps {
 }
 
 export function CollectionsTableClient({ collections, total }: CollectionsTableClientProps) {
-  const crud = useCrudState<CollectionRow>()
-  const { isPending, run } = useServerAction()
-  const [pendingDelete, setPendingDelete] = useState<CollectionRow | null>(null)
-
-  const handleDelete = () => {
-    if (!pendingDelete) return
-    const collection = pendingDelete
-    setPendingDelete(null)
-    run(() => deleteCollection(collection.id), {
-      successMsg: `"${collection.name}" eliminada`,
-      refresh: true,
-    })
-  }
+  const crud = useEntityCrud<CollectionRow>(deleteCollection, (c) => `"${c.name}" eliminada`)
 
   const columns: Column<CollectionRow>[] = [
     {
@@ -102,10 +89,10 @@ export function CollectionsTableClient({ collections, total }: CollectionsTableC
             variant="icon"
             size="sm"
             destructive
-            disabled={isPending}
+            disabled={crud.isPending}
             onClick={(e) => {
               e.stopPropagation()
-              setPendingDelete(c)
+              crud.openDelete(c)
             }}
             title="Eliminar"
           >
@@ -141,12 +128,12 @@ export function CollectionsTableClient({ collections, total }: CollectionsTableC
       )}
 
       <ConfirmModal
-        open={!!pendingDelete}
-        onClose={() => setPendingDelete(null)}
-        onConfirm={handleDelete}
+        open={!!crud.pendingDelete}
+        onClose={crud.closeDelete}
+        onConfirm={crud.handleDelete}
         title="¿Eliminar colección?"
-        description={`"${pendingDelete?.name}" se eliminará permanentemente.`}
-        isPending={isPending}
+        description={`"${crud.pendingDelete?.name}" se eliminará permanentemente.`}
+        isPending={crud.isPending}
       />
 
       {crud.drawerOpen && (

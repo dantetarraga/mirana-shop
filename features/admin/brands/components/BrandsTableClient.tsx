@@ -8,10 +8,9 @@ import { EntityProductsDrawer } from '@/shared/components/admin/EntityProductsDr
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
-import { useCrudState, useServerAction } from '@/shared/hooks/admin'
+import { useEntityCrud } from '@/shared/hooks/admin'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
-import { useState } from 'react'
 
 interface BrandsTableClientProps {
   brands: BrandRow[]
@@ -20,19 +19,7 @@ interface BrandsTableClientProps {
 }
 
 export function BrandsTableClient({ brands, total, allBrands }: BrandsTableClientProps) {
-  const crud = useCrudState<BrandRow>()
-  const { isPending, run } = useServerAction()
-  const [pendingDelete, setPendingDelete] = useState<BrandRow | null>(null)
-
-  const handleDelete = () => {
-    if (!pendingDelete) return
-    const brand = pendingDelete
-    setPendingDelete(null)
-    run(() => deleteBrand(brand.id), {
-      successMsg: `"${brand.name}" eliminada`,
-      refresh: true,
-    })
-  }
+  const crud = useEntityCrud<BrandRow>(deleteBrand, (b) => `"${b.name}" eliminada`)
 
   const columns: Column<BrandRow>[] = [
     {
@@ -90,10 +77,10 @@ export function BrandsTableClient({ brands, total, allBrands }: BrandsTableClien
             variant="icon"
             size="sm"
             destructive
-            disabled={isPending}
+            disabled={crud.isPending}
             onClick={(e) => {
               e.stopPropagation()
-              setPendingDelete(b)
+              crud.openDelete(b)
             }}
             title="Eliminar"
           >
@@ -129,12 +116,12 @@ export function BrandsTableClient({ brands, total, allBrands }: BrandsTableClien
       )}
 
       <ConfirmModal
-        open={!!pendingDelete}
-        onClose={() => setPendingDelete(null)}
-        onConfirm={handleDelete}
+        open={!!crud.pendingDelete}
+        onClose={crud.closeDelete}
+        onConfirm={crud.handleDelete}
         title="¿Eliminar marca?"
-        description={`"${pendingDelete?.name}" se eliminará permanentemente.`}
-        isPending={isPending}
+        description={`"${crud.pendingDelete?.name}" se eliminará permanentemente.`}
+        isPending={crud.isPending}
       />
 
       {crud.drawerOpen && (

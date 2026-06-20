@@ -1,10 +1,9 @@
 'use client'
 
+import type { ActionResult } from '@/shared/types/action-result.types'
 import { useRouter } from 'next/navigation'
 import { useTransition } from 'react'
 import { toast } from 'sonner'
-
-type ActionResult<T> = { success: true; data: T } | { success: false; error: string }
 
 export function useServerAction() {
   const [isPending, startTransition] = useTransition()
@@ -14,7 +13,6 @@ export function useServerAction() {
     action: () => Promise<ActionResult<T>>,
     options?: {
       successMsg?: string
-      /** Puede ser async — se awaita antes del refresh */
       onSuccess?: (data: T) => void | Promise<void>
       refresh?: boolean
     },
@@ -25,9 +23,10 @@ export function useServerAction() {
         if (options?.successMsg) toast.success(options.successMsg)
         await options?.onSuccess?.(result.data)
         if (options?.refresh) router.refresh()
-      } else {
-        toast.error(result.error)
+        return
       }
+
+      toast.error(result.error)
     })
   }
 

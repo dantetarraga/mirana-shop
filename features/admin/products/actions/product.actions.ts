@@ -5,15 +5,10 @@ import { categoryRepo } from '@/modules/catalog/repositories/category.repo'
 import { productRepo } from '@/modules/catalog/repositories/product.repo'
 import { db } from '@/shared/lib/db'
 import { importProductRowSchema, productDbBaseSchema, productDbSchema } from '@/shared/lib/schemas'
+import type { ActionResult } from '@/shared/types/action-result.types'
 import type { DrawerProduct } from '@/shared/types/entity-products.types'
 import { revalidatePath, revalidateTag } from 'next/cache'
 import { z } from 'zod'
-
-// ---------------------------------------------------------------------------
-// Tipos de resultado
-// ---------------------------------------------------------------------------
-
-type ActionResult<T = void> = { success: true; data: T } | { success: false; error: string }
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -35,8 +30,8 @@ function invalidateProductCaches() {
   revalidatePath('/admin/dashboard')
   revalidatePath('/catalogo')
   revalidatePath('/')
-  revalidateTag('products')
-  revalidateTag('catalog')
+  revalidateTag('products', 'max')
+  revalidateTag('catalog', 'max')
 }
 
 // ---------------------------------------------------------------------------
@@ -49,7 +44,7 @@ export async function createProduct(
   const parsed = productDbSchema.safeParse(rawInput)
   if (!parsed.success) {
     const firstError = parsed.error.issues[0]?.message ?? 'Datos inválidos'
-    return { success: false, error: firstError }
+    return { success: false, error: firstError, code: 400 }
   }
 
   const input = parsed.data
@@ -77,9 +72,9 @@ export async function createProduct(
     const message = err instanceof Error ? err.message : 'Error al crear producto'
     // SKU duplicado es el caso más común
     if (message.includes('Unique constraint') || message.includes('unique')) {
-      return { success: false, error: 'El SKU o slug ya existe' }
+      return { success: false, error: 'El SKU o slug ya existe', code: 409 }
     }
-    return { success: false, error: message }
+    return { success: false, error: message, code: 500 }
   }
 }
 
@@ -92,12 +87,12 @@ export async function updateProduct(
   rawInput: unknown,
   images?: { url: string; alt?: string }[],
 ): Promise<ActionResult<{ id: string }>> {
-  if (!id) return { success: false, error: 'ID de producto requerido' }
+  if (!id) return { success: false, error: 'ID de producto requerido', code: 400 }
 
   const parsed = productDbBaseSchema.partial().safeParse(rawInput)
   if (!parsed.success) {
     const firstError = parsed.error.issues[0]?.message ?? 'Datos inválidos'
-    return { success: false, error: firstError }
+    return { success: false, error: firstError, code: 400 }
   }
 
   const input = parsed.data
@@ -125,7 +120,7 @@ export async function updateProduct(
     return { success: true, data: { id: updated.id } }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Error al actualizar producto'
-    return { success: false, error: message }
+    return { success: false, error: message, code: 500 }
   }
 }
 
@@ -142,7 +137,7 @@ export async function deleteProduct(id: string): Promise<ActionResult> {
     return { success: true, data: undefined }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Error al eliminar producto'
-    return { success: false, error: message }
+    return { success: false, error: message, code: 500 }
   }
 }
 
@@ -161,7 +156,7 @@ export async function importProducts(
 ): Promise<ActionResult<{ created: number; updated: number; errors: string[] }>> {
   const parsed = importRowSchema.safeParse(rawRows)
   if (!parsed.success) {
-    return { success: false, error: 'Formato de importación inválido' }
+    return { success: false, error: 'Formato de importación inválido', code: 400 }
   }
 
   const rows = parsed.data
@@ -243,7 +238,7 @@ export async function importProducts(
 export async function searchAvailableProducts(
   query: string,
   excludeIds: string[] = [],
-): Promise<{ success: true; data: DrawerProduct[] } | { success: false; error: string }> {
+): Promise<ActionResult<DrawerProduct[]>> {
   if (!query || query.trim().length < 2) {
     return { success: true, data: [] }
   }
@@ -292,6 +287,6 @@ export async function searchAvailableProducts(
       })),
     }
   } catch {
-    return { success: false, error: 'Error al buscar productos' }
+    return { success: false, error: 'Error al buscar productos', code: 500 }
   }
 }

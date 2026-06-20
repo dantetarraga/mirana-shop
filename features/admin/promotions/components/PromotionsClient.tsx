@@ -11,7 +11,7 @@ import type { PromotionRow } from '@/modules/catalog/repositories/promotion.repo
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
-import { useCrudState, useServerAction } from '@/shared/hooks/admin'
+import { useEntityCrud } from '@/shared/hooks/admin'
 import { promotionDbSchema } from '@/shared/lib/schemas'
 import { Plus } from 'lucide-react'
 import type { z } from 'zod'
@@ -23,13 +23,12 @@ interface Props {
 }
 
 export function PromotionsClient({ promotions }: Props) {
-  const crud = useCrudState<PromotionRow>()
-  const { isPending, run } = useServerAction()
+  const crud = useEntityCrud<PromotionRow>(deletePromotion, (p) => `"${p.name}" eliminada`)
 
   const editing = crud.editing
 
   const onSubmit = (data: FormValues) => {
-    run(() => savePromotion(editing?.id ?? null, data), {
+    crud.run(() => savePromotion(editing?.id ?? null, data), {
       successMsg: crud.isNew ? 'Promoción creada' : 'Promoción actualizada',
       onSuccess: () => crud.closeDrawer(),
       refresh: true,
@@ -37,18 +36,8 @@ export function PromotionsClient({ promotions }: Props) {
   }
 
   const handleToggle = (p: PromotionRow) => {
-    run(() => togglePromotion(p.id, p.active), {
+    crud.run(() => togglePromotion(p.id, p.active), {
       successMsg: p.active ? `"${p.name}" pausada` : `"${p.name}" activada`,
-      refresh: true,
-    })
-  }
-
-  const handleDelete = () => {
-    if (!crud.pendingDelete) return
-    const p = crud.pendingDelete
-    crud.closeDelete()
-    run(() => deletePromotion(p.id), {
-      successMsg: `"${p.name}" eliminada`,
       refresh: true,
     })
   }
@@ -85,7 +74,7 @@ export function PromotionsClient({ promotions }: Props) {
               onEdit={() => crud.openEdit(promo)}
               onToggle={() => handleToggle(promo)}
               onDelete={() => crud.openDelete(promo)}
-              isPending={isPending}
+              isPending={crud.isPending}
             />
           ))}
         </div>
@@ -98,7 +87,7 @@ export function PromotionsClient({ promotions }: Props) {
           isNew={crud.isNew}
           onClose={crud.closeDrawer}
           onSubmit={onSubmit}
-          isPending={isPending}
+          isPending={crud.isPending}
         />
       )}
 
@@ -106,7 +95,7 @@ export function PromotionsClient({ promotions }: Props) {
       <ConfirmModal
         open={!!crud.pendingDelete}
         onClose={crud.closeDelete}
-        onConfirm={handleDelete}
+        onConfirm={crud.handleDelete}
         title="¿Eliminar promoción?"
         description={`Esta acción eliminará "${crud.pendingDelete?.name ?? ''}" permanentemente.`}
         isPending={isPending}

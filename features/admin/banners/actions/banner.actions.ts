@@ -1,43 +1,31 @@
-"use server";
+'use server'
 
-import { revalidatePath, revalidateTag } from "next/cache";
-import { bannerRepo } from "@/modules/catalog/repositories/banner.repo";
-import { bannerDbSchema } from "@/shared/lib/schemas";
-
-// ---------------------------------------------------------------------------
-// Tipos
-// ---------------------------------------------------------------------------
-
-type ActionResult<T = void> =
-  | { success: true; data: T }
-  | { success: false; error: string };
+import { bannerRepo } from '@/modules/catalog/repositories/banner.repo'
+import { bannerDbSchema } from '@/shared/lib/schemas'
+import type { ActionResult } from '@/shared/types/action-result.types'
+import { revalidatePath, revalidateTag } from 'next/cache'
 
 function invalidateBannerCaches() {
-  revalidatePath("/admin/banners");
-  revalidatePath("/admin/dashboard");
-  revalidatePath("/");
-  revalidateTag("banners");
+  revalidatePath('/admin/banners')
+  revalidatePath('/admin/dashboard')
+  revalidatePath('/')
+  revalidateTag('banners', 'max')
 }
-
-// ---------------------------------------------------------------------------
-// saveBanner — crea o actualiza según si id está presente
-// ---------------------------------------------------------------------------
 
 export async function saveBanner(
   id: string | null,
-  rawInput: unknown
+  rawInput: unknown,
 ): Promise<ActionResult<{ id: string }>> {
-  const parsed = bannerDbSchema.safeParse(rawInput);
+  const parsed = bannerDbSchema.safeParse(rawInput)
   if (!parsed.success) {
-    const firstError = parsed.error.issues[0]?.message ?? "Datos inválidos";
-    return { success: false, error: firstError };
+    const firstError = parsed.error.issues[0]?.message ?? 'Datos inválidos'
+    return { success: false, error: firstError, code: 400 }
   }
 
-  const input = parsed.data;
+  const input = parsed.data
 
   try {
     if (id) {
-      // Actualizar banner existente
       const updated = await bannerRepo.update({
         id,
         title: input.title,
@@ -47,11 +35,10 @@ export async function saveBanner(
         imageUrl: input.imageUrl,
         position: input.position,
         active: input.active,
-      });
-      invalidateBannerCaches();
-      return { success: true, data: { id: updated.id } };
+      })
+      invalidateBannerCaches()
+      return { success: true, data: { id: updated.id } }
     } else {
-      // Crear nuevo banner
       const created = await bannerRepo.create({
         title: input.title,
         subtitle: input.subtitle || undefined,
@@ -60,49 +47,38 @@ export async function saveBanner(
         imageUrl: input.imageUrl,
         position: input.position,
         active: input.active,
-      });
-      invalidateBannerCaches();
-      return { success: true, data: { id: created.id } };
+      })
+      invalidateBannerCaches()
+      return { success: true, data: { id: created.id } }
     }
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Error al guardar banner";
-    return { success: false, error: message };
+    const message = err instanceof Error ? err.message : 'Error al guardar banner'
+    return { success: false, error: message, code: 500 }
   }
 }
 
-// ---------------------------------------------------------------------------
-// toggleBanner — activa/desactiva un banner
-// ---------------------------------------------------------------------------
-
-export async function toggleBanner(
-  id: string,
-  currentActive: boolean
-): Promise<ActionResult> {
-  if (!id) return { success: false, error: "ID de banner requerido" };
+export async function toggleBanner(id: string, currentActive: boolean): Promise<ActionResult> {
+  if (!id) return { success: false, error: 'ID de banner requerido', code: 400 }
 
   try {
-    await bannerRepo.toggle(id, !currentActive);
-    invalidateBannerCaches();
-    return { success: true, data: undefined };
+    await bannerRepo.toggle(id, !currentActive)
+    invalidateBannerCaches()
+    return { success: true, data: undefined }
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Error al cambiar estado del banner";
-    return { success: false, error: message };
+    const message = err instanceof Error ? err.message : 'Error al cambiar estado del banner'
+    return { success: false, error: message, code: 500 }
   }
 }
-
-// ---------------------------------------------------------------------------
-// deleteBanner
-// ---------------------------------------------------------------------------
 
 export async function deleteBanner(id: string): Promise<ActionResult> {
-  if (!id) return { success: false, error: "ID de banner requerido" };
+  if (!id) return { success: false, error: 'ID de banner requerido', code: 400 }
 
   try {
-    await bannerRepo.delete(id);
-    invalidateBannerCaches();
-    return { success: true, data: undefined };
+    await bannerRepo.delete(id)
+    invalidateBannerCaches()
+    return { success: true, data: undefined }
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Error al eliminar banner";
-    return { success: false, error: message };
+    const message = err instanceof Error ? err.message : 'Error al eliminar banner'
+    return { success: false, error: message, code: 500 }
   }
 }
