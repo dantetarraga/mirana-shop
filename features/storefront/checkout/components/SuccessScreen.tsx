@@ -2,15 +2,14 @@
 
 import { Button } from '@/shared/components/ui/Button'
 import { formatCurrency } from '@/shared/lib/utils'
-import { BadgeCheck, Home, ShoppingCart } from 'lucide-react'
+import { BadgeCheck, Home, MessageCircle, ShoppingCart } from 'lucide-react'
 import Link from 'next/link'
+import { buildWhatsappOrderUrl, WHATSAPP_PHONE_DISPLAY } from '../lib/whatsapp'
 import type { SuccessData } from '../types'
 import { Step } from './ui'
 
 export function SuccessScreen({ data }: { data: SuccessData }) {
-  const isTransfer = data.paymentMethod === 'WHATSAPP_TRANSFER'
-  const isYape = data.paymentMethod === 'CULQI_YAPE'
-  const isCard = data.paymentMethod === 'CULQI_CARD'
+  const whatsappUrl = buildWhatsappOrderUrl(data)
 
   return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center px-4 py-16">
@@ -83,94 +82,32 @@ export function SuccessScreen({ data }: { data: SuccessData }) {
           </div>
         </div>
 
-        {/* Pago con tarjeta confirmado */}
-        {isCard && (
-          <div className="bg-surf border border-(--bd) w-full px-6 py-5 flex flex-col gap-3">
-            <p className="text-[10px] tracking-[3px] uppercase text-(--gold)">Pago confirmado</p>
-            <p className="text-[13px] text-muted leading-snug">
-              Tu pago fue procesado exitosamente con tarjeta de crédito/débito.
-            </p>
-            {data.cardNumber && (
-              <p className="text-[12px] text-muted">
-                Tarjeta terminada en{' '}
-                <span className="font-mono font-semibold text-white">
-                  {data.cardNumber.slice(-4)}
-                </span>
-              </p>
-            )}
-            <p className="text-[12px] text-muted mt-1">
-              Recibirás una confirmación al correo registrado y tu pedido será preparado a la
-              brevedad.
-            </p>
+        {/* Próximos pasos — pago manual por WhatsApp */}
+        <div className="bg-surf border border-(--bd) w-full px-6 py-5">
+          <p className="text-[10px] tracking-[3px] uppercase text-(--gold) mb-3">
+            Próximos pasos
+          </p>
+          <div className="flex flex-col gap-2.5 text-[13px] leading-snug mb-5">
+            <Step n={1}>Realiza tu transferencia o depósito al número de cuenta indicado.</Step>
+            <Step n={2}>
+              Envía tu comprobante de pago por WhatsApp
+              {WHATSAPP_PHONE_DISPLAY ? (
+                <>
+                  {' '}
+                  al <span className="font-semibold text-white">{WHATSAPP_PHONE_DISPLAY}</span>
+                </>
+              ) : null}{' '}
+              junto con tu código <span className="font-mono text-(--gold)">{data.code}</span>.
+            </Step>
+            <Step n={3}>Una vez confirmado el pago, prepararemos y enviaremos tu pedido.</Step>
           </div>
-        )}
-
-        {/* Yape QR */}
-        {isYape && data.culqi && (
-          <div className="bg-surf border border-(--bd) w-full px-6 py-5 flex flex-col items-center gap-4">
-            <p className="text-[10px] tracking-[3px] uppercase text-(--gold)">Paga con Yape</p>
-
-            {data.culqi.qrUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={data.culqi.qrUrl}
-                alt="Código QR para pagar con Yape"
-                className="w-44 h-44 object-contain border border-(--bd) p-2"
-              />
-            ) : null}
-
-            {data.culqi.paymentCode && (
-              <div className="text-center">
-                <p className="text-[11px] text-muted mb-1">Código de pago</p>
-                <p className="font-mono font-bold text-[22px] tracking-widest text-white">
-                  {data.culqi.paymentCode}
-                </p>
-              </div>
-            )}
-
-            <p className="text-[12px] text-muted text-center">
-              Abre Yape, escanea el QR o ingresa el código de pago. El pedido se confirmará
-              automáticamente.
-            </p>
-
-            {data.culqi.peUrl && (
-              <a
-                href={data.culqi.peUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[12px] underline text-(--gold) hover:opacity-80"
-              >
-                También puedes pagar con PagoEfectivo
-              </a>
-            )}
-          </div>
-        )}
-
-        {/* Próximos pasos (transferencia u otros) */}
-        {!isYape && !isCard && (
-          <div className="bg-surf border border-(--bd) w-full px-6 py-5">
-            <p className="text-[10px] tracking-[3px] uppercase text-(--gold) mb-3">
-              Próximos pasos
-            </p>
-            {isTransfer ? (
-              <div className="flex flex-col gap-2.5 text-[13px] leading-snug">
-                <Step n={1}>Realiza tu transferencia o depósito al número de cuenta indicado.</Step>
-                <Step n={2}>
-                  Envía tu comprobante de pago por WhatsApp al{' '}
-                  <span className="font-semibold text-white">+51 987 654 321</span> junto con tu
-                  código <span className="font-mono text-(--gold)">{data.code}</span>.
-                </Step>
-                <Step n={3}>Una vez confirmado el pago, prepararemos y enviaremos tu pedido.</Step>
-              </div>
-            ) : (
-              <div className="text-[13px] leading-snug text-muted">
-                Te contactaremos al correo registrado con las instrucciones de pago.
-                <br />
-                Código de referencia: <span className="font-mono text-(--gold)">{data.code}</span>
-              </div>
-            )}
-          </div>
-        )}
+          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="block">
+            <Button variant="accent" size="md" full>
+              <MessageCircle size={15} className="mr-2" />
+              Enviar comprobante por WhatsApp
+            </Button>
+          </a>
+        </div>
 
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-3 w-full">

@@ -4,7 +4,7 @@
     'Figuras exclusivas de importación',
     'Preventas con adelanto del 50%',
     'Más de 500 productos',
-    'Pago seguro con Culqi',
+    'Coordina tu pago por WhatsApp',
     'Devoluciones en 30 días',
   ]
   const doubled = [...items, ...items]

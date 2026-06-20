@@ -101,10 +101,16 @@ async function main() {
       profile: {
         create: {
           phone: '999888777',
+        },
+      },
+      addresses: {
+        create: {
+          fullName: 'Carlos Mendoza',
+          phone: '999888777',
           address: 'Av. Larco 1234',
           district: 'Miraflores',
           city: 'Lima',
-          country: 'PE',
+          isDefault: true,
         },
       },
     },
@@ -648,7 +654,7 @@ async function main() {
       userId: customer.id,
       status: OrderStatus.PAID,
       paymentStatus: PaymentStatus.PAID,
-      paymentMethod: PaymentMethod.CULQI_CARD,
+      paymentMethod: PaymentMethod.WHATSAPP_TRANSFER,
       subtotal: 639.8,
       shippingCost: 15.0,
       total: 654.8,
@@ -674,12 +680,10 @@ async function main() {
       },
       payment: {
         create: {
-          method: PaymentMethod.CULQI_CARD,
+          method: PaymentMethod.WHATSAPP_TRANSFER,
           status: PaymentStatus.PAID,
           amount: 654.8,
           currency: 'PEN',
-          culqiChargeId: 'chr_test_seed_001',
-          culqiEventId: 'evt_test_seed_001',
         },
       },
       shipping: {
@@ -748,7 +752,7 @@ async function main() {
       userId: customer.id,
       status: OrderStatus.PENDING,
       paymentStatus: PaymentStatus.UNPAID,
-      paymentMethod: PaymentMethod.CULQI_CARD,
+      paymentMethod: PaymentMethod.WHATSAPP_TRANSFER,
       subtotal: 199.9,
       shippingCost: 15.0,
       total: 214.9,
@@ -766,7 +770,7 @@ async function main() {
       },
       payment: {
         create: {
-          method: PaymentMethod.CULQI_CARD,
+          method: PaymentMethod.WHATSAPP_TRANSFER,
           status: PaymentStatus.PROCESSING,
           amount: 214.9,
           currency: 'PEN',
@@ -844,7 +848,7 @@ async function main() {
       guestEmail: 'sofia@example.com',
       status: OrderStatus.SHIPPED,
       paymentStatus: PaymentStatus.PAID,
-      paymentMethod: PaymentMethod.CULQI_YAPE,
+      paymentMethod: PaymentMethod.WHATSAPP_TRANSFER,
       subtotal: 1549.7,
       shippingCost: 0,
       total: 1549.7,
@@ -877,7 +881,7 @@ async function main() {
       },
       payment: {
         create: {
-          method: PaymentMethod.CULQI_YAPE,
+          method: PaymentMethod.WHATSAPP_TRANSFER,
           status: PaymentStatus.PAID,
           amount: 1549.7,
           currency: 'PEN',

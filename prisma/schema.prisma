@@ -43,8 +43,6 @@ enum PaymentStatus {
 }
 
 enum PaymentMethod {
-  CULQI_CARD
-  CULQI_YAPE
   WHATSAPP_TRANSFER
 }
 
@@ -339,13 +337,8 @@ model Payment {
   amount   Decimal       @db.Decimal(10, 2)
   currency String        @default("PEN")
 
-  culqiOrderId  String? @unique
-  culqiChargeId String? @unique
-  culqiEventId  String? @unique
-  culqiQrUrl    String?
-  culqiPeUrl    String?
-  proofUrl      String?
-  rawResponse   Json?
+  /// URL del comprobante de pago enviado por el cliente (WhatsApp)
+  proofUrl String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -415,13 +408,11 @@ model Preorder {
   /// Si no paga el depósito en X días, la reserva expira
   expiresAt        DateTime?
 
-  /// Pago del depósito (puede ser transferencia o Culqi)
-  depositStatus        PaymentStatus  @default(UNPAID)
-  depositMethod        PaymentMethod?
-  depositPaidAt        DateTime?
-  depositProofUrl      String?
-  /// Idempotencia Culqi para el depósito
-  depositCulqiChargeId String?        @unique
+  /// Pago del depósito — transferencia/WhatsApp manual
+  depositStatus   PaymentStatus  @default(UNPAID)
+  depositMethod   PaymentMethod?
+  depositPaidAt   DateTime?
+  depositProofUrl String?
 
   /// Cuando la reserva se convierte en pedido final
   orderId String? @unique
@@ -439,40 +430,6 @@ model Preorder {
   @@index([productId])
   @@index([status])
   @@index([createdAt])
-}
-
-// ---------------------------------------------------------------------------
-// Payments — Idempotency
-// ---------------------------------------------------------------------------
-
-/// Garantiza que un pago no se procese dos veces aunque el cliente reintente.
-/// El frontend genera un UUID por intento de pago y lo envía como header X-Idempotency-Key.
-model IdempotencyKey {
-  id       String  @id @default(cuid())
-  /// UUID generado por el cliente — clave de deduplicación
-  key      String  @unique
-  userId   String?
-  /// Endpoint o acción que se está protegiendo, ej: "checkout", "preorder.deposit"
-  endpoint String
-
-  /// Hash del body de la request — detecta reutilización incorrecta de la misma key con distinto payload
-  requestHash String?
-
-  /// Resultado cacheado de la operación
-  statusCode Int?
-  response   Json?
-
-  /// lockedAt: procesando. resolvedAt: completado. Ambos null: nueva.
-  lockedAt   DateTime?
-  resolvedAt DateTime?
-
-  /// Después de esta fecha la key puede reutilizarse (recomendado: 24h)
-  expiresAt DateTime
-
-  createdAt DateTime @default(now())
-
-  @@index([userId])
-  @@index([expiresAt])
 }
 
 // ---------------------------------------------------------------------------

@@ -222,7 +222,7 @@ export const checkoutSchema = z.object({
   district: z.string().min(2, 'Distrito requerido'),
   city: z.string().min(2, 'Ciudad requerida'),
   reference: z.string().optional(),
-  paymentMethod: z.enum(['CULQI_CARD', 'CULQI_YAPE', 'WHATSAPP_TRANSFER'], {
+  paymentMethod: z.enum(['WHATSAPP_TRANSFER'], {
     error: 'Selecciona un método de pago',
   }),
 })

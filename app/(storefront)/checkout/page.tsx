@@ -23,32 +23,9 @@ import { useStore } from '@/shared/stores/store'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ShoppingBag, ShoppingCart } from 'lucide-react'
 import Link from 'next/link'
-import Script from 'next/script'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
-
-// ---------------------------------------------------------------------------
-// Culqi.js global types
-// ---------------------------------------------------------------------------
-
-declare global {
-  interface Window {
-    Culqi: {
-      publicKey: string
-      token: { id: string; [k: string]: unknown } | null
-      error: { user_message: string; [k: string]: unknown } | null
-      createToken: (data: {
-        card_number: string
-        cvv: string
-        expiration_month: string
-        expiration_year: string
-        email: string
-      }) => void
-    }
-    culqi: () => void
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -69,11 +46,6 @@ export default function CheckoutPage() {
   const [savedAddresses, setSavedAddresses] = useState<AddressData[]>([])
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
   const [showNewAddressForm, setShowNewAddressForm] = useState(false)
-  // Card form state
-  const [cardNumber, setCardNumber] = useState('')
-  const [cardExpiry, setCardExpiry] = useState('')
-  const [cardCvv, setCardCvv] = useState('')
-  const [cardError, setCardError] = useState<string | null>(null)
 
   // Cart calculations
   const subtotal = cart.reduce((s, i) => s + i.product.price * i.qty, 0)
@@ -85,7 +57,6 @@ export default function CheckoutPage() {
     register,
     handleSubmit,
     setValue,
-    watch,
     formState: { errors },
   } = useForm<CheckoutInput>({
     resolver: zodResolver(checkoutSchema),
@@ -100,8 +71,6 @@ export default function CheckoutPage() {
       paymentMethod: 'WHATSAPP_TRANSFER',
     },
   })
-
-  const selectedPayment = watch('paymentMethod')
 
   // Cargar direcciones guardadas si el usuario está logueado
   useEffect(() => {
@@ -188,7 +157,6 @@ export default function CheckoutPage() {
   const onSubmit = async (data: CheckoutInput) => {
     if (loading) return
     setLoading(true)
-    setCardError(null)
 
     const items = cart.map((i) => ({
       productId: i.product.id,
@@ -198,54 +166,12 @@ export default function CheckoutPage() {
       unitPrice: i.product.price,
     }))
 
-    // ---- Tokenización Culqi.js para tarjeta ----
-    let culqiTokenId: string | undefined
-    if (data.paymentMethod === 'CULQI_CARD') {
-      const rawNumber = cardNumber.replace(/\s/g, '')
-      const [expMonth, expYearShort] = cardExpiry.split('/')
-      const expYear = expYearShort ? `20${expYearShort.trim()}` : ''
-
-      if (rawNumber.length < 13 || !expMonth || !expYear || cardCvv.length < 3) {
-        setCardError('Completa los datos de tu tarjeta')
-        setLoading(false)
-        return
-      }
-
-      try {
-        culqiTokenId = await new Promise<string>((resolve, reject) => {
-          window.culqi = () => {
-            if (window.Culqi.error) {
-              reject(new Error(window.Culqi.error.user_message))
-            } else if (window.Culqi.token) {
-              resolve(window.Culqi.token.id as string)
-            } else {
-              reject(new Error('Error al procesar la tarjeta'))
-            }
-          }
-          window.Culqi.publicKey = process.env.NEXT_PUBLIC_CULQI_PUBLIC_KEY ?? ''
-          window.Culqi.createToken({
-            card_number: rawNumber,
-            cvv: cardCvv,
-            expiration_month: expMonth.trim().padStart(2, '0'),
-            expiration_year: expYear,
-            email: data.email,
-          })
-        })
-      } catch (tokenErr) {
-        const msg = tokenErr instanceof Error ? tokenErr.message : 'Error al tokenizar la tarjeta'
-        setCardError(msg)
-        setLoading(false)
-        return
-      }
-    }
-
     const result = await placeOrder({
       form: data,
       items,
       subtotal,
       shippingCost,
       total,
-      culqiTokenId,
     })
     setLoading(false)
 
@@ -270,8 +196,6 @@ export default function CheckoutPage() {
       subtotal,
       shippingCost,
       total,
-      culqi: result.data.culqi,
-      cardNumber: result.data.cardNumber,
     })
   }
 
@@ -310,21 +234,7 @@ export default function CheckoutPage() {
 
             <DeliveryForm register={register} errors={errors} />
 
-            <PaymentSection
-              register={register}
-              errors={errors}
-              selectedPayment={selectedPayment}
-              card={{
-                cardNumber,
-                cardExpiry,
-                cardCvv,
-                cardError,
-                setCardNumber,
-                setCardExpiry,
-                setCardCvv,
-                setCardError,
-              }}
-            />
+            <PaymentSection register={register} errors={errors} />
           </div>
 
           {/* ── Right column ───────────────────────────────── */}
@@ -339,9 +249,6 @@ export default function CheckoutPage() {
           />
         </div>
       </form>
-
-      {/* Culqi.js — carga lazy, solo cuando se necesita tokenizar */}
-      <Script src="https://checkout.culqi.com/js/v4" strategy="lazyOnload" />
     </div>
   )
 }
