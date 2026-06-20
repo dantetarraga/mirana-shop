@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { CategoriesTableClient } from '@/features/categories/components/CategoriesTableClient'
 import { countCategories, getCategories } from '@/features/categories/queries/category.queries'
 import { ServerSearchForm } from '@/shared/components/admin/ServerSearchForm'
@@ -26,12 +27,12 @@ export default async function CategoriesPage({ searchParams }: PageProps) {
       <div className="px-8 pt-6 flex items-center gap-3.5 mb-0">
         <ServerSearchForm placeholder="Buscar categorías..." defaultValue={q ?? ''} paramName="q" />
         {q && (
-          <a
+          <Link
             href="/admin/categories"
             className="text-[12px] text-muted hover:text-text transition-colors"
           >
             Limpiar
-          </a>
+          </Link>
         )}
       </div>
 
@@ -41,7 +42,7 @@ export default async function CategoriesPage({ searchParams }: PageProps) {
       {totalPages > 1 && (
         <div className="px-8 pb-8 flex items-center gap-2 justify-end">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <a
+            <Link
               key={p}
               href={`/admin/categories?${q ? `q=${encodeURIComponent(q)}&` : ''}page=${p}`}
               className={`px-3 py-1.5 text-[13px] border transition-colors ${
@@ -51,7 +52,7 @@ export default async function CategoriesPage({ searchParams }: PageProps) {
               }`}
             >
               {p}
-            </a>
+            </Link>
           ))}
         </div>
       )}

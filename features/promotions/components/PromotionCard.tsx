@@ -1,15 +1,11 @@
+import { PromotionCardActions } from '@/features/promotions/components/PromotionCardActions'
 import type { PromotionRow } from '@/features/promotions/types'
 import { StatusBadge } from '@/features/orders/components/StatusBadge'
-import { Button } from '@/shared/components/ui/Button'
 import { formatCurrency, formatDate } from '@/shared/lib/utils'
 import { BadgePercent, Package, Truck } from 'lucide-react'
 
 interface Props {
   promotion: PromotionRow
-  onEdit: () => void
-  onToggle: () => void
-  onDelete: () => void
-  isPending: boolean
 }
 
 const TYPE_META: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
@@ -35,7 +31,7 @@ const ACTIVE_STATUS = {
   inactivo: { label: 'Inactivo', cls: 'badge-red', outlineCls: 'badge-red-outline' },
 } as const
 
-export function PromotionCard({ promotion, onEdit, onToggle, onDelete, isPending }: Props) {
+export function PromotionCard({ promotion }: Props) {
   const meta = TYPE_META[promotion.type] ?? TYPE_META.FREE_SHIPPING
   const statusKey = promotion.active ? 'activo' : 'inactivo'
 
@@ -93,18 +89,7 @@ export function PromotionCard({ promotion, onEdit, onToggle, onDelete, isPending
         )}
       </div>
 
-      {/* Acciones */}
-      <div className="flex gap-2 px-5 pb-5">
-        <Button variant="outline" size="sm" full onClick={onEdit}>
-          Editar
-        </Button>
-        <Button variant="outline" size="sm" full onClick={onToggle} disabled={isPending}>
-          {promotion.active ? 'Pausar' : 'Activar'}
-        </Button>
-        <Button variant="icon" size="sm" destructive onClick={onDelete} disabled={isPending}>
-          ×
-        </Button>
-      </div>
+      <PromotionCardActions promotion={promotion} />
     </div>
   )
 }

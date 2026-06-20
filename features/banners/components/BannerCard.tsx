@@ -1,25 +1,15 @@
+import { BannerCardActions } from '@/features/banners/components/BannerCardActions'
+import { getBannerStatus } from '@/features/banners/lib/banner-status'
 import type { BannerRow } from '@/features/banners/types'
 import { StatusBadge } from '@/features/orders/components/StatusBadge'
-import { Button } from '@/shared/components/ui/Button'
 import { BANNER_STATUS } from '@/shared/lib/admin/admin-constants'
 import { ArrowRight } from 'lucide-react'
 
 interface BannerCardProps {
   banner: BannerRow
-  onEdit: () => void
-  onToggle: () => void
-  onDelete: () => void
-  isPending: boolean
 }
 
-function getBannerStatus(banner: BannerRow): 'activo' | 'programado' | 'inactivo' {
-  const now = new Date()
-  if (!banner.active) return 'inactivo'
-  if (banner.startsAt && banner.startsAt > now) return 'programado'
-  return 'activo'
-}
-
-export function BannerCard({ banner, onEdit, onToggle, onDelete, isPending }: BannerCardProps) {
+export function BannerCard({ banner }: BannerCardProps) {
   const uiStatus = getBannerStatus(banner)
 
   return (
@@ -58,17 +48,7 @@ export function BannerCard({ banner, onEdit, onToggle, onDelete, isPending }: Ba
             <span className="font-mono text-[11px] truncate max-w-40">{banner.ctaHref}</span>
           </div>
         )}
-        <div className="flex gap-2 mt-3">
-          <Button variant="outline" size="sm" full onClick={onEdit}>
-            Editar
-          </Button>
-          <Button variant="outline" size="sm" full onClick={onToggle} disabled={isPending}>
-            {banner.active ? 'Pausar' : 'Activar'}
-          </Button>
-          <Button variant="icon" size="sm" destructive onClick={onDelete} disabled={isPending}>
-            ×
-          </Button>
-        </div>
+        <BannerCardActions banner={banner} />
       </div>
     </div>
   )

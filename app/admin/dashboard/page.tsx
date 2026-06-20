@@ -1,4 +1,4 @@
-import { DashboardClient } from '@/features/dashboard/components/DashboardClient'
+import { DashboardView } from '@/features/dashboard/components/DashboardView'
 import { getProducts } from '@/features/products/queries/product.queries'
 import { getInventoryStats } from '@/features/inventory/queries/inventory.queries'
 import {
@@ -46,7 +46,7 @@ export default async function DashboardPage() {
   }))
 
   return (
-    <DashboardClient
+    <DashboardView
       orderStats={{ ...orderStats, revenue: Number(orderStats.revenue) }}
       topProducts={serializedProducts}
       inventoryStats={inventoryStats}
