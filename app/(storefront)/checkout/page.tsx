@@ -1,25 +1,25 @@
 'use client'
 
-import { DeliveryForm } from '@/features/storefront/checkout/components/DeliveryForm'
-import { OrderSummary } from '@/features/storefront/checkout/components/OrderSummary'
-import { PaymentSection } from '@/features/storefront/checkout/components/PaymentSection'
-import { SavedAddressSelector } from '@/features/storefront/checkout/components/SavedAddressSelector'
-import { SuccessScreen } from '@/features/storefront/checkout/components/SuccessScreen'
-import type { SuccessData } from '@/features/storefront/checkout/types'
-import { placeOrder } from '@/features/storefront/checkout/actions/checkout.actions'
+import { DeliveryForm } from '@/features/checkout/components/DeliveryForm'
+import { OrderSummary } from '@/features/checkout/components/OrderSummary'
+import { PaymentSection } from '@/features/checkout/components/PaymentSection'
+import { SavedAddressSelector } from '@/features/checkout/components/SavedAddressSelector'
+import { SuccessScreen } from '@/features/checkout/components/SuccessScreen'
+import type { SuccessData } from '@/features/checkout/types'
+import { placeOrder } from '@/features/checkout/actions/checkout.actions'
 import {
   createAddress,
   getMyAddresses,
   type AddressData,
-} from '@/features/account/profile/actions/account-profile.actions'
+} from '@/features/profile/actions/account-profile.actions'
 import {
   AddressFormPanel,
   type AddressFormValues,
-} from '@/features/account/profile/components/AddressFormPanel'
+} from '@/features/profile/components/AddressFormPanel'
+import { useCartStore } from '@/features/cart/stores/cart.store'
 import { Button } from '@/shared/components/ui/Button'
 import { useUser } from '@/shared/hooks'
 import { checkoutSchema, type CheckoutInput } from '@/shared/lib/schemas'
-import { useStore } from '@/shared/stores/store'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ShoppingBag, ShoppingCart } from 'lucide-react'
 import Link from 'next/link'
@@ -39,7 +39,7 @@ const SHIPPING_COST = 15
 // ---------------------------------------------------------------------------
 
 export default function CheckoutPage() {
-  const { cart, removeItem: _removeItem } = useStore()
+  const { cart, removeItem: _removeItem } = useCartStore()
   const { user } = useUser()
   const [success, setSuccess] = useState<SuccessData | null>(null)
   const [loading, setLoading] = useState(false)

@@ -1,10 +1,10 @@
 'use client'
 
+import { useCartStore } from '@/features/cart/stores/cart.store'
+import { getCategoryLabel, getCategoryStripe } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
-import { useStore } from '@/shared/stores/store'
 import { formatCurrency } from '@/shared/lib/utils'
-import { getCategoryLabel, getCategoryStripe } from '@/shared/types/catalog.types'
 import { ArrowLeft, CreditCard, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -15,7 +15,7 @@ const SHIPPING_THRESHOLD = 150
 const SHIPPING_COST = 15
 
 export default function CartPage() {
-  const { cart, updateQty, removeItem } = useStore()
+  const { cart, updateQty, removeItem } = useCartStore()
   const router = useRouter()
   const [pendingRemove, setPendingRemove] = useState<{ id: string; name: string } | null>(null)
 

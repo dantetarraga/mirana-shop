@@ -1,4 +1,4 @@
-import type { CatalogProduct } from '@/shared/types/catalog.types'
+import type { CatalogProduct } from '@/features/products/types/catalog.types'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
@@ -8,7 +8,7 @@ import { createJSONStorage, persist } from 'zustand/middleware'
 
 export type CartItem = { product: CatalogProduct; qty: number }
 
-interface StoreState {
+interface CartState {
   // --- Hydration ---
   _hasHydrated: boolean
   _setHasHydrated: (v: boolean) => void
@@ -21,17 +21,6 @@ interface StoreState {
   updateQty: (id: string, delta: number) => void
   removeItem: (id: string) => void
   setCartOpen: (open: boolean) => void
-
-  // --- Auth modal (UI only) ---
-  authOpen: boolean
-  authMode: 'login' | 'register'
-  openAuth: (mode: 'login' | 'register') => void
-  closeAuth: () => void
-
-  // --- Product modal ---
-  activeProduct: CatalogProduct | null
-  openProductModal: (product: CatalogProduct) => void
-  closeProductModal: () => void
 }
 
 // ---------------------------------------------------------------------------
@@ -46,7 +35,7 @@ function countCart(cart: CartItem[]) {
 // Store
 // ---------------------------------------------------------------------------
 
-export const useStore = create<StoreState>()(
+export const useCartStore = create<CartState>()(
   persist(
     (set) => ({
       // hydration
@@ -82,18 +71,6 @@ export const useStore = create<StoreState>()(
         }),
 
       setCartOpen: (open) => set({ cartOpen: open }),
-
-      // auth modal (solo UI)
-      authOpen: false,
-      authMode: 'login',
-
-      openAuth: (mode) => set({ authMode: mode, authOpen: true }),
-      closeAuth: () => set({ authOpen: false }),
-
-      // product modal
-      activeProduct: null,
-      openProductModal: (product) => set({ activeProduct: product }),
-      closeProductModal: () => set({ activeProduct: null }),
     }),
     {
       name: 'm-store',
