@@ -35,10 +35,10 @@ const SHIPPING_THRESHOLD = 150
 const SHIPPING_COST = 15
 
 // ---------------------------------------------------------------------------
-// Page
+// View
 // ---------------------------------------------------------------------------
 
-export default function CheckoutPage() {
+export function CheckoutView() {
   const { cart, removeItem: _removeItem } = useCartStore()
   const { user } = useUser()
   const [success, setSuccess] = useState<SuccessData | null>(null)

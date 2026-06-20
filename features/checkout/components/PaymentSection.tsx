@@ -1,6 +1,6 @@
 'use client'
 
-import type { CheckoutInput } from '@/shared/lib/schemas'
+import type { CheckoutInput } from '@/features/checkout/schemas/checkout.schema'
 import { MessageCircle } from 'lucide-react'
 import type { FieldErrors, UseFormRegister } from 'react-hook-form'
 

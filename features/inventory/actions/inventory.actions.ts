@@ -1,7 +1,7 @@
 'use server'
 
 import { inventoryRepo, OptimisticLockError } from '@/features/inventory/services/inventory.service'
-import { adjustStockSchema } from '@/shared/lib/schemas'
+import { adjustStockSchema } from '@/features/inventory/schemas/inventory.schema'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import { revalidatePath } from 'next/cache'
 

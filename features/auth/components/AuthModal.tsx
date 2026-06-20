@@ -11,7 +11,7 @@ import {
   registerSchema,
   type LoginInput,
   type RegisterInput,
-} from '@/shared/lib/schemas'
+} from '@/features/auth/schemas/auth.schema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { signIn } from 'next-auth/react'
 import { useEffect, useState } from 'react'

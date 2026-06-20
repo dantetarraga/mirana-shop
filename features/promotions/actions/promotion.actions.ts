@@ -2,7 +2,7 @@
 
 import type { PromotionType } from '@/generated/prisma/client'
 import { promotionRepo } from '@/features/promotions/services/promotion.service'
-import { promotionDbSchema } from '@/shared/lib/schemas'
+import { promotionDbSchema } from '@/features/promotions/schemas/promotion.schema'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import { revalidatePath } from 'next/cache'
 

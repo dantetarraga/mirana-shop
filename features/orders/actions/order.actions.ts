@@ -2,7 +2,7 @@
 
 import type { OrderStatus } from '@/generated/prisma/client'
 import { orderRepo } from '@/features/orders/services/order.service'
-import { updateOrderStatusSchema } from '@/shared/lib/schemas'
+import { updateOrderStatusSchema } from '@/features/orders/schemas/order.schema'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import { revalidatePath } from 'next/cache'
 

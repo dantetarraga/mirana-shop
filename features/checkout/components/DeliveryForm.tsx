@@ -1,6 +1,6 @@
 'use client'
 
-import type { CheckoutInput } from '@/shared/lib/schemas'
+import type { CheckoutInput } from '@/features/checkout/schemas/checkout.schema'
 import type { FieldErrors, UseFormRegister } from 'react-hook-form'
 import { Field, input } from './ui'
 

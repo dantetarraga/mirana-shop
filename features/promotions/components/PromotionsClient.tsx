@@ -12,7 +12,7 @@ import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
 import { useEntityCrud } from '@/shared/hooks/admin'
-import { promotionDbSchema } from '@/shared/lib/schemas'
+import { promotionDbSchema } from '@/features/promotions/schemas/promotion.schema'
 import { Plus } from 'lucide-react'
 import type { z } from 'zod'
 

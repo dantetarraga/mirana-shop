@@ -2,7 +2,7 @@
 
 import type { PaymentMethod } from '@/generated/prisma/client'
 import { orderRepo } from '@/features/orders/services/order.service'
-import { checkoutSchema } from '@/shared/lib/schemas'
+import { checkoutSchema } from '@/features/checkout/schemas/checkout.schema'
 import { revalidatePath } from 'next/cache'
 
 // ---------------------------------------------------------------------------
