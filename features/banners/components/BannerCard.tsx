@@ -1,4 +1,4 @@
-import type { BannerRow } from '@/features/banners/services/banner.service'
+import type { BannerRow } from '@/features/banners/types'
 import { StatusBadge } from '@/features/orders/components/StatusBadge'
 import { Button } from '@/shared/components/ui/Button'
 import { BANNER_STATUS } from '@/shared/lib/admin/admin-constants'

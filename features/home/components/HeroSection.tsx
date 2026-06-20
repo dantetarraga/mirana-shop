@@ -1,4 +1,4 @@
-import type { BannerRow } from '@/features/banners/services/banner.service'
+import type { BannerRow } from '@/features/banners/types'
 
 interface HeroSectionProps {
   banner?: BannerRow | null

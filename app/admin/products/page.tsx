@@ -1,7 +1,7 @@
 import { ProductsClient } from '@/features/products/components/ProductsClient'
-import { brandRepo } from '@/features/brands/services/brand.service'
-import { categoryRepo } from '@/features/categories/services/category.service'
-import { collectionRepo } from '@/features/collections/services/collection.service'
+import { getBrands } from '@/features/brands/queries/brand.queries'
+import { getCategories } from '@/features/categories/queries/category.queries'
+import { getCollections } from '@/features/collections/queries/collection.queries'
 import { productRepo } from '@/features/products/services/product.service'
 
 const PER_PAGE = 30
@@ -35,9 +35,9 @@ export default async function ProductsPage({ searchParams }: PageProps) {
       take: PER_PAGE,
       skip,
     }),
-    categoryRepo.findAll(),
-    brandRepo.findAll(),
-    collectionRepo.findAll({ perPage: 200 }),
+    getCategories(),
+    getBrands(),
+    getCollections({ perPage: 200 }),
     productRepo.count({
       search: q,
       categorySlug: categorySlugs.length > 0 ? categorySlugs : undefined,

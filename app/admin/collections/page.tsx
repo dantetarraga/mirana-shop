@@ -1,4 +1,4 @@
-import { collectionRepo } from "@/features/collections/services/collection.service";
+import { countCollections, getCollections } from "@/features/collections/queries/collection.queries";
 import { CollectionsTableClient } from "@/features/collections/components/CollectionsTableClient";
 import { ServerSearchForm } from "@/shared/components/admin/ServerSearchForm";
 
@@ -18,8 +18,8 @@ export default async function CollectionsPage({ searchParams }: PageProps) {
     activeParam === "1" ? true : activeParam === "0" ? false : undefined;
 
   const [collections, total] = await Promise.all([
-    collectionRepo.findAll({ search: q, active: activeFilter, page: currentPage, perPage }),
-    collectionRepo.count({ search: q, active: activeFilter }),
+    getCollections({ search: q, active: activeFilter, page: currentPage, perPage }),
+    countCollections({ search: q, active: activeFilter }),
   ]);
 
   const totalPages = Math.ceil(total / perPage);

@@ -2,7 +2,7 @@
 
 import { deleteBrand } from '@/features/brands/actions/brand.actions'
 import { BrandCrudDrawer } from '@/features/brands/components/BrandCrudDrawer'
-import type { BrandRow } from '@/features/brands/services/brand.service'
+import type { BrandRow } from '@/features/brands/types'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
 import { EntityProductsDrawer } from '@/shared/components/admin/EntityProductsDrawer'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'

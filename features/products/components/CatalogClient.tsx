@@ -1,6 +1,6 @@
 'use client'
 
-import type { CategoryRow } from '@/features/categories/services/category.service'
+import type { CategoryRow } from '@/features/categories/types'
 import { ProductCard } from '@/features/products/components/ProductCard'
 import { Button } from '@/shared/components/ui/Button'
 import type { CatalogProduct } from '@/features/products/types/catalog.types'

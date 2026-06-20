@@ -1,6 +1,9 @@
 'use server'
 
-import { collectionRepo } from '@/features/collections/services/collection.service'
+import {
+  COLLECTION_SELECT,
+  getCollectionBySlug,
+} from '@/features/collections/queries/collection.queries'
 import { db } from '@/shared/lib/db'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import type { DrawerProduct } from '@/shared/types/entity-products.types'
@@ -57,17 +60,20 @@ export async function createCollection(rawInput: unknown): Promise<ActionResult<
   const { name, slug, description, imageUrl, active } = parsed.data
 
   try {
-    const existing = await collectionRepo.findBySlug(slug)
+    const existing = await getCollectionBySlug(slug)
     if (existing) {
       return { success: false, error: 'Ya existe una colección con ese slug', code: 409 }
     }
 
-    const collection = await collectionRepo.create({
-      name,
-      slug,
-      description: description || undefined,
-      imageUrl: imageUrl || undefined,
-      active,
+    const collection = await db.collection.create({
+      data: {
+        name,
+        slug,
+        description: description || null,
+        imageUrl: imageUrl || null,
+        active: active ?? true,
+      },
+      select: COLLECTION_SELECT,
     })
 
     invalidateCollectionCaches()
@@ -96,16 +102,22 @@ export async function updateCollection(rawInput: unknown): Promise<ActionResult<
 
   try {
     if (fields.slug) {
-      const existing = await collectionRepo.findBySlug(fields.slug)
+      const existing = await getCollectionBySlug(fields.slug)
       if (existing && existing.id !== id) {
         return { success: false, error: 'Ya existe una colección con ese slug', code: 409 }
       }
     }
 
-    const collection = await collectionRepo.update(id, {
-      ...fields,
-      imageUrl: fields.imageUrl || undefined,
-      description: fields.description || undefined,
+    const collection = await db.collection.update({
+      where: { id },
+      data: {
+        ...(fields.name !== undefined && { name: fields.name }),
+        ...(fields.slug !== undefined && { slug: fields.slug }),
+        ...(fields.description !== undefined && { description: fields.description || null }),
+        ...(fields.imageUrl !== undefined && { imageUrl: fields.imageUrl || null }),
+        ...(fields.active !== undefined && { active: fields.active }),
+      },
+      select: COLLECTION_SELECT,
     })
 
     invalidateCollectionCaches()
@@ -124,7 +136,7 @@ export async function deleteCollection(id: string): Promise<ActionResult> {
   if (!id) return { success: false, error: 'ID de colección requerido', code: 400 }
 
   try {
-    await collectionRepo.softDelete(id)
+    await db.collection.update({ where: { id }, data: { deletedAt: new Date() } })
     invalidateCollectionCaches()
     return { success: true, data: undefined }
   } catch (err) {
@@ -190,7 +202,11 @@ export async function addProductToCollection(
   }
 
   try {
-    await collectionRepo.addProduct(collectionId, productId)
+    await db.productCollection.upsert({
+      where: { productId_collectionId: { productId, collectionId } },
+      create: { productId, collectionId },
+      update: {},
+    })
     invalidateCollectionCaches()
     revalidatePath(`/admin/collections`)
     return { success: true, data: undefined }
@@ -263,7 +279,7 @@ export async function removeProductFromCollection(
   }
 
   try {
-    await collectionRepo.removeProduct(collectionId, productId)
+    await db.productCollection.deleteMany({ where: { collectionId, productId } })
     invalidateCollectionCaches()
     return { success: true, data: undefined }
   } catch (err) {

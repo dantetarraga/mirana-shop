@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { bannerRepo } from "@/features/banners/services/banner.service";
-import { brandRepo }  from "@/features/brands/services/brand.service";
-import { categoryRepo } from "@/features/categories/services/category.service";
+import { getBrands }  from "@/features/brands/queries/brand.queries";
+import { getCategories } from "@/features/categories/queries/category.queries";
 import { HeroSection }      from "@/features/home/components/HeroSection";
 import { PromoBanner }      from "@/features/home/components/PromoBanner";
 import { NewArrivals }      from "@/features/home/components/NewArrivals";
@@ -20,8 +20,8 @@ export const metadata: Metadata = {
 export default async function HomePage() {
   const [activeBanners, categories, brands] = await Promise.all([
     bannerRepo.findActive(),
-    categoryRepo.findAll({ perPage: 50 }),
-    brandRepo.findAll({ perPage: 50 }),
+    getCategories({ perPage: 50 }),
+    getBrands({ perPage: 50 }),
   ]);
 
   const heroBanner = activeBanners.sort((a, b) => a.position - b.position)[0] ?? null;

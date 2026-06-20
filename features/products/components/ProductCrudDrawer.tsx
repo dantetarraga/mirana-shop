@@ -1,8 +1,8 @@
 'use client'
 
-import type { BrandRow } from '@/features/brands/services/brand.service'
-import type { CategoryRow } from '@/features/categories/services/category.service'
-import type { CollectionRow } from '@/features/collections/services/collection.service'
+import type { BrandRow } from '@/features/brands/types'
+import type { CategoryRow } from '@/features/categories/types'
+import type { CollectionRow } from '@/features/collections/types'
 import type { ProductListItem } from '@/features/products/services/product.service'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { FilterMultiSelect } from '@/shared/components/admin/FilterMultiSelect'

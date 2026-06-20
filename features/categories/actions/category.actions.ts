@@ -1,6 +1,10 @@
 'use server'
 
-import { categoryRepo } from '@/features/categories/services/category.service'
+import {
+  CATEGORY_SELECT,
+  getCategoryById,
+  getCategoryBySlug,
+} from '@/features/categories/queries/category.queries'
 import { db } from '@/shared/lib/db'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import type { DrawerProduct } from '@/shared/types/entity-products.types'
@@ -57,25 +61,28 @@ export async function createCategory(rawInput: unknown): Promise<ActionResult<{ 
   const { name, slug, parentId, description, imageUrl } = parsed.data
 
   try {
-    const existing = await categoryRepo.findBySlug(slug)
+    const existing = await getCategoryBySlug(slug)
     if (existing) {
       return { success: false, error: 'Ya existe una categoría con ese slug', code: 409 }
     }
 
     // Valida que el parentId existe si se proporciona
     if (parentId) {
-      const parent = await categoryRepo.findById(parentId)
+      const parent = await getCategoryById(parentId)
       if (!parent) {
         return { success: false, error: 'Categoría padre no encontrada', code: 404 }
       }
     }
 
-    const category = await categoryRepo.create({
-      name,
-      slug,
-      parentId: parentId || undefined,
-      description: description || undefined,
-      imageUrl: imageUrl || undefined,
+    const category = await db.category.create({
+      data: {
+        name,
+        slug,
+        parentId: parentId || null,
+        description: description || null,
+        imageUrl: imageUrl || null,
+      },
+      select: CATEGORY_SELECT,
     })
 
     invalidateCategoryCaches()
@@ -104,7 +111,7 @@ export async function updateCategory(rawInput: unknown): Promise<ActionResult<{ 
 
   try {
     if (fields.slug) {
-      const existing = await categoryRepo.findBySlug(fields.slug)
+      const existing = await getCategoryBySlug(fields.slug)
       if (existing && existing.id !== id) {
         return { success: false, error: 'Ya existe una categoría con ese slug', code: 409 }
       }
@@ -114,10 +121,16 @@ export async function updateCategory(rawInput: unknown): Promise<ActionResult<{ 
       return { success: false, error: 'Una categoría no puede ser su propio padre', code: 422 }
     }
 
-    const category = await categoryRepo.update(id, {
-      ...fields,
-      imageUrl: fields.imageUrl || undefined,
-      description: fields.description || undefined,
+    const category = await db.category.update({
+      where: { id },
+      data: {
+        ...(fields.name !== undefined && { name: fields.name }),
+        ...(fields.slug !== undefined && { slug: fields.slug }),
+        ...(fields.parentId !== undefined && { parentId: fields.parentId }),
+        ...(fields.description !== undefined && { description: fields.description || null }),
+        ...(fields.imageUrl !== undefined && { imageUrl: fields.imageUrl || null }),
+      },
+      select: CATEGORY_SELECT,
     })
 
     invalidateCategoryCaches()
@@ -211,7 +224,7 @@ export async function deleteCategory(id: string): Promise<ActionResult> {
   if (!id) return { success: false, error: 'ID de categoría requerido', code: 400 }
 
   try {
-    const category = await categoryRepo.findById(id)
+    const category = await getCategoryById(id)
     if (!category) return { success: false, error: 'Categoría no encontrada', code: 404 }
 
     if (category.productCount > 0) {
@@ -222,7 +235,7 @@ export async function deleteCategory(id: string): Promise<ActionResult> {
       }
     }
 
-    await categoryRepo.softDelete(id)
+    await db.category.update({ where: { id }, data: { deletedAt: new Date() } })
     invalidateCategoryCaches()
     return { success: true, data: undefined }
   } catch (err) {

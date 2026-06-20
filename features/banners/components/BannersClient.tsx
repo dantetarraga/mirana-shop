@@ -7,7 +7,7 @@ import {
 } from '@/features/banners/actions/banner.actions'
 import { BannerCard } from '@/features/banners/components/BannerCard'
 import { BannerFormDrawer } from '@/features/banners/components/BannerFormDrawer'
-import type { BannerRow } from '@/features/banners/services/banner.service'
+import type { BannerRow } from '@/features/banners/types'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'

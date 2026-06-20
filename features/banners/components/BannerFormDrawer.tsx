@@ -1,6 +1,6 @@
 'use client'
 
-import type { BannerRow } from '@/features/banners/services/banner.service'
+import type { BannerRow } from '@/features/banners/types'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { FilterMultiSelect } from '@/shared/components/admin/FilterMultiSelect'
 import { Button } from '@/shared/components/ui/Button'

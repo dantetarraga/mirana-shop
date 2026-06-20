@@ -2,7 +2,7 @@
 
 import { deleteCollection } from '@/features/collections/actions/collection.actions'
 import { CollectionCrudDrawer } from '@/features/collections/components/CollectionCrudDrawer'
-import type { CollectionRow } from '@/features/collections/services/collection.service'
+import type { CollectionRow } from '@/features/collections/types'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
 import { EntityProductsDrawer } from '@/shared/components/admin/EntityProductsDrawer'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'

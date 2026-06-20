@@ -1,7 +1,8 @@
 'use server'
 
-import { bannerRepo } from '@/features/banners/services/banner.service'
+import { BANNER_SELECT } from '@/features/banners/queries/banner.queries'
 import { bannerDbSchema } from '@/features/banners/schemas/banner.schema'
+import { db } from '@/shared/lib/db'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import { revalidatePath, revalidateTag } from 'next/cache'
 
@@ -26,27 +27,33 @@ export async function saveBanner(
 
   try {
     if (id) {
-      const updated = await bannerRepo.update({
-        id,
-        title: input.title,
-        subtitle: input.subtitle || undefined,
-        ctaLabel: input.ctaLabel || undefined,
-        ctaHref: input.ctaHref || undefined,
-        imageUrl: input.imageUrl,
-        position: input.position,
-        active: input.active,
+      const updated = await db.banner.update({
+        where: { id },
+        data: {
+          title: input.title,
+          subtitle: input.subtitle || undefined,
+          ctaLabel: input.ctaLabel || undefined,
+          ctaHref: input.ctaHref || undefined,
+          imageUrl: input.imageUrl,
+          position: input.position,
+          active: input.active,
+        },
+        select: BANNER_SELECT,
       })
       invalidateBannerCaches()
       return { success: true, data: { id: updated.id } }
     } else {
-      const created = await bannerRepo.create({
-        title: input.title,
-        subtitle: input.subtitle || undefined,
-        ctaLabel: input.ctaLabel || undefined,
-        ctaHref: input.ctaHref || undefined,
-        imageUrl: input.imageUrl,
-        position: input.position,
-        active: input.active,
+      const created = await db.banner.create({
+        data: {
+          title: input.title,
+          subtitle: input.subtitle || null,
+          ctaLabel: input.ctaLabel || null,
+          ctaHref: input.ctaHref || null,
+          imageUrl: input.imageUrl,
+          position: input.position ?? 0,
+          active: input.active ?? false,
+        },
+        select: BANNER_SELECT,
       })
       invalidateBannerCaches()
       return { success: true, data: { id: created.id } }
@@ -61,7 +68,7 @@ export async function toggleBanner(id: string, currentActive: boolean): Promise<
   if (!id) return { success: false, error: 'ID de banner requerido', code: 400 }
 
   try {
-    await bannerRepo.toggle(id, !currentActive)
+    await db.banner.update({ where: { id }, data: { active: !currentActive } })
     invalidateBannerCaches()
     return { success: true, data: undefined }
   } catch (err) {
@@ -74,7 +81,7 @@ export async function deleteBanner(id: string): Promise<ActionResult> {
   if (!id) return { success: false, error: 'ID de banner requerido', code: 400 }
 
   try {
-    await bannerRepo.delete(id)
+    await db.banner.delete({ where: { id } })
     invalidateBannerCaches()
     return { success: true, data: undefined }
   } catch (err) {

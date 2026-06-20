@@ -1,5 +1,5 @@
 import { CategoriesTableClient } from '@/features/categories/components/CategoriesTableClient'
-import { categoryRepo } from '@/features/categories/services/category.service'
+import { countCategories, getCategories } from '@/features/categories/queries/category.queries'
 import { ServerSearchForm } from '@/shared/components/admin/ServerSearchForm'
 
 interface PageProps {
@@ -14,9 +14,9 @@ export default async function CategoriesPage({ searchParams }: PageProps) {
   const perPage = 30
 
   const [categories, allCategories, total] = await Promise.all([
-    categoryRepo.findAll({ search: q, page: currentPage, perPage }),
-    categoryRepo.findAll({ perPage: 500 }), // para el dropdown de reasignación en EntityProductsDrawer
-    categoryRepo.count({ search: q }),
+    getCategories({ search: q, page: currentPage, perPage }),
+    getCategories({ perPage: 500 }), // para el dropdown de reasignación en EntityProductsDrawer
+    countCategories({ search: q }),
   ])
 
   const totalPages = Math.ceil(total / perPage)

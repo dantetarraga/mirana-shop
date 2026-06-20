@@ -2,7 +2,7 @@
 
 import { deleteCategory } from '@/features/categories/actions/category.actions'
 import { CategoryCrudDrawer } from '@/features/categories/components/CategoryCrudDrawer'
-import type { CategoryRow } from '@/features/categories/services/category.service'
+import type { CategoryRow } from '@/features/categories/types'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
 import { EntityProductsDrawer } from '@/shared/components/admin/EntityProductsDrawer'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'

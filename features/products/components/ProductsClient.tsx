@@ -11,9 +11,9 @@ import {
   ProductCrudDrawer,
   type SerializedProduct,
 } from '@/features/products/components/ProductCrudDrawer'
-import type { BrandRow } from '@/features/brands/services/brand.service'
-import type { CategoryRow } from '@/features/categories/services/category.service'
-import type { CollectionRow } from '@/features/collections/services/collection.service'
+import type { BrandRow } from '@/features/brands/types'
+import type { CategoryRow } from '@/features/categories/types'
+import type { CollectionRow } from '@/features/collections/types'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
 import { ExcelImportDrawer } from '@/features/products/components/ExcelImportDrawer'
 import { FilterMultiSelect } from '@/shared/components/admin/FilterMultiSelect'

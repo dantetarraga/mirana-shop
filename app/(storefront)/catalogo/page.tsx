@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { productRepo } from "@/features/products/services/product.service";
-import { categoryRepo } from "@/features/categories/services/category.service";
+import { getCategories } from "@/features/categories/queries/category.queries";
 import { toProductCards } from "@/features/products/services/product.mapper";
 import { CatalogClient } from "@/features/products/components/CatalogClient";
 
@@ -8,7 +8,7 @@ import { CatalogClient } from "@/features/products/components/CatalogClient";
 export default async function CatalogPage() {
   const [products, categories] = await Promise.all([
     productRepo.findMany({ take: 200 }),
-    categoryRepo.findAll(),
+    getCategories(),
   ]);
 
   const items = toProductCards(products);

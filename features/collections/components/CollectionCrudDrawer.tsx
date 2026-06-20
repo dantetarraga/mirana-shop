@@ -4,7 +4,7 @@ import {
   createCollection,
   updateCollection,
 } from '@/features/collections/actions/collection.actions'
-import type { CollectionRow } from '@/features/collections/services/collection.service'
+import type { CollectionRow } from '@/features/collections/types'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { EntityProductsPanel } from '@/shared/components/admin/EntityProductsPanel'
 import { FilterMultiSelect } from '@/shared/components/admin/FilterMultiSelect'

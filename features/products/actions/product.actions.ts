@@ -1,7 +1,7 @@
 'use server'
 
-import { brandRepo } from '@/features/brands/services/brand.service'
-import { categoryRepo } from '@/features/categories/services/category.service'
+import { getBrands } from '@/features/brands/queries/brand.queries'
+import { getCategories } from '@/features/categories/queries/category.queries'
 import { productRepo } from '@/features/products/services/product.service'
 import { db } from '@/shared/lib/db'
 import { importProductRowSchema, productDbBaseSchema, productDbSchema } from '@/features/products/schemas/product.schema'
@@ -165,7 +165,7 @@ export async function importProducts(
   let updated = 0
 
   // Mapas para resolver categoryId y brandId por nombre/slug
-  const [categories, brands] = await Promise.all([categoryRepo.findAll(), brandRepo.findAll()])
+  const [categories, brands] = await Promise.all([getCategories(), getBrands()])
 
   const catMap: Record<string, string> = {
     figures: categories.find((c) => c.slug === 'figuras-accion')?.id ?? '',
