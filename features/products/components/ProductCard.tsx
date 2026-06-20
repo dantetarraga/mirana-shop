@@ -5,6 +5,9 @@ import { useProductModalStore } from '@/features/products/stores/product-modal.s
 import type { CatalogProduct } from '@/features/products/types/catalog.types'
 import { getCategoryLabel, getCategoryStripe } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
+import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
+import { Minus, Plus, Trash2 } from 'lucide-react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 
 interface ProductCardProps {
@@ -29,11 +32,13 @@ export function ProductCard({
   noAnimation = false,
 }: ProductCardProps) {
   const { openProductModal } = useProductModalStore()
-  const { addToCart } = useCartStore()
+  const { cart, addToCart, updateQty, removeItem } = useCartStore()
+  const [confirmRemove, setConfirmRemove] = useState(false)
   const stripe = getCategoryStripe(p.category.slug)
   const catLabel = getCategoryLabel(p.category.slug)
   const isOutOfStock = p.stock === 0 || p.status === 'SOLD_OUT'
   const isNew = p.status === 'AVAILABLE' && p.stock > 0
+  const qtyInCart = cart.find((i) => i.product.id === p.id)?.qty ?? 0
 
   return (
     <div
@@ -62,7 +67,7 @@ export function ProductCard({
           </div>
         )}
         {showBadge && p.status === 'PREORDER' && (
-          <div className="absolute top-3 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-2.5 py-1.25 bg-[#5f9eff] text-white">
+          <div className="absolute top-3 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-2.5 py-1.25 bg-[#8b7cff] text-white">
             PREVENTA
           </div>
         )}
@@ -86,22 +91,79 @@ export function ProductCard({
             <Stars r={isNew ? 4.5 : 4.0} />
           </div>
         </div>
-        <Button
-          variant="accent"
-          size="md"
-          className="add-btn w-full"
-          disabled={isOutOfStock}
-          onClick={(e) => {
-            e.stopPropagation()
-            if (!isOutOfStock) {
-              addToCart(p, 1)
-              toast.success(`"${p.name}" agregado al carrito`)
-            }
-          }}
-        >
-          {isOutOfStock ? 'Sin stock' : '+ Agregar al carrito'}
-        </Button>
+        {qtyInCart > 0 && !isOutOfStock ? (
+          <div className="flex items-center border border-(--bd) w-full">
+            {qtyInCart === 1 ? (
+              <Button
+                variant="icon"
+                size="md"
+                destructive
+                className="flex-1"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setConfirmRemove(true)
+                }}
+              >
+                <Trash2 size={14} />
+              </Button>
+            ) : (
+              <Button
+                variant="icon"
+                size="md"
+                className="flex-1"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  updateQty(p.id, -1)
+                }}
+              >
+                <Minus size={14} />
+              </Button>
+            )}
+            <div className="flex-1 text-center font-display text-[16px] font-extrabold border-l border-r border-(--bd) flex items-center justify-center h-10.5">
+              {qtyInCart}
+            </div>
+            <Button
+              variant="icon"
+              size="md"
+              className="flex-1"
+              onClick={(e) => {
+                e.stopPropagation()
+                updateQty(p.id, 1)
+              }}
+            >
+              <Plus size={14} />
+            </Button>
+          </div>
+        ) : (
+          <Button
+            variant="accent"
+            size="md"
+            className="add-btn w-full"
+            disabled={isOutOfStock}
+            onClick={(e) => {
+              e.stopPropagation()
+              if (!isOutOfStock) {
+                addToCart(p, 1)
+                toast.success(`"${p.name}" agregado al carrito`)
+              }
+            }}
+          >
+            {isOutOfStock ? 'Sin stock' : '+ Agregar al carrito'}
+          </Button>
+        )}
       </div>
+
+      <ConfirmModal
+        open={confirmRemove}
+        onClose={() => setConfirmRemove(false)}
+        onConfirm={() => {
+          removeItem(p.id)
+          toast.success(`"${p.name}" eliminado del carrito`)
+          setConfirmRemove(false)
+        }}
+        title="¿Eliminar producto?"
+        description={`"${p.name}" será eliminado de tu carrito.`}
+      />
     </div>
   )
 }

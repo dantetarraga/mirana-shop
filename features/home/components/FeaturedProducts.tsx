@@ -16,8 +16,8 @@ export async function FeaturedProducts() {
   if (items.length === 0) return null;
 
   return (
-    <section className="px-12 py-20">
-      <div className="flex justify-between items-end mb-8">
+    <section className="glow-section px-12 py-20">
+      <div className="relative z-1 flex justify-between items-end mb-8">
         <div>
           <div className="text-[10px] font-bold tracking-[3px] uppercase mb-2.5 text-(--gold)">
             Selección premium
@@ -36,7 +36,7 @@ export async function FeaturedProducts() {
         </a>
       </div>
 
-      <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(260px,1fr))]">
+      <div className="relative z-1 grid gap-4 grid-cols-[repeat(auto-fill,minmax(260px,1fr))]">
         {items.map((p) => (
           <ProductCard key={p.id} product={p} />
         ))}

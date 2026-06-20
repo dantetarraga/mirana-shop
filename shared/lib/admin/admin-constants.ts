@@ -14,8 +14,8 @@ export const ORDER_STATUS: Record<
   },
   enviado: {
     label: 'Enviado',
-    color: '#5f9eff',
-    bg: 'rgba(95,158,255,.12)',
+    color: '#8b7cff',
+    bg: 'rgba(139,124,255,.12)',
     cls: 'badge-blue',
     outlineCls: 'badge-blue-outline',
     btnCls: 'btn-status-blue',
@@ -58,10 +58,10 @@ export const USER_STATUS: Record<
   },
   nuevo: {
     label: 'Nuevo',
-    color: '#5f9eff',
+    color: '#8b7cff',
     cls: 'badge-blue',
     outlineCls: 'badge-blue-outline',
-    textCls: 'text-[#5f9eff]',
+    textCls: 'text-[#8b7cff]',
   },
 }
 
@@ -77,7 +77,7 @@ export const BANNER_STATUS: Record<
   },
   programado: {
     label: 'Programado',
-    color: '#5f9eff',
+    color: '#8b7cff',
     cls: 'badge-blue',
     outlineCls: 'badge-blue-outline',
   },

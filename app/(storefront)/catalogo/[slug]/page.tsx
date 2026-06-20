@@ -74,33 +74,35 @@ export default async function ProductDetailPage({ params }: PageProps) {
         {/* Main grid */}
         <div className="grid grid-cols-2 gap-16 items-start">
           {/* Left — image */}
-          <div className={`${stripe} aspect-square flex items-center justify-center relative`}>
+          <div
+            className={`${stripe} glow-section glow-section--card aspect-square flex items-center justify-center relative`}
+          >
             {product.imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={product.imageUrl}
                 alt={product.name}
-                className="w-full h-full object-cover absolute inset-0"
+                className="relative z-1 w-full h-full object-cover absolute inset-0"
               />
             ) : (
-              <div className="font-mono text-[12px] tracking-[2px] text-muted uppercase">
+              <div className="relative z-1 font-mono text-[12px] tracking-[2px] text-muted uppercase">
                 {product.name.toUpperCase()}
               </div>
             )}
 
             {/* Badges */}
             {product.featured && !isOutOfStock && (
-              <div className="absolute top-4 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-3 py-1.5 bg-(--gold) text-black">
+              <div className="z-1 absolute top-4 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-3 py-1.5 bg-(--gold) text-black">
                 DESTACADO
               </div>
             )}
             {isOutOfStock && (
-              <div className="absolute top-4 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-3 py-1.5 bg-[#ff6644]/80 text-white">
+              <div className="z-1 absolute top-4 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-3 py-1.5 bg-[#ff6644]/80 text-white">
                 AGOTADO
               </div>
             )}
             {product.status === 'PREORDER' && (
-              <div className="absolute top-4 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-3 py-1.5 bg-[#5f9eff] text-white">
+              <div className="z-1 absolute top-4 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-3 py-1.5 bg-[#8b7cff] text-white">
                 PREVENTA
               </div>
             )}

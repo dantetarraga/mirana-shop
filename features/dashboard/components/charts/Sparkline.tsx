@@ -9,7 +9,7 @@ interface SparklineProps {
   h?: number
 }
 
-export function Sparkline({ data, color = '#58aaff', w = 160, h = 40 }: SparklineProps) {
+export function Sparkline({ data, color = '#00c8ff', w = 160, h = 40 }: SparklineProps) {
   const chartData = data.map((v) => ({ v }))
   const gradId = 'spark-' + color.replace(/[^a-z0-9]/gi, '')
   return (

@@ -44,24 +44,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
           <Toaster
             theme="dark"
-            position="bottom-right"
+            position="top-center"
             icons={{
               success: <CheckCircle2 size={16} color="#3fcf7f" />,
               error: <XCircle size={16} color="#ff6644" />,
               warning: <AlertTriangle size={16} color="#ffb84a" />,
-              info: <Info size={16} color="#58aaff" />,
+              info: <Info size={16} color="#8b7cff" />,
             }}
             toastOptions={{
               style: {
                 background: 'var(--color-surf)',
-                border: '1px solid rgba(80,150,255,0.15)',
+                border: '1px solid rgba(0,200,255,0.15)',
                 color: 'var(--color-text)',
               },
               classNames: {
                 success: '!border-l-[3px] ![border-left-color:#3fcf7f]',
                 error: '!border-l-[3px] ![border-left-color:#ff6644]',
                 warning: '!border-l-[3px] ![border-left-color:#ffb84a]',
-                info: '!border-l-[3px] ![border-left-color:#58aaff]',
+                info: '!border-l-[3px] ![border-left-color:#8b7cff]',
               },
             }}
           />

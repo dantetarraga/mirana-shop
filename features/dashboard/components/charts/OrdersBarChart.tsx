@@ -11,11 +11,11 @@ export function OrdersBarChart({ data }: OrdersBarChartProps) {
   return (
     <ResponsiveContainer width="100%" height={180}>
       <BarChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(80,150,255,.1)" vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,200,255,.1)" vertical={false} />
         <XAxis
           dataKey="d"
           tick={{
-            fill: 'rgba(240,238,232,.42)',
+            fill: 'rgba(228,240,255,.42)',
             fontSize: 9,
             fontFamily: 'monospace',
           }}
@@ -29,8 +29,8 @@ export function OrdersBarChart({ data }: OrdersBarChartProps) {
           fill="var(--card-h)"
           radius={[2, 2, 0, 0]}
           activeBar={{
-            fill: '#58aaff',
-            stroke: '#58aaff',
+            fill: '#00c8ff',
+            stroke: '#00c8ff',
             strokeWidth: 1,
           }}
         />

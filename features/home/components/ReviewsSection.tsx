@@ -45,8 +45,8 @@
 
 export function ReviewsSection() {
   return (
-    <section className="px-12 py-20">
-      <div className="flex justify-between items-start mb-10">
+    <section className="glow-section px-12 py-20">
+      <div className="relative z-1 flex justify-between items-start mb-10">
         <div>
           <div className="text-[10px] font-bold tracking-[3px] uppercase text-(--gold) mb-2.5">
             Testimonios
@@ -70,7 +70,7 @@ export function ReviewsSection() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="relative z-1 grid grid-cols-3 gap-4">
         {REVIEWS.map((r, i) => (
           <div
             key={i}

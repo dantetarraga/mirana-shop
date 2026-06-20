@@ -64,7 +64,7 @@ export default async function OrdersPage({ searchParams }: PageProps) {
       <div className="grid grid-cols-4 gap-4 mb-6">
         <KpiCard label="Total pedidos" value={stats.total} valueClass="text-text" />
         <KpiCard label="Por procesar" value={stats.pending} valueClass="text-[#ffb84a]" />
-        <KpiCard label="En tránsito" value={stats.shipped} valueClass="text-[#5f9eff]" />
+        <KpiCard label="En tránsito" value={stats.shipped} valueClass="text-[#8b7cff]" />
         <KpiCard
           label="Ingresos"
           value={`S/ ${(Number(stats.revenue) / 1000).toFixed(1)}K`}
