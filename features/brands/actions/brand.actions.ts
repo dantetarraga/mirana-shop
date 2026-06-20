@@ -189,8 +189,8 @@ export async function reassignProductBrand(
     })
     revalidatePath('/admin/brands')
     revalidatePath('/admin/products')
-    revalidateTag('brands')
-    revalidateTag('catalog')
+    revalidateTag('brands', 'max')
+    revalidateTag('catalog', 'max')
     return { success: true, data: undefined }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Error al reasignar marca'

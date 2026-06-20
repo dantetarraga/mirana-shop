@@ -332,7 +332,7 @@ export function ProductCrudDrawer({
                 { label: 'Próximamente', value: 'COMING_SOON' },
                 { label: 'Archivado', value: 'ARCHIVED' },
               ]}
-              selected={watch('status') ? [watch('status')] : []}
+              selected={watch('status') ? [watch('status') as string] : []}
               onToggle={(val) =>
                 setValue('status', val as ProductFormValues['status'], { shouldValidate: true })
               }

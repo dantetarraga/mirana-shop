@@ -4,7 +4,6 @@ import type { UserRow } from '@/features/users/types'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
 import { DrawerSection } from '@/shared/components/admin/DrawerSection'
-import { ServerSearchForm } from '@/shared/components/admin/ServerSearchForm'
 import { StatusBadge } from '@/features/orders/components/StatusBadge'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { USER_STATUS } from '@/shared/lib/admin/admin-constants'
@@ -29,49 +28,17 @@ const ROLE_LABELS: Record<string, string> = {
   CUSTOMER: 'Cliente',
 }
 
-const SEGMENT_TABS = [
-  { key: 'todos', label: 'Todos' },
-  { key: 'vip', label: 'VIP' },
-  { key: 'activo', label: 'Activos' },
-  { key: 'nuevo', label: 'Nuevos' },
-]
-
-function buildUrl(params: Record<string, string | undefined>) {
-  const p = new URLSearchParams()
-  for (const [k, v] of Object.entries(params)) {
-    if (v) p.set(k, v)
-  }
-  const qs = p.toString()
-  return qs ? `/admin/users?${qs}` : '/admin/users'
-}
-
 // ---------------------------------------------------------------------------
-// Props
+// Props — solo la tabla + drawer de detalle son interactivos.
+// El chrome (búsqueda, tabs, paginación) vive en page.tsx (server).
 // ---------------------------------------------------------------------------
 
 interface UsersClientProps {
   users: UserRow[]
-  total: number
-  currentPage: number
-  perPage: number
-  currentQ: string
-  currentSegment: string
 }
 
-// ---------------------------------------------------------------------------
-// Component — sin filtros client-side
-// ---------------------------------------------------------------------------
-
-export function UsersClient({
-  users,
-  total,
-  currentPage,
-  perPage,
-  currentQ,
-  currentSegment,
-}: UsersClientProps) {
+export function UsersClient({ users }: UsersClientProps) {
   const [detail, setDetail] = useState<UserRow | null>(null)
-  const totalPages = Math.ceil(total / perPage)
 
   const columns = useMemo<Column<UserRow>[]>(
     () => [
@@ -116,84 +83,8 @@ export function UsersClient({
   )
 
   return (
-    <div className="px-8 pt-7 pb-12">
-      {/* Filtros server-side */}
-      <div className="flex items-center gap-3.5 flex-wrap mb-4">
-        <ServerSearchForm
-          placeholder="Buscar usuario..."
-          defaultValue={currentQ}
-          paramName="q"
-          extraParams={currentSegment !== 'todos' ? { segment: currentSegment } : {}}
-        />
-
-        <div className="flex gap-1.5">
-          {SEGMENT_TABS.map(({ key, label }) => {
-            const isActive = key === currentSegment
-            const href = buildUrl({
-              q: currentQ || undefined,
-              segment: key !== 'todos' ? key : undefined,
-            })
-            return (
-              <a
-                key={key}
-                href={href}
-                className={cn(
-                  'px-3.5 py-2 text-[11px] tracking-[1px] uppercase font-display font-extrabold border transition-colors',
-                  isActive
-                    ? 'bg-(--gold) border-(--gold) text-black'
-                    : 'border-(--bd) text-muted hover:text-text',
-                )}
-              >
-                {label}
-              </a>
-            )
-          })}
-        </div>
-
-        {(currentQ || currentSegment !== 'todos') && (
-          <a
-            href="/admin/users"
-            className="text-[12px] text-muted hover:text-text transition-colors"
-          >
-            Limpiar
-          </a>
-        )}
-
-        <span className="ml-auto text-[12px] text-muted">
-          {total} usuario{total !== 1 ? 's' : ''}
-        </span>
-      </div>
-
-      <AdminTable
-        columns={columns}
-        data={users}
-        keyExtractor={(u) => u.id}
-        onRowClick={setDetail}
-      />
-
-      {/* Paginación */}
-      {totalPages > 1 && (
-        <div className="flex gap-2 justify-end mt-4">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <a
-              key={p}
-              href={buildUrl({
-                q: currentQ || undefined,
-                segment: currentSegment !== 'todos' ? currentSegment : undefined,
-                page: String(p),
-              })}
-              className={cn(
-                'px-3 py-1.5 text-[13px] border transition-colors',
-                p === currentPage
-                  ? 'bg-(--gold) border-(--gold) text-black font-bold'
-                  : 'border-(--bd) text-muted hover:text-text',
-              )}
-            >
-              {p}
-            </a>
-          ))}
-        </div>
-      )}
+    <>
+      <AdminTable columns={columns} data={users} keyExtractor={(u) => u.id} onRowClick={setDetail} />
 
       {/* Drawer de detalle */}
       {detail && (
@@ -241,6 +132,6 @@ export function UsersClient({
           </DrawerSection>
         </AdminDrawer>
       )}
-    </div>
+    </>
   )
 }

@@ -7,8 +7,6 @@ import {
 } from '@/features/orders/components/OrderDetailDrawer'
 import type { OrderStatus } from '@/generated/prisma/client'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
-import { KpiCard } from '@/features/dashboard/components/KpiCard'
-import { ServerSearchForm } from '@/shared/components/admin/ServerSearchForm'
 import { StatusBadge } from '@/features/orders/components/StatusBadge'
 import { useServerAction } from '@/shared/hooks/admin'
 import { cls } from '@/shared/lib/admin/admin-classes'
@@ -35,67 +33,22 @@ function fmtDate(d: Date): string {
   return formatDate(d, 'd MMM')
 }
 
-function buildUrl(base: string, params: Record<string, string | undefined>) {
-  const p = new URLSearchParams()
-  for (const [k, v] of Object.entries(params)) {
-    if (v) p.set(k, v)
-  }
-  const qs = p.toString()
-  return qs ? `${base}?${qs}` : base
-}
-
 // ---------------------------------------------------------------------------
-// Props
+// Props — solo la tabla + drawer de detalle son interactivos.
+// El chrome (KPIs, búsqueda, tabs, paginación) vive en page.tsx (server).
 // ---------------------------------------------------------------------------
-
-interface OrderStats {
-  total: number
-  pending: number
-  shipped: number
-  delivered: number
-  cancelled: number
-  revenue: number
-}
 
 interface OrdersClientProps {
   orders: SerializedOrder[]
-  stats: OrderStats
-  total: number
-  currentPage: number
-  perPage: number
-  currentQ: string
-  currentGroup: string
 }
 
-const FILTER_TABS = [
-  { key: '', label: 'Todos' },
-  { key: 'pendiente', label: 'Pendientes' },
-  { key: 'enviado', label: 'Enviados' },
-  { key: 'entregado', label: 'Entregados' },
-  { key: 'cancelado', label: 'Cancelados' },
-]
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
-export function OrdersClient({
-  orders,
-  stats,
-  total,
-  currentPage,
-  perPage,
-  currentQ,
-  currentGroup,
-}: OrdersClientProps) {
+export function OrdersClient({ orders }: OrdersClientProps) {
   const [detail, setDetail] = useState<SerializedOrder | null>(null)
   const { isPending, run } = useServerAction()
 
-  const totalPages = Math.ceil(total / perPage)
-
   const handleStatusChange = (orderId: string, status: OrderStatus) => {
     run(() => updateOrderStatus({ orderId, status }), {
-      successMsg: `Estado: ${UI_STATUS_LABELS[status]}`,
+      successMsg: `Estado: ${ORDER_STATUS[DB_TO_UI_STATUS[status]]?.label ?? status}`,
       // Actualización optimista del drawer — el toast sobrevive al refresh
       onSuccess: () => setDetail((d) => (d?.id === orderId ? { ...d, status } : d)),
       // router.refresh() trae los pedidos actualizados del servidor
@@ -136,90 +89,8 @@ export function OrdersClient({
   )
 
   return (
-    <div className="px-8 pt-7 pb-12">
-      {/* KPIs */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        <KpiCard label="Total pedidos" value={stats.total} valueClass="text-text" />
-        <KpiCard label="Por procesar" value={stats.pending} valueClass="text-[#ffb84a]" />
-        <KpiCard label="En tránsito" value={stats.shipped} valueClass="text-[#5f9eff]" />
-        <KpiCard
-          label="Ingresos"
-          value={`S/ ${(stats.revenue / 1000).toFixed(1)}K`}
-          valueClass="text-(--gold)"
-        />
-      </div>
-
-      {/* Filtros server-side */}
-      <div className="flex items-center gap-3.5 flex-wrap mb-4">
-        <ServerSearchForm
-          placeholder="Buscar pedido o cliente..."
-          defaultValue={currentQ}
-          paramName="q"
-          extraParams={currentGroup ? { statusGroup: currentGroup } : {}}
-        />
-        <div className="flex gap-1.5">
-          {FILTER_TABS.map(({ key, label }) => {
-            const isActive = key === currentGroup
-            const href = buildUrl('/admin/orders', {
-              q: currentQ || undefined,
-              statusGroup: key || undefined,
-            })
-            return (
-              <a
-                key={key}
-                href={href}
-                className={cn(
-                  'px-3.5 py-2 text-[11px] tracking-[1px] uppercase font-display font-extrabold border transition-colors',
-                  isActive
-                    ? 'bg-(--gold) border-(--gold) text-black'
-                    : 'border-(--bd) text-muted hover:text-text hover:border-(--bd)',
-                )}
-              >
-                {label}
-              </a>
-            )
-          })}
-        </div>
-        {(currentQ || currentGroup) && (
-          <a
-            href="/admin/orders"
-            className="text-[12px] text-muted hover:text-text transition-colors"
-          >
-            Limpiar
-          </a>
-        )}
-      </div>
-
-      <AdminTable
-        columns={columns}
-        data={orders}
-        keyExtractor={(o) => o.id}
-        onRowClick={setDetail}
-      />
-
-      {/* Paginación */}
-      {totalPages > 1 && (
-        <div className="flex gap-2 justify-end mt-4">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <a
-              key={p}
-              href={buildUrl('/admin/orders', {
-                q: currentQ || undefined,
-                statusGroup: currentGroup || undefined,
-                page: String(p),
-              })}
-              className={cn(
-                'px-3 py-1.5 text-[13px] border transition-colors',
-                p === currentPage
-                  ? 'bg-(--gold) border-(--gold) text-black font-bold'
-                  : 'border-(--bd) text-muted hover:text-text',
-              )}
-            >
-              {p}
-            </a>
-          ))}
-        </div>
-      )}
+    <>
+      <AdminTable columns={columns} data={orders} keyExtractor={(o) => o.id} onRowClick={setDetail} />
 
       {/* Drawer de detalle */}
       {detail && (
@@ -230,6 +101,6 @@ export function OrdersClient({
           isPending={isPending}
         />
       )}
-    </div>
+    </>
   )
 }

@@ -16,9 +16,7 @@ import type { CategoryRow } from '@/features/categories/types'
 import type { CollectionRow } from '@/features/collections/types'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
 import { ExcelImportDrawer } from '@/features/products/components/ExcelImportDrawer'
-import { FilterMultiSelect } from '@/shared/components/admin/FilterMultiSelect'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
-import { ServerSearchForm } from '@/shared/components/admin/ServerSearchForm'
 import { StockBadge } from '@/features/inventory/components/StockBadge'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
@@ -26,9 +24,7 @@ import { useCrudState, useServerAction } from '@/shared/hooks/admin'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import type { ImportProductRow } from '@/features/products/schemas/product.schema'
 import { productDbSchema } from '@/features/products/schemas/product.schema'
-import { cn } from '@/shared/lib/utils'
-import { FileSpreadsheet, Pencil, Plus, Trash2, X } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { FileSpreadsheet, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -52,30 +48,19 @@ const STATUS_LABELS: Record<string, string> = {
   ARCHIVED: 'Archivado',
 }
 
-function buildUrl(params: Record<string, string | string[] | undefined>) {
-  const p = new URLSearchParams()
-  for (const [k, v] of Object.entries(params)) {
-    if (!v) continue
-    const val = Array.isArray(v) ? v.join(',') : v
-    if (val) p.set(k, val)
-  }
-  const qs = p.toString()
-  return qs ? `/admin/products?${qs}` : '/admin/products'
-}
-
 interface ProductsClientProps {
   initialProducts: SerializedProduct[]
   categories: CategoryRow[]
   brands: BrandRow[]
   collections: CollectionRow[]
   total: number
-  currentPage: number
-  perPage: number
-  currentQ: string
-  currentCats: string[]
-  currentBrands: string[]
-  currentCollections: string[]
 }
+
+// ---------------------------------------------------------------------------
+// Isla cliente con el ciclo de vida CRUD completo: header+botones, tabla,
+// drawers y confirm modal comparten el mismo estado (useCrudState) y por eso
+// viven juntos. Búsqueda, filtros, chips y paginación viven en page.tsx (server).
+// ---------------------------------------------------------------------------
 
 export function ProductsClient({
   initialProducts,
@@ -83,20 +68,11 @@ export function ProductsClient({
   brands,
   collections,
   total,
-  currentPage,
-  perPage,
-  currentQ,
-  currentCats,
-  currentBrands,
-  currentCollections,
 }: ProductsClientProps) {
   const crud = useCrudState<SerializedProduct>()
   const [showImport, setShowImport] = useState(false)
   const [products, setProducts] = useState<SerializedProduct[]>(initialProducts)
   const { isPending, run } = useServerAction()
-  const router = useRouter()
-
-  const totalPages = Math.ceil(total / perPage)
 
   const onSubmit = (
     data: ProductFormValues,
@@ -173,12 +149,6 @@ export function ProductsClient({
     })
   }
 
-  const hasFilters =
-    currentQ !== '' ||
-    currentCats.length > 0 ||
-    currentBrands.length > 0 ||
-    currentCollections.length > 0
-
   const columns = useMemo<Column<SerializedProduct>[]>(
     () => [
       {
@@ -254,7 +224,7 @@ export function ProductsClient({
   )
 
   return (
-    <div className="px-8 pt-7 pb-12">
+    <>
       <PanelHeader
         label="Catálogo"
         title={`${total} producto${total !== 1 ? 's' : ''}`}
@@ -271,200 +241,12 @@ export function ProductsClient({
         }
       />
 
-      {/* Filtros */}
-      <div className="flex flex-col gap-2.5 mb-4.5">
-        {/* Fila: búsqueda + selects + limpiar */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <ServerSearchForm
-            placeholder="Buscar producto o SKU..."
-            defaultValue={currentQ}
-            paramName="q"
-            extraParams={{
-              ...(currentCats.length > 0 && { cat: currentCats.join(',') }),
-              ...(currentBrands.length > 0 && { brand: currentBrands.join(',') }),
-              ...(currentCollections.length > 0 && { collection: currentCollections.join(',') }),
-            }}
-          />
-          <FilterMultiSelect
-            label="Categoría"
-            options={categories.map((c) => ({ label: c.name, value: c.slug }))}
-            selected={currentCats}
-            onToggle={(val) => {
-              const next = currentCats.includes(val)
-                ? currentCats.filter((v) => v !== val)
-                : [...currentCats, val]
-              router.push(
-                buildUrl({
-                  q: currentQ || undefined,
-                  cat: next.length > 0 ? next : undefined,
-                  brand: currentBrands.length > 0 ? currentBrands : undefined,
-                  collection: currentCollections.length > 0 ? currentCollections : undefined,
-                }),
-              )
-            }}
-          />
-          <FilterMultiSelect
-            label="Marca"
-            options={brands.map((b) => ({ label: b.name, value: b.slug }))}
-            selected={currentBrands}
-            onToggle={(val) => {
-              const next = currentBrands.includes(val)
-                ? currentBrands.filter((v) => v !== val)
-                : [...currentBrands, val]
-              router.push(
-                buildUrl({
-                  q: currentQ || undefined,
-                  cat: currentCats.length > 0 ? currentCats : undefined,
-                  brand: next.length > 0 ? next : undefined,
-                  collection: currentCollections.length > 0 ? currentCollections : undefined,
-                }),
-              )
-            }}
-          />
-          <FilterMultiSelect
-            label="Colección"
-            options={collections.map((c) => ({ label: c.name, value: c.slug }))}
-            selected={currentCollections}
-            onToggle={(val) => {
-              const next = currentCollections.includes(val)
-                ? currentCollections.filter((v) => v !== val)
-                : [...currentCollections, val]
-              router.push(
-                buildUrl({
-                  q: currentQ || undefined,
-                  cat: currentCats.length > 0 ? currentCats : undefined,
-                  brand: currentBrands.length > 0 ? currentBrands : undefined,
-                  collection: next.length > 0 ? next : undefined,
-                }),
-              )
-            }}
-          />
-          {hasFilters && (
-            <a
-              href="/admin/products"
-              className="ml-auto text-[11px] text-muted hover:text-text transition-colors underline underline-offset-2 whitespace-nowrap"
-            >
-              Limpiar todo
-            </a>
-          )}
-        </div>
-
-        {/* Chips de filtros activos */}
-        {hasFilters && (
-          <div className="flex gap-2 flex-wrap items-center">
-            <span className="text-[10px] uppercase tracking-widest text-muted font-bold font-display">
-              Activos:
-            </span>
-            {currentQ && (
-              <a
-                href={buildUrl({
-                  cat: currentCats.length > 0 ? currentCats : undefined,
-                  brand: currentBrands.length > 0 ? currentBrands : undefined,
-                  collection: currentCollections.length > 0 ? currentCollections : undefined,
-                })}
-                className="group flex items-center gap-1.5 px-2.5 py-1 bg-(--sub) border border-(--bd) hover:border-(--gold) transition-colors"
-              >
-                <span className="text-[11px] text-muted">Búsqueda:</span>
-                <span className="text-[11px] text-text font-semibold">{currentQ}</span>
-                <X size={10} className="text-muted group-hover:text-(--gold) transition-colors" />
-              </a>
-            )}
-            {currentCats.map((slug) => {
-              const name = categories.find((c) => c.slug === slug)?.name ?? slug
-              const remaining = currentCats.filter((s) => s !== slug)
-              return (
-                <a
-                  key={`cat-${slug}`}
-                  href={buildUrl({
-                    q: currentQ || undefined,
-                    cat: remaining.length > 0 ? remaining : undefined,
-                    brand: currentBrands.length > 0 ? currentBrands : undefined,
-                    collection: currentCollections.length > 0 ? currentCollections : undefined,
-                  })}
-                  className="group flex items-center gap-1.5 px-2.5 py-1 bg-(--sub) border border-(--bd) hover:border-(--gold) transition-colors"
-                >
-                  <span className="text-[11px] text-muted">Cat:</span>
-                  <span className="text-[11px] text-text font-semibold">{name}</span>
-                  <X size={10} className="text-muted group-hover:text-(--gold) transition-colors" />
-                </a>
-              )
-            })}
-            {currentBrands.map((slug) => {
-              const name = brands.find((b) => b.slug === slug)?.name ?? slug
-              const remaining = currentBrands.filter((s) => s !== slug)
-              return (
-                <a
-                  key={`brd-${slug}`}
-                  href={buildUrl({
-                    q: currentQ || undefined,
-                    cat: currentCats.length > 0 ? currentCats : undefined,
-                    brand: remaining.length > 0 ? remaining : undefined,
-                    collection: currentCollections.length > 0 ? currentCollections : undefined,
-                  })}
-                  className="group flex items-center gap-1.5 px-2.5 py-1 bg-(--sub) border border-(--bd) hover:border-(--gold) transition-colors"
-                >
-                  <span className="text-[11px] text-muted">Marca:</span>
-                  <span className="text-[11px] text-text font-semibold">{name}</span>
-                  <X size={10} className="text-muted group-hover:text-(--gold) transition-colors" />
-                </a>
-              )
-            })}
-            {currentCollections.map((slug) => {
-              const name = collections.find((c) => c.slug === slug)?.name ?? slug
-              const remaining = currentCollections.filter((s) => s !== slug)
-              return (
-                <a
-                  key={`col-${slug}`}
-                  href={buildUrl({
-                    q: currentQ || undefined,
-                    cat: currentCats.length > 0 ? currentCats : undefined,
-                    brand: currentBrands.length > 0 ? currentBrands : undefined,
-                    collection: remaining.length > 0 ? remaining : undefined,
-                  })}
-                  className="group flex items-center gap-1.5 px-2.5 py-1 bg-(--sub) border border-(--bd) hover:border-(--gold) transition-colors"
-                >
-                  <span className="text-[11px] text-muted">Col:</span>
-                  <span className="text-[11px] text-text font-semibold">{name}</span>
-                  <X size={10} className="text-muted group-hover:text-(--gold) transition-colors" />
-                </a>
-              )
-            })}
-          </div>
-        )}
-      </div>
-
       <AdminTable
         columns={columns}
         data={products}
         keyExtractor={(p) => p.id}
         onRowClick={crud.openEdit}
       />
-
-      {/* Paginación */}
-      {totalPages > 1 && (
-        <div className="flex gap-2 justify-end mt-4">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <a
-              key={p}
-              href={buildUrl({
-                q: currentQ || undefined,
-                cat: currentCats.length > 0 ? currentCats : undefined,
-                brand: currentBrands.length > 0 ? currentBrands : undefined,
-                collection: currentCollections.length > 0 ? currentCollections : undefined,
-                page: String(p),
-              })}
-              className={cn(
-                'px-3 py-1.5 text-[13px] border transition-colors',
-                p === currentPage
-                  ? 'bg-(--gold) border-(--gold) text-black font-bold'
-                  : 'border-(--bd) text-muted hover:text-text',
-              )}
-            >
-              {p}
-            </a>
-          ))}
-        </div>
-      )}
 
       <ConfirmModal
         open={!!crud.pendingDelete}
@@ -491,6 +273,6 @@ export function ProductsClient({
           isPending={isPending}
         />
       )}
-    </div>
+    </>
   )
 }

@@ -98,7 +98,7 @@ export function PromotionsClient({ promotions }: Props) {
         onConfirm={crud.handleDelete}
         title="¿Eliminar promoción?"
         description={`Esta acción eliminará "${crud.pendingDelete?.name ?? ''}" permanentemente.`}
-        isPending={isPending}
+        isPending={crud.isPending}
       />
     </div>
   )

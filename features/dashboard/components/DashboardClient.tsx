@@ -123,9 +123,10 @@ type SerializedOrder = Omit<OrderListItem, 'total' | 'subtotal' | 'shippingCost'
 }
 
 // Versión serializable de ProductListItem — Decimals ya convertidos a number
-type SerializedProduct = Omit<ProductListItem, 'price' | 'compareAtPrice'> & {
+type SerializedProduct = Omit<ProductListItem, 'price' | 'compareAtPrice' | 'salePrice'> & {
   price: number
   compareAtPrice: number | null
+  salePrice: number | null
 }
 
 interface DashboardClientProps {

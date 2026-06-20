@@ -1,5 +1,7 @@
-function Bone({ className }: { className?: string }) {
-  return <div className={`animate-pulse bg-(--sub) ${className ?? ''}`} />
+import type { CSSProperties } from 'react'
+
+function Bone({ className, style }: { className?: string; style?: CSSProperties }) {
+  return <div className={`animate-pulse bg-(--sub) ${className ?? ''}`} style={style} />
 }
 
 interface AdminPageSkeletonProps {

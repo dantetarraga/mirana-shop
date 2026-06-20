@@ -31,8 +31,8 @@ const TYPE_META: Record<string, { icon: React.ReactNode; label: string; color: s
 }
 
 const ACTIVE_STATUS = {
-  activo: { label: 'Activo', color: '#22c55e' },
-  inactivo: { label: 'Inactivo', color: '#6b7280' },
+  activo: { label: 'Activo', cls: 'badge-green', outlineCls: 'badge-green-outline' },
+  inactivo: { label: 'Inactivo', cls: 'badge-red', outlineCls: 'badge-red-outline' },
 } as const
 
 export function PromotionCard({ promotion, onEdit, onToggle, onDelete, isPending }: Props) {
@@ -50,10 +50,7 @@ export function PromotionCard({ promotion, onEdit, onToggle, onDelete, isPending
           </div>
           <div className="text-[11px] text-muted tracking-[1px] uppercase mt-0.5">{meta.label}</div>
         </div>
-        <StatusBadge
-          config={{ label: ACTIVE_STATUS[statusKey].label, color: ACTIVE_STATUS[statusKey].color }}
-          variant="filled"
-        />
+        <StatusBadge config={ACTIVE_STATUS[statusKey]} variant="filled" />
       </div>
 
       {/* Detalles */}

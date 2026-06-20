@@ -162,7 +162,7 @@ export async function updateProduct(
 // ---------------------------------------------------------------------------
 
 export async function deleteProduct(id: string): Promise<ActionResult> {
-  if (!id) return { success: false, error: 'ID de producto requerido' }
+  if (!id) return { success: false, error: 'ID de producto requerido', code: 400 }
 
   try {
     await db.product.update({ where: { id }, data: { deletedAt: new Date() } })
