@@ -1,7 +1,7 @@
 'use client'
 
-import { createBrand, updateBrand } from '@/features/admin/brands/actions/brand.actions'
-import type { BrandRow } from '@/modules/catalog/repositories/brand.repo'
+import { createBrand, updateBrand } from '@/features/brands/actions/brand.actions'
+import type { BrandRow } from '@/features/brands/services/brand.service'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { EntityProductsPanel } from '@/shared/components/admin/EntityProductsPanel'
 import { Button } from '@/shared/components/ui/Button'

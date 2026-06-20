@@ -1,6 +1,6 @@
 'use server'
 
-import { brandRepo } from '@/modules/catalog/repositories/brand.repo'
+import { brandRepo } from '@/features/brands/services/brand.service'
 import { db } from '@/shared/lib/db'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import type { DrawerProduct } from '@/shared/types/entity-products.types'

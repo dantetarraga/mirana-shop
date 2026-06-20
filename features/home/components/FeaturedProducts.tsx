@@ -1,6 +1,6 @@
-import { productRepo } from "@/modules/catalog/repositories/product.repo";
-import { toProductCards } from "@/modules/catalog/mappers/product.mapper";
-import { ProductCard } from "@/shared/components/ProductCard";
+import { productRepo } from "@/features/products/services/product.service";
+import { toProductCards } from "@/features/products/services/product.mapper";
+import { ProductCard } from "@/features/products/components/ProductCard";
 
 // Server Component — fetcha directamente desde el repo
 export async function FeaturedProducts() {

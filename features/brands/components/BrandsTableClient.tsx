@@ -1,8 +1,8 @@
 'use client'
 
-import { deleteBrand } from '@/features/admin/brands/actions/brand.actions'
-import { BrandCrudDrawer } from '@/features/admin/brands/components/BrandCrudDrawer'
-import type { BrandRow } from '@/modules/catalog/repositories/brand.repo'
+import { deleteBrand } from '@/features/brands/actions/brand.actions'
+import { BrandCrudDrawer } from '@/features/brands/components/BrandCrudDrawer'
+import type { BrandRow } from '@/features/brands/services/brand.service'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
 import { EntityProductsDrawer } from '@/shared/components/admin/EntityProductsDrawer'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'

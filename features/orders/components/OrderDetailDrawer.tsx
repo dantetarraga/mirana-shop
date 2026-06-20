@@ -1,7 +1,7 @@
 'use client'
 
 import type { OrderStatus } from '@/generated/prisma/client'
-import type { OrderListItem } from '@/modules/orders/repositories/order.repo'
+import type { OrderListItem } from '@/features/orders/services/order.service'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { DrawerSection } from '@/shared/components/admin/DrawerSection'
 import { Button } from '@/shared/components/ui/Button'

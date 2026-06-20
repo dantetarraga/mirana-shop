@@ -1,6 +1,6 @@
-import { getMyAddresses } from '@/features/account/profile/actions/account-profile.actions'
-import { AddressesSkeleton } from '@/features/account/profile/components/AddressesSkeleton'
-import { DireccionesContent } from '@/features/account/profile/components/DireccionesContent'
+import { getMyAddresses } from '@/features/profile/actions/account-profile.actions'
+import { AddressesSkeleton } from '@/features/profile/components/AddressesSkeleton'
+import { DireccionesContent } from '@/features/profile/components/DireccionesContent'
 import { getAccountUser } from '@/shared/lib/get-account-user'
 import { Suspense } from 'react'
 

@@ -1,8 +1,8 @@
 'use client'
 
+import { useCartStore } from '@/features/cart/stores/cart.store'
+import type { CatalogProduct } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
-import { useStore } from '@/shared/stores/store'
-import type { CatalogProduct } from '@/shared/types/catalog.types'
 import { Minus, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -12,7 +12,7 @@ interface Props {
 }
 
 export function AddToCartPanel({ product: p }: Props) {
-  const { addToCart } = useStore()
+  const { addToCart } = useCartStore()
   const [qty, setQty] = useState(1)
   const isOutOfStock = p.stock === 0 || p.status === 'SOLD_OUT'
 

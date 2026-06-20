@@ -7,11 +7,11 @@ import {
   setDefaultAddress,
   updateAddress,
   type AddressData,
-} from '@/features/account/profile/actions/account-profile.actions'
+} from '@/features/profile/actions/account-profile.actions'
 import {
   AddressFormPanel,
   type AddressFormValues,
-} from '@/features/account/profile/components/AddressFormPanel'
+} from '@/features/profile/components/AddressFormPanel'
 import { Button } from '@/shared/components/ui/Button'
 import type { SessionUser } from '@/shared/hooks/useUser'
 import { cn } from '@/shared/lib/utils'

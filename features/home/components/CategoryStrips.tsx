@@ -1,4 +1,4 @@
-import type { CategoryRow } from '@/modules/catalog/repositories/category.repo'
+import type { CategoryRow } from '@/features/categories/services/category.service'
 
 // Mapeo de slug de categoría → clase CSS de stripe
 const STRIPE_MAP: Record<string, string> = {

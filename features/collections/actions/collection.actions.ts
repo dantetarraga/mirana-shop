@@ -1,6 +1,6 @@
 'use server'
 
-import { collectionRepo } from '@/modules/catalog/repositories/collection.repo'
+import { collectionRepo } from '@/features/collections/services/collection.service'
 import { db } from '@/shared/lib/db'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import type { DrawerProduct } from '@/shared/types/entity-products.types'

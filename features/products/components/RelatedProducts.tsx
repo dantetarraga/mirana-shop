@@ -1,5 +1,5 @@
-import { toProductCards } from '@/modules/catalog/mappers/product.mapper'
-import { productRepo } from '@/modules/catalog/repositories/product.repo'
+import { toProductCards } from '@/features/products/services/product.mapper'
+import { productRepo } from '@/features/products/services/product.service'
 import { ProductCarousel } from './ProductCarousel'
 
 interface Props {

@@ -1,6 +1,6 @@
-import { getMyOrders } from '@/features/account/orders/actions/account.actions'
-import { OrdersContent } from '@/features/account/orders/components/OrdersContent'
-import { OrdersSkeleton } from '@/features/account/orders/components/OrdersSkeleton'
+import { getMyOrders } from '@/features/orders/actions/account-orders.actions'
+import { OrdersContent } from '@/features/orders/components/OrdersContent'
+import { OrdersSkeleton } from '@/features/orders/components/OrdersSkeleton'
 import { getAccountUser } from '@/shared/lib/get-account-user'
 import { Suspense } from 'react'
 

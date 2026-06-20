@@ -1,8 +1,9 @@
 'use client'
 
+import { useAuthModalStore } from '@/features/auth/stores/auth-modal.store'
+import { useCartStore } from '@/features/cart/stores/cart.store'
 import { Button } from '@/shared/components/ui/Button'
 import { useUser } from '@/shared/hooks'
-import { useStore } from '@/shared/stores/store'
 import { cn } from '@/shared/lib/utils'
 import { LayoutGrid, LogOut, MapPin, Package, Search, ShoppingBag, User } from 'lucide-react'
 import { signOut } from 'next-auth/react'
@@ -11,7 +12,8 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
 export function Navbar() {
-  const { cartCount, setCartOpen, openAuth } = useStore()
+  const { cartCount, setCartOpen } = useCartStore()
+  const { openAuth } = useAuthModalStore()
   const { user } = useUser()
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchVal, setSearchVal] = useState('')

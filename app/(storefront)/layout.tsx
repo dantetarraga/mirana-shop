@@ -1,6 +1,6 @@
 import { Footer } from '@/shared/components/layout/Footer'
 import { Navbar } from '@/shared/components/layout/Navbar'
-import { StoreOverlays } from '@/shared/components/StoreOverlays'
+import { StoreOverlays } from '@/features/cart/components/StoreOverlays'
 
 export default function StorefrontLayout({ children }: { children: React.ReactNode }) {
   return (

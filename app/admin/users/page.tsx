@@ -1,5 +1,5 @@
-import { userRepo, type UserSegment, type UserRow } from "@/modules/users/repositories/user.repo";
-import { UsersClient } from "@/features/admin/users/components/UsersClient";
+import { userRepo, type UserSegment, type UserRow } from "@/features/users/services/user.service";
+import { UsersClient } from "@/features/users/components/UsersClient";
 
 export type { UserRow };
 

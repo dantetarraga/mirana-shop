@@ -1,8 +1,8 @@
-import { ProductsClient } from '@/features/admin/products/components/ProductsClient'
-import { brandRepo } from '@/modules/catalog/repositories/brand.repo'
-import { categoryRepo } from '@/modules/catalog/repositories/category.repo'
-import { collectionRepo } from '@/modules/catalog/repositories/collection.repo'
-import { productRepo } from '@/modules/catalog/repositories/product.repo'
+import { ProductsClient } from '@/features/products/components/ProductsClient'
+import { brandRepo } from '@/features/brands/services/brand.service'
+import { categoryRepo } from '@/features/categories/services/category.service'
+import { collectionRepo } from '@/features/collections/services/collection.service'
+import { productRepo } from '@/features/products/services/product.service'
 
 const PER_PAGE = 30
 

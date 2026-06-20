@@ -1,8 +1,8 @@
 'use client'
 
-import { AuthModal } from './AuthModal'
+import { AuthModal } from '@/features/auth/components/AuthModal'
+import { ProductModal } from '@/features/products/components/ProductModal'
 import { CartDrawer } from './CartDrawer'
-import { ProductModal } from './ProductModal'
 
 export function StoreOverlays() {
   return (

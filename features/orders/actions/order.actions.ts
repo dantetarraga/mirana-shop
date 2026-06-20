@@ -1,7 +1,7 @@
 'use server'
 
 import type { OrderStatus } from '@/generated/prisma/client'
-import { orderRepo } from '@/modules/orders/repositories/order.repo'
+import { orderRepo } from '@/features/orders/services/order.service'
 import { updateOrderStatusSchema } from '@/shared/lib/schemas'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import { revalidatePath } from 'next/cache'

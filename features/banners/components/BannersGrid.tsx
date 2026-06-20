@@ -1,4 +1,4 @@
-import type { BannerRow } from '@/modules/catalog/repositories/banner.repo'
+import type { BannerRow } from '@/features/banners/services/banner.service'
 import { BannerCard } from './BannerCard'
 
 interface BannersGridProps {

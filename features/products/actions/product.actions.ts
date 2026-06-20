@@ -1,8 +1,8 @@
 'use server'
 
-import { brandRepo } from '@/modules/catalog/repositories/brand.repo'
-import { categoryRepo } from '@/modules/catalog/repositories/category.repo'
-import { productRepo } from '@/modules/catalog/repositories/product.repo'
+import { brandRepo } from '@/features/brands/services/brand.service'
+import { categoryRepo } from '@/features/categories/services/category.service'
+import { productRepo } from '@/features/products/services/product.service'
 import { db } from '@/shared/lib/db'
 import { importProductRowSchema, productDbBaseSchema, productDbSchema } from '@/shared/lib/schemas'
 import type { ActionResult } from '@/shared/types/action-result.types'

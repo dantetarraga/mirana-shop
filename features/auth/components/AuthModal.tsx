@@ -1,7 +1,8 @@
 'use client'
 
-import { acceptTerms } from '@/features/storefront/auth/actions/accept-terms.actions'
-import { registerUser } from '@/features/storefront/auth/actions/register.actions'
+import { acceptTerms } from '@/features/auth/actions/accept-terms.actions'
+import { registerUser } from '@/features/auth/actions/register.actions'
+import { useAuthModalStore } from '@/features/auth/stores/auth-modal.store'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
 import { Modal } from '@/shared/components/ui/Modal'
@@ -11,7 +12,6 @@ import {
   type LoginInput,
   type RegisterInput,
 } from '@/shared/lib/schemas'
-import { useStore } from '@/shared/stores/store'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { signIn } from 'next-auth/react'
 import { useEffect, useState } from 'react'
@@ -21,7 +21,7 @@ import { toast } from 'sonner'
 type FormValues = LoginInput & Partial<Pick<RegisterInput, 'name' | 'confirm'>>
 
 export function AuthModal() {
-  const { authOpen, authMode, closeAuth, openAuth } = useStore()
+  const { authOpen, authMode, closeAuth, openAuth } = useAuthModalStore()
   const mode = authMode
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [termsError, setTermsError] = useState(false)

@@ -1,5 +1,5 @@
-import type { BannerRow } from '@/modules/catalog/repositories/banner.repo'
-import { StatusBadge } from '@/shared/components/admin/StatusBadge'
+import type { BannerRow } from '@/features/banners/services/banner.service'
+import { StatusBadge } from '@/features/orders/components/StatusBadge'
 import { Button } from '@/shared/components/ui/Button'
 import { BANNER_STATUS } from '@/shared/lib/admin/admin-constants'
 import { ArrowRight } from 'lucide-react'

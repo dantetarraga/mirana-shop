@@ -1,8 +1,8 @@
-import { DashboardClient } from '@/features/admin/dashboard/components/DashboardClient'
-import { productRepo } from '@/modules/catalog/repositories/product.repo'
-import { inventoryRepo } from '@/modules/inventory/repositories/inventory.repo'
-import { orderRepo } from '@/modules/orders/repositories/order.repo'
-import { userRepo } from '@/modules/users/repositories/user.repo'
+import { DashboardClient } from '@/features/dashboard/components/DashboardClient'
+import { productRepo } from '@/features/products/services/product.service'
+import { inventoryRepo } from '@/features/inventory/services/inventory.service'
+import { orderRepo } from '@/features/orders/services/order.service'
+import { userRepo } from '@/features/users/services/user.service'
 
 export default async function DashboardPage() {
   const [

@@ -1,15 +1,17 @@
 'use client'
 
+import { useCartStore } from '@/features/cart/stores/cart.store'
+import { useProductModalStore } from '@/features/products/stores/product-modal.store'
+import { getCategoryStripe } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
-import { useStore } from '@/shared/stores/store'
-import { getCategoryStripe } from '@/shared/types/catalog.types'
 import { Minus, Plus, X } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 export function ProductModal() {
-  const { activeProduct: p, closeProductModal, addToCart } = useStore()
+  const { activeProduct: p, closeProductModal } = useProductModalStore()
+  const { addToCart } = useCartStore()
   const [qty, setQty] = useState(1)
 
   useEffect(() => {

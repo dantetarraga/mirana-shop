@@ -1,9 +1,10 @@
 'use client'
 
+import { useCartStore } from '@/features/cart/stores/cart.store'
+import { useProductModalStore } from '@/features/products/stores/product-modal.store'
+import type { CatalogProduct } from '@/features/products/types/catalog.types'
+import { getCategoryLabel, getCategoryStripe } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
-import { useStore } from '@/shared/stores/store'
-import type { CatalogProduct } from '@/shared/types/catalog.types'
-import { getCategoryLabel, getCategoryStripe } from '@/shared/types/catalog.types'
 import { toast } from 'sonner'
 
 interface ProductCardProps {
@@ -27,7 +28,8 @@ export function ProductCard({
   showBadge = true,
   noAnimation = false,
 }: ProductCardProps) {
-  const { openProductModal, addToCart } = useStore()
+  const { openProductModal } = useProductModalStore()
+  const { addToCart } = useCartStore()
   const stripe = getCategoryStripe(p.category.slug)
   const catLabel = getCategoryLabel(p.category.slug)
   const isOutOfStock = p.stock === 0 || p.status === 'SOLD_OUT'

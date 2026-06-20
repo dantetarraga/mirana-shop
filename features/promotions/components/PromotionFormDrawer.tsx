@@ -1,6 +1,6 @@
 'use client'
 
-import type { PromotionRow } from '@/modules/catalog/repositories/promotion.repo'
+import type { PromotionRow } from '@/features/promotions/services/promotion.service'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'

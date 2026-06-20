@@ -1,15 +1,15 @@
 'use client'
 
-import { updateOrderStatus } from '@/features/admin/orders/actions/order.actions'
+import { updateOrderStatus } from '@/features/orders/actions/order.actions'
 import {
   OrderDetailDrawer,
   type SerializedOrder,
-} from '@/features/admin/orders/components/OrderDetailDrawer'
+} from '@/features/orders/components/OrderDetailDrawer'
 import type { OrderStatus } from '@/generated/prisma/client'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
-import { KpiCard } from '@/shared/components/admin/KpiCard'
+import { KpiCard } from '@/features/dashboard/components/KpiCard'
 import { ServerSearchForm } from '@/shared/components/admin/ServerSearchForm'
-import { StatusBadge } from '@/shared/components/admin/StatusBadge'
+import { StatusBadge } from '@/features/orders/components/StatusBadge'
 import { useServerAction } from '@/shared/hooks/admin'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { ORDER_STATUS, fmt } from '@/shared/lib/admin/admin-constants'

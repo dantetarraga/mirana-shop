@@ -1,7 +1,7 @@
 'use client'
 
-import { createCategory, updateCategory } from '@/features/admin/categories/actions/category.actions'
-import type { CategoryRow } from '@/modules/catalog/repositories/category.repo'
+import { createCategory, updateCategory } from '@/features/categories/actions/category.actions'
+import type { CategoryRow } from '@/features/categories/services/category.service'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { EntityProductsPanel } from '@/shared/components/admin/EntityProductsPanel'
 import { FilterMultiSelect } from '@/shared/components/admin/FilterMultiSelect'

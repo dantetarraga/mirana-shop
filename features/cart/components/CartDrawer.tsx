@@ -1,17 +1,17 @@
 'use client'
 
+import { useCartStore } from '@/features/cart/stores/cart.store'
+import { getCategoryStripe } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
-import { useStore } from '@/shared/stores/store'
 import { formatCurrency } from '@/shared/lib/utils'
-import { getCategoryStripe } from '@/shared/types/catalog.types'
 import { Minus, Plus, X } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 export function CartDrawer() {
-  const { cart, cartOpen, setCartOpen, updateQty, removeItem } = useStore()
+  const { cart, cartOpen, setCartOpen, updateQty, removeItem } = useCartStore()
   const total = cart.reduce((s, i) => s + i.product.price * i.qty, 0)
   const [pendingRemove, setPendingRemove] = useState<{ id: string; name: string } | null>(null)
 

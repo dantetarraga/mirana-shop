@@ -1,6 +1,6 @@
 import type { OrderStatus, PaymentMethod, PaymentStatus } from '@/generated/prisma/client'
 import type { Decimal } from '@/generated/prisma/internal/prismaNamespace'
-import { inventoryRepo } from '@/modules/inventory/repositories/inventory.repo'
+import { inventoryRepo } from '@/features/inventory/services/inventory.service'
 import { db } from '@/shared/lib/db'
 import { formatDate } from '@/shared/lib/utils'
 

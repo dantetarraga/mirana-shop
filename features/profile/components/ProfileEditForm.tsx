@@ -1,6 +1,6 @@
 'use client'
 
-import { updateMyProfile, type ProfileData } from '@/features/account/profile/actions/account-profile.actions'
+import { updateMyProfile, type ProfileData } from '@/features/profile/actions/account-profile.actions'
 import { Button } from '@/shared/components/ui/Button'
 import { Loader2, Save } from 'lucide-react'
 import { useState } from 'react'

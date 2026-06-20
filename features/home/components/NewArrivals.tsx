@@ -1,6 +1,6 @@
-import { toProductCards } from '@/modules/catalog/mappers/product.mapper'
-import { productRepo } from '@/modules/catalog/repositories/product.repo'
-import { ProductCard } from '@/shared/components/ProductCard'
+import { toProductCards } from '@/features/products/services/product.mapper'
+import { productRepo } from '@/features/products/services/product.service'
+import { ProductCard } from '@/features/products/components/ProductCard'
 
 // Server Component — no necesita "use client"
 export async function NewArrivals() {

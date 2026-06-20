@@ -1,4 +1,4 @@
-import type { BrandRow } from '@/modules/catalog/repositories/brand.repo'
+import type { BrandRow } from '@/features/brands/services/brand.service'
 
 interface BrandsCarouselProps {
   brands: BrandRow[]

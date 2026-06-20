@@ -3,8 +3,8 @@
 import {
   createCollection,
   updateCollection,
-} from '@/features/admin/collections/actions/collection.actions'
-import type { CollectionRow } from '@/modules/catalog/repositories/collection.repo'
+} from '@/features/collections/actions/collection.actions'
+import type { CollectionRow } from '@/features/collections/services/collection.service'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { EntityProductsPanel } from '@/shared/components/admin/EntityProductsPanel'
 import { FilterMultiSelect } from '@/shared/components/admin/FilterMultiSelect'

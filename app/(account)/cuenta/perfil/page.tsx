@@ -1,7 +1,7 @@
-import { getMyOrders } from '@/features/account/orders/actions/account.actions'
-import { getMyProfile } from '@/features/account/profile/actions/account-profile.actions'
-import { PerfilContent } from '@/features/account/profile/components/PerfilContent'
-import { ProfileSkeleton } from '@/features/account/profile/components/ProfileSkeleton'
+import { getMyOrders } from '@/features/orders/actions/account-orders.actions'
+import { getMyProfile } from '@/features/profile/actions/account-profile.actions'
+import { PerfilContent } from '@/features/profile/components/PerfilContent'
+import { ProfileSkeleton } from '@/features/profile/components/ProfileSkeleton'
 import { getAccountUser } from '@/shared/lib/get-account-user'
 import { Suspense } from 'react'
 

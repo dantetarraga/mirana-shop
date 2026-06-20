@@ -1,9 +1,9 @@
 'use client'
 
-import type { CategoryRow } from '@/modules/catalog/repositories/category.repo'
-import { ProductCard } from '@/shared/components/ProductCard'
+import type { CategoryRow } from '@/features/categories/services/category.service'
+import { ProductCard } from '@/features/products/components/ProductCard'
 import { Button } from '@/shared/components/ui/Button'
-import type { CatalogProduct } from '@/shared/types/catalog.types'
+import type { CatalogProduct } from '@/features/products/types/catalog.types'
 import { Search } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useMemo, useState } from 'react'

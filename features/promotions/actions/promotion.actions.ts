@@ -1,7 +1,7 @@
 'use server'
 
 import type { PromotionType } from '@/generated/prisma/client'
-import { promotionRepo } from '@/modules/catalog/repositories/promotion.repo'
+import { promotionRepo } from '@/features/promotions/services/promotion.service'
 import { promotionDbSchema } from '@/shared/lib/schemas'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import { revalidatePath } from 'next/cache'

@@ -1,6 +1,6 @@
 'use server'
 
-import { bannerRepo } from '@/modules/catalog/repositories/banner.repo'
+import { bannerRepo } from '@/features/banners/services/banner.service'
 import { bannerDbSchema } from '@/shared/lib/schemas'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import { revalidatePath, revalidateTag } from 'next/cache'

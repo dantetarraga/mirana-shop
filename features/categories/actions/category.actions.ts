@@ -1,6 +1,6 @@
 'use server'
 
-import { categoryRepo } from '@/modules/catalog/repositories/category.repo'
+import { categoryRepo } from '@/features/categories/services/category.service'
 import { db } from '@/shared/lib/db'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import type { DrawerProduct } from '@/shared/types/entity-products.types'

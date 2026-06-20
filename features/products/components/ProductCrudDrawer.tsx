@@ -1,9 +1,9 @@
 'use client'
 
-import type { BrandRow } from '@/modules/catalog/repositories/brand.repo'
-import type { CategoryRow } from '@/modules/catalog/repositories/category.repo'
-import type { CollectionRow } from '@/modules/catalog/repositories/collection.repo'
-import type { ProductListItem } from '@/modules/catalog/repositories/product.repo'
+import type { BrandRow } from '@/features/brands/services/brand.service'
+import type { CategoryRow } from '@/features/categories/services/category.service'
+import type { CollectionRow } from '@/features/collections/services/collection.service'
+import type { ProductListItem } from '@/features/products/services/product.service'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { FilterMultiSelect } from '@/shared/components/admin/FilterMultiSelect'
 import { Button } from '@/shared/components/ui/Button'

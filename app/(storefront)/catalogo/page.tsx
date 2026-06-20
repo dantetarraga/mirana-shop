@@ -1,8 +1,8 @@
 import { Suspense } from "react";
-import { productRepo } from "@/modules/catalog/repositories/product.repo";
-import { categoryRepo } from "@/modules/catalog/repositories/category.repo";
-import { toProductCards } from "@/modules/catalog/mappers/product.mapper";
-import { CatalogClient } from "@/features/storefront/catalog/components/CatalogClient";
+import { productRepo } from "@/features/products/services/product.service";
+import { categoryRepo } from "@/features/categories/services/category.service";
+import { toProductCards } from "@/features/products/services/product.mapper";
+import { CatalogClient } from "@/features/products/components/CatalogClient";
 
 // Server Component — fetcha categorías y productos iniciales
 export default async function CatalogPage() {

@@ -1,8 +1,8 @@
 'use client'
 
-import type { ProductListItem } from '@/modules/catalog/repositories/product.repo'
-import type { OrderListItem } from '@/modules/orders/repositories/order.repo'
-import { KpiCard } from '@/shared/components/admin/KpiCard'
+import type { ProductListItem } from '@/features/products/services/product.service'
+import type { OrderListItem } from '@/features/orders/services/order.service'
+import { KpiCard } from '@/features/dashboard/components/KpiCard'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { cn, formatDate } from '@/shared/lib/utils'

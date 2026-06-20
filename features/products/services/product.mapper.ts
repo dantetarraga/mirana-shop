@@ -1,5 +1,5 @@
-import type { ProductListItem } from "../repositories/product.repo";
-import type { CatalogProduct } from "@/shared/types/catalog.types";
+import type { ProductListItem } from "./product.service";
+import type { CatalogProduct } from "@/features/products/types/catalog.types";
 
 /**
  * Convierte un ProductListItem (con Decimal de Prisma) a un CatalogProduct

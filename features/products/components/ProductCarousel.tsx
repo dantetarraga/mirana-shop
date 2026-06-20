@@ -1,7 +1,7 @@
 'use client'
 
-import { ProductCard } from '@/shared/components/ProductCard'
-import type { CatalogProduct } from '@/shared/types/catalog.types'
+import { ProductCard } from '@/features/products/components/ProductCard'
+import type { CatalogProduct } from '@/features/products/types/catalog.types'
 import useEmblaCarousel from 'embla-carousel-react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'

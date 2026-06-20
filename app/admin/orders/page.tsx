@@ -1,5 +1,5 @@
-import { orderRepo, type OrderStatusGroup } from "@/modules/orders/repositories/order.repo";
-import { OrdersClient } from "@/features/admin/orders/components/OrdersClient";
+import { orderRepo, type OrderStatusGroup } from "@/features/orders/services/order.service";
+import { OrdersClient } from "@/features/orders/components/OrdersClient";
 
 const PER_PAGE = 30;
 

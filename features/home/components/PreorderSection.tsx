@@ -1,4 +1,4 @@
-import { productRepo } from '@/modules/catalog/repositories/product.repo'
+import { productRepo } from '@/features/products/services/product.service'
 import { Button } from '@/shared/components/ui/Button'
 
 const STRIPE_MAP: Record<string, string> = {

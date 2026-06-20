@@ -1,7 +1,7 @@
 'use server'
 
 import type { PaymentMethod } from '@/generated/prisma/client'
-import { orderRepo } from '@/modules/orders/repositories/order.repo'
+import { orderRepo } from '@/features/orders/services/order.service'
 import { checkoutSchema } from '@/shared/lib/schemas'
 import { revalidatePath } from 'next/cache'
 

@@ -1,25 +1,25 @@
 'use client'
 
-import { syncProductCollections } from '@/features/admin/collections/actions/collection.actions'
+import { syncProductCollections } from '@/features/collections/actions/collection.actions'
 import {
   createProduct,
   deleteProduct,
   importProducts,
   updateProduct,
-} from '@/features/admin/products/actions/product.actions'
+} from '@/features/products/actions/product.actions'
 import {
   ProductCrudDrawer,
   type SerializedProduct,
-} from '@/features/admin/products/components/ProductCrudDrawer'
-import type { BrandRow } from '@/modules/catalog/repositories/brand.repo'
-import type { CategoryRow } from '@/modules/catalog/repositories/category.repo'
-import type { CollectionRow } from '@/modules/catalog/repositories/collection.repo'
+} from '@/features/products/components/ProductCrudDrawer'
+import type { BrandRow } from '@/features/brands/services/brand.service'
+import type { CategoryRow } from '@/features/categories/services/category.service'
+import type { CollectionRow } from '@/features/collections/services/collection.service'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
 import { ExcelImportDrawer } from '@/shared/components/admin/ExcelImportDrawer'
 import { FilterMultiSelect } from '@/shared/components/admin/FilterMultiSelect'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { ServerSearchForm } from '@/shared/components/admin/ServerSearchForm'
-import { StockBadge } from '@/shared/components/admin/StockBadge'
+import { StockBadge } from '@/features/inventory/components/StockBadge'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
 import { useCrudState, useServerAction } from '@/shared/hooks/admin'

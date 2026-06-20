@@ -1,5 +1,5 @@
-import { BrandsTableClient } from '@/features/admin/brands/components/BrandsTableClient'
-import { brandRepo } from '@/modules/catalog/repositories/brand.repo'
+import { BrandsTableClient } from '@/features/brands/components/BrandsTableClient'
+import { brandRepo } from '@/features/brands/services/brand.service'
 import { ServerSearchForm } from '@/shared/components/admin/ServerSearchForm'
 
 interface PageProps {

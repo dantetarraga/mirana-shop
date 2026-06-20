@@ -1,5 +1,5 @@
-import { collectionRepo } from "@/modules/catalog/repositories/collection.repo";
-import { CollectionsTableClient } from "@/features/admin/collections/components/CollectionsTableClient";
+import { collectionRepo } from "@/features/collections/services/collection.service";
+import { CollectionsTableClient } from "@/features/collections/components/CollectionsTableClient";
 import { ServerSearchForm } from "@/shared/components/admin/ServerSearchForm";
 
 interface PageProps {

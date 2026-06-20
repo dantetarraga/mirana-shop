@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
-import { bannerRepo } from "@/modules/catalog/repositories/banner.repo";
-import { brandRepo }  from "@/modules/catalog/repositories/brand.repo";
-import { categoryRepo } from "@/modules/catalog/repositories/category.repo";
-import { HeroSection }      from "@/features/storefront/home/components/HeroSection";
-import { PromoBanner }      from "@/features/storefront/home/components/PromoBanner";
-import { NewArrivals }      from "@/features/storefront/home/components/NewArrivals";
-import { FeaturedProducts } from "@/features/storefront/home/components/FeaturedProducts";
-import { CTABand }          from "@/features/storefront/home/components/CTABand";
-import { CategoryStrips }   from "@/features/storefront/home/components/CategoryStrips";
-import { BrandsCarousel }   from "@/features/storefront/home/components/BrandsCarousel";
-import { ReviewsSection }   from "@/features/storefront/home/components/ReviewsSection";
-import { PreorderSection }  from "@/features/storefront/home/components/PreorderSection";
+import { bannerRepo } from "@/features/banners/services/banner.service";
+import { brandRepo }  from "@/features/brands/services/brand.service";
+import { categoryRepo } from "@/features/categories/services/category.service";
+import { HeroSection }      from "@/features/home/components/HeroSection";
+import { PromoBanner }      from "@/features/home/components/PromoBanner";
+import { NewArrivals }      from "@/features/home/components/NewArrivals";
+import { FeaturedProducts } from "@/features/home/components/FeaturedProducts";
+import { CTABand }          from "@/features/home/components/CTABand";
+import { CategoryStrips }   from "@/features/home/components/CategoryStrips";
+import { BrandsCarousel }   from "@/features/home/components/BrandsCarousel";
+import { ReviewsSection }   from "@/features/home/components/ReviewsSection";
+import { PreorderSection }  from "@/features/home/components/PreorderSection";
 
 export const metadata: Metadata = {
   title:       "MIRANA — Juguetes & Figuras",

@@ -1,8 +1,8 @@
 'use client'
 
-import { deleteCategory } from '@/features/admin/categories/actions/category.actions'
-import { CategoryCrudDrawer } from '@/features/admin/categories/components/CategoryCrudDrawer'
-import type { CategoryRow } from '@/modules/catalog/repositories/category.repo'
+import { deleteCategory } from '@/features/categories/actions/category.actions'
+import { CategoryCrudDrawer } from '@/features/categories/components/CategoryCrudDrawer'
+import type { CategoryRow } from '@/features/categories/services/category.service'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
 import { EntityProductsDrawer } from '@/shared/components/admin/EntityProductsDrawer'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'

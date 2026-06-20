@@ -1,6 +1,6 @@
 'use client'
 
-import type { AddressData } from '@/features/account/profile/actions/account-profile.actions'
+import type { AddressData } from '@/features/profile/actions/account-profile.actions'
 import { cn } from '@/shared/lib/utils'
 import { Check, MapPin, Plus } from 'lucide-react'
 

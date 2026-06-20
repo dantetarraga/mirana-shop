@@ -1,5 +1,5 @@
-import { CategoriesTableClient } from '@/features/admin/categories/components/CategoriesTableClient'
-import { categoryRepo } from '@/modules/catalog/repositories/category.repo'
+import { CategoriesTableClient } from '@/features/categories/components/CategoriesTableClient'
+import { categoryRepo } from '@/features/categories/services/category.service'
 import { ServerSearchForm } from '@/shared/components/admin/ServerSearchForm'
 
 interface PageProps {
