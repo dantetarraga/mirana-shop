@@ -68,8 +68,6 @@ function buildWhere(filters: Omit<ProductFilters, 'take' | 'skip'>) {
       : [collectionSlug]
     : undefined
 
-  // status omitido → solo AVAILABLE (default histórico). 'ALL' → sin filtro.
-  // array → { in: [...] }. valor único → igualdad.
   const statusWhere =
     status === undefined
       ? ('AVAILABLE' as const)
