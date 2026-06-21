@@ -18,28 +18,35 @@ export type SearchSuggestions = {
   total: number
 }
 
+async function getPopularCategories(take: number): Promise<CategoryRow[]> {
+  const allCategories = await getCategories({ perPage: 50 })
+  return allCategories
+    .slice()
+    .sort((a, b) => b.productCount - a.productCount)
+    .slice(0, take)
+}
+
 export async function getSearchSuggestions(rawQuery: string): Promise<SearchSuggestions> {
   const query = rawQuery.trim()
 
   if (query.length < MIN_QUERY_LENGTH) {
-    const allCategories = await getCategories({ perPage: 50 })
-    const popularCategories = allCategories
-      .slice()
-      .sort((a, b) => b.productCount - a.productCount)
-      .slice(0, POPULAR_CATEGORIES_TAKE)
     return {
       query: '',
       products: [],
-      categories: popularCategories,
+      categories: await getPopularCategories(POPULAR_CATEGORIES_TAKE),
       total: 0,
     }
   }
 
-  const [products, categories, total] = await Promise.all([
+  const [products, matchingCategories, total] = await Promise.all([
     getProducts({ search: query, take: PRODUCT_SUGGESTIONS_TAKE }),
     getCategories({ search: query, perPage: MATCHING_CATEGORIES_TAKE }),
     countProducts({ search: query }),
   ])
+
+  // Sin coincidencias de producto: usar categorías populares como sugerencia de
+  // recuperación en vez de categorías que tampoco matchearon el término.
+  const categories = total === 0 ? await getPopularCategories(POPULAR_CATEGORIES_TAKE) : matchingCategories
 
   return {
     query,
