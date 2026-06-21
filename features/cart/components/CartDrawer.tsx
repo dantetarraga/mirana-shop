@@ -5,7 +5,7 @@ import { getCategoryStripe } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
 import { formatCurrency } from '@/shared/lib/utils'
-import { Minus, Plus, X } from 'lucide-react'
+import { ArrowRight, Minus, Plus, X } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -125,8 +125,13 @@ export function CartDrawer() {
               </span>
             </div>
             <Button variant="accent" size="lg" full>
-              <Link href="/carrito" onClick={() => setCartOpen(false)} className="w-full block">
-                Ver carrito y pagar →
+              <Link
+                href="/carrito"
+                onClick={() => setCartOpen(false)}
+                className="w-full inline-flex items-center justify-center"
+              >
+                Ver carrito y pagar
+                <ArrowRight size={14} className="ml-1" strokeWidth={3} />
               </Link>
             </Button>
             <div className="text-center mt-3 text-[12px] text-muted">

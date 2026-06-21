@@ -14,13 +14,13 @@ export function PromotionCardActions({ promotion }: PromotionCardActionsProps) {
 
   return (
     <div className="flex gap-2 px-5 pb-5">
-      <Button variant="outline" size="sm" full onClick={() => openEdit(promotion)}>
+      <Button variant="outline" size="sm" className="flex-1" onClick={() => openEdit(promotion)}>
         Editar
       </Button>
       <Button
         variant="outline"
         size="sm"
-        full
+        className="flex-1"
         onClick={() => toggle(promotion)}
         disabled={isPending}
       >
@@ -29,6 +29,7 @@ export function PromotionCardActions({ promotion }: PromotionCardActionsProps) {
       <Button
         variant="icon"
         size="sm"
+        className="h-full flex-1"
         destructive
         onClick={() => openDelete(promotion)}
         disabled={isPending}

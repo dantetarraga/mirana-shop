@@ -28,7 +28,8 @@ export function ProductCard({
   const [confirmRemove, setConfirmRemove] = useState(false)
   const stripe = getCategoryStripe(p.category.slug)
   const catLabel = getCategoryLabel(p.category.slug)
-  const isOutOfStock = p.stock === 0 || p.status === 'SOLD_OUT'
+  const isPreorder = p.status === 'PREORDER'
+  const isOutOfStock = p.status === 'SOLD_OUT' || (!isPreorder && p.stock === 0)
   const isNew = p.status === 'AVAILABLE' && p.stock > 0
   const qtyInCart = cart.find((i) => i.product.id === p.id)?.qty ?? 0
 
@@ -147,7 +148,9 @@ export function ProductCard({
               e.stopPropagation()
               if (!isOutOfStock) {
                 addToCart(p, 1)
-                toast.success(`"${p.name}" agregado al carrito`)
+                toast.success(
+                  isPreorder ? `"${p.name}" reservado` : `"${p.name}" agregado al carrito`
+                )
               }
             }}
           >
@@ -156,7 +159,7 @@ export function ProductCard({
             ) : (
               <>
                 <ShoppingCart size={15} />
-                Agregar al carrito
+                {isPreorder ? 'Reservar ahora' : 'Agregar al carrito'}
               </>
             )}
           </Button>

@@ -4,7 +4,7 @@ import { useCartStore } from '@/features/cart/stores/cart.store'
 import { useProductModalStore } from '@/features/products/stores/product-modal.store'
 import { getCategoryStripe } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
-import { Minus, Plus, X } from 'lucide-react'
+import { ArrowRight, Minus, Plus, X } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -24,6 +24,8 @@ export function ProductModal() {
   }, [p, closeProductModal])
 
   if (!p) return null
+
+  const isPreorder = p.status === 'PREORDER'
 
   return (
     <div
@@ -95,19 +97,22 @@ export function ProductModal() {
             full
             onClick={() => {
               addToCart(p, qty)
-              toast.success(`"${p.name}" agregado al carrito`)
+              toast.success(
+                isPreorder ? `"${p.name}" reservado` : `"${p.name}" agregado al carrito`,
+              )
               closeProductModal()
             }}
           >
-            Agregar al carrito · S/ {(p.price * qty).toFixed(2)}
+            {isPreorder ? 'Reservar ahora' : 'Agregar al carrito'} · S/ {(p.price * qty).toFixed(2)}
           </Button>
 
           <Link
             href={`/catalogo/${p.slug}`}
             onClick={closeProductModal}
-            className="block w-full text-center border border-(--bd) px-6 py-3 text-[12px] tracking-[2px] uppercase font-display font-extrabold hover:border-(--gold) hover:text-(--gold) transition-colors"
+            className="inline-flex justify-center items-center w-full text-center border border-(--bd) px-6 py-3 text-[12px] tracking-[2px] uppercase font-display font-extrabold hover:border-(--gold) hover:text-(--gold) transition-colors duration-300"
           >
-            Ver detalles del producto →
+            Ver detalles del producto
+            <ArrowRight className="ml-1" size={14} strokeWidth={3} />
           </Link>
 
           <Button variant="ghost" size="lg" full onClick={closeProductModal}>

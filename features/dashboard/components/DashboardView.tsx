@@ -14,6 +14,7 @@ import type { ProductListItem } from '@/features/products/types'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { cn, formatDate } from '@/shared/lib/utils'
+import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
 // Versión serializable de ProductListItem — Decimals ya convertidos a number
@@ -183,9 +184,10 @@ export function DashboardView({
             side={
               <Link
                 href="/admin/products"
-                className="font-display text-[14px] font-bold no-underline tracking-[1px] text-muted"
+                className="font-display inline-flex items-center hover:text-(--gold) transition-colors duration-200 text-[14px] font-bold no-underline tracking-[1px] text-muted"
               >
-                Ver todos →
+                Ver todos
+                <ArrowRight size={14} className="inline-block ml-1" strokeWidth={3} />
               </Link>
             }
           />
@@ -238,9 +240,10 @@ export function DashboardView({
           </div>
           <Link
             href="/admin/orders"
-            className="font-display text-[13px] font-bold no-underline tracking-[1px] uppercase text-muted hover:text-(--gold) transition-colors"
+            className="font-display inline-flex items-center transition-colors duration-200 text-[13px] font-bold no-underline tracking-[1px] uppercase text-muted hover:text-(--gold)"
           >
-            Ver todos →
+            Ver todos
+            <ArrowRight size={14} className="inline-block ml-1" strokeWidth={3} />
           </Link>
         </div>
 

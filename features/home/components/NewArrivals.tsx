@@ -1,6 +1,8 @@
+import { ProductCard } from '@/features/products/components/ProductCard'
 import { toProductCards } from '@/features/products/lib/product-card'
 import { getNewProducts } from '@/features/products/queries/product.queries'
-import { ProductCard } from '@/features/products/components/ProductCard'
+import { ArrowRight } from 'lucide-react'
+import Link from 'next/link'
 
 // Server Component — no necesita "use client"
 export async function NewArrivals() {
@@ -20,15 +22,16 @@ export async function NewArrivals() {
             Novedades
           </h2>
         </div>
-        <a
+        <Link
           href="/catalogo"
-          className="font-display text-[15px] font-bold tracking-[1px] uppercase no-underline border-b border-transparent pb-0.5 text-muted"
+          className="font-display text-[15px] font-bold tracking-[1px] uppercase pb-0.5 text-muted hover:text-(--gold) transition-colors duration-300 inline-flex items-center"
         >
-          Ver todos →
-        </a>
+          Ver todos
+          <ArrowRight className="ml-1" size={14} />
+        </Link>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-none [&::-webkit-scrollbar]:hidden">
         {items.map((p) => (
           <div key={p.id} className="w-65 shrink-0">
             <ProductCard product={p} />

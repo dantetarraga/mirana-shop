@@ -1,4 +1,7 @@
 import type { BannerRow } from '@/features/banners/types'
+import { ArrowRight } from 'lucide-react'
+import Image from 'next/image'
+import Link from 'next/link'
 
 interface HeroSectionProps {
   banner?: BannerRow | null
@@ -15,7 +18,7 @@ export function HeroSection({ banner }: HeroSectionProps) {
 
   return (
     <section className="glow-section relative overflow-hidden shell grid grid-cols-[1fr_0.85fr] items-center gap-15 pt-[calc(var(--nh)+80px)] pb-20">
-      <div className="absolute right-[-60px] top-1/2 translate-y-[-52%] font-display font-black italic pointer-events-none whitespace-nowrap select-none leading-none text-[clamp(180px,20vw,300px)] text-transparent tracking-[-6px] [-webkit-text-stroke:1px_rgba(0,200,255,.06)]">
+      <div className="absolute -right-15 top-1/2 translate-y-[-52%] font-display font-black italic pointer-events-none whitespace-nowrap select-none leading-none text-[clamp(180px,20vw,300px)] text-transparent tracking-[-6px] [-webkit-text-stroke:1px_rgba(0,200,255,.06)]">
         COLLECT
       </div>
 
@@ -35,12 +38,16 @@ export function HeroSection({ banner }: HeroSectionProps) {
         </p>
 
         <div className="flex gap-3 flex-wrap">
-          <a href={ctaHref} className="btn-gold">
+          <Link href={ctaHref} className="btn-gold">
             {ctaLabel}
-          </a>
-          <a href="/catalogo?cat=figures" className="btn-outline-mirana">
-            Novedades →
-          </a>
+          </Link>
+          <Link
+            href="/catalogo?cat=figures"
+            className="btn-outline-mirana inline-flex items-center"
+          >
+            Novedades
+            <ArrowRight className="ml-1" size={16} />
+          </Link>
         </div>
 
         <div className="flex gap-9 mt-13 pt-8 border-t border-(--bd)">
@@ -63,7 +70,12 @@ export function HeroSection({ banner }: HeroSectionProps) {
       <div className="relative z-1 flex items-center justify-center">
         <div className="stripe-fig w-full max-w-125 h-[clamp(340px,42vh,520px)] flex items-center justify-center flex-col gap-2.5 border border-(--bd) relative overflow-hidden">
           {imageUrl ? (
-            <img src={imageUrl} alt={title} className="absolute inset-0 w-full h-full object-cover opacity-70" />
+            <Image
+              src={imageUrl}
+              alt={title}
+              className="absolute inset-0 w-full h-full object-cover opacity-70"
+              fill
+            />
           ) : (
             <span className="font-mono text-[11px] tracking-[2px] uppercase text-muted">
               product shot
