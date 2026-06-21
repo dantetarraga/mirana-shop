@@ -46,7 +46,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
       categorySlug: categorySlugs.length > 0 ? categorySlugs : undefined,
       brandSlug: brandSlugs.length > 0 ? brandSlugs : undefined,
       collectionSlug: collectionSlugs.length > 0 ? collectionSlugs : undefined,
-      status: undefined,
+      status: 'ALL',
       take: PER_PAGE,
       skip,
     }),
@@ -58,7 +58,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
       categorySlug: categorySlugs.length > 0 ? categorySlugs : undefined,
       brandSlug: brandSlugs.length > 0 ? brandSlugs : undefined,
       collectionSlug: collectionSlugs.length > 0 ? collectionSlugs : undefined,
-      status: undefined,
+      status: 'ALL',
     }),
   ])
 

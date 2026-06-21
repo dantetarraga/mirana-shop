@@ -19,7 +19,7 @@ export function CategoryStrips({ categories }: CategoryStripsProps) {
   if (featured.length === 0) return null
 
   return (
-    <section className="px-12 pb-20 grid grid-cols-3 gap-4">
+    <section className="shell pb-20 grid grid-cols-3 gap-4">
       {featured.map((cat) => (
         <a
           key={cat.id}

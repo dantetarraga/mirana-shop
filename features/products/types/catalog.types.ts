@@ -17,6 +17,7 @@ export type CatalogProduct = {
   compareAtPrice: number | null;
   status: ProductStatus;
   featured: boolean;
+  createdAt: Date;
   category: { id: string; name: string; slug: string };
   brand: { id: string; name: string; slug: string };
   imageUrl: string | null;

@@ -15,7 +15,7 @@
 
 export function Footer() {
   return (
-    <footer className="border-t border-(--bd) pt-16 pb-8 px-12 grid gap-10 grid-cols-[1.4fr_1fr_1fr_1fr]">
+    <footer className="border-t border-(--bd) pt-16 pb-8 shell grid gap-10 grid-cols-[1.4fr_1fr_1fr_1fr]">
       <div>
         <div className="font-display text-[36px] font-black tracking-[5px] mb-3.5">
           MIRA<span className="text-(--gold)">NA</span>

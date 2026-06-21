@@ -2,10 +2,11 @@
 
 import { useAuthModalStore } from '@/features/auth/stores/auth-modal.store'
 import { useCartStore } from '@/features/cart/stores/cart.store'
+import { SearchBox } from '@/features/search/components/SearchBox'
 import { Button } from '@/shared/components/ui/Button'
 import { useUser } from '@/shared/hooks'
 import { cn } from '@/shared/lib/utils'
-import { LayoutGrid, LogOut, MapPin, Package, Search, ShoppingBag, User } from 'lucide-react'
+import { LayoutGrid, LogOut, MapPin, Package, ShoppingBag, User } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -16,7 +17,6 @@ export function Navbar() {
   const { openAuth } = useAuthModalStore()
   const { user } = useUser()
   const [menuOpen, setMenuOpen] = useState(false)
-  const [searchVal, setSearchVal] = useState('')
   const menuRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
 
@@ -38,44 +38,27 @@ export function Navbar() {
     : ''
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-200 flex items-center justify-between px-12 transition-[background] duration-300 h-(--nh) bg-[rgba(3,4,9,.92)] backdrop-blur-[28px] border-b border-(--bd)">
-      <Link
-        href="/"
-        className="font-display font-black text-[26px] tracking-[5px] no-underline uppercase text-text"
-      >
-        MIRA<span className="text-(--gold)">NA</span>
-      </Link>
+    <nav className="fixed top-0 left-0 right-0 z-200 flex items-center gap-8 shell transition-[background] duration-300 h-(--nh) bg-[rgba(3,4,9,.92)] backdrop-blur-[28px] border-b border-(--bd)">
+      <div className="flex items-center gap-7 shrink-0">
+        <Link
+          href="/"
+          className="font-display font-black text-[26px] tracking-[5px] no-underline uppercase text-text"
+        >
+          MIRA<span className="text-(--gold)">NA</span>
+        </Link>
+        <Link
+          href="/catalogo"
+          className="text-[12px] font-semibold tracking-[1px] no-underline uppercase transition-[color] duration-200 pb-1 border-b border-transparent text-muted hover:text-text"
+        >
+          Catálogo
+        </Link>
+      </div>
 
-      <ul className="flex gap-7 list-none">
-        {[
-          ['Inicio', '/'],
-          ['Catálogo', '/catalogo'],
-          ['Novedades', '/catalogo?cat=figures'],
-          ['Preventas', '/catalogo?cat=preorder'],
-        ].map(([label, href]) => (
-          <li key={label}>
-            <Link
-              href={href}
-              className="text-[12px] font-semibold tracking-[1px] no-underline uppercase transition-[color] duration-200 pb-1 border-b border-transparent text-muted"
-            >
-              {label}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <div className="flex-1 max-w-2xl mx-auto">
+        <SearchBox />
+      </div>
 
-      <div className="flex items-center gap-3">
-        {/* Search */}
-        <div className="flex items-center gap-2 px-3.5 h-10 bg-surf border border-(--bd)">
-          <Search size={13} className="shrink-0 text-muted" />
-          <input
-            value={searchVal}
-            onChange={(e) => setSearchVal(e.target.value)}
-            placeholder="Buscar..."
-            className="bg-transparent border-none outline-none font-sans text-[13px] w-35 text-text"
-          />
-        </div>
-
+      <div className="flex items-center gap-3 shrink-0">
         {/* Cart */}
         <Button variant="icon" size="md" onClick={() => setCartOpen(true)} className="relative">
           <ShoppingBag size={17} />

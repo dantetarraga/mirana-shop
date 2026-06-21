@@ -8,6 +8,7 @@ import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
 import { StarRating } from '@/shared/components/ui/StarRating'
 import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react'
+import Image from 'next/image'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
@@ -31,6 +32,26 @@ export function ProductCard({
   const isNew = p.status === 'AVAILABLE' && p.stock > 0
   const qtyInCart = cart.find((i) => i.product.id === p.id)?.qty ?? 0
 
+  const discountPct =
+    p.compareAtPrice && p.compareAtPrice > p.price
+      ? Math.round((1 - p.price / p.compareAtPrice) * 100)
+      : 0
+  const isNewArrival =
+    p.status === 'AVAILABLE' && Date.now() - p.createdAt.getTime() < 30 * 24 * 60 * 60 * 1000
+
+  // Una sola badge visible por card, por prioridad.
+  const badge = isOutOfStock
+    ? { label: 'AGOTADO', className: 'bg-surface-700 text-white' }
+    : p.status === 'PREORDER'
+      ? { label: 'PREVENTA', className: 'bg-info text-white' }
+      : discountPct > 0
+        ? { label: `-${discountPct}%`, className: 'bg-danger text-white' }
+        : isNewArrival
+          ? { label: 'NUEVO', className: 'bg-success text-white' }
+          : p.featured
+            ? { label: 'TOP', className: 'bg-(--gold) text-black' }
+            : null
+
   return (
     <div
       className={`pcard${noAnimation ? '' : ' animate-fade-up'}`}
@@ -39,34 +60,25 @@ export function ProductCard({
       <div className="relative">
         <div className={`${stripe} h-55 flex items-center justify-center`}>
           {p.imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={p.imageUrl} alt={p.name} className="h-full w-full object-cover" />
+            <Image src={p.imageUrl} alt={p.name} className="h-full w-full object-cover" fill />
           ) : (
             <span className="font-mono text-[10px] tracking-[2px] uppercase text-muted">
               {catLabel}
             </span>
           )}
         </div>
-        {showBadge && p.featured && !isOutOfStock && (
-          <div className="absolute top-3 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-2.5 py-1.25 bg-(--gold) text-black">
-            DESTACADO
-          </div>
-        )}
-        {showBadge && isOutOfStock && (
-          <div className="absolute top-3 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-2.5 py-1.25 bg-[#ff6644]/80 text-white">
-            AGOTADO
-          </div>
-        )}
-        {showBadge && p.status === 'PREORDER' && (
-          <div className="absolute top-3 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-2.5 py-1.25 bg-[#8b7cff] text-white">
-            PREVENTA
+        {showBadge && badge && (
+          <div
+            className={`absolute top-3 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-2.5 py-1.25 ${badge.className}`}
+          >
+            {badge.label}
           </div>
         )}
       </div>
 
       <div className="px-4 pt-4 pb-3.5">
         <div className="text-[10px] tracking-[2px] uppercase mb-1.25 text-muted">{catLabel}</div>
-        <div className="font-display text-[21px] font-black uppercase leading-[1.05] mb-3 tracking-[-0.5px] line-clamp-2 min-h-[44px]">
+        <div className="font-display text-[21px] font-black uppercase leading-[1.05] mb-3 tracking-[-0.5px] line-clamp-2 min-h-11">
           {p.name}
         </div>
         <div className="flex items-center justify-between mb-3">

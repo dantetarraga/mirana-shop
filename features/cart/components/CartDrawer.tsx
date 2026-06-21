@@ -11,7 +11,7 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 export function CartDrawer() {
-  const { cart, cartOpen, setCartOpen, updateQty, removeItem } = useCartStore()
+  const { cart, cartCount, cartOpen, setCartOpen, updateQty, removeItem } = useCartStore()
   const total = cart.reduce((s, i) => s + i.product.price * i.qty, 0)
   const [pendingRemove, setPendingRemove] = useState<{ id: string; name: string } | null>(null)
 
@@ -39,7 +39,7 @@ export function CartDrawer() {
         {/* Header */}
         <div className="px-7 py-6 border-b border-(--bd) flex items-center justify-between">
           <div className="font-display text-[26px] font-black uppercase tracking-[1px]">
-            Carrito <span className="text-(--gold)">({cart.length})</span>
+            Carrito <span className="text-(--gold)">({cartCount})</span>
           </div>
           <Button variant="icon" size="md" onClick={() => setCartOpen(false)}>
             <X size={16} />

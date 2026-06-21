@@ -18,6 +18,7 @@ export type ProductListItem = {
   salePrice: Decimal | null
   status: ProductStatus
   featured: boolean
+  createdAt: Date
   category: { id: string; name: string; slug: string }
   brand: { id: string; name: string; slug: string }
   images: ProductImage[]
@@ -28,11 +29,12 @@ export type ProductListItem = {
 export type ProductDetail = ProductListItem & {
   description: string
   currency: string
-  createdAt: Date
   updatedAt: Date
 }
 
 export type StockFilter = 'all' | 'low' | 'out'
+
+export type ProductSort = 'relevance' | 'price_asc' | 'price_desc' | 'newest'
 
 export type ProductFilters = {
   categorySlug?: string | string[]
@@ -40,8 +42,12 @@ export type ProductFilters = {
   collectionSlug?: string | string[]
   search?: string
   featured?: boolean
-  status?: ProductStatus
+  /** Por defecto (clave omitida) solo `AVAILABLE`. Pasar 'ALL' para no filtrar por status. */
+  status?: ProductStatus | ProductStatus[] | 'ALL'
   stockFilter?: StockFilter
+  priceMin?: number
+  priceMax?: number
+  sort?: ProductSort
   take?: number
   skip?: number
 }

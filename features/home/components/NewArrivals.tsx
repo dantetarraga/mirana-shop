@@ -10,7 +10,7 @@ export async function NewArrivals() {
   if (items.length === 0) return null
 
   return (
-    <section className="px-12 py-20">
+    <section className="shell py-20">
       <div className="flex justify-between items-end mb-8">
         <div>
           <div className="text-[10px] font-bold tracking-[3px] uppercase mb-2.5 text-(--gold)">
@@ -28,9 +28,11 @@ export async function NewArrivals() {
         </a>
       </div>
 
-      <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(260px,1fr))]">
+      <div className="flex gap-4 overflow-x-auto pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {items.map((p) => (
-          <ProductCard key={p.id} product={p} />
+          <div key={p.id} className="w-65 shrink-0">
+            <ProductCard product={p} />
+          </div>
         ))}
       </div>
     </section>

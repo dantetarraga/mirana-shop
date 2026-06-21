@@ -87,7 +87,7 @@ export default async function InventoryPage({ searchParams }: PageProps) {
     rawFilter && VALID_FILTERS.has(rawFilter as StockFilter) ? (rawFilter as StockFilter) : 'all'
 
   const [rawProducts, stats] = await Promise.all([
-    getProducts({ stockFilter, status: undefined, take: 500 }),
+    getProducts({ stockFilter, status: 'ALL', take: 500 }),
     getInventoryStats(),
   ])
 

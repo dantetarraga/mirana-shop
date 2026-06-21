@@ -47,7 +47,7 @@ const REVIEWS = [
 
 export function ReviewsSection() {
   return (
-    <section className="glow-section px-12 py-20">
+    <section className="glow-section shell py-20">
       <div className="relative z-1 flex justify-between items-start mb-10">
         <div>
           <div className="text-[10px] font-bold tracking-[3px] uppercase text-(--gold) mb-2.5">

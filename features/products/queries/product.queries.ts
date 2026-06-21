@@ -1,6 +1,6 @@
-import 'server-only'
-import { db } from '@/shared/lib/db'
 import type { ProductDetail, ProductFilters, ProductListItem } from '@/features/products/types'
+import { db } from '@/shared/lib/db'
+import 'server-only'
 
 const LOW_STOCK_THRESHOLD = 8
 
@@ -14,6 +14,7 @@ export const PRODUCT_LIST_SELECT = {
   salePrice: true,
   status: true,
   featured: true,
+  createdAt: true,
   category: { select: { id: true, name: true, slug: true } },
   brand: { select: { id: true, name: true, slug: true } },
   images: {
@@ -43,8 +44,17 @@ export const PRODUCT_DETAIL_SELECT = {
 } as const
 
 function buildWhere(filters: Omit<ProductFilters, 'take' | 'skip'>) {
-  const { categorySlug, brandSlug, collectionSlug, search, featured, status = 'AVAILABLE', stockFilter } =
-    filters
+  const {
+    categorySlug,
+    brandSlug,
+    collectionSlug,
+    search,
+    featured,
+    status,
+    stockFilter,
+    priceMin,
+    priceMax,
+  } = filters
 
   const catSlugs = categorySlug
     ? Array.isArray(categorySlug)
@@ -58,6 +68,17 @@ function buildWhere(filters: Omit<ProductFilters, 'take' | 'skip'>) {
       : [collectionSlug]
     : undefined
 
+  // status omitido → solo AVAILABLE (default histórico). 'ALL' → sin filtro.
+  // array → { in: [...] }. valor único → igualdad.
+  const statusWhere =
+    status === undefined
+      ? ('AVAILABLE' as const)
+      : status === 'ALL'
+        ? undefined
+        : Array.isArray(status)
+          ? { in: status }
+          : status
+
   const inventoryWhere =
     stockFilter === 'low'
       ? { inventory: { availableStock: { gt: 0, lte: LOW_STOCK_THRESHOLD } } }
@@ -65,25 +86,46 @@ function buildWhere(filters: Omit<ProductFilters, 'take' | 'skip'>) {
         ? { inventory: { availableStock: 0 } }
         : {}
 
+  const priceWhere =
+    priceMin != null || priceMax != null
+      ? { price: { gte: priceMin ?? undefined, lte: priceMax ?? undefined } }
+      : {}
+
   return {
     deletedAt: null,
-    status: status ?? undefined,
+    status: statusWhere,
     featured: featured ?? undefined,
     category: catSlugs?.length ? { slug: { in: catSlugs } } : undefined,
     brand: brdSlugs?.length ? { slug: { in: brdSlugs } } : undefined,
-    collections: colSlugs?.length ? { some: { collection: { slug: { in: colSlugs } } } } : undefined,
+    collections: colSlugs?.length
+      ? { some: { collection: { slug: { in: colSlugs } } } }
+      : undefined,
     name: search ? { contains: search, mode: 'insensitive' as const } : undefined,
     ...inventoryWhere,
+    ...priceWhere,
+  }
+}
+
+function buildOrderBy(sort: ProductFilters['sort']) {
+  switch (sort) {
+    case 'price_asc':
+      return [{ price: 'asc' as const }]
+    case 'price_desc':
+      return [{ price: 'desc' as const }]
+    case 'newest':
+      return [{ createdAt: 'desc' as const }]
+    default:
+      return [{ featured: 'desc' as const }, { createdAt: 'desc' as const }]
   }
 }
 
 export async function getProducts(filters: ProductFilters = {}): Promise<ProductListItem[]> {
-  const { take = 50, skip = 0 } = filters
+  const { take = 50, skip = 0, sort } = filters
 
   return db.product.findMany({
     where: buildWhere(filters),
     select: PRODUCT_LIST_SELECT,
-    orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }],
+    orderBy: buildOrderBy(sort),
     take,
     skip,
   }) as Promise<ProductListItem[]>
@@ -91,7 +133,12 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Product
 
 export async function getFeaturedProducts(take = 8): Promise<ProductListItem[]> {
   return db.product.findMany({
-    where: { deletedAt: null, featured: true, status: 'AVAILABLE' },
+    where: {
+      deletedAt: null,
+      featured: true,
+      status: 'AVAILABLE',
+      inventory: { availableStock: { gt: 0 } },
+    },
     select: PRODUCT_LIST_SELECT,
     orderBy: { createdAt: 'desc' },
     take,
@@ -121,6 +168,8 @@ export async function getProductById(id: string): Promise<ProductDetail | null> 
   }) as Promise<ProductDetail | null>
 }
 
-export async function countProducts(filters: Omit<ProductFilters, 'take' | 'skip'> = {}): Promise<number> {
+export async function countProducts(
+  filters: Omit<ProductFilters, 'take' | 'skip'> = {},
+): Promise<number> {
   return db.product.count({ where: buildWhere(filters) })
 }

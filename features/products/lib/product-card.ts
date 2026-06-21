@@ -16,6 +16,7 @@ export function toProductCard(product: ProductListItem): CatalogProduct {
     compareAtPrice: product.compareAtPrice ? Number(product.compareAtPrice) : null,
     status: product.status,
     featured: product.featured,
+    createdAt: product.createdAt,
     category: product.category,
     brand: product.brand,
     imageUrl: product.images[0]?.url ?? null,

@@ -11,7 +11,7 @@ export function BrandsCarousel({ brands }: BrandsCarouselProps) {
 
   return (
     <section className="py-15 overflow-hidden bg-surf section-fade-y">
-      <div className="px-12 pb-8 flex justify-between items-baseline">
+      <div className="shell pb-8 flex justify-between items-baseline">
         <div>
           <div className="text-[10px] font-bold tracking-[3px] uppercase text-(--gold) mb-2.5">
             Marcas oficiales

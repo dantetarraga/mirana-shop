@@ -17,7 +17,7 @@ export async function PreorderSection() {
   if (preorders.length === 0) return null
 
   return (
-    <section className="px-12 py-20">
+    <section className="shell py-20">
       <div className="mb-8">
         <div className="text-[10px] font-bold tracking-[3px] uppercase text-(--gold) mb-2.5">
           Disponibles pronto

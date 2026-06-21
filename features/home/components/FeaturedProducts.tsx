@@ -1,22 +1,29 @@
-import { getFeaturedProducts, getProducts } from "@/features/products/queries/product.queries";
-import { toProductCards } from "@/features/products/lib/product-card";
-import { ProductCard } from "@/features/products/components/ProductCard";
+import { ProductCard } from '@/features/products/components/ProductCard'
+import { toProductCards } from '@/features/products/lib/product-card'
+import { getFeaturedProducts, getProducts } from '@/features/products/queries/product.queries'
+import { ArrowRight } from 'lucide-react'
+import Link from 'next/link'
 
-// Server Component — fetcha directamente desde el repo
 export async function FeaturedProducts() {
-  // Primero busca destacados, si no hay suficientes completa con recientes
-  const [featured, recent] = await Promise.all([
-    getFeaturedProducts(8),
-    getProducts({ take: 8 }),
-  ]);
+  const featured = await getFeaturedProducts(5)
 
-  const source = featured.length >= 4 ? featured : recent;
-  const items = toProductCards(source.slice(0, 8));
+  let source = featured
 
-  if (items.length === 0) return null;
+  if (featured.length < 5) {
+    const recent = await getProducts({ take: 5 })
+
+    source = [
+      ...featured,
+      ...recent.filter((product) => !featured.some((f) => f.id === product.id)),
+    ].slice(0, 5)
+  }
+
+  const items = toProductCards(source.slice(0, 5))
+
+  if (items.length === 0) return null
 
   return (
-    <section className="glow-section px-12 py-20">
+    <section className="glow-section shell py-20">
       <div className="relative z-1 flex justify-between items-end mb-8">
         <div>
           <div className="text-[10px] font-bold tracking-[3px] uppercase mb-2.5 text-(--gold)">
@@ -28,12 +35,13 @@ export async function FeaturedProducts() {
             momento
           </h2>
         </div>
-        <a
+        <Link
           href="/catalogo"
-          className="font-display text-[15px] font-bold tracking-[1px] uppercase no-underline border-b border-transparent pb-0.5 text-muted"
+          className="hover:text-(--gold) transition-colors duration-200 font-display inline-flex items-center text-[15px] font-bold tracking-[1px] uppercase no-underline border-b border-transparent pb-0.5 text-muted"
         >
-          Ver catálogo →
-        </a>
+          Ver catálogo
+          <ArrowRight size={14} className="inline-block ml-1" strokeWidth={3} />
+        </Link>
       </div>
 
       <div className="relative z-1 grid gap-4 grid-cols-[repeat(auto-fill,minmax(260px,1fr))]">
@@ -42,5 +50,5 @@ export async function FeaturedProducts() {
         ))}
       </div>
     </section>
-  );
+  )
 }

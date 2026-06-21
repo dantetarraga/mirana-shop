@@ -38,6 +38,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
     compareAtPrice: raw.compareAtPrice != null ? Number(raw.compareAtPrice) : null,
     status: raw.status,
     featured: raw.featured,
+    createdAt: raw.createdAt,
     category: raw.category,
     brand: raw.brand,
     imageUrl: raw.images[0]?.url ?? null,
