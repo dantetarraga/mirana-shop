@@ -18,9 +18,8 @@ import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
 // Versión serializable de ProductListItem — Decimals ya convertidos a number
-type SerializedProduct = Omit<ProductListItem, 'price' | 'compareAtPrice' | 'salePrice'> & {
+type SerializedProduct = Omit<ProductListItem, 'price' | 'salePrice'> & {
   price: number
-  compareAtPrice: number | null
   salePrice: number | null
 }
 

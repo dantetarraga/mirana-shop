@@ -13,7 +13,7 @@ export function toProductCard(product: ProductListItem): CatalogProduct {
     slug: product.slug,
     name: product.name,
     price: Number(product.price),
-    compareAtPrice: product.compareAtPrice ? Number(product.compareAtPrice) : null,
+    salePrice: product.salePrice ? Number(product.salePrice) : null,
     status: product.status,
     featured: product.featured,
     createdAt: product.createdAt,

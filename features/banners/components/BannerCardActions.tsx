@@ -13,14 +13,14 @@ export function BannerCardActions({ banner }: BannerCardActionsProps) {
   const { openEdit, openDelete, toggle, isPending } = useBannerCrud()
 
   return (
-    <div className="flex gap-2 mt-3">
-      <Button variant="outline" size="sm" full onClick={() => openEdit(banner)}>
+    <div className="flex gap-2 mt-3 h-9">
+      <Button variant="outline" className="flex-1" size="sm" onClick={() => openEdit(banner)}>
         Editar
       </Button>
       <Button
         variant="outline"
+        className="flex-1"
         size="sm"
-        full
         onClick={() => toggle(banner)}
         disabled={isPending}
       >
@@ -30,6 +30,7 @@ export function BannerCardActions({ banner }: BannerCardActionsProps) {
         variant="icon"
         size="sm"
         destructive
+        className="flex-1 h-full"
         onClick={() => openDelete(banner)}
         disabled={isPending}
       >

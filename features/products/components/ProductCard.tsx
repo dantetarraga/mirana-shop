@@ -34,8 +34,8 @@ export function ProductCard({
   const qtyInCart = cart.find((i) => i.product.id === p.id)?.qty ?? 0
 
   const discountPct =
-    p.compareAtPrice && p.compareAtPrice > p.price
-      ? Math.round((1 - p.price / p.compareAtPrice) * 100)
+    p.salePrice && p.salePrice < p.price
+      ? Math.round((1 - p.salePrice / p.price) * 100)
       : 0
   const isNewArrival =
     p.status === 'AVAILABLE' && Date.now() - p.createdAt.getTime() < 30 * 24 * 60 * 60 * 1000
@@ -84,10 +84,10 @@ export function ProductCard({
         </div>
         <div className="flex items-center justify-between mb-3">
           <div className="font-display text-[26px] font-black text-(--gold)">
-            S/ {p.price.toFixed(2)}
-            {p.compareAtPrice && p.compareAtPrice > p.price && (
+            S/ {(p.salePrice && p.salePrice < p.price ? p.salePrice : p.price).toFixed(2)}
+            {p.salePrice && p.salePrice < p.price && (
               <span className="ml-2 text-[14px] font-normal text-muted line-through">
-                S/ {p.compareAtPrice.toFixed(2)}
+                S/ {p.price.toFixed(2)}
               </span>
             )}
           </div>

@@ -14,7 +14,6 @@ export type ProductListItem = {
   slug: string
   name: string
   price: Decimal
-  compareAtPrice: Decimal | null
   salePrice: Decimal | null
   status: ProductStatus
   featured: boolean
@@ -58,7 +57,6 @@ export type CreateProductInput = {
   name: string
   description: string
   price: number
-  compareAtPrice?: number
   salePrice?: number
   status?: ProductStatus
   featured?: boolean

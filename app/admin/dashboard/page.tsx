@@ -41,7 +41,6 @@ export default async function DashboardPage() {
   const serializedProducts = products.map((p) => ({
     ...p,
     price: Number(p.price),
-    compareAtPrice: p.compareAtPrice != null ? Number(p.compareAtPrice) : null,
     salePrice: p.salePrice != null ? Number(p.salePrice) : null,
   }))
 

@@ -35,7 +35,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
     slug: raw.slug,
     name: raw.name,
     price: Number(raw.price),
-    compareAtPrice: raw.compareAtPrice != null ? Number(raw.compareAtPrice) : null,
+    salePrice: raw.salePrice != null ? Number(raw.salePrice) : null,
     status: raw.status,
     featured: raw.featured,
     createdAt: raw.createdAt,
@@ -129,11 +129,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
             {/* Price */}
             <div className="flex items-baseline gap-4">
               <div className="font-display text-[56px] font-black text-(--gold) leading-none">
-                S/ {product.price.toFixed(2)}
+                S/ {(product.salePrice && product.salePrice < product.price ? product.salePrice : product.price).toFixed(2)}
               </div>
-              {product.compareAtPrice && product.compareAtPrice > product.price && (
+              {product.salePrice && product.salePrice < product.price && (
                 <div className="font-display text-[28px] font-bold text-muted line-through">
-                  S/ {product.compareAtPrice.toFixed(2)}
+                  S/ {product.price.toFixed(2)}
                 </div>
               )}
             </div>

@@ -10,7 +10,6 @@ export const PRODUCT_LIST_SELECT = {
   slug: true,
   name: true,
   price: true,
-  compareAtPrice: true,
   salePrice: true,
   status: true,
   featured: true,

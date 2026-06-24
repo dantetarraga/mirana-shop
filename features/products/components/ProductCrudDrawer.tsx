@@ -20,9 +20,8 @@ import { z } from 'zod'
 
 type ProductFormValues = z.input<typeof productDbSchema>
 
-export type SerializedProduct = Omit<ProductListItem, 'price' | 'compareAtPrice' | 'salePrice'> & {
+export type SerializedProduct = Omit<ProductListItem, 'price' | 'salePrice'> & {
   price: number
-  compareAtPrice: number | null
   salePrice: number | null
   collections: { collection: { id: string; name: string; slug: string } }[]
 }
@@ -99,7 +98,6 @@ export function ProductCrudDrawer({
       sku: p.sku,
       description: (p as SerializedProduct & { description?: string }).description ?? '',
       price: p.price,
-      compareAtPrice: p.compareAtPrice ?? undefined,
       salePrice: p.salePrice ?? undefined,
       stock: p.inventory?.availableStock ?? 0,
       categoryId: p.category.id,
@@ -172,7 +170,7 @@ export function ProductCrudDrawer({
 
         {/* ── Precios ── */}
         <div className="grid grid-cols-2 gap-3.5">
-          <FormField label="Precio base (S/)" error={errors.price?.message}>
+          <FormField label="Precio (S/)" error={errors.price?.message}>
             <input
               {...register('price', { valueAsNumber: true })}
               type="number"
@@ -182,7 +180,7 @@ export function ProductCrudDrawer({
             />
           </FormField>
           <div className="flex flex-col gap-1">
-            <FormField label="Precio de venta (S/)" error={errors.salePrice?.message}>
+            <FormField label="Precio de oferta (S/)" error={errors.salePrice?.message}>
               <input
                 {...register('salePrice', { valueAsNumber: true })}
                 type="number"

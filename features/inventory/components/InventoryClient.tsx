@@ -16,9 +16,8 @@ import { useMemo, useState } from 'react'
 // Tipos serializados
 // ---------------------------------------------------------------------------
 
-type SerializedProduct = Omit<ProductListItem, 'price' | 'compareAtPrice'> & {
+type SerializedProduct = Omit<ProductListItem, 'price'> & {
   price: number
-  compareAtPrice: number | null
 }
 
 function getCategoryStripe(slug: string): string {

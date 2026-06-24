@@ -21,6 +21,9 @@ const COL_ALIASES: Record<string, keyof ExcelRow> = {
   desc: 'desc',
   precio: 'price',
   price: 'price',
+  'precio oferta': 'salePrice',
+  'sale price': 'salePrice',
+  saleprice: 'salePrice',
   cantidad: 'stock',
   quantity: 'stock',
   stock: 'stock',
@@ -30,9 +33,42 @@ const COL_ALIASES: Record<string, keyof ExcelRow> = {
   categoría: 'cat',
   category: 'cat',
   cat: 'cat',
+  estado: 'status',
+  status: 'status',
+  destacado: 'featured',
+  featured: 'featured',
+  imagen: 'imageUrl',
+  image: 'imageUrl',
+  'imagen url': 'imageUrl',
+  'image url': 'imageUrl',
+  imageurl: 'imageUrl',
+  'imagenes': 'imageUrl',
+  'imagenes url': 'imageUrl',
+  'images': 'imageUrl',
+  'image urls': 'imageUrl',
+  'imagenes separadas por |': 'imageUrl',
 }
 
 type CatKey = 'figures' | 'lego' | 'vehicles'
+
+type StatusKey = 'AVAILABLE' | 'PREORDER' | 'SOLD_OUT' | 'COMING_SOON' | 'ARCHIVED'
+
+const STATUS_MAP: Record<string, StatusKey> = {
+  available: 'AVAILABLE',
+  disponible: 'AVAILABLE',
+  preorder: 'PREORDER',
+  'pre-orden': 'PREORDER',
+  'pre orden': 'PREORDER',
+  soldout: 'SOLD_OUT',
+  'sold out': 'SOLD_OUT',
+  agotado: 'SOLD_OUT',
+  comingsoon: 'COMING_SOON',
+  'coming soon': 'COMING_SOON',
+  proximamente: 'COMING_SOON',
+  'próximamente': 'COMING_SOON',
+  archived: 'ARCHIVED',
+  archivado: 'ARCHIVED',
+}
 
 const CAT_MAP: Record<string, CatKey> = {
   figures: 'figures',
@@ -62,9 +98,13 @@ interface ExcelRow {
   name: string
   desc: string
   price: number
+  salePrice: number
   stock: number
   brand: string
   cat: CatKey
+  status: StatusKey
+  featured: boolean
+  imageUrl: string
 }
 
 interface ParsedRow {
@@ -114,6 +154,50 @@ function parseSheet(workbook: XLSX.WorkBook): ParsedRow[] {
     if (!mappedCat) errors.push(`Categoría desconocida: "${catRaw}"`)
     else normalized.cat = mappedCat
 
+    const rawSale = Number(normalized.salePrice)
+    if (normalized.salePrice != null && normalized.salePrice !== ('' as unknown as number)) {
+      if (isNaN(rawSale) || rawSale <= 0) errors.push('Precio de oferta inválido')
+      else normalized.salePrice = rawSale
+    } else {
+      normalized.salePrice = undefined as unknown as number
+    }
+
+    const statusRaw = String(normalized.status ?? '')
+      .toLowerCase()
+      .trim()
+    if (statusRaw) {
+      const mappedStatus = STATUS_MAP[statusRaw]
+      if (!mappedStatus) errors.push(`Estado desconocido: "${statusRaw}"`)
+      else normalized.status = mappedStatus
+    } else {
+      normalized.status = 'AVAILABLE'
+    }
+
+    const featRaw = normalized.featured
+    if (typeof featRaw === 'string') {
+      normalized.featured = featRaw.toLowerCase() === 'true' || featRaw === '1' || featRaw.toLowerCase() === 'si' || featRaw.toLowerCase() === 'sí'
+    } else {
+      normalized.featured = Boolean(featRaw)
+    }
+
+    if (normalized.imageUrl && typeof normalized.imageUrl === 'string') {
+      const urls = String(normalized.imageUrl)
+        .split('|')
+        .map((u) => u.trim())
+        .filter(Boolean)
+      const invalidUrls = urls.filter((u) => {
+        try {
+          new URL(u)
+          return false
+        } catch {
+          return true
+        }
+      })
+      if (invalidUrls.length > 0) {
+        errors.push(`URL de imagen inválida: ${invalidUrls.join(', ')}`)
+      }
+    }
+
     return { row: i + 2, data: normalized, errors }
   })
 }
@@ -154,9 +238,18 @@ export function ExcelImportDrawer({ onClose, onImport }: Props) {
       name: r.data.name!,
       desc: r.data.desc ?? '',
       price: r.data.price!,
+      salePrice: r.data.salePrice || undefined,
       stock: r.data.stock!,
       brand: r.data.brand ?? '',
       cat: r.data.cat!,
+      status: r.data.status ?? 'AVAILABLE',
+      featured: r.data.featured ?? false,
+      imageUrls: r.data.imageUrl
+        ? String(r.data.imageUrl)
+            .split('|')
+            .map((u) => u.trim())
+            .filter(Boolean)
+        : [],
     }))
     onImport(products)
     onClose()
@@ -187,11 +280,24 @@ export function ExcelImportDrawer({ onClose, onImport }: Props) {
           <div className="bg-card border border-(--bd) p-4">
             <div className={cn(cls.label, 'mb-2')}>Columnas requeridas</div>
             <div className="flex flex-wrap gap-2">
-              {['SKU', 'Nombre', 'Descripcion', 'Precio', 'Cantidad', 'Marca', 'Categoria'].map(
+              {['SKU', 'Nombre', 'Precio', 'Cantidad', 'Categoria'].map(
                 (c) => (
                   <span
                     key={c}
                     className="font-mono text-[11px] bg-black/30 border border-(--bd) px-2 py-0.5 text-muted"
+                  >
+                    {c}
+                  </span>
+                ),
+              )}
+            </div>
+            <div className={cn(cls.label, 'mb-2 mt-3')}>Columnas opcionales</div>
+            <div className="flex flex-wrap gap-2">
+              {['Descripcion', 'Marca', 'Precio Oferta', 'Estado', 'Destacado', 'URL Imagen'].map(
+                (c) => (
+                  <span
+                    key={c}
+                    className="font-mono text-[11px] bg-black/10 border border-(--bd) px-2 py-0.5 text-muted/70"
                   >
                     {c}
                   </span>
@@ -277,7 +383,7 @@ export function ExcelImportDrawer({ onClose, onImport }: Props) {
                   <table className="w-full text-left">
                     <thead>
                       <tr>
-                        {['Fila', 'SKU', 'Nombre', 'Cat.', 'Precio', 'Qty', 'Marca'].map((h) => (
+                        {['Fila', 'SKU', 'Nombre', 'Cat.', 'Precio', 'Oferta', 'Estado', 'Dest.', 'Qty', 'Marca'].map((h) => (
                           <th key={h} className={cn(cls.th, 'whitespace-nowrap')}>
                             {h}
                           </th>
@@ -293,15 +399,20 @@ export function ExcelImportDrawer({ onClose, onImport }: Props) {
                         >
                           <td className={cn(cls.td, cls.mono)}>{r.row}</td>
                           <td className={cn(cls.td, cls.mono)}>{r.data.sku ?? '—'}</td>
-                          <td className={cn(cls.td, 'max-w-37.5 truncate')}>
+                          <td className={cn(cls.td, 'max-w-30 truncate')}>
                             {r.data.name ?? '—'}
                           </td>
                           <td className={cn(cls.td, cls.mono)}>{r.data.cat ?? '—'}</td>
                           <td className={cn(cls.td, cls.valGold)}>
                             {r.data.price != null ? `S/ ${r.data.price.toFixed(2)}` : '—'}
                           </td>
+                          <td className={cn(cls.td, cls.valGold)}>
+                            {r.data.salePrice != null ? `S/ ${r.data.salePrice.toFixed(2)}` : '—'}
+                          </td>
+                          <td className={cn(cls.td, 'text-[11px]')}>{r.data.status ?? '—'}</td>
+                          <td className={cn(cls.td, 'text-center')}>{r.data.featured ? '★' : '—'}</td>
                           <td className={cls.td}>{r.data.stock ?? '—'}</td>
-                          <td className={cn(cls.td, 'max-w-25 truncate')}>{r.data.brand ?? '—'}</td>
+                          <td className={cn(cls.td, 'max-w-20 truncate')}>{r.data.brand ?? '—'}</td>
                           <td className={cls.td}>
                             {r.errors.length === 0 ? (
                               <CheckCircle2 size={14} className="text-emerald-400" />

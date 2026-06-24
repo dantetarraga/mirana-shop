@@ -13,7 +13,6 @@ export const productDbBaseSchema = z.object({
   sku: z.string().min(1, 'SKU requerido'),
   description: z.string().optional().default(''),
   price: z.number({ error: 'Precio requerido' }).positive('Debe ser mayor a 0'),
-  compareAtPrice: z.number().positive().optional(),
   salePrice: z.preprocess(
     (v) => (v === '' || v === null || (typeof v === 'number' && isNaN(v)) ? undefined : v),
     z.number().positive('Debe ser mayor a 0').optional(),
@@ -29,10 +28,10 @@ export const productDbBaseSchema = z.object({
 })
 
 export const productDbSchema = productDbBaseSchema.superRefine((data, ctx) => {
-  if (data.salePrice !== undefined && data.salePrice >= data.price) {
+  if (data.salePrice !== undefined && data.salePrice > data.price) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: 'El precio de venta debe ser menor al precio base',
+      message: 'El precio de oferta no puede ser mayor al precio base',
       path: ['salePrice'],
     })
   }
@@ -49,9 +48,31 @@ export const importProductRowSchema = z.object({
   sku: z.string().min(1),
   cat: z.enum(['figures', 'lego', 'vehicles']),
   price: z.number().positive(),
+  salePrice: z.preprocess(
+    (v) => (v === '' || v === null || (typeof v === 'number' && isNaN(v)) ? undefined : v),
+    z.number().positive().optional(),
+  ),
   stock: z.number().int().min(0),
   brand: z.string().optional().default(''),
   desc: z.string().optional().default(''),
+  status: z.enum(['AVAILABLE', 'PREORDER', 'SOLD_OUT', 'COMING_SOON', 'ARCHIVED']).optional().default('AVAILABLE'),
+  featured: z.preprocess(
+    (v) => {
+      if (typeof v === 'boolean') return v
+      if (typeof v === 'string') return v.toLowerCase() === 'true' || v === '1' || v.toLowerCase() === 'si' || v.toLowerCase() === 'sí'
+      return false
+    },
+    z.boolean().default(false),
+  ),
+  imageUrls: z.array(z.string().url('URL de imagen inválida')).optional().default([]),
+}).superRefine((data, ctx) => {
+  if (data.salePrice !== undefined && data.salePrice > data.price) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'El precio de oferta no puede ser mayor al precio base',
+      path: ['salePrice'],
+    })
+  }
 })
 
 export type ImportProductRow = z.infer<typeof importProductRowSchema>

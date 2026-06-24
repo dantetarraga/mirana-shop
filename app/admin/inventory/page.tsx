@@ -8,9 +8,8 @@ import { StockBadge } from '@/features/inventory/components/StockBadge'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { cn } from '@/shared/lib/utils'
 
-type SerializedProduct = Omit<ProductListItem, 'price' | 'compareAtPrice' | 'salePrice'> & {
+type SerializedProduct = Omit<ProductListItem, 'price' | 'salePrice'> & {
   price: number
-  compareAtPrice: number | null
   salePrice: number | null
 }
 
@@ -94,7 +93,6 @@ export default async function InventoryPage({ searchParams }: PageProps) {
   const products = rawProducts.map((p) => ({
     ...p,
     price: Number(p.price),
-    compareAtPrice: p.compareAtPrice != null ? Number(p.compareAtPrice) : null,
     salePrice: p.salePrice != null ? Number(p.salePrice) : null,
   }))
 

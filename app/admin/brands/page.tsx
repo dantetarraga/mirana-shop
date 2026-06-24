@@ -1,7 +1,7 @@
-import Link from 'next/link'
 import { BrandsTableClient } from '@/features/brands/components/BrandsTableClient'
 import { countBrands, getBrands } from '@/features/brands/queries/brand.queries'
 import { ServerSearchForm } from '@/shared/components/admin/ServerSearchForm'
+import Link from 'next/link'
 
 interface PageProps {
   searchParams: Promise<{ q?: string; page?: string }>
@@ -16,7 +16,7 @@ export default async function BrandsPage({ searchParams }: PageProps) {
 
   const [brands, allBrands, total] = await Promise.all([
     getBrands({ search: q, page: currentPage, perPage }),
-    getBrands({ perPage: 500 }), // para el dropdown de reasignación en EntityProductsDrawer
+    getBrands({ perPage: 30 }),
     countBrands({ search: q }),
   ])
 

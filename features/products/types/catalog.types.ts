@@ -14,7 +14,7 @@ export type CatalogProduct = {
   slug: string;
   name: string;
   price: number;
-  compareAtPrice: number | null;
+  salePrice: number | null;
   status: ProductStatus;
   featured: boolean;
   createdAt: Date;

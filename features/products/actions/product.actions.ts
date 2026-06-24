@@ -60,7 +60,6 @@ export async function createProduct(
         name: input.name,
         description: input.description ?? '',
         price: input.price,
-        compareAtPrice: input.compareAtPrice ?? null,
         salePrice: input.salePrice ?? null,
         status: input.status ?? 'AVAILABLE',
         featured: input.featured,
@@ -113,7 +112,6 @@ export async function updateProduct(
           ...(input.slug !== undefined && { slug: input.slug }),
           ...(input.description !== undefined && { description: input.description }),
           ...(input.price !== undefined && { price: input.price }),
-          ...(input.compareAtPrice !== undefined && { compareAtPrice: input.compareAtPrice ?? null }),
           ...(input.salePrice !== undefined && { salePrice: input.salePrice ?? null }),
           ...(input.status !== undefined && { status: input.status }),
           ...(input.featured !== undefined && { featured: input.featured }),
@@ -229,11 +227,32 @@ export async function importProducts(
       const match = existing.find((p) => p.sku === row.sku)
 
       if (match) {
+        const newImages = (row.imageUrls ?? []).map((url, i) => ({
+          url,
+          alt: row.name,
+          position: i,
+        }))
+
         await db.$transaction(async (tx) => {
           await tx.product.update({
             where: { id: match.id },
-            data: { name: row.name, price: row.price, description: row.desc ?? '' },
+            data: {
+              name: row.name,
+              price: row.price,
+              description: row.desc ?? '',
+              salePrice: row.salePrice ?? null,
+              status: row.status ?? 'AVAILABLE',
+              featured: row.featured ?? false,
+            },
           })
+
+          if (newImages.length > 0) {
+            await tx.productImage.deleteMany({ where: { productId: match.id } })
+            await tx.productImage.createMany({
+              data: newImages.map((img) => ({ ...img, productId: match.id })),
+            })
+          }
+
           await tx.productInventory.upsert({
             where: { productId: match.id },
             update: { availableStock: row.stock },
@@ -242,6 +261,12 @@ export async function importProducts(
         })
         updated++
       } else {
+        const images = (row.imageUrls ?? []).map((url, i) => ({
+          url,
+          alt: row.name,
+          position: i,
+        }))
+
         await db.product.create({
           data: {
             sku: row.sku,
@@ -249,10 +274,12 @@ export async function importProducts(
             name: row.name,
             description: row.desc ?? '',
             price: row.price,
+            salePrice: row.salePrice ?? null,
             categoryId,
             brandId,
-            status: 'AVAILABLE',
-            featured: false,
+            status: row.status ?? 'AVAILABLE',
+            featured: row.featured ?? false,
+            images: images.length > 0 ? { create: images } : undefined,
             inventory: { create: { availableStock: row.stock } },
           },
         })
