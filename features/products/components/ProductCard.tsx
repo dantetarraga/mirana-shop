@@ -82,10 +82,12 @@ export function ProductCard({
           {p.name}
         </div>
         <div className="flex items-center justify-between mb-3">
-          <div className="font-display text-[26px] font-black text-(--gold)">
-            S/ {(p.salePrice && p.salePrice < p.price ? p.salePrice : p.price).toFixed(2)}
+          <div className="flex items-baseline gap-1.5 min-w-0">
+            <span className="font-display text-[19px] sm:text-[26px] font-black text-(--gold) whitespace-nowrap">
+              S/ {(p.salePrice && p.salePrice < p.price ? p.salePrice : p.price).toFixed(2)}
+            </span>
             {p.salePrice && p.salePrice < p.price && (
-              <span className="ml-2 text-[14px] font-normal text-muted line-through">
+              <span className="text-[11px] sm:text-[14px] font-normal text-muted line-through whitespace-nowrap">
                 S/ {p.price.toFixed(2)}
               </span>
             )}

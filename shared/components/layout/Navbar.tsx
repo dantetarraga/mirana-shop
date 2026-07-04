@@ -8,6 +8,7 @@ import { useUser } from '@/shared/hooks'
 import { cn } from '@/shared/lib/utils'
 import { LayoutGrid, LogOut, MapPin, Package, ShoppingBag, User } from 'lucide-react'
 import { signOut } from 'next-auth/react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
@@ -40,11 +41,15 @@ export function Navbar() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-200 flex items-center gap-3 sm:gap-5 md:gap-8 shell transition-[background] duration-300 h-(--nh) bg-[rgba(3,4,9,.92)] backdrop-blur-[28px] border-b border-(--bd)">
       <div className="flex items-center gap-4 md:gap-7 shrink-0">
-        <Link
-          href="/"
-          className="font-display font-black text-[20px] sm:text-[24px] md:text-[26px] tracking-[3px] md:tracking-[5px] no-underline uppercase text-text"
-        >
-          MIRA<span className="text-(--gold)">NA</span>
+        <Link href="/" className="flex items-center shrink-0">
+          <Image
+            src="/logo.svg"
+            alt="Mirana"
+            width={150}
+            height={90}
+            priority
+            className="h-8 sm:h-9 md:h-10 w-auto"
+          />
         </Link>
         <Link
           href="/catalogo"

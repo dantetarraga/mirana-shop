@@ -63,7 +63,16 @@ export function CatalogFilters({
     })
   }
 
-  function go(overrides: Partial<{ cat: string[]; brand: string[]; avail: string[]; oferta?: boolean; priceMin?: number; priceMax?: number }>) {
+  function go(
+    overrides: Partial<{
+      cat: string[]
+      brand: string[]
+      avail: string[]
+      oferta?: boolean
+      priceMin?: number
+      priceMax?: number
+    }>,
+  ) {
     router.push(
       buildCatalogUrl({
         q: currentQ,
@@ -95,15 +104,27 @@ export function CatalogFilters({
   const chips: { key: string; label: string; onRemove: () => void }[] = [
     ...currentCats.map((slug) => {
       const cat = categories.find((c) => c.slug === slug)
-      return { key: `cat-${slug}`, label: cat?.name ?? slug, onRemove: () => go({ cat: currentCats.filter((c) => c !== slug) }) }
+      return {
+        key: `cat-${slug}`,
+        label: cat?.name ?? slug,
+        onRemove: () => go({ cat: currentCats.filter((c) => c !== slug) }),
+      }
     }),
     ...currentBrands.map((slug) => {
       const brand = brands.find((b) => b.slug === slug)
-      return { key: `brand-${slug}`, label: brand?.name ?? slug, onRemove: () => go({ brand: currentBrands.filter((b) => b !== slug) }) }
+      return {
+        key: `brand-${slug}`,
+        label: brand?.name ?? slug,
+        onRemove: () => go({ brand: currentBrands.filter((b) => b !== slug) }),
+      }
     }),
     ...currentAvail.map((val) => {
       const opt = AVAILABILITY_OPTIONS.find((o) => o.value === val)
-      return { key: `avail-${val}`, label: opt?.label ?? val, onRemove: () => go({ avail: currentAvail.filter((a) => a !== val) }) }
+      return {
+        key: `avail-${val}`,
+        label: opt?.label ?? val,
+        onRemove: () => go({ avail: currentAvail.filter((a) => a !== val) }),
+      }
     }),
     ...(currentOferta
       ? [{ key: 'oferta', label: 'En oferta', onRemove: () => go({ oferta: undefined }) }]
@@ -131,7 +152,7 @@ export function CatalogFilters({
         <button
           type="button"
           onClick={() => setMobileOpen((o) => !o)}
-          className="flex items-center gap-2 font-display text-[20px] font-black uppercase tracking-[0.5px]"
+          className="flex-1 flex items-center gap-3 font-display text-[20px] font-black uppercase tracking-[0.5px] text-left justify-between"
         >
           Filtros
           {hasActiveFilters && (
@@ -172,7 +193,12 @@ export function CatalogFilters({
         )}
 
         {/* Categoría */}
-        <FilterGroup id="categoria" label="Categoría" open={openGroups.has('categoria')} onToggle={toggleGroup}>
+        <FilterGroup
+          id="categoria"
+          label="Categoría"
+          open={openGroups.has('categoria')}
+          onToggle={toggleGroup}
+        >
           {categories.map((cat) => (
             <FilterCheckbox
               key={cat.id}
@@ -204,7 +230,12 @@ export function CatalogFilters({
         </FilterGroup>
 
         {/* Precio */}
-        <FilterGroup id="precio" label="Precio" open={openGroups.has('precio')} onToggle={toggleGroup}>
+        <FilterGroup
+          id="precio"
+          label="Precio"
+          open={openGroups.has('precio')}
+          onToggle={toggleGroup}
+        >
           <div className="grid grid-cols-2 gap-2 mb-3">
             <div className="relative">
               <span className="absolute left-2.5 top-1/2 -translate-y-1/2 font-display text-[13px] font-bold text-muted">
@@ -297,7 +328,10 @@ function FilterGroup({
         className="w-full flex items-center justify-between px-5 py-3.5 font-display text-[15px] font-extrabold uppercase tracking-[0.5px] text-text hover:text-(--gold) transition-colors"
       >
         {label}
-        <ChevronDown size={14} className={`text-muted transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown
+          size={14}
+          className={`text-muted transition-transform ${open ? 'rotate-180' : ''}`}
+        />
       </button>
       {open && <div className="px-5 pb-4">{children}</div>}
     </div>
@@ -316,10 +350,7 @@ function FilterCheckbox({
   count?: number
 }) {
   return (
-    <label
-      onClick={onClick}
-      className="flex items-center gap-2.5 py-1.5 cursor-pointer group"
-    >
+    <label onClick={onClick} className="flex items-center gap-2.5 py-1.5 cursor-pointer group">
       <span
         className={`w-4 h-4 shrink-0 border flex items-center justify-center transition-colors ${
           checked ? 'bg-(--gold) border-(--gold)' : 'border-(--bd) bg-transparent'
@@ -327,7 +358,9 @@ function FilterCheckbox({
       >
         {checked && <Check size={10} className="text-black" strokeWidth={3} />}
       </span>
-      <span className={`flex-1 text-[13px] transition-colors ${checked ? 'text-text' : 'text-muted group-hover:text-text'}`}>
+      <span
+        className={`flex-1 text-[13px] transition-colors ${checked ? 'text-text' : 'text-muted group-hover:text-text'}`}
+      >
         {label}
       </span>
       {count != null && <span className="text-[11px] text-muted opacity-55">{count}</span>}
