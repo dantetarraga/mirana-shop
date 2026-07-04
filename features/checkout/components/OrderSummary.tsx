@@ -1,5 +1,6 @@
 'use client'
 
+import { effectivePrice } from '@/features/checkout/lib/pricing'
 import { Button } from '@/shared/components/ui/Button'
 import { formatCurrency } from '@/shared/lib/utils'
 import { ArrowLeft, Loader2, Truck } from 'lucide-react'
@@ -10,6 +11,7 @@ type CartItem = {
     name: string
     imageUrl: string | null
     price: number
+    salePrice: number | null
   }
   qty: number
 }
@@ -19,9 +21,12 @@ type Props = {
   subtotal: number
   shippingCost: number
   shippingFree: boolean
+  discount: number
+  discountName: string | null
   total: number
   loading: boolean
-  shippingThreshold: number
+  /** null = no hay promoción de envío gratis activa */
+  shippingThreshold: number | null
 }
 
 export function OrderSummary({
@@ -29,6 +34,8 @@ export function OrderSummary({
   subtotal,
   shippingCost,
   shippingFree,
+  discount,
+  discountName,
   total,
   loading,
   shippingThreshold,
@@ -61,11 +68,11 @@ export function OrderSummary({
                   {item.product.name}
                 </p>
                 <p className="text-[11px] text-muted">
-                  {item.qty} × {formatCurrency(item.product.price)}
+                  {item.qty} × {formatCurrency(effectivePrice(item.product))}
                 </p>
               </div>
               <span className="font-semibold text-[13px] shrink-0">
-                {formatCurrency(item.product.price * item.qty)}
+                {formatCurrency(effectivePrice(item.product) * item.qty)}
               </span>
             </li>
           ))}
@@ -78,6 +85,15 @@ export function OrderSummary({
             <span>{formatCurrency(subtotal)}</span>
           </div>
 
+          {discount > 0 && (
+            <div className="flex justify-between text-[13px]">
+              <span className="text-muted">Descuento{discountName ? ` — ${discountName}` : ''}</span>
+              <span className="text-emerald-400 font-semibold">
+                −{formatCurrency(discount)}
+              </span>
+            </div>
+          )}
+
           <div className="flex justify-between text-[13px]">
             <span className="text-muted">Envío</span>
             {shippingFree ? (
@@ -89,7 +105,7 @@ export function OrderSummary({
             )}
           </div>
 
-          {!shippingFree && (
+          {!shippingFree && shippingThreshold != null && (
             <p className="text-[11px] text-muted leading-snug">
               Agrega{' '}
               <span className="text-white font-semibold">

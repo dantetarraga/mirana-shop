@@ -44,6 +44,7 @@ export function ProductFilters({
     <>
       <FilterMultiSelect
         label="Categoría"
+        className="min-w-44"
         options={categories.map((c) => ({ label: c.name, value: c.slug }))}
         selected={currentCats}
         onToggle={(val) => {
@@ -62,6 +63,7 @@ export function ProductFilters({
       />
       <FilterMultiSelect
         label="Marca"
+        className="min-w-44"
         options={brands.map((b) => ({ label: b.name, value: b.slug }))}
         selected={currentBrands}
         onToggle={(val) => {
@@ -80,6 +82,7 @@ export function ProductFilters({
       />
       <FilterMultiSelect
         label="Colección"
+        className="min-w-44"
         options={collections.map((c) => ({ label: c.name, value: c.slug }))}
         selected={currentCollections}
         onToggle={(val) => {

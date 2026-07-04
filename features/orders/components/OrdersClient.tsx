@@ -12,6 +12,7 @@ import { useServerAction } from '@/shared/hooks/admin'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { ORDER_STATUS, fmt } from '@/shared/lib/admin/admin-constants'
 import { cn, formatDate } from '@/shared/lib/utils'
+import { ChevronRight } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 // ---------------------------------------------------------------------------
@@ -83,7 +84,11 @@ export function OrdersClient({ orders }: OrdersClientProps) {
           )
         },
       },
-      { header: '', className: 'text-right text-muted', render: () => '→' },
+      {
+        header: '',
+        className: 'text-right text-muted',
+        render: () => <ChevronRight size={14} className="inline-block" />,
+      },
     ],
     [],
   )

@@ -1,6 +1,11 @@
 'use client'
 
 import { useCartStore } from '@/features/cart/stores/cart.store'
+import {
+  computeTotals,
+  effectivePrice,
+  type PricingRules,
+} from '@/features/checkout/lib/pricing'
 import { getCategoryLabel, getCategoryStripe } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
@@ -11,19 +16,22 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
-const SHIPPING_THRESHOLD = 150
-const SHIPPING_COST = 15
+interface CartViewProps {
+  /** Reglas de precios (envío y promociones activas) calculadas en el server */
+  pricingRules: PricingRules
+}
 
-export function CartView() {
+export function CartView({ pricingRules }: CartViewProps) {
   const { cart, updateQty, removeItem } = useCartStore()
   const router = useRouter()
   const [pendingRemove, setPendingRemove] = useState<{ id: string; name: string } | null>(null)
 
-  const subtotal = cart.reduce((s, i) => s + i.product.price * i.qty, 0)
+  const subtotal = cart.reduce((s, i) => s + effectivePrice(i.product) * i.qty, 0)
   const itemCount = cart.reduce((s, i) => s + i.qty, 0)
-  const shippingFree = subtotal >= SHIPPING_THRESHOLD
-  const shipping = shippingFree ? 0 : SHIPPING_COST
-  const total = subtotal + shipping
+  const { shippingFree, shippingCost, discount, discountName, total } = computeTotals(
+    subtotal,
+    pricingRules,
+  )
 
   /* ── Empty state ─────────────────────────────────── */
   if (cart.length === 0) {
@@ -72,7 +80,8 @@ export function CartView() {
             {cart.map((item) => {
               const stripe = getCategoryStripe(item.product.category.slug)
               const catLabel = getCategoryLabel(item.product.category.slug)
-              const lineTotal = item.product.price * item.qty
+              const unitPrice = effectivePrice(item.product)
+              const lineTotal = unitPrice * item.qty
 
               return (
                 <div
@@ -107,7 +116,7 @@ export function CartView() {
                       </div>
                     </Link>
                     <div className="text-(--gold) font-display text-[15px] font-bold mt-0.5">
-                      {formatCurrency(item.product.price)} c/u
+                      {formatCurrency(unitPrice)} c/u
                     </div>
 
                     {/* Qty controls */}
@@ -151,7 +160,7 @@ export function CartView() {
                     </div>
                     {item.qty > 1 && (
                       <div className="text-[11px] text-muted mt-0.5">
-                        {item.qty} × {formatCurrency(item.product.price)}
+                        {item.qty} × {formatCurrency(unitPrice)}
                       </div>
                     )}
                   </div>
@@ -177,20 +186,29 @@ export function CartView() {
                 <span className="font-semibold">{formatCurrency(subtotal)}</span>
               </div>
 
+              {discount > 0 && (
+                <div className="flex justify-between items-baseline">
+                  <span className="text-muted">
+                    Descuento{discountName ? ` — ${discountName}` : ''}
+                  </span>
+                  <span className="text-green-400 font-semibold">−{formatCurrency(discount)}</span>
+                </div>
+              )}
+
               <div className="flex justify-between items-baseline">
                 <span className="text-muted">Envío</span>
                 {shippingFree ? (
                   <span className="text-green-400 font-semibold text-[13px]">Gratis</span>
                 ) : (
-                  <span className="font-semibold">{formatCurrency(SHIPPING_COST)}</span>
+                  <span className="font-semibold">{formatCurrency(shippingCost)}</span>
                 )}
               </div>
 
-              {!shippingFree && (
+              {!shippingFree && pricingRules.freeShippingThreshold != null && (
                 <div className="text-[12px] text-muted border border-(--bd) px-3.5 py-2.5 leading-relaxed">
                   Agrega{' '}
                   <span className="text-(--gold) font-semibold">
-                    {formatCurrency(SHIPPING_THRESHOLD - subtotal)}
+                    {formatCurrency(pricingRules.freeShippingThreshold - subtotal)}
                   </span>{' '}
                   más para obtener envío gratis.
                 </div>

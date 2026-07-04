@@ -2,7 +2,7 @@ import { PromotionCardActions } from '@/features/promotions/components/Promotion
 import type { PromotionRow } from '@/features/promotions/types'
 import { StatusBadge } from '@/features/orders/components/StatusBadge'
 import { formatCurrency, formatDate } from '@/shared/lib/utils'
-import { BadgePercent, Package, Truck } from 'lucide-react'
+import { BadgePercent, MoveRight, Package, Truck } from 'lucide-react'
 
 interface Props {
   promotion: PromotionRow
@@ -81,8 +81,9 @@ export function PromotionCard({ promotion }: Props) {
         {(promotion.startsAt || promotion.endsAt) && (
           <div className="flex justify-between text-[13px]">
             <span className="text-muted">Vigencia</span>
-            <span className="font-mono text-[11px]">
-              {promotion.startsAt ? formatDate(promotion.startsAt, 'P') : '—'} →{' '}
+            <span className="font-mono text-[11px] inline-flex items-center gap-1.5">
+              {promotion.startsAt ? formatDate(promotion.startsAt, 'P') : '—'}
+              <MoveRight size={11} className="text-muted" />
               {promotion.endsAt ? formatDate(promotion.endsAt, 'P') : '∞'}
             </span>
           </div>

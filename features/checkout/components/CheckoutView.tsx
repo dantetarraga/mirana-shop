@@ -17,6 +17,11 @@ import {
   type AddressFormValues,
 } from '@/features/profile/components/AddressFormPanel'
 import { useCartStore } from '@/features/cart/stores/cart.store'
+import {
+  computeTotals,
+  effectivePrice,
+  type PricingRules,
+} from '@/features/checkout/lib/pricing'
 import type { PaymentAccountData } from '@/features/settings/queries/payment-accounts.queries'
 import { Button } from '@/shared/components/ui/Button'
 import { useUser } from '@/shared/hooks'
@@ -29,22 +34,17 @@ import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 
 // ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const SHIPPING_THRESHOLD = 150
-const SHIPPING_COST = 15
-
-// ---------------------------------------------------------------------------
 // View
 // ---------------------------------------------------------------------------
 
 interface CheckoutViewProps {
   paymentAccounts: PaymentAccountData[]
   whatsappPhone: string
+  /** Reglas de precios (envío y promociones activas) calculadas en el server */
+  pricingRules: PricingRules
 }
 
-export function CheckoutView({ paymentAccounts, whatsappPhone }: CheckoutViewProps) {
+export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: CheckoutViewProps) {
   const { cart, clearCart } = useCartStore()
   const { user } = useUser()
   const [success, setSuccess] = useState<SuccessData | null>(null)
@@ -53,11 +53,13 @@ export function CheckoutView({ paymentAccounts, whatsappPhone }: CheckoutViewPro
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
   const [showNewAddressForm, setShowNewAddressForm] = useState(false)
 
-  // Cart calculations
-  const subtotal = cart.reduce((s, i) => s + i.product.price * i.qty, 0)
-  const shippingFree = subtotal >= SHIPPING_THRESHOLD
-  const shippingCost = shippingFree ? 0 : SHIPPING_COST
-  const total = subtotal + shippingCost
+  // Totales con precio efectivo (oferta si existe) + promociones de la BD.
+  // El servidor recalcula y valida todo esto de nuevo en placeOrder.
+  const subtotal = cart.reduce((s, i) => s + effectivePrice(i.product) * i.qty, 0)
+  const { shippingFree, shippingCost, discount, discountName, total } = computeTotals(
+    subtotal,
+    pricingRules,
+  )
 
   const {
     register,
@@ -164,20 +166,16 @@ export function CheckoutView({ paymentAccounts, whatsappPhone }: CheckoutViewPro
     if (loading) return
     setLoading(true)
 
+    // Solo id + cantidad: los precios y promociones los valida el servidor
     const items = cart.map((i) => ({
       productId: i.product.id,
-      productName: i.product.name,
-      productSku: i.product.sku,
       quantity: i.qty,
-      unitPrice: i.product.price,
     }))
 
     const result = await placeOrder({
       form: data,
       items,
-      subtotal,
-      shippingCost,
-      total,
+      clientTotal: total,
     })
     setLoading(false)
 
@@ -186,11 +184,11 @@ export function CheckoutView({ paymentAccounts, whatsappPhone }: CheckoutViewPro
       return
     }
 
-    // Capturamos resumen antes de limpiar el carrito
+    // Capturamos resumen antes de limpiar el carrito (montos: los del server)
     const successItems = cart.map((i) => ({
       name: i.product.name,
       qty: i.qty,
-      unitPrice: i.product.price,
+      unitPrice: effectivePrice(i.product),
     }))
 
     clearCart()
@@ -198,9 +196,11 @@ export function CheckoutView({ paymentAccounts, whatsappPhone }: CheckoutViewPro
       code: result.data.code,
       paymentMethod: result.data.paymentMethod,
       items: successItems,
-      subtotal,
-      shippingCost,
-      total,
+      subtotal: result.data.subtotal,
+      discount: result.data.discount,
+      discountName: result.data.discountName,
+      shippingCost: result.data.shippingCost,
+      total: result.data.total,
     })
   }
 
@@ -248,9 +248,11 @@ export function CheckoutView({ paymentAccounts, whatsappPhone }: CheckoutViewPro
             subtotal={subtotal}
             shippingCost={shippingCost}
             shippingFree={shippingFree}
+            discount={discount}
+            discountName={discountName}
             total={total}
             loading={loading}
-            shippingThreshold={SHIPPING_THRESHOLD}
+            shippingThreshold={pricingRules.freeShippingThreshold}
           />
         </div>
       </form>

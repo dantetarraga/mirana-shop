@@ -74,6 +74,16 @@ export function SuccessScreen({
               <span className="text-muted">Subtotal</span>
               <span>{formatCurrency(data.subtotal)}</span>
             </div>
+            {data.discount > 0 && (
+              <div className="flex justify-between text-[13px]">
+                <span className="text-muted">
+                  Descuento{data.discountName ? ` — ${data.discountName}` : ''}
+                </span>
+                <span className="text-emerald-400 font-semibold">
+                  −{formatCurrency(data.discount)}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between text-[13px]">
               <span className="text-muted">Envío</span>
               {data.shippingCost === 0 ? (

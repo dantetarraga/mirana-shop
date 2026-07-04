@@ -4,6 +4,7 @@ import { syncProductCollections } from '@/features/collections/actions/collectio
 import {
   createProduct,
   deleteProduct,
+  getCatalogForExport,
   importProducts,
   updateProduct,
 } from '@/features/products/actions/product.actions'
@@ -24,7 +25,7 @@ import { useCrudState, useServerAction } from '@/shared/hooks/admin'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import type { ImportProductRow } from '@/features/products/schemas/product.schema'
 import { productDbSchema } from '@/features/products/schemas/product.schema'
-import { FileSpreadsheet, Pencil, Plus, Trash2 } from 'lucide-react'
+import { FileDown, FileSpreadsheet, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -71,8 +72,28 @@ export function ProductsClient({
 }: ProductsClientProps) {
   const crud = useCrudState<SerializedProduct>()
   const [showImport, setShowImport] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const [products, setProducts] = useState<SerializedProduct[]>(initialProducts)
   const { isPending, run } = useServerAction()
+
+  const handleExportPdf = async () => {
+    if (exporting) return
+    setExporting(true)
+    try {
+      const res = await getCatalogForExport()
+      if (!res.success) {
+        toast.error(res.error)
+        return
+      }
+      const { generateCatalogPdf } = await import('@/features/products/lib/catalog-pdf')
+      await generateCatalogPdf(res.data)
+      toast.success('Catálogo PDF descargado — listo para compartir')
+    } catch {
+      toast.error('Error al generar el PDF')
+    } finally {
+      setExporting(false)
+    }
+  }
 
   const onSubmit = (
     data: ProductFormValues,
@@ -231,6 +252,10 @@ export function ProductsClient({
         align="center"
         side={
           <div className="flex gap-2">
+            <Button variant="outline" size="md" onClick={handleExportPdf} disabled={exporting}>
+              <FileDown size={15} className="mr-1.5" />
+              {exporting ? 'Generando…' : 'Exportar PDF'}
+            </Button>
             <Button variant="outline" size="md" onClick={() => setShowImport(true)}>
               <FileSpreadsheet size={15} className="mr-1.5" /> Importar Excel
             </Button>

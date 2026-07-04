@@ -9,6 +9,9 @@ export type SuccessData = {
   paymentMethod: string
   items: SuccessItem[]
   subtotal: number
+  /** Descuento aplicado por promociones (0 si no hubo) */
+  discount: number
+  discountName: string | null
   shippingCost: number
   total: number
 }

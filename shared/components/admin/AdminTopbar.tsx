@@ -1,7 +1,8 @@
 ﻿'use client'
 
-import { Button } from '@/shared/components/ui/Button'
-import { Bell, Calendar } from 'lucide-react'
+import { AlertsBell } from '@/features/alerts/components/AlertsBell'
+import type { AdminAlertItem } from '@/features/alerts/queries/alert.queries'
+import { Calendar } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 
 const TITLES: Record<string, [string, string]> = {
@@ -13,7 +14,12 @@ const TITLES: Record<string, [string, string]> = {
   '/admin/users': ['Usuarios', 'Base de clientes y segmentación'],
 }
 
-export function AdminTopbar() {
+interface AdminTopbarProps {
+  alerts: AdminAlertItem[]
+  unreadCount: number
+}
+
+export function AdminTopbar({ alerts, unreadCount }: AdminTopbarProps) {
   const pathname = usePathname()
   const [t1, t2] = TITLES[pathname] ?? ['Admin', 'Panel de administración']
 
@@ -30,10 +36,7 @@ export function AdminTopbar() {
           <Calendar size={13} />
           May 2026
         </div>
-        <Button variant="icon" size="md" className="relative">
-          <Bell size={17} />
-          <span className="absolute top-2 right-2.25 w-1.5 h-1.5 rounded-full bg-(--gold)" />
-        </Button>
+        <AlertsBell alerts={alerts} unreadCount={unreadCount} />
       </div>
     </div>
   )

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { X, Search, Loader2 } from "lucide-react";
 import { AdminDrawer } from "@/shared/components/admin/AdminDrawer";
 import { Button } from "@/shared/components/ui/Button";
+import { Select } from "@/shared/components/ui/Select";
 import { StockBadge } from "@/features/inventory/components/StockBadge";
 import { cls } from "@/shared/lib/admin/admin-classes";
 import type { DrawerProduct } from "@/shared/types/entity-products.types";
@@ -284,9 +285,9 @@ export function EntityProductsDrawer({
                     {(entityType === "brand" || entityType === "category") && (
                       <div className="relative">
                         {reassigningId === p.id ? (
-                          <select
+                          <Select
                             autoFocus
-                            className={cls.input + " text-[12px] py-1.5 px-2 pr-6 min-w-[130px]"}
+                            className="text-[12px] py-1.5 px-2 min-w-[130px]"
                             defaultValue=""
                             onChange={(e) => {
                               if (e.target.value) handleReassign(p.id, e.target.value);
@@ -297,7 +298,7 @@ export function EntityProductsDrawer({
                             {reassignOptions.map((opt) => (
                               <option key={opt.id} value={opt.id}>{opt.name}</option>
                             ))}
-                          </select>
+                          </Select>
                         ) : (
                           <Button
                             variant="outline"

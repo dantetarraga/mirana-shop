@@ -4,7 +4,7 @@ import { getSearchSuggestions, type SearchSuggestions } from '@/features/search/
 import { useRecentSearchesStore } from '@/features/search/stores/recent-searches.store'
 import { getCategoryStripe } from '@/features/products/types/catalog.types'
 import { useDebounce } from '@/shared/hooks'
-import { Clock, History, Search, X } from 'lucide-react'
+import { ArrowRight, Clock, History, Search, SearchX, X } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
@@ -150,7 +150,7 @@ export function SearchBox() {
                       </div>
                       <div className="text-[11px] text-muted mt-0.5">{cat.productCount} productos</div>
                     </div>
-                    <span className="text-muted text-[13px]">→</span>
+                    <ArrowRight size={13} className="text-muted shrink-0" />
                   </button>
                 ))}
               </div>
@@ -219,9 +219,9 @@ export function SearchBox() {
                 <Link
                   href={`/catalogo?q=${encodeURIComponent(query)}`}
                   onClick={() => addTerm(query)}
-                  className="border border-(--bd) text-text font-display text-[13px] font-bold tracking-[1px] uppercase px-4 py-1.5 hover:border-(--gold) hover:text-(--gold) transition-colors"
+                  className="inline-flex items-center gap-1.5 border border-(--bd) text-text font-display text-[13px] font-bold tracking-[1px] uppercase px-4 py-1.5 hover:border-(--gold) hover:text-(--gold) transition-colors"
                 >
-                  Ver todo →
+                  Ver todo <ArrowRight size={12} />
                 </Link>
               </div>
             </>
@@ -229,7 +229,7 @@ export function SearchBox() {
 
           {hasNoResults && (
             <div className="py-8 px-4.5 text-center text-muted">
-              <div className="text-[36px] opacity-20 mb-2.5">◎</div>
+              <SearchX size={36} className="opacity-20 mb-2.5 mx-auto" />
               <div className="text-[14px]">
                 Sin resultados para &quot;<strong>{query}</strong>&quot;
               </div>

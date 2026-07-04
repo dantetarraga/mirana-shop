@@ -4,7 +4,7 @@ import { Button } from '@/shared/components/ui/Button'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import type { ImportProductRow } from '@/features/products/schemas/product.schema'
 import { cn, slugify } from '@/shared/lib/utils'
-import { AlertCircle, CheckCircle2, FileSpreadsheet, Upload, X } from 'lucide-react'
+import { AlertCircle, CheckCircle2, FileSpreadsheet, Star, Upload, X } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
 import * as XLSX from 'xlsx'
 
@@ -415,7 +415,13 @@ export function ExcelImportDrawer({ categories, brands, onClose, onImport }: Pro
                             {r.data.salePrice != null ? `S/ ${r.data.salePrice.toFixed(2)}` : '—'}
                           </td>
                           <td className={cn(cls.td, 'text-[11px]')}>{r.data.status ?? '—'}</td>
-                          <td className={cn(cls.td, 'text-center')}>{r.data.featured ? '★' : '—'}</td>
+                          <td className={cn(cls.td, 'text-center')}>
+                            {r.data.featured ? (
+                              <Star size={12} className="inline text-(--gold)" fill="currentColor" />
+                            ) : (
+                              '—'
+                            )}
+                          </td>
                           <td className={cls.td}>{r.data.stock ?? '—'}</td>
                           <td className={cn(cls.td, 'max-w-20 truncate')}>{r.data.brand ?? '—'}</td>
                           <td className={cls.td}>

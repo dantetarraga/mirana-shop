@@ -320,6 +320,82 @@ export async function importProducts(
 }
 
 // ---------------------------------------------------------------------------
+// getCatalogForExport
+// Catálogo completo para exportar a PDF visual desde el admin. Las imágenes
+// se descargan aquí (server-side, sin CORS) y viajan como data URLs; el
+// cliente las normaliza a JPEG con canvas antes de incrustarlas en el PDF.
+// ---------------------------------------------------------------------------
+
+export interface CatalogExportRow {
+  name: string
+  sku: string
+  category: string
+  brand: string
+  price: number
+  salePrice: number | null
+  status: string
+  imageDataUrl: string | null
+}
+
+const MAX_IMAGE_BYTES = 4_000_000
+
+async function fetchImageAsDataUrl(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) })
+    if (!res.ok) return null
+    const type = res.headers.get('content-type') ?? 'image/jpeg'
+    if (!type.startsWith('image/')) return null
+    const buf = Buffer.from(await res.arrayBuffer())
+    if (buf.byteLength === 0 || buf.byteLength > MAX_IMAGE_BYTES) return null
+    return `data:${type};base64,${buf.toString('base64')}`
+  } catch {
+    return null
+  }
+}
+
+export async function getCatalogForExport(): Promise<ActionResult<CatalogExportRow[]>> {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
+  try {
+    const products = await db.product.findMany({
+      where: { deletedAt: null, status: { not: 'ARCHIVED' } },
+      select: {
+        name: true,
+        sku: true,
+        price: true,
+        salePrice: true,
+        status: true,
+        category: { select: { name: true } },
+        brand: { select: { name: true } },
+        images: { select: { url: true }, orderBy: { position: 'asc' }, take: 1 },
+      },
+      orderBy: [{ category: { name: 'asc' } }, { name: 'asc' }],
+    })
+
+    const images = await Promise.all(
+      products.map((p) => (p.images[0]?.url ? fetchImageAsDataUrl(p.images[0].url) : null)),
+    )
+
+    return {
+      success: true,
+      data: products.map((p, i) => ({
+        name: p.name,
+        sku: p.sku,
+        category: p.category.name,
+        brand: p.brand.name,
+        price: Number(p.price),
+        salePrice: p.salePrice != null ? Number(p.salePrice) : null,
+        status: p.status,
+        imageDataUrl: images[i],
+      })),
+    }
+  } catch {
+    return { success: false, error: 'Error al cargar el catálogo', code: 500 }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // searchAvailableProducts
 // Busca productos por nombre/SKU, excluyendo los IDs dados.
 // Usada por EntityProductsDrawer para el flujo "Agregar producto".

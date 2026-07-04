@@ -1,6 +1,7 @@
 'use client'
 
 import { useCartStore } from '@/features/cart/stores/cart.store'
+import { effectivePrice } from '@/features/checkout/lib/pricing'
 import { getCategoryStripe } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
@@ -12,7 +13,7 @@ import { toast } from 'sonner'
 
 export function CartDrawer() {
   const { cart, cartCount, cartOpen, setCartOpen, updateQty, removeItem } = useCartStore()
-  const total = cart.reduce((s, i) => s + i.product.price * i.qty, 0)
+  const total = cart.reduce((s, i) => s + effectivePrice(i.product) * i.qty, 0)
   const [pendingRemove, setPendingRemove] = useState<{ id: string; name: string } | null>(null)
 
   useEffect(() => {
@@ -70,7 +71,7 @@ export function CartDrawer() {
                     {item.product.name}
                   </div>
                   <div className="text-(--gold) font-display text-[20px] font-extrabold mt-px">
-                    {formatCurrency(item.product.price)}
+                    {formatCurrency(effectivePrice(item.product))}
                   </div>
                   <div className="flex items-center gap-2 mt-2">
                     <Button variant="icon" size="sm" onClick={() => updateQty(item.product.id, -1)}>

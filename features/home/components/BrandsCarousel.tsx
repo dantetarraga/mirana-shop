@@ -1,9 +1,10 @@
 'use client'
 
 import type { BrandRow } from '@/features/brands/types'
+import { cn } from '@/shared/lib/utils'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface BrandsCarouselProps {
   brands: BrandRow[]
@@ -11,6 +12,19 @@ interface BrandsCarouselProps {
 
 export function BrandsCarousel({ brands }: BrandsCarouselProps) {
   const trackRef = useRef<HTMLDivElement>(null)
+  // Si todas las marcas caben sin scroll, se centran y las flechas se ocultan.
+  const [hasOverflow, setHasOverflow] = useState(false)
+
+  useEffect(() => {
+    const track = trackRef.current
+    if (!track) return
+    // ResizeObserver dispara al observar y en cada cambio de tamaño
+    const ro = new ResizeObserver(() => {
+      setHasOverflow(track.scrollWidth > track.clientWidth + 1)
+    })
+    ro.observe(track)
+    return () => ro.disconnect()
+  }, [])
 
   if (brands.length === 0) return null
 
@@ -23,18 +37,23 @@ export function BrandsCarousel({ brands }: BrandsCarouselProps) {
   return (
     <section className="bg-surf border-b border-(--bd)">
       <div className="flex items-center">
-        <button
-          type="button"
-          aria-label="Marcas anteriores"
-          onClick={() => scrollByPage(-1)}
-          className="shrink-0 h-24 px-2.5 bg-transparent border-none text-muted transition-colors duration-200 hover:text-(--gold)"
-        >
-          <ChevronLeft size={26} />
-        </button>
+        {hasOverflow && (
+          <button
+            type="button"
+            aria-label="Marcas anteriores"
+            onClick={() => scrollByPage(-1)}
+            className="shrink-0 h-24 px-2.5 bg-transparent border-none text-muted transition-colors duration-200 hover:text-(--gold)"
+          >
+            <ChevronLeft size={26} />
+          </button>
+        )}
 
         <div
           ref={trackRef}
-          className="flex-1 flex overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className={cn(
+            'flex-1 flex overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+            !hasOverflow && 'justify-center',
+          )}
         >
           {brands.map((b) => (
             <Link
@@ -61,14 +80,16 @@ export function BrandsCarousel({ brands }: BrandsCarouselProps) {
           ))}
         </div>
 
-        <button
-          type="button"
-          aria-label="Más marcas"
-          onClick={() => scrollByPage(1)}
-          className="shrink-0 h-24 px-2.5 bg-transparent border-none text-muted transition-colors duration-200 hover:text-(--gold)"
-        >
-          <ChevronRight size={26} />
-        </button>
+        {hasOverflow && (
+          <button
+            type="button"
+            aria-label="Más marcas"
+            onClick={() => scrollByPage(1)}
+            className="shrink-0 h-24 px-2.5 bg-transparent border-none text-muted transition-colors duration-200 hover:text-(--gold)"
+          >
+            <ChevronRight size={26} />
+          </button>
+        )}
       </div>
     </section>
   )

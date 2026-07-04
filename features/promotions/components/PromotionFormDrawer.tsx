@@ -4,6 +4,7 @@ import type { PromotionRow } from '@/features/promotions/types'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
+import { Select } from '@/shared/components/ui/Select'
 import { useFormEntity } from '@/shared/hooks/admin'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { promotionDbSchema } from '@/features/promotions/schemas/promotion.schema'
@@ -94,13 +95,13 @@ export function PromotionFormDrawer({ promotion, isNew, onClose, onSubmit, isPen
         </FormField>
 
         <FormField label="Tipo de promoción" error={errors.type?.message}>
-          <select {...register('type')} className={cls.input}>
+          <Select {...register('type')}>
             {Object.entries(TYPE_LABELS).map(([val, label]) => (
               <option key={val} value={val}>
                 {label}
               </option>
             ))}
-          </select>
+          </Select>
         </FormField>
 
         {/* Monto mínimo — aplica a todos los tipos */}

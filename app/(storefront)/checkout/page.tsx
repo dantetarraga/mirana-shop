@@ -1,12 +1,20 @@
 import { CheckoutView } from '@/features/checkout/components/CheckoutView'
+import { getPricingRules } from '@/features/checkout/queries/pricing.queries'
 import { getActivePaymentAccounts } from '@/features/settings/queries/payment-accounts.queries'
 import { getWhatsappPhone } from '@/features/settings/queries/store-settings.queries'
 
 export default async function CheckoutPage() {
-  const [paymentAccounts, whatsappPhone] = await Promise.all([
+  const [paymentAccounts, whatsappPhone, pricingRules] = await Promise.all([
     getActivePaymentAccounts(),
     getWhatsappPhone(),
+    getPricingRules(),
   ])
 
-  return <CheckoutView paymentAccounts={paymentAccounts} whatsappPhone={whatsappPhone} />
+  return (
+    <CheckoutView
+      paymentAccounts={paymentAccounts}
+      whatsappPhone={whatsappPhone}
+      pricingRules={pricingRules}
+    />
+  )
 }

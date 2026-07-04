@@ -323,10 +323,12 @@ model Order {
   paymentStatus PaymentStatus @default(UNPAID)
   paymentMethod PaymentMethod
 
-  subtotal     Decimal @db.Decimal(10, 2)
-  shippingCost Decimal @default(0) @db.Decimal(10, 2)
-  total        Decimal @db.Decimal(10, 2)
-  currency     String  @default("PEN")
+  subtotal      Decimal @db.Decimal(10, 2)
+  shippingCost  Decimal @default(0) @db.Decimal(10, 2)
+  /// Descuento aplicado por promociones activas al momento de la compra
+  discountTotal Decimal @default(0) @db.Decimal(10, 2)
+  total         Decimal @db.Decimal(10, 2)
+  currency      String  @default("PEN")
 
   items    OrderItem[]
   payment  Payment?
@@ -621,4 +623,27 @@ model PaymentAccount {
   updatedAt DateTime @updatedAt
 
   @@index([active, position])
+}
+
+// ---------------------------------------------------------------------------
+// Alertas del admin — generadas por el cron /api/cron/alerts
+// ---------------------------------------------------------------------------
+
+enum AdminAlertType {
+  LOW_STOCK
+  PENDING_ORDERS
+  PROMO_EXPIRING
+  DAILY_SUMMARY
+}
+
+model AdminAlert {
+  id      String         @id @default(cuid())
+  type    AdminAlertType
+  title   String
+  message String         @db.Text
+  readAt  DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([readAt, createdAt])
 }
