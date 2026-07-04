@@ -6,6 +6,7 @@ import type { CollectionRow } from '@/features/collections/types'
 import type { ProductListItem } from '@/features/products/types'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { FilterMultiSelect } from '@/shared/components/admin/FilterMultiSelect'
+import { ImageUploadField } from '@/shared/components/admin/ImageUploadField'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
 import { useAutoSlug, useFormEntity } from '@/shared/hooks/admin'
@@ -236,12 +237,11 @@ export function ProductCrudDrawer({
             {imageInputs.map((img, i) => (
               <div key={i} className="flex gap-2 items-start">
                 <div className="flex-1 flex flex-col gap-1.5">
-                  <input
+                  <ImageUploadField
                     value={img.url}
-                    onChange={(e) => updateImage(i, 'url', e.target.value)}
-                    className={cls.input}
+                    onChange={(url) => updateImage(i, 'url', url)}
+                    folder="products"
                     placeholder={`URL imagen ${i + 1}`}
-                    type="url"
                   />
                   <input
                     value={img.alt}

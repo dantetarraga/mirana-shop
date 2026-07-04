@@ -78,12 +78,13 @@ const IMGS = {
 async function main() {
   console.log('Seeding database...')
 
+  const adminEmail = process.env.SEED_ADMIN_EMAIL ?? 'admin@mirana.com'
   const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? 'Admin123456*'
   const adminPasswordHash = await bcrypt.hash(adminPassword, 12)
 
   // ── Admin user ─────────────────────────────────────────────────────────────
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@mirana.com' },
+    where: { email: adminEmail },
     update: {
       name: 'Admin Mirana',
       role: 'ADMIN',
@@ -91,7 +92,7 @@ async function main() {
       passwordHash: adminPasswordHash,
     },
     create: {
-      email: 'admin@mirana.com',
+      email: adminEmail,
       name: 'Admin Mirana',
       role: 'ADMIN',
       emailVerified: new Date(),

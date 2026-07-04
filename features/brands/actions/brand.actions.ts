@@ -4,6 +4,7 @@ import { BRAND_SELECT, getBrandById, getBrandBySlug } from '@/features/brands/qu
 import { db } from '@/shared/lib/db'
 import { slugify } from '@/shared/lib/utils'
 import { requireAdmin } from '@/shared/lib/require-admin'
+import { imageUrlSchema } from '@/shared/schemas/image-url.schema'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import type { DrawerProduct } from '@/shared/types/entity-products.types'
 import { revalidatePath, revalidateTag } from 'next/cache'
@@ -23,7 +24,7 @@ const createBrandSchema = z.object({
   slug: slugSchema,
   tagline: z.string().max(80).optional(),
   description: z.string().max(500).optional(),
-  imageUrl: z.string().url('URL de imagen inválida').optional().or(z.literal('')),
+  imageUrl: imageUrlSchema().optional().or(z.literal('')),
 })
 
 const updateBrandSchema = createBrandSchema.partial().extend({

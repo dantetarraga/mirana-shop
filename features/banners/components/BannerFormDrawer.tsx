@@ -4,6 +4,7 @@ import { bannerDbSchema } from '@/features/banners/schemas/banner.schema'
 import type { BannerRow } from '@/features/banners/types'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { FilterMultiSelect } from '@/shared/components/admin/FilterMultiSelect'
+import { ImageUploadField } from '@/shared/components/admin/ImageUploadField'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
 import { useFormEntity } from '@/shared/hooks/admin'
@@ -86,8 +87,12 @@ export function BannerFormDrawer({
           />
         </FormField>
 
-        <FormField label="URL de imagen" error={errors.imageUrl?.message}>
-          <input {...register('imageUrl')} className={cls.input} placeholder="https://..." />
+        <FormField label="Imagen" error={errors.imageUrl?.message}>
+          <ImageUploadField
+            value={watch('imageUrl') ?? ''}
+            onChange={(url) => setValue('imageUrl', url, { shouldValidate: true })}
+            folder="banners"
+          />
         </FormField>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">

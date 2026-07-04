@@ -1,3 +1,4 @@
+import { imageUrlSchema } from '@/shared/schemas/image-url.schema'
 import { z } from 'zod'
 
 // ---------------------------------------------------------------------------
@@ -24,7 +25,7 @@ export const productDbBaseSchema = z.object({
     .enum(['AVAILABLE', 'PREORDER', 'SOLD_OUT', 'COMING_SOON', 'ARCHIVED'])
     .default('AVAILABLE'),
   featured: z.boolean().default(false),
-  imageUrl: z.string().url('URL de imagen inválida').optional(),
+  imageUrl: imageUrlSchema().optional(),
 })
 
 export const productDbSchema = productDbBaseSchema.superRefine((data, ctx) => {

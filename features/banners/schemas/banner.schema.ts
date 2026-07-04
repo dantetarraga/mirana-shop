@@ -1,3 +1,4 @@
+import { imageUrlSchema } from '@/shared/schemas/image-url.schema'
 import { z } from 'zod'
 
 export const bannerSchema = z.object({
@@ -24,7 +25,7 @@ export const bannerDbSchema = z.object({
       z.literal(''),
     ])
     .optional(),
-  imageUrl: z.string().url('URL de imagen requerida'),
+  imageUrl: imageUrlSchema('URL de imagen requerida'),
   position: z.number().int().min(0).default(0),
   active: z.boolean().default(false),
 })

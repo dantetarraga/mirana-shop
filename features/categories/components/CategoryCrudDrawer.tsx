@@ -9,6 +9,8 @@ import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
 import { useAutoSlug, useFormEntity, useServerAction } from '@/shared/hooks/admin'
 import { cls } from '@/shared/lib/admin/admin-classes'
+import { imageUrlSchema } from '@/shared/schemas/image-url.schema'
+import { ImageUploadField } from '@/shared/components/admin/ImageUploadField'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -25,7 +27,7 @@ const formSchema = z.object({
     .regex(/^[a-z0-9-]+$/, 'Solo minúsculas, números y guiones'),
   parentId: z.string().optional(),
   description: z.string().max(500).optional(),
-  imageUrl: z.string().url('URL inválida').optional().or(z.literal('')),
+  imageUrl: imageUrlSchema('URL inválida').optional().or(z.literal('')),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -140,8 +142,12 @@ export function CategoryCrudDrawer({
           />
         </FormField>
 
-        <FormField label="URL de imagen" error={errors.imageUrl?.message}>
-          <input {...register('imageUrl')} className={cls.input} placeholder="https://..." />
+        <FormField label="Imagen" error={errors.imageUrl?.message}>
+          <ImageUploadField
+            value={watch('imageUrl') ?? ''}
+            onChange={(url) => setValue('imageUrl', url, { shouldValidate: true })}
+            folder="categories"
+          />
         </FormField>
 
         <div className="flex gap-2.5 pt-1">

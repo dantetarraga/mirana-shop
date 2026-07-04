@@ -7,6 +7,7 @@ import {
 } from '@/features/categories/queries/category.queries'
 import { db } from '@/shared/lib/db'
 import { requireAdmin } from '@/shared/lib/require-admin'
+import { imageUrlSchema } from '@/shared/schemas/image-url.schema'
 import { slugify } from '@/shared/lib/utils'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import type { DrawerProduct } from '@/shared/types/entity-products.types'
@@ -27,7 +28,7 @@ const createCategorySchema = z.object({
   slug: slugSchema,
   parentId: z.string().optional(),
   description: z.string().max(500).optional(),
-  imageUrl: z.string().url('URL de imagen inválida').optional().or(z.literal('')),
+  imageUrl: imageUrlSchema().optional().or(z.literal('')),
 })
 
 const updateCategorySchema = createCategorySchema.partial().extend({
