@@ -184,6 +184,20 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       return created
     })
 
+  try {
+    let order: { id: string; code: string } | null = null
+    for (let attempt = 1; attempt <= MAX_CODE_RETRIES; attempt++) {
+      try {
+        order = await createOrder()
+        break
+      } catch (err) {
+        const isCodeCollision =
+          typeof err === 'object' && err !== null && (err as { code?: string }).code === 'P2002'
+        if (!isCodeCollision || attempt === MAX_CODE_RETRIES) throw err
+      }
+    }
+    if (!order) throw new Error('No se pudo generar el código del pedido')
+
     revalidatePath('/admin/orders')
     revalidatePath('/admin/dashboard')
 
