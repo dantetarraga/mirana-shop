@@ -1,6 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_API_KEY)
+const supabaseUrl = process.env.SUPABASE_URL
+const supabaseKey = process.env.SUPABASE_API_KEY
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('Missing SUPABASE_URL or SUPABASE_API_KEY environment variables')
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 async function testConnection() {
   const { data, error } = await supabase.from('Product').select('*').limit(1)
