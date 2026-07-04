@@ -1,9 +1,9 @@
 allowBuilds:
   '@prisma/engines': true
-  core-js: set this to true or false
+  core-js: false
   esbuild: true
   prisma: true
-  puppeteer: set this to true or false
+  puppeteer: false
   sharp: true
   unrs-resolver: true
 ignoredBuiltDependencies:
