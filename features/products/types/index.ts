@@ -31,7 +31,7 @@ export type ProductDetail = ProductListItem & {
   updatedAt: Date
 }
 
-export type StockFilter = 'all' | 'low' | 'out'
+export type StockFilter = 'all' | 'low' | 'out' | 'in'
 
 export type ProductSort = 'relevance' | 'price_asc' | 'price_desc' | 'newest'
 
@@ -46,6 +46,8 @@ export type ProductFilters = {
   stockFilter?: StockFilter
   priceMin?: number
   priceMax?: number
+  /** Solo productos con precio de oferta (salePrice) */
+  onSale?: boolean
   sort?: ProductSort
   take?: number
   skip?: number

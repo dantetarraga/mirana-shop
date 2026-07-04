@@ -3,10 +3,14 @@
 import { OptimisticLockError } from '@/features/inventory/lib/stock'
 import { adjustStockSchema } from '@/features/inventory/schemas/inventory.schema'
 import { db } from '@/shared/lib/db'
+import { requireAdmin } from '@/shared/lib/require-admin'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import { revalidatePath } from 'next/cache'
 
 export async function adjustStock(rawInput: unknown): Promise<ActionResult<{ newStock: number }>> {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   const parsed = adjustStockSchema.safeParse(rawInput)
   if (!parsed.success) {
     const firstError = parsed.error.issues[0]?.message ?? 'Datos inválidos'

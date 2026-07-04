@@ -258,7 +258,12 @@ export function ProductsClient({
       />
 
       {showImport && (
-        <ExcelImportDrawer onClose={() => setShowImport(false)} onImport={handleImport} />
+        <ExcelImportDrawer
+          categories={categories}
+          brands={brands}
+          onClose={() => setShowImport(false)}
+          onImport={handleImport}
+        />
       )}
 
       {crud.drawerOpen && (

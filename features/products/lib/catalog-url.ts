@@ -5,6 +5,7 @@ export type CatalogUrlParams = {
   priceMin?: number
   priceMax?: number
   avail?: string[]
+  oferta?: boolean
   sort?: string
   page?: number
 }
@@ -17,6 +18,7 @@ export function buildCatalogUrl(params: CatalogUrlParams): string {
   if (params.priceMin != null) p.set('priceMin', String(params.priceMin))
   if (params.priceMax != null) p.set('priceMax', String(params.priceMax))
   if (params.avail?.length) p.set('avail', params.avail.join(','))
+  if (params.oferta) p.set('oferta', '1')
   if (params.sort && params.sort !== 'relevance') p.set('sort', params.sort)
   if (params.page && params.page > 1) p.set('page', String(params.page))
   const qs = p.toString()

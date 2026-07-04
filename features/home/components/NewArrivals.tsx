@@ -1,12 +1,17 @@
 import { ProductCard } from '@/features/products/components/ProductCard'
 import { toProductCards } from '@/features/products/lib/product-card'
 import { getNewProducts } from '@/features/products/queries/product.queries'
+import { getPublicStockFilter } from '@/features/settings/queries/store-settings.queries'
 import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
+// Cantidad fija con filas completas (2 cols en móvil, 4 en desktop) para que
+// nunca queden tarjetas cortadas; el resto se ve con "Ver todos".
+const NEW_ARRIVALS_COUNT = 4
+
 // Server Component — no necesita "use client"
 export async function NewArrivals() {
-  const products = await getNewProducts(6)
+  const products = await getNewProducts(NEW_ARRIVALS_COUNT, await getPublicStockFilter())
   const items = toProductCards(products)
 
   if (items.length === 0) return null
@@ -23,7 +28,7 @@ export async function NewArrivals() {
           </h2>
         </div>
         <Link
-          href="/catalogo"
+          href="/catalogo?sort=newest"
           className="font-display text-[15px] font-bold tracking-[1px] uppercase pb-0.5 text-muted hover:text-(--gold) transition-colors duration-300 inline-flex items-center"
         >
           Ver todos
@@ -31,11 +36,9 @@ export async function NewArrivals() {
         </Link>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-none [&::-webkit-scrollbar]:hidden">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         {items.map((p) => (
-          <div key={p.id} className="w-65 shrink-0">
-            <ProductCard product={p} />
-          </div>
+          <ProductCard key={p.id} product={p} />
         ))}
       </div>
     </section>

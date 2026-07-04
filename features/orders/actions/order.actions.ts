@@ -6,6 +6,7 @@ import { ORDER_LIST_SELECT } from '@/features/orders/queries/order.queries'
 import { updateOrderStatusSchema } from '@/features/orders/schemas/order.schema'
 import type { OrderListItem } from '@/features/orders/types'
 import { db } from '@/shared/lib/db'
+import { requireAdmin } from '@/shared/lib/require-admin'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import { revalidatePath } from 'next/cache'
 
@@ -16,6 +17,9 @@ import { revalidatePath } from 'next/cache'
 export async function updateOrderStatus(
   rawInput: unknown,
 ): Promise<ActionResult<{ id: string; status: string }>> {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   const parsed = updateOrderStatusSchema.safeParse(rawInput)
   if (!parsed.success) {
     const firstError = parsed.error.issues[0]?.message ?? 'Datos inválidos'

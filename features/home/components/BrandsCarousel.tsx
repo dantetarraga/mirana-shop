@@ -1,52 +1,74 @@
+'use client'
+
 import type { BrandRow } from '@/features/brands/types'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import Link from 'next/link'
+import { useRef } from 'react'
 
 interface BrandsCarouselProps {
   brands: BrandRow[]
 }
 
 export function BrandsCarousel({ brands }: BrandsCarouselProps) {
+  const trackRef = useRef<HTMLDivElement>(null)
+
   if (brands.length === 0) return null
 
-  const doubled = [...brands, ...brands]
+  const scrollByPage = (dir: 1 | -1) => {
+    const track = trackRef.current
+    if (!track) return
+    track.scrollBy({ left: dir * track.clientWidth * 0.8, behavior: 'smooth' })
+  }
 
   return (
-    <section className="py-15 overflow-hidden bg-surf section-fade-y">
-      <div className="shell pb-8 flex justify-between items-baseline">
-        <div>
-          <div className="text-[10px] font-bold tracking-[3px] uppercase text-(--gold) mb-2.5">
-            Marcas oficiales
-          </div>
-          <h2 className="font-display font-black uppercase tracking-[-1px] leading-[0.95] text-[clamp(28px,3.5vw,42px)]">
-            Distribuidor autorizado
-          </h2>
-        </div>
-        <div className="text-[12px] text-muted tracking-[1px] uppercase">
-          {brands.length}+ marcas premium
-        </div>
-      </div>
+    <section className="bg-surf border-b border-(--bd)">
+      <div className="flex items-center">
+        <button
+          type="button"
+          aria-label="Marcas anteriores"
+          onClick={() => scrollByPage(-1)}
+          className="shrink-0 h-24 px-2.5 bg-transparent border-none text-muted transition-colors duration-200 hover:text-(--gold)"
+        >
+          <ChevronLeft size={26} />
+        </button>
 
-      <div className="animate-marquee-slow flex gap-0">
-        {doubled.map((b, i) => (
-          <div
-            key={`${b.id}-${i}`}
-            className="brand-item shrink-0 w-60 h-30 flex items-center justify-center border-r border-(--bd) px-8"
-          >
-            {b.imageUrl ? (
-              <img src={b.imageUrl} alt={b.name} className="max-h-15 max-w-40 object-contain" />
-            ) : (
-              <div className="text-center">
-                <div className="font-display font-black uppercase tracking-[1px] leading-none text-text text-[24px]">
-                  {b.name}
-                </div>
-                {b.tagline && (
-                  <div className="font-sans text-[9px] tracking-[3px] font-medium text-muted mt-1.5">
-                    {b.tagline}
+        <div
+          ref={trackRef}
+          className="flex-1 flex overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {brands.map((b) => (
+            <Link
+              key={b.id}
+              href={`/catalogo?brand=${b.slug}`}
+              title={b.name}
+              className="brand-item shrink-0 w-44 h-24 flex items-center justify-center border-r border-(--bd) px-6 no-underline first:border-l"
+            >
+              {b.imageUrl ? (
+                <img src={b.imageUrl} alt={b.name} className="max-h-12 max-w-32 object-contain" />
+              ) : (
+                <div className="text-center">
+                  <div className="font-display font-black uppercase tracking-[1px] leading-none text-text text-[18px]">
+                    {b.name}
                   </div>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
+                  {b.tagline && (
+                    <div className="font-sans text-[8px] tracking-[2.5px] font-medium text-muted mt-1">
+                      {b.tagline}
+                    </div>
+                  )}
+                </div>
+              )}
+            </Link>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          aria-label="Más marcas"
+          onClick={() => scrollByPage(1)}
+          className="shrink-0 h-24 px-2.5 bg-transparent border-none text-muted transition-colors duration-200 hover:text-(--gold)"
+        >
+          <ChevronRight size={26} />
+        </button>
       </div>
     </section>
   )

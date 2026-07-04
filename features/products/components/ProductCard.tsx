@@ -6,7 +6,7 @@ import type { CatalogProduct } from '@/features/products/types/catalog.types'
 import { getCategoryLabel, getCategoryStripe } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
-import { StarRating } from '@/shared/components/ui/StarRating'
+// import { StarRating } from '@/shared/components/ui/StarRating' — oculto hasta tener reviews reales
 import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
@@ -30,15 +30,14 @@ export function ProductCard({
   const catLabel = getCategoryLabel(p.category.slug)
   const isPreorder = p.status === 'PREORDER'
   const isOutOfStock = p.status === 'SOLD_OUT' || (!isPreorder && p.stock === 0)
-  const isNew = p.status === 'AVAILABLE' && p.stock > 0
+  // const isNew = p.status === 'AVAILABLE' && p.stock > 0 — solo se usaba para las estrellas ocultas
   const qtyInCart = cart.find((i) => i.product.id === p.id)?.qty ?? 0
 
   const discountPct =
-    p.salePrice && p.salePrice < p.price
-      ? Math.round((1 - p.salePrice / p.price) * 100)
-      : 0
-  const isNewArrival =
-    p.status === 'AVAILABLE' && Date.now() - p.createdAt.getTime() < 30 * 24 * 60 * 60 * 1000
+    p.salePrice && p.salePrice < p.price ? Math.round((1 - p.salePrice / p.price) * 100) : 0
+  // isNewArrival viene precalculado del server (toProductCard) — no usar
+  // Date.now() en render: es impuro y el React Compiler lo rechaza.
+  const isNewArrival = p.isNewArrival
 
   // Una sola badge visible por card, por prioridad.
   const badge = isOutOfStock
@@ -91,9 +90,11 @@ export function ProductCard({
               </span>
             )}
           </div>
+          {/* Estrellas ocultas hasta tener sistema de reviews real
           <div className="text-[11px] text-muted">
             <StarRating value={isNew ? 4.5 : 4.0} size={11} className="text-(--gold)" />
           </div>
+          */}
         </div>
         {qtyInCart > 0 && !isOutOfStock ? (
           <div className="flex items-center border border-(--bd) w-full">
@@ -118,6 +119,7 @@ export function ProductCard({
                 onClick={(e) => {
                   e.stopPropagation()
                   updateQty(p.id, -1)
+                  toast.success(`"${p.name}" — ${qtyInCart - 1} en el carrito`)
                 }}
               >
                 <Minus size={14} />
@@ -133,6 +135,7 @@ export function ProductCard({
               onClick={(e) => {
                 e.stopPropagation()
                 updateQty(p.id, 1)
+                toast.success(`"${p.name}" agregado — ${qtyInCart + 1} en el carrito`)
               }}
             >
               <Plus size={14} />
@@ -149,7 +152,7 @@ export function ProductCard({
               if (!isOutOfStock) {
                 addToCart(p, 1)
                 toast.success(
-                  isPreorder ? `"${p.name}" reservado` : `"${p.name}" agregado al carrito`
+                  isPreorder ? `"${p.name}" reservado` : `"${p.name}" agregado al carrito`,
                 )
               }
             }}

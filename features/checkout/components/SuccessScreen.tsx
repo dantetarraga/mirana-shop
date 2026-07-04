@@ -4,12 +4,19 @@ import { Button } from '@/shared/components/ui/Button'
 import { formatCurrency } from '@/shared/lib/utils'
 import { BadgeCheck, Home, MessageCircle, ShoppingCart } from 'lucide-react'
 import Link from 'next/link'
-import { buildWhatsappOrderUrl, WHATSAPP_PHONE_DISPLAY } from '../lib/whatsapp'
+import { buildWhatsappOrderUrl, formatPhoneDisplay } from '../lib/whatsapp'
 import type { SuccessData } from '../types'
 import { Step } from './ui'
 
-export function SuccessScreen({ data }: { data: SuccessData }) {
-  const whatsappUrl = buildWhatsappOrderUrl(data)
+export function SuccessScreen({
+  data,
+  whatsappPhone,
+}: {
+  data: SuccessData
+  whatsappPhone: string
+}) {
+  const whatsappUrl = buildWhatsappOrderUrl(data, whatsappPhone)
+  const phoneDisplay = formatPhoneDisplay(whatsappPhone)
 
   return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center px-4 pt-[calc(var(--nh)+36px)] pb-16">
@@ -91,22 +98,24 @@ export function SuccessScreen({ data }: { data: SuccessData }) {
             <Step n={1}>Realiza tu transferencia o depósito al número de cuenta indicado.</Step>
             <Step n={2}>
               Envía tu comprobante de pago por WhatsApp
-              {WHATSAPP_PHONE_DISPLAY ? (
+              {phoneDisplay ? (
                 <>
                   {' '}
-                  al <span className="font-semibold text-white">{WHATSAPP_PHONE_DISPLAY}</span>
+                  al <span className="font-semibold text-white">{phoneDisplay}</span>
                 </>
               ) : null}{' '}
               junto con tu código <span className="font-mono text-(--gold)">{data.code}</span>.
             </Step>
             <Step n={3}>Una vez confirmado el pago, prepararemos y enviaremos tu pedido.</Step>
           </div>
-          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="block">
-            <Button variant="accent" size="md" full>
-              <MessageCircle size={15} className="mr-2" />
-              Enviar comprobante por WhatsApp
-            </Button>
-          </a>
+          {whatsappPhone && (
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="block">
+              <Button variant="accent" size="md" full>
+                <MessageCircle size={15} className="mr-2" />
+                Enviar comprobante por WhatsApp
+              </Button>
+            </a>
+          )}
         </div>
 
         {/* Actions */}

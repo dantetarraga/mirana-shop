@@ -5,6 +5,9 @@ import {
   Archive,
   ArrowLeft,
   BadgePercent,
+  FileText,
+  Megaphone,
+  Settings,
   FolderTree,
   Image,
   LayoutDashboard,
@@ -38,8 +41,13 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/admin/inventory', label: 'Inventario', icon: Archive },
   { href: '/admin/banners', label: 'Banners', icon: Image },
   { href: '/admin/promotions', label: 'Promociones', icon: BadgePercent },
+  { section: 'Contenido' },
+  { href: '/admin/cta', label: 'CTA de Inicio', icon: Megaphone },
+  { href: '/admin/legal', label: 'Páginas legales', icon: FileText },
   { section: 'Clientes' },
   { href: '/admin/users', label: 'Usuarios', icon: Users },
+  { section: 'Configuración' },
+  { href: '/admin/settings', label: 'Tienda', icon: Settings },
 ]
 
 export function AdminSidebar() {

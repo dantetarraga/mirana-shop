@@ -4,13 +4,15 @@
 //
 // Semántica de códigos (similar a HTTP):
 //   400 — Bad Request:          input inválido o parámetros faltantes
+//   401 — Unauthorized:         sin sesión iniciada
+//   403 — Forbidden:            sesión sin permisos suficientes (no admin)
 //   404 — Not Found:            recurso no encontrado
 //   409 — Conflict:             slug/SKU duplicado, bloqueo optimista
 //   422 — Unprocessable Entity: regla de negocio violada
 //   500 — Internal Server Error: error inesperado del servidor
 // ---------------------------------------------------------------------------
 
-export type ActionErrorCode = 400 | 404 | 409 | 422 | 500
+export type ActionErrorCode = 400 | 401 | 403 | 404 | 409 | 422 | 500
 
 export type ActionResult<T = void> =
   | { success: true; data: T }

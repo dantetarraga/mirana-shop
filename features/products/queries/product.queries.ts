@@ -1,4 +1,9 @@
-import type { ProductDetail, ProductFilters, ProductListItem } from '@/features/products/types'
+import type {
+  ProductDetail,
+  ProductFilters,
+  ProductListItem,
+  StockFilter,
+} from '@/features/products/types'
 import { db } from '@/shared/lib/db'
 import 'server-only'
 
@@ -53,6 +58,7 @@ function buildWhere(filters: Omit<ProductFilters, 'take' | 'skip'>) {
     stockFilter,
     priceMin,
     priceMax,
+    onSale,
   } = filters
 
   const catSlugs = categorySlug
@@ -81,7 +87,9 @@ function buildWhere(filters: Omit<ProductFilters, 'take' | 'skip'>) {
       ? { inventory: { availableStock: { gt: 0, lte: LOW_STOCK_THRESHOLD } } }
       : stockFilter === 'out'
         ? { inventory: { availableStock: 0 } }
-        : {}
+        : stockFilter === 'in'
+          ? { inventory: { availableStock: { gt: 0 } } }
+          : {}
 
   const priceWhere =
     priceMin != null || priceMax != null
@@ -98,6 +106,7 @@ function buildWhere(filters: Omit<ProductFilters, 'take' | 'skip'>) {
       ? { some: { collection: { slug: { in: colSlugs } } } }
       : undefined,
     name: search ? { contains: search, mode: 'insensitive' as const } : undefined,
+    salePrice: onSale ? { not: null } : undefined,
     ...inventoryWhere,
     ...priceWhere,
   }
@@ -142,9 +151,16 @@ export async function getFeaturedProducts(take = 8): Promise<ProductListItem[]> 
   }) as Promise<ProductListItem[]>
 }
 
-export async function getNewProducts(take = 6): Promise<ProductListItem[]> {
+export async function getNewProducts(
+  take = 6,
+  stockFilter?: StockFilter,
+): Promise<ProductListItem[]> {
   return db.product.findMany({
-    where: { deletedAt: null, status: 'AVAILABLE' },
+    where: {
+      deletedAt: null,
+      status: 'AVAILABLE',
+      ...(stockFilter === 'in' ? { inventory: { availableStock: { gt: 0 } } } : {}),
+    },
     select: PRODUCT_LIST_SELECT,
     orderBy: { createdAt: 'desc' },
     take,

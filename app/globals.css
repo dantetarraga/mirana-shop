@@ -632,3 +632,68 @@
     border-color: var(--bdh);
   }
 }
+
+/* ── Contenido legal (editor TipTap y página pública) ── */
+.legal-prose {
+  font-size: 14.5px;
+  line-height: 1.85;
+}
+.legal-prose h2 {
+  font-family: var(--font-display, inherit);
+  font-size: 24px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+  margin: 34px 0 12px;
+}
+.legal-prose h3 {
+  font-family: var(--font-display, inherit);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 26px 0 10px;
+}
+.legal-prose h2:first-child,
+.legal-prose h3:first-child {
+  margin-top: 0;
+}
+.legal-prose p {
+  margin: 0 0 14px;
+  color: var(--color-muted);
+}
+.legal-prose ul,
+.legal-prose ol {
+  margin: 0 0 16px;
+  padding-left: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--color-muted);
+}
+.legal-prose ul {
+  list-style: disc;
+}
+.legal-prose ol {
+  list-style: decimal;
+}
+.legal-prose strong {
+  color: var(--text, inherit);
+  font-weight: 600;
+}
+.legal-prose a {
+  color: var(--gold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.legal-prose blockquote {
+  border-left: 2px solid var(--gold);
+  padding-left: 16px;
+  font-style: italic;
+  margin: 0 0 14px;
+}
+.legal-prose hr {
+  border: none;
+  border-top: 1px solid var(--bd);
+  margin: 24px 0;
+}

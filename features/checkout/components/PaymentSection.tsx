@@ -1,8 +1,10 @@
 'use client'
 
 import type { CheckoutInput } from '@/features/checkout/schemas/checkout.schema'
-import { MessageCircle } from 'lucide-react'
+import type { PaymentAccountData } from '@/features/settings/queries/payment-accounts.queries'
+import { Copy, Landmark, MessageCircle } from 'lucide-react'
 import type { FieldErrors, UseFormRegister } from 'react-hook-form'
+import { toast } from 'sonner'
 
 const PAYMENT_METHODS = [
   {
@@ -17,9 +19,30 @@ const PAYMENT_METHODS = [
 type Props = {
   register: UseFormRegister<CheckoutInput>
   errors: FieldErrors<CheckoutInput>
+  /** Cuentas administradas en /admin/settings */
+  accounts: PaymentAccountData[]
 }
 
-export function PaymentSection({ register, errors }: Props) {
+function CopyValue({ label, value }: { label: string; value: string }) {
+  return (
+    <button
+      type="button"
+      title={`Copiar ${label.toLowerCase()}`}
+      onClick={() => {
+        navigator.clipboard
+          .writeText(value)
+          .then(() => toast.success(`${label} copiado`))
+          .catch(() => {})
+      }}
+      className="inline-flex items-center gap-1.5 font-mono text-[13px] text-text hover:text-(--gold) transition-colors cursor-pointer"
+    >
+      {value}
+      <Copy size={12} className="opacity-50" />
+    </button>
+  )
+}
+
+export function PaymentSection({ register, errors, accounts }: Props) {
   return (
     <section className="bg-card border border-(--bd) p-6">
       <h2 className="font-display font-black uppercase text-[14px] tracking-[2px] text-(--gold) mb-5">
@@ -60,6 +83,41 @@ export function PaymentSection({ register, errors }: Props) {
           </label>
         ))}
       </div>
+
+      {/* Cuentas para transferir — administrables desde el admin */}
+      {accounts.length > 0 && (
+        <div className="mt-4 border border-(--bd) bg-surf">
+          <div className="px-4 py-3 border-b border-(--bd) flex items-center gap-2">
+            <Landmark size={14} className="text-(--gold)" />
+            <span className="text-[10px] tracking-[2px] uppercase text-muted">
+              Cuentas para realizar tu pago
+            </span>
+          </div>
+          <ul className="divide-y divide-(--bd)">
+            {accounts.map((acc) => (
+              <li key={acc.id} className="px-4 py-3 flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-display font-bold text-[13px] uppercase tracking-tight">
+                    {acc.name}
+                  </span>
+                  {acc.holder && <span className="text-[11px] text-muted">— {acc.holder}</span>}
+                </div>
+                <div className="flex flex-wrap gap-x-6 gap-y-1">
+                  <span className="text-[11px] text-muted">
+                    {acc.cci ? 'Cuenta: ' : 'Número: '}
+                    <CopyValue label="Número" value={acc.number} />
+                  </span>
+                  {acc.cci && (
+                    <span className="text-[11px] text-muted">
+                      CCI: <CopyValue label="CCI" value={acc.cci} />
+                    </span>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {errors.paymentMethod && (
         <p className="text-red-500 text-[12px] mt-2">{errors.paymentMethod.message}</p>

@@ -1,11 +1,9 @@
-import type { CatalogProduct } from '@/features/products/types/catalog.types'
 import type { ProductListItem } from '@/features/products/types'
+import type { CatalogProduct } from '@/features/products/types/catalog.types'
+import { Dates } from '@/shared/lib/dates'
 
-/**
- * Convierte un ProductListItem (con Decimal de Prisma) a un CatalogProduct
- * serializable como prop de Server Component a Client Component.
- * Los Decimal de Prisma NO son serializables directamente — se convierten a number.
- */
+const NEW_ARRIVAL_DAYS = 30
+
 export function toProductCard(product: ProductListItem): CatalogProduct {
   return {
     id: product.id,
@@ -17,6 +15,8 @@ export function toProductCard(product: ProductListItem): CatalogProduct {
     status: product.status,
     featured: product.featured,
     createdAt: product.createdAt,
+    isNewArrival:
+      product.status === 'AVAILABLE' && Dates.isWithinLastDays(product.createdAt, NEW_ARRIVAL_DAYS),
     category: product.category,
     brand: product.brand,
     imageUrl: product.images[0]?.url ?? null,

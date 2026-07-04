@@ -17,6 +17,7 @@ import {
   type AddressFormValues,
 } from '@/features/profile/components/AddressFormPanel'
 import { useCartStore } from '@/features/cart/stores/cart.store'
+import type { PaymentAccountData } from '@/features/settings/queries/payment-accounts.queries'
 import { Button } from '@/shared/components/ui/Button'
 import { useUser } from '@/shared/hooks'
 import { checkoutSchema, type CheckoutInput } from '@/features/checkout/schemas/checkout.schema'
@@ -38,7 +39,12 @@ const SHIPPING_COST = 15
 // View
 // ---------------------------------------------------------------------------
 
-export function CheckoutView() {
+interface CheckoutViewProps {
+  paymentAccounts: PaymentAccountData[]
+  whatsappPhone: string
+}
+
+export function CheckoutView({ paymentAccounts, whatsappPhone }: CheckoutViewProps) {
   const { cart, clearCart } = useCartStore()
   const { user } = useUser()
   const [success, setSuccess] = useState<SuccessData | null>(null)
@@ -147,7 +153,7 @@ export function CheckoutView() {
   // ---------------------------------------------------------------------------
 
   if (success) {
-    return <SuccessScreen data={success} />
+    return <SuccessScreen data={success} whatsappPhone={whatsappPhone} />
   }
 
   // ---------------------------------------------------------------------------
@@ -233,7 +239,7 @@ export function CheckoutView() {
 
             <DeliveryForm register={register} errors={errors} />
 
-            <PaymentSection register={register} errors={errors} />
+            <PaymentSection register={register} errors={errors} accounts={paymentAccounts} />
           </div>
 
           {/* ── Right column ───────────────────────────────── */}

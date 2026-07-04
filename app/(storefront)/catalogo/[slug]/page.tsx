@@ -3,6 +3,7 @@ import { RelatedProducts } from '@/features/products/components/RelatedProducts'
 import { getProductBySlug } from '@/features/products/queries/product.queries'
 import type { CatalogProduct } from '@/features/products/types/catalog.types'
 import { getCategoryLabel, getCategoryStripe } from '@/features/products/types/catalog.types'
+import { Dates } from '@/shared/lib/dates'
 import { ChevronRight } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
@@ -39,6 +40,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
     status: raw.status,
     featured: raw.featured,
     createdAt: raw.createdAt,
+    isNewArrival: raw.status === 'AVAILABLE' && Dates.isWithinLastDays(raw.createdAt, 30),
     category: raw.category,
     brand: raw.brand,
     imageUrl: raw.images[0]?.url ?? null,

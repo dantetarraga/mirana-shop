@@ -5,6 +5,7 @@ import {
   getCollectionBySlug,
 } from '@/features/collections/queries/collection.queries'
 import { db } from '@/shared/lib/db'
+import { requireAdmin } from '@/shared/lib/require-admin'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import type { DrawerProduct } from '@/shared/types/entity-products.types'
 import { revalidatePath, revalidateTag } from 'next/cache'
@@ -48,6 +49,9 @@ function invalidateCollectionCaches() {
 // ---------------------------------------------------------------------------
 
 export async function createCollection(rawInput: unknown): Promise<ActionResult<{ id: string }>> {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   const parsed = createCollectionSchema.safeParse(rawInput)
   if (!parsed.success) {
     return {
@@ -89,6 +93,9 @@ export async function createCollection(rawInput: unknown): Promise<ActionResult<
 // ---------------------------------------------------------------------------
 
 export async function updateCollection(rawInput: unknown): Promise<ActionResult<{ id: string }>> {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   const parsed = updateCollectionSchema.safeParse(rawInput)
   if (!parsed.success) {
     return {
@@ -133,6 +140,9 @@ export async function updateCollection(rawInput: unknown): Promise<ActionResult<
 // ---------------------------------------------------------------------------
 
 export async function deleteCollection(id: string): Promise<ActionResult> {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   if (!id) return { success: false, error: 'ID de colección requerido', code: 400 }
 
   try {
@@ -153,6 +163,9 @@ export async function syncProductCollections(
   productId: string,
   desiredIds: string[],
 ): Promise<ActionResult> {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   if (!productId) return { success: false, error: 'ID de producto requerido', code: 400 }
 
   try {
@@ -197,6 +210,9 @@ export async function addProductToCollection(
   collectionId: string,
   productId: string,
 ): Promise<ActionResult> {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   if (!collectionId || !productId) {
     return { success: false, error: 'IDs de colección y producto requeridos', code: 400 }
   }
@@ -223,6 +239,9 @@ export async function addProductToCollection(
 export async function getCollectionProducts(
   collectionId: string,
 ): Promise<ActionResult<DrawerProduct[]>> {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   try {
     const products = await db.product.findMany({
       where: {
@@ -274,6 +293,9 @@ export async function removeProductFromCollection(
   collectionId: string,
   productId: string,
 ): Promise<ActionResult> {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   if (!collectionId || !productId) {
     return { success: false, error: 'IDs de colección y producto requeridos', code: 400 }
   }

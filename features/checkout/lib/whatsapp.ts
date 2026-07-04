@@ -9,11 +9,18 @@ import type { SuccessData } from '../types'
 // pedido. Un admin valida el pago y acepta la orden manualmente.
 // ---------------------------------------------------------------------------
 
-/** Número en formato E.164 sin "+" (ej: "51987654321"), usado en el enlace wa.me. */
-export const WHATSAPP_PHONE = process.env.NEXT_PUBLIC_WHATSAPP_PHONE ?? ''
-
-/** Número formateado para mostrar al usuario (ej: "+51 987 654 321"). */
-export const WHATSAPP_PHONE_DISPLAY = process.env.NEXT_PUBLIC_WHATSAPP_PHONE_DISPLAY ?? ''
+/**
+ * Formatea el número para mostrar (ej: "51987654321" → "+51 987 654 321").
+ * El número administrable vive en StoreSettings (getWhatsappPhone, server).
+ */
+export function formatPhoneDisplay(phone: string): string {
+  if (!phone) return ''
+  if (phone.length === 11 && phone.startsWith('51')) {
+    const rest = phone.slice(2)
+    return `+51 ${rest.slice(0, 3)} ${rest.slice(3, 6)} ${rest.slice(6)}`
+  }
+  return `+${phone}`
+}
 
 function buildOrderMessage(data: SuccessData): string {
   const lines = [
@@ -33,7 +40,7 @@ function buildOrderMessage(data: SuccessData): string {
 }
 
 /** Construye el enlace de WhatsApp con el mensaje predeterminado de la compra. */
-export function buildWhatsappOrderUrl(data: SuccessData): string {
+export function buildWhatsappOrderUrl(data: SuccessData, phone: string): string {
   const text = encodeURIComponent(buildOrderMessage(data))
-  return `https://wa.me/${WHATSAPP_PHONE}?text=${text}`
+  return `https://wa.me/${phone}?text=${text}`
 }

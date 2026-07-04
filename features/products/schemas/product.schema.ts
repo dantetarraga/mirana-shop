@@ -46,7 +46,8 @@ export type ProductDbInput = z.infer<typeof productDbSchema>
 export const importProductRowSchema = z.object({
   name: z.string().min(1),
   sku: z.string().min(1),
-  cat: z.enum(['figures', 'lego', 'vehicles']),
+  // Nombre o slug de la categoría — se resuelve contra la BD al importar
+  cat: z.string().min(1),
   price: z.number().positive(),
   salePrice: z.preprocess(
     (v) => (v === '' || v === null || (typeof v === 'number' && isNaN(v)) ? undefined : v),

@@ -1,24 +1,32 @@
 import { ProductCard } from '@/features/products/components/ProductCard'
 import { toProductCards } from '@/features/products/lib/product-card'
 import { getFeaturedProducts, getProducts } from '@/features/products/queries/product.queries'
+import { getPublicStockFilter } from '@/features/settings/queries/store-settings.queries'
 import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
+// Cantidad fija con filas completas (2 cols en móvil, 4 en desktop) para que
+// nunca queden tarjetas cortadas ni filas incompletas.
+const FEATURED_COUNT = 4
+
 export async function FeaturedProducts() {
-  const featured = await getFeaturedProducts(5)
+  const featured = await getFeaturedProducts(FEATURED_COUNT)
 
   let source = featured
 
-  if (featured.length < 5) {
-    const recent = await getProducts({ take: 5 })
+  if (featured.length < FEATURED_COUNT) {
+    const recent = await getProducts({
+      take: FEATURED_COUNT,
+      stockFilter: await getPublicStockFilter(),
+    })
 
     source = [
       ...featured,
       ...recent.filter((product) => !featured.some((f) => f.id === product.id)),
-    ].slice(0, 5)
+    ].slice(0, FEATURED_COUNT)
   }
 
-  const items = toProductCards(source.slice(0, 5))
+  const items = toProductCards(source.slice(0, FEATURED_COUNT))
 
   if (items.length === 0) return null
 
@@ -39,12 +47,12 @@ export async function FeaturedProducts() {
           href="/catalogo"
           className="hover:text-(--gold) transition-colors duration-200 font-display inline-flex items-center text-[15px] font-bold tracking-[1px] uppercase no-underline border-b border-transparent pb-0.5 text-muted"
         >
-          Ver catálogo
+          Ver todos
           <ArrowRight size={14} className="inline-block ml-1" strokeWidth={3} />
         </Link>
       </div>
 
-      <div className="relative z-1 grid gap-4 grid-cols-[repeat(auto-fill,minmax(260px,1fr))]">
+      <div className="relative z-1 grid gap-4 grid-cols-2 lg:grid-cols-4">
         {items.map((p) => (
           <ProductCard key={p.id} product={p} />
         ))}

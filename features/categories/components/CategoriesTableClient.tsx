@@ -1,16 +1,58 @@
 'use client'
 
-import { deleteCategory } from '@/features/categories/actions/category.actions'
+import { deleteCategory, importCategories } from '@/features/categories/actions/category.actions'
 import { CategoryCrudDrawer } from '@/features/categories/components/CategoryCrudDrawer'
 import type { CategoryRow } from '@/features/categories/types'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
+import {
+  EntityImportDrawer,
+  type ImportField,
+  type ImportedRow,
+} from '@/shared/components/admin/EntityImportDrawer'
 import { EntityProductsDrawer } from '@/shared/components/admin/EntityProductsDrawer'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
-import { useEntityCrud } from '@/shared/hooks/admin'
+import { useEntityCrud, useServerAction } from '@/shared/hooks/admin'
 import { cls } from '@/shared/lib/admin/admin-classes'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { FileSpreadsheet, Pencil, Plus, Trash2 } from 'lucide-react'
+import { useState } from 'react'
+import { toast } from 'sonner'
+
+const IMPORT_FIELDS: ImportField[] = [
+  { key: 'name', label: 'Nombre', aliases: ['nombre', 'categoria', 'categoría', 'category'], required: true },
+  { key: 'slug', label: 'Slug', aliases: [], mono: true },
+  {
+    key: 'parent',
+    label: 'Padre',
+    aliases: ['padre', 'categoria padre', 'categoría padre'],
+  },
+  {
+    key: 'description',
+    label: 'Descripcion',
+    aliases: ['descripcion', 'descripción', 'desc'],
+  },
+  {
+    key: 'imageUrl',
+    label: 'URL Imagen',
+    aliases: ['imagen', 'image', 'imagen url', 'image url', 'url imagen'],
+  },
+]
+
+function validateImportRow(data: ImportedRow): string[] {
+  const errors: string[] = []
+  if (data.slug && !/^[a-z0-9-]+$/.test(data.slug)) {
+    errors.push('Slug inválido (minúsculas, números y guiones)')
+  }
+  if (data.imageUrl) {
+    try {
+      new URL(data.imageUrl)
+    } catch {
+      errors.push('URL de imagen inválida')
+    }
+  }
+  return errors
+}
 
 interface CategoriesTableClientProps {
   categories: CategoryRow[]
@@ -24,6 +66,19 @@ export function CategoriesTableClient({
   allCategories,
 }: CategoriesTableClientProps) {
   const crud = useEntityCrud<CategoryRow>(deleteCategory, (c) => `"${c.name}" eliminada`)
+  const [showImport, setShowImport] = useState(false)
+  const importer = useServerAction()
+
+  const handleImport = (rows: ImportedRow[]) => {
+    importer.run(() => importCategories(rows), {
+      onSuccess: (data) => {
+        toast.success(`${data.created} creadas, ${data.updated} actualizadas`)
+        data.errors.forEach((e) => toast.error(e))
+        setShowImport(false)
+      },
+      refresh: true,
+    })
+  }
 
   const nameById = Object.fromEntries(categories.map((c) => [c.id, c.name]))
 
@@ -112,9 +167,14 @@ export function CategoriesTableClient({
         title={`${total} categoría${total !== 1 ? 's' : ''}`}
         align="center"
         side={
-          <Button variant="accent" size="md" onClick={crud.openNew}>
-            <Plus size={15} className="mr-2" /> Nueva categoría
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="md" onClick={() => setShowImport(true)}>
+              <FileSpreadsheet size={15} className="mr-1.5" /> Importar Excel
+            </Button>
+            <Button variant="accent" size="md" onClick={crud.openNew}>
+              <Plus size={15} className="mr-2" /> Nueva categoría
+            </Button>
+          </div>
         }
       />
 
@@ -144,6 +204,19 @@ export function CategoriesTableClient({
           isNew={crud.isNew}
           allCategories={categories}
           onClose={crud.closeDrawer}
+        />
+      )}
+
+      {showImport && (
+        <EntityImportDrawer
+          title="Importar categorías"
+          entitySingular="categoría"
+          entityPlural="categorías"
+          fields={IMPORT_FIELDS}
+          validateRow={validateImportRow}
+          templateHref="/plantillas/plantilla-importar-categorias.xlsx"
+          onClose={() => setShowImport(false)}
+          onImport={handleImport}
         />
       )}
 

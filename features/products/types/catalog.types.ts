@@ -18,6 +18,8 @@ export type CatalogProduct = {
   status: ProductStatus;
   featured: boolean;
   createdAt: Date;
+  /** Calculado al mapear (server): creado en los últimos 30 días */
+  isNewArrival: boolean;
   category: { id: string; name: string; slug: string };
   brand: { id: string; name: string; slug: string };
   imageUrl: string | null;

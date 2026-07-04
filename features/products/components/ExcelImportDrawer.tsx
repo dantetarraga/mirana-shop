@@ -3,7 +3,7 @@
 import { Button } from '@/shared/components/ui/Button'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import type { ImportProductRow } from '@/features/products/schemas/product.schema'
-import { cn } from '@/shared/lib/utils'
+import { cn, slugify } from '@/shared/lib/utils'
 import { AlertCircle, CheckCircle2, FileSpreadsheet, Upload, X } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
 import * as XLSX from 'xlsx'
@@ -49,8 +49,6 @@ const COL_ALIASES: Record<string, keyof ExcelRow> = {
   'imagenes separadas por |': 'imageUrl',
 }
 
-type CatKey = 'figures' | 'lego' | 'vehicles'
-
 type StatusKey = 'AVAILABLE' | 'PREORDER' | 'SOLD_OUT' | 'COMING_SOON' | 'ARCHIVED'
 
 const STATUS_MAP: Record<string, StatusKey> = {
@@ -70,27 +68,16 @@ const STATUS_MAP: Record<string, StatusKey> = {
   archivado: 'ARCHIVED',
 }
 
-const CAT_MAP: Record<string, CatKey> = {
-  figures: 'figures',
-  figuras: 'figures',
-  figura: 'figures',
-  'figura de acción': 'figures',
-  'figura de accion': 'figures',
-  accion: 'figures',
-  acción: 'figures',
-  'figuras de accion': 'figures',
-  lego: 'lego',
-  'set lego': 'lego',
-  legos: 'lego',
-  vehicles: 'vehicles',
-  vehiculos: 'vehicles',
-  vehículos: 'vehicles',
-  vehículo: 'vehicles',
-  vehiculo: 'vehicles',
-  modelos: 'vehicles',
-  escala: 'vehicles',
-  'modelo escala': 'vehicles',
-  'modelos a escala': 'vehicles',
+// Opción de catálogo (categoría o marca) contra la que se valida cada fila.
+// Se acepta el nombre o el slug, comparados con slugify (sin tildes ni case).
+interface CatalogOption {
+  name: string
+  slug: string
+}
+
+function matchOption(value: string, options: CatalogOption[]): CatalogOption | undefined {
+  const needle = slugify(value)
+  return options.find((o) => o.slug === needle || slugify(o.name) === needle)
 }
 
 interface ExcelRow {
@@ -101,7 +88,7 @@ interface ExcelRow {
   salePrice: number
   stock: number
   brand: string
-  cat: CatKey
+  cat: string
   status: StatusKey
   featured: boolean
   imageUrl: string
@@ -114,6 +101,8 @@ interface ParsedRow {
 }
 
 interface Props {
+  categories: CatalogOption[]
+  brands: CatalogOption[]
   onClose: () => void
   onImport: (products: ImportProductRow[]) => void
 }
@@ -121,7 +110,11 @@ interface Props {
 // ---------------------------------------------------------------------------
 // Parser
 // ---------------------------------------------------------------------------
-function parseSheet(workbook: XLSX.WorkBook): ParsedRow[] {
+function parseSheet(
+  workbook: XLSX.WorkBook,
+  categories: CatalogOption[],
+  brands: CatalogOption[],
+): ParsedRow[] {
   const sheet = workbook.Sheets[workbook.SheetNames[0]]
   const raw = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: '' })
 
@@ -147,12 +140,15 @@ function parseSheet(workbook: XLSX.WorkBook): ParsedRow[] {
     if (isNaN(rawStock) || rawStock < 0) errors.push('Cantidad inválida')
     else normalized.stock = Math.floor(rawStock)
 
-    const catRaw = String(normalized.cat ?? '')
-      .toLowerCase()
-      .trim()
-    const mappedCat = CAT_MAP[catRaw]
-    if (!mappedCat) errors.push(`Categoría desconocida: "${catRaw}"`)
-    else normalized.cat = mappedCat
+    const catRaw = String(normalized.cat ?? '').trim()
+    const matchedCat = catRaw ? matchOption(catRaw, categories) : undefined
+    if (!matchedCat) errors.push(catRaw ? `Categoría desconocida: "${catRaw}"` : 'Categoría requerida')
+    else normalized.cat = matchedCat.name
+
+    const brandRaw = String(normalized.brand ?? '').trim()
+    const matchedBrand = brandRaw ? matchOption(brandRaw, brands) : undefined
+    if (!matchedBrand) errors.push(brandRaw ? `Marca desconocida: "${brandRaw}"` : 'Marca requerida')
+    else normalized.brand = matchedBrand.name
 
     const rawSale = Number(normalized.salePrice)
     if (normalized.salePrice != null && normalized.salePrice !== ('' as unknown as number)) {
@@ -173,9 +169,10 @@ function parseSheet(workbook: XLSX.WorkBook): ParsedRow[] {
       normalized.status = 'AVAILABLE'
     }
 
-    const featRaw = normalized.featured
+    const featRaw = normalized.featured as unknown
     if (typeof featRaw === 'string') {
-      normalized.featured = featRaw.toLowerCase() === 'true' || featRaw === '1' || featRaw.toLowerCase() === 'si' || featRaw.toLowerCase() === 'sí'
+      const feat = featRaw.toLowerCase().trim()
+      normalized.featured = feat === 'true' || feat === '1' || feat === 'si' || feat === 'sí'
     } else {
       normalized.featured = Boolean(featRaw)
     }
@@ -205,7 +202,7 @@ function parseSheet(workbook: XLSX.WorkBook): ParsedRow[] {
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export function ExcelImportDrawer({ onClose, onImport }: Props) {
+export function ExcelImportDrawer({ categories, brands, onClose, onImport }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
   const [rows, setRows] = useState<ParsedRow[] | null>(null)
@@ -217,7 +214,7 @@ export function ExcelImportDrawer({ onClose, onImport }: Props) {
     reader.onload = (e) => {
       const data = new Uint8Array(e.target!.result as ArrayBuffer)
       const wb = XLSX.read(data, { type: 'array' })
-      setRows(parseSheet(wb))
+      setRows(parseSheet(wb, categories, brands))
     }
     reader.readAsArrayBuffer(file)
   }
@@ -240,7 +237,7 @@ export function ExcelImportDrawer({ onClose, onImport }: Props) {
       price: r.data.price!,
       salePrice: r.data.salePrice || undefined,
       stock: r.data.stock!,
-      brand: r.data.brand ?? '',
+      brand: r.data.brand!,
       cat: r.data.cat!,
       status: r.data.status ?? 'AVAILABLE',
       featured: r.data.featured ?? false,
@@ -280,7 +277,7 @@ export function ExcelImportDrawer({ onClose, onImport }: Props) {
           <div className="bg-card border border-(--bd) p-4">
             <div className={cn(cls.label, 'mb-2')}>Columnas requeridas</div>
             <div className="flex flex-wrap gap-2">
-              {['SKU', 'Nombre', 'Precio', 'Cantidad', 'Categoria'].map(
+              {['SKU', 'Nombre', 'Precio', 'Cantidad', 'Categoria', 'Marca'].map(
                 (c) => (
                   <span
                     key={c}
@@ -293,7 +290,7 @@ export function ExcelImportDrawer({ onClose, onImport }: Props) {
             </div>
             <div className={cn(cls.label, 'mb-2 mt-3')}>Columnas opcionales</div>
             <div className="flex flex-wrap gap-2">
-              {['Descripcion', 'Marca', 'Precio Oferta', 'Estado', 'Destacado', 'URL Imagen'].map(
+              {['Descripcion', 'Precio Oferta', 'Estado', 'Destacado', 'URL Imagen'].map(
                 (c) => (
                   <span
                     key={c}
@@ -305,8 +302,16 @@ export function ExcelImportDrawer({ onClose, onImport }: Props) {
               )}
             </div>
             <p className="text-[12px] text-muted mt-2">
-              Los encabezados aceptan variaciones en español o inglés. Soporta .xlsx, .xls y .csv.
+              Los encabezados aceptan variaciones en español o inglés. Categoría y Marca aceptan el
+              nombre o el slug tal como existen en el sistema. Soporta .xlsx, .xls y .csv.
             </p>
+            <a
+              href="/plantillas/plantilla-importar-productos.xlsx"
+              download
+              className="inline-flex items-center gap-1.5 text-[12px] text-(--gold) no-underline mt-2 hover:underline"
+            >
+              <FileSpreadsheet size={13} /> Descargar plantilla de ejemplo
+            </a>
           </div>
 
           {/* Dropzone */}
@@ -383,7 +388,7 @@ export function ExcelImportDrawer({ onClose, onImport }: Props) {
                   <table className="w-full text-left">
                     <thead>
                       <tr>
-                        {['Fila', 'SKU', 'Nombre', 'Cat.', 'Precio', 'Oferta', 'Estado', 'Dest.', 'Qty', 'Marca'].map((h) => (
+                        {['Fila', 'SKU', 'Nombre', 'Cat.', 'Precio', 'Oferta', 'Estado', 'Dest.', 'Cant.', 'Marca'].map((h) => (
                           <th key={h} className={cn(cls.th, 'whitespace-nowrap')}>
                             {h}
                           </th>

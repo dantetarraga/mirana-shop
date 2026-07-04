@@ -1,15 +1,30 @@
-﻿const FOOTER_NAVIGATION = [
+﻿import Link from 'next/link'
+
+const FOOTER_NAVIGATION = [
   {
     title: 'Tienda',
-    links: ['Catálogo', 'Novedades', 'Preventas', 'Ediciones limitadas'],
+    links: [
+      { label: 'Catálogo', href: '/catalogo' },
+      { label: 'Novedades', href: '/catalogo?sort=newest' },
+      { label: 'Preventas', href: '/catalogo?avail=preorder' },
+      { label: 'Ofertas', href: '/catalogo?oferta=1' },
+    ],
   },
   {
     title: 'Cuenta',
-    links: ['Mi perfil', 'Mis pedidos', 'Favoritos', 'Devoluciones'],
+    links: [
+      { label: 'Mi perfil', href: '/cuenta/perfil' },
+      { label: 'Mis pedidos', href: '/cuenta/pedidos' },
+      { label: 'Mis direcciones', href: '/cuenta/direcciones' },
+      { label: 'Carrito', href: '/carrito' },
+    ],
   },
   {
-    title: 'Info',
-    links: ['Sobre MIRANA', 'Envíos', 'Términos', 'Contacto'],
+    title: 'Legal',
+    links: [
+      { label: 'Términos y Condiciones', href: '/terminos-y-condiciones' },
+      { label: 'Política de Privacidad', href: '/politica-de-privacidad' },
+    ],
   },
 ] as const
 
@@ -33,11 +48,11 @@ export function Footer() {
           </h4>
 
           <ul className="list-none flex flex-col gap-2.5">
-            {links.map((link) => (
-              <li key={link}>
-                <a href="#" className="footer-link text-[14px] text-text no-underline block">
-                  {link}
-                </a>
+            {links.map(({ label, href }) => (
+              <li key={label}>
+                <Link href={href} className="footer-link text-[14px] text-text no-underline block">
+                  {label}
+                </Link>
               </li>
             ))}
           </ul>

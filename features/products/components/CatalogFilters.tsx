@@ -23,6 +23,7 @@ interface CatalogFiltersProps {
   currentCats: string[]
   currentBrands: string[]
   currentAvail: AvailabilityOption[]
+  currentOferta?: boolean
   priceMin?: number
   priceMax?: number
 }
@@ -39,6 +40,7 @@ export function CatalogFilters({
   currentCats,
   currentBrands,
   currentAvail,
+  currentOferta,
   priceMin,
   priceMax,
 }: CatalogFiltersProps) {
@@ -61,7 +63,7 @@ export function CatalogFilters({
     })
   }
 
-  function go(overrides: Partial<{ cat: string[]; brand: string[]; avail: string[]; priceMin?: number; priceMax?: number }>) {
+  function go(overrides: Partial<{ cat: string[]; brand: string[]; avail: string[]; oferta?: boolean; priceMin?: number; priceMax?: number }>) {
     router.push(
       buildCatalogUrl({
         q: currentQ,
@@ -69,6 +71,7 @@ export function CatalogFilters({
         cat: overrides.cat ?? currentCats,
         brand: overrides.brand ?? currentBrands,
         avail: overrides.avail ?? currentAvail,
+        oferta: 'oferta' in overrides ? overrides.oferta : currentOferta,
         priceMin: 'priceMin' in overrides ? overrides.priceMin : priceMin,
         priceMax: 'priceMax' in overrides ? overrides.priceMax : priceMax,
       }),
@@ -102,6 +105,9 @@ export function CatalogFilters({
       const opt = AVAILABILITY_OPTIONS.find((o) => o.value === val)
       return { key: `avail-${val}`, label: opt?.label ?? val, onRemove: () => go({ avail: currentAvail.filter((a) => a !== val) }) }
     }),
+    ...(currentOferta
+      ? [{ key: 'oferta', label: 'En oferta', onRemove: () => go({ oferta: undefined }) }]
+      : []),
     ...(priceMin != null || priceMax != null
       ? [
           {

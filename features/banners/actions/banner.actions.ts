@@ -3,6 +3,7 @@
 import { BANNER_SELECT } from '@/features/banners/queries/banner.queries'
 import { bannerDbSchema } from '@/features/banners/schemas/banner.schema'
 import { db } from '@/shared/lib/db'
+import { requireAdmin } from '@/shared/lib/require-admin'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import { revalidatePath, revalidateTag } from 'next/cache'
 
@@ -17,6 +18,9 @@ export async function saveBanner(
   id: string | null,
   rawInput: unknown,
 ): Promise<ActionResult<{ id: string }>> {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   const parsed = bannerDbSchema.safeParse(rawInput)
   if (!parsed.success) {
     const firstError = parsed.error.issues[0]?.message ?? 'Datos inválidos'
@@ -65,6 +69,9 @@ export async function saveBanner(
 }
 
 export async function toggleBanner(id: string, currentActive: boolean): Promise<ActionResult> {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   if (!id) return { success: false, error: 'ID de banner requerido', code: 400 }
 
   try {
@@ -78,6 +85,9 @@ export async function toggleBanner(id: string, currentActive: boolean): Promise<
 }
 
 export async function deleteBanner(id: string): Promise<ActionResult> {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   if (!id) return { success: false, error: 'ID de banner requerido', code: 400 }
 
   try {

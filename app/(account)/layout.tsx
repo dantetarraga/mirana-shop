@@ -1,5 +1,6 @@
 import { Footer } from '@/shared/components/layout/Footer'
 import { Navbar } from '@/shared/components/layout/Navbar'
+import { WhatsAppFloat } from '@/shared/components/layout/WhatsAppFloat'
 import { StoreOverlays } from '@/features/cart/components/StoreOverlays'
 import { getAccountUser } from '@/shared/lib/get-account-user'
 
@@ -12,6 +13,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
       <main className="flex-1">{children}</main>
       <Footer />
       <StoreOverlays />
+      <WhatsAppFloat />
     </>
   )
 }

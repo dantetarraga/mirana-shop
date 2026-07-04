@@ -3,6 +3,7 @@ import { StoreOverlays } from '@/features/cart/components/StoreOverlays'
 import { getCart } from '@/features/cart/queries/cart.queries'
 import { Footer } from '@/shared/components/layout/Footer'
 import { Navbar } from '@/shared/components/layout/Navbar'
+import { WhatsAppFloat } from '@/shared/components/layout/WhatsAppFloat'
 
 export default async function StorefrontLayout({ children }: { children: React.ReactNode }) {
   const initialCart = await getCart()
@@ -14,6 +15,7 @@ export default async function StorefrontLayout({ children }: { children: React.R
       <main className="flex-1">{children}</main>
       <Footer />
       <StoreOverlays />
+      <WhatsAppFloat />
     </>
   )
 }

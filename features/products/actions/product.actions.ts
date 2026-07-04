@@ -5,6 +5,7 @@ import { getCategories } from '@/features/categories/queries/category.queries'
 import { PRODUCT_DETAIL_SELECT, getProducts } from '@/features/products/queries/product.queries'
 import { db } from '@/shared/lib/db'
 import { importProductRowSchema, productDbBaseSchema, productDbSchema } from '@/features/products/schemas/product.schema'
+import { requireAdmin } from '@/shared/lib/require-admin'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import type { DrawerProduct } from '@/shared/types/entity-products.types'
 import { revalidatePath, revalidateTag } from 'next/cache'
@@ -41,6 +42,9 @@ function invalidateProductCaches() {
 export async function createProduct(
   rawInput: unknown,
 ): Promise<ActionResult<{ id: string; slug: string }>> {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   const parsed = productDbSchema.safeParse(rawInput)
   if (!parsed.success) {
     const firstError = parsed.error.issues[0]?.message ?? 'Datos inválidos'
@@ -92,6 +96,9 @@ export async function updateProduct(
   rawInput: unknown,
   images?: { url: string; alt?: string }[],
 ): Promise<ActionResult<{ id: string }>> {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   if (!id) return { success: false, error: 'ID de producto requerido', code: 400 }
 
   const parsed = productDbBaseSchema.partial().safeParse(rawInput)
@@ -160,6 +167,9 @@ export async function updateProduct(
 // ---------------------------------------------------------------------------
 
 export async function deleteProduct(id: string): Promise<ActionResult> {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   if (!id) return { success: false, error: 'ID de producto requerido', code: 400 }
 
   try {
@@ -185,6 +195,9 @@ type ImportRow = z.infer<typeof importProductRowSchema>
 export async function importProducts(
   rawRows: unknown,
 ): Promise<ActionResult<{ created: number; updated: number; errors: string[] }>> {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   const parsed = importRowSchema.safeParse(rawRows)
   if (!parsed.success) {
     return { success: false, error: 'Formato de importación inválido', code: 400 }
@@ -195,30 +208,41 @@ export async function importProducts(
   let created = 0
   let updated = 0
 
-  // Mapas para resolver categoryId y brandId por nombre/slug
-  const [categories, brands] = await Promise.all([getCategories(), getBrands()])
+  // Mapas dinámicos: la celda puede traer el nombre o el slug de la
+  // categoría/marca; se normaliza con slugify para comparar sin tildes ni case.
+  const [categories, brands] = await Promise.all([
+    getCategories({ perPage: 100 }),
+    getBrands({ perPage: 100 }),
+  ])
 
-  const catMap: Record<string, string> = {
-    figures: categories.find((c) => c.slug === 'figuras-accion')?.id ?? '',
-    lego: categories.find((c) => c.slug === 'lego')?.id ?? '',
-    vehicles: categories.find((c) => c.slug === 'modelos-escala')?.id ?? '',
+  const catMap = new Map<string, string>()
+  for (const c of categories) {
+    catMap.set(c.slug, c.id)
+    catMap.set(slugify(c.name), c.id)
+  }
+
+  const brandMap = new Map<string, string>()
+  for (const b of brands) {
+    brandMap.set(b.slug, b.id)
+    brandMap.set(slugify(b.name), b.id)
   }
 
   for (const row of rows) {
     try {
-      const categoryId = catMap[row.cat]
+      const categoryId = catMap.get(slugify(row.cat))
       if (!categoryId) {
         errors.push(`Fila "${row.name}": categoría "${row.cat}" no encontrada`)
         continue
       }
 
-      // Resolución de marca: busca por nombre case-insensitive
-      const brandName = (row.brand ?? '').toLowerCase()
-      const brand = brands.find((b) => b.name.toLowerCase() === brandName)
-      const brandId = brand?.id ?? brands[0]?.id
+      if (!row.brand) {
+        errors.push(`Fila "${row.name}": marca requerida`)
+        continue
+      }
 
+      const brandId = brandMap.get(slugify(row.brand))
       if (!brandId) {
-        errors.push(`Fila "${row.name}": no se encontró marca`)
+        errors.push(`Fila "${row.name}": marca "${row.brand}" no encontrada`)
         continue
       }
 
@@ -305,6 +329,9 @@ export async function searchAvailableProducts(
   query: string,
   excludeIds: string[] = [],
 ): Promise<ActionResult<DrawerProduct[]>> {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   if (!query || query.trim().length < 2) {
     return { success: true, data: [] }
   }

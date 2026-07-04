@@ -1,6 +1,5 @@
+import { Dates } from '@/shared/lib/dates'
 import { type ClassValue, clsx } from 'clsx'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
 import { twMerge } from 'tailwind-merge'
 
 export function cn(...inputs: ClassValue[]) {
@@ -25,6 +24,7 @@ export function slugify(str: string) {
     .replace(/\s+/g, '-')
 }
 
+/** @deprecated Usa Dates.format de '@/shared/lib/dates' — se mantiene por compatibilidad */
 export function formatDate(date: Date | string, fmt = "d 'de' MMMM 'de' yyyy"): string {
-  return format(new Date(date), fmt, { locale: es })
+  return Dates.format(date, fmt)
 }

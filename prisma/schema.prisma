@@ -558,3 +558,67 @@ model Banner {
 
   @@index([active, position])
 }
+
+// ---------------------------------------------------------------------------
+// Contenido legal editable desde el admin (términos, políticas)
+// ---------------------------------------------------------------------------
+
+model LegalPage {
+  id      String @id @default(cuid())
+  slug    String @unique
+  title   String
+  content String @default("") @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// CTA del home (franja "Ediciones Limitadas") — editable desde el admin.
+// Registro único con id fijo 'home-cta'.
+// ---------------------------------------------------------------------------
+
+model HomeCta {
+  id       String  @id
+  title    String
+  subtitle String  @default("")
+  ctaLabel String  @default("")
+  ctaHref  String  @default("")
+  imageUrl String  @default("")
+  active   Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Configuración general de la tienda — registro único con id 'store'
+// ---------------------------------------------------------------------------
+
+model StoreSettings {
+  id             String  @id
+  showOutOfStock Boolean @default(true)
+  whatsappNumber String  @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Métodos de pago manuales mostrados en el checkout (Yape, BCP, BBVA, etc.)
+// ---------------------------------------------------------------------------
+
+model PaymentAccount {
+  id       String  @id @default(cuid())
+  name     String
+  holder   String  @default("")
+  number   String
+  cci      String  @default("")
+  position Int     @default(0)
+  active   Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active, position])
+}

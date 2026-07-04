@@ -17,11 +17,12 @@ interface CatalogSortSelectProps {
   cat: string[]
   brand: string[]
   avail: string[]
+  oferta?: boolean
   priceMin?: number
   priceMax?: number
 }
 
-export function CatalogSortSelect({ value, q, cat, brand, avail, priceMin, priceMax }: CatalogSortSelectProps) {
+export function CatalogSortSelect({ value, q, cat, brand, avail, oferta, priceMin, priceMax }: CatalogSortSelectProps) {
   const router = useRouter()
 
   return (
@@ -29,7 +30,7 @@ export function CatalogSortSelect({ value, q, cat, brand, avail, priceMin, price
       value={value}
       onChange={(e) =>
         router.push(
-          buildCatalogUrl({ q, cat, brand, avail, priceMin, priceMax, sort: e.target.value }),
+          buildCatalogUrl({ q, cat, brand, avail, oferta, priceMin, priceMax, sort: e.target.value }),
         )
       }
       className="bg-card border border-(--bd) text-text font-display text-[14px] font-bold uppercase tracking-[0.5px] px-3.5 py-2.25 outline-none cursor-pointer focus:border-(--gold)"

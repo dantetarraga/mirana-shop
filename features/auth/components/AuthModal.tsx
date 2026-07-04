@@ -154,6 +154,8 @@ export function AuthModal() {
           </FormField>
         )}
 
+        {/* "Recordarme" y recuperación de contraseña ocultos hasta tener flujo
+            real (la sesión JWT ya persiste por defecto; el reset requiere email)
         {mode === 'login' && (
           <div className="flex justify-between items-center text-[12px] text-muted mt-0.5 mb-1">
             <label className="flex items-center gap-1.5 cursor-pointer">
@@ -162,6 +164,7 @@ export function AuthModal() {
             <a className="text-(--gold) cursor-pointer">¿Olvidaste tu contraseña?</a>
           </div>
         )}
+        */}
 
         {mode === 'register' && (
           <div className="mt-0.5 mb-1">
@@ -212,7 +215,7 @@ export function AuthModal() {
         </Button>
       </form>
 
-      {/* OAuth */}
+      {/* OAuth — botón de Google deshabilitado temporalmente
       <div className="flex items-center gap-3 my-5 text-muted text-[11px] tracking-[2px] uppercase">
         <span className="flex-1 h-px bg-(--bd)" /> o continúa con{' '}
         <span className="flex-1 h-px bg-(--bd)" />
@@ -239,6 +242,7 @@ export function AuthModal() {
         </svg>
         Google
       </Button>
+      */}
     </Modal>
   )
 }

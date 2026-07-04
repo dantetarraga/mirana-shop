@@ -69,8 +69,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session
     },
 
-    /** Protección de rutas: redirige a home si no hay sesión */
-    authorized({ auth: session }) {
+    /**
+     * Protección de rutas (chequeo optimista desde proxy.ts):
+     * - /admin/* exige sesión con rol admin.
+     * - El resto de rutas del matcher (/cuenta/*) solo exige sesión.
+     * La autorización real vive en requireAdmin() dentro de cada action.
+     */
+    authorized({ auth: session, request }) {
+      const { pathname } = request.nextUrl
+
+      if (pathname.startsWith('/admin')) {
+        return session?.user?.role === 'admin'
+      }
+
       return !!session?.user
     },
   },
