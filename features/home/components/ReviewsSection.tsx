@@ -47,13 +47,13 @@ const REVIEWS = [
 
 export function ReviewsSection() {
   return (
-    <section className="glow-section shell py-20">
-      <div className="relative z-1 flex justify-between items-start mb-10">
+    <section className="glow-section shell py-14 md:py-20">
+      <div className="relative z-1 flex justify-between items-start mb-8 md:mb-10">
         <div>
           <div className="text-[10px] font-bold tracking-[3px] uppercase text-(--gold) mb-2.5">
             Testimonios
           </div>
-          <h2 className="font-display font-black uppercase tracking-[-1px] leading-[0.95] text-[clamp(36px,5vw,64px)]">
+          <h2 className="font-display font-black uppercase tracking-[-1px] leading-[0.95] text-[clamp(32px,5vw,64px)]">
             Lo que dicen
             <br />
             nuestros coleccionistas
@@ -72,11 +72,11 @@ export function ReviewsSection() {
         </div>
       </div>
 
-      <div className="relative z-1 grid grid-cols-3 gap-4">
+      <div className="relative z-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {REVIEWS.map((r, i) => (
           <div
             key={i}
-            className="animate-fade-up bg-card border border-(--bd) p-7 relative transition-[border-color] duration-[.25s]"
+            className="animate-fade-up bg-card border border-(--bd) p-6 sm:p-7 relative transition-[border-color] duration-[.25s]"
           >
             <div className="absolute top-3.5 right-4.5 font-display text-[72px] font-black text-(--gold) opacity-[.15] leading-[0.8] italic">
               "

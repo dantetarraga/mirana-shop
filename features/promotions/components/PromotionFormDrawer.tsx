@@ -145,7 +145,7 @@ export function PromotionFormDrawer({ promotion, isNew, onClose, onSubmit, isPen
           </FormField>
         )}
 
-        <div className="grid grid-cols-2 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <FormField label="Inicio (opcional)" error={errors.startsAt?.message}>
             <input {...register('startsAt')} type="date" className={cls.input} />
           </FormField>
@@ -166,7 +166,7 @@ export function PromotionFormDrawer({ promotion, isNew, onClose, onSubmit, isPen
           </label>
         </div>
 
-        <div className="flex gap-3 pt-2">
+        <div className="flex flex-wrap gap-3 pt-2">
           <Button type="submit" variant="accent" size="md" full disabled={isPending}>
             {isPending ? 'Guardando...' : isNew ? 'Crear promoción' : 'Guardar cambios'}
           </Button>

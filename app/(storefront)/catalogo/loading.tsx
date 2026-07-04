@@ -18,11 +18,11 @@ function ProductCardSkeleton() {
 
 export default function CatalogoLoading() {
   return (
-    <div className="px-6 py-10">
+    <div className="px-4 sm:px-6 py-10">
       {/* Search + filters row */}
-      <div className="flex items-center gap-3 mb-7">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-7">
         <Bone className="h-10 flex-1 max-w-80" />
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {Array.from({ length: 5 }).map((_, i) => (
             <Bone key={i} className="h-9 w-22" />
           ))}
@@ -33,7 +33,7 @@ export default function CatalogoLoading() {
       <Bone className="h-3 w-32 mb-6" />
 
       {/* Grid */}
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-3.5 sm:gap-5">
         {Array.from({ length: 12 }).map((_, i) => (
           <ProductCardSkeleton key={i} />
         ))}

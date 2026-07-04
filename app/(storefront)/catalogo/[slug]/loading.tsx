@@ -4,9 +4,9 @@ function Bone({ className }: { className?: string }) {
 
 export default function ProductDetailLoading() {
   return (
-    <div className="px-6 py-12 max-w-360 mx-auto">
+    <div className="px-4 sm:px-6 py-8 sm:py-12 max-w-360 mx-auto">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-3 mb-10">
+      <div className="flex flex-wrap items-center gap-3 mb-6 sm:mb-10">
         <Bone className="h-2.5 w-10" />
         <Bone className="h-2.5 w-2.5" />
         <Bone className="h-2.5 w-16" />
@@ -16,7 +16,7 @@ export default function ProductDetailLoading() {
         <Bone className="h-2.5 w-48" />
       </div>
 
-      <div className="grid grid-cols-2 gap-16 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-start">
         {/* Left — image */}
         <Bone className="aspect-square w-full" />
 

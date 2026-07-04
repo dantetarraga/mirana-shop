@@ -15,7 +15,7 @@ export function KpiCard({ label, value, valueClass = 'text-text', children }: Kp
       <div className={cn(cls.label, 'mb-2')}>{label}</div>
       <div
         className={cn(
-          'font-display text-[36px] font-black leading-none tracking-[-1px]',
+          'font-display text-[26px] sm:text-[36px] font-black leading-none tracking-[-1px] truncate',
           valueClass,
         )}
       >

@@ -19,7 +19,7 @@ export default async function BannersPage() {
           side={<NewBannerButton />}
         />
 
-        <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(320px,1fr))]">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {banners.map((banner) => (
             <BannerCard key={banner.id} banner={banner} />
           ))}

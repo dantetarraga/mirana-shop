@@ -1,13 +1,18 @@
 'use client'
 
 import { AuthModal } from '@/features/auth/components/AuthModal'
+import type { PricingRules } from '@/features/checkout/lib/pricing'
 import { ProductModal } from '@/features/products/components/ProductModal'
 import { CartDrawer } from './CartDrawer'
 
-export function StoreOverlays() {
+interface StoreOverlaysProps {
+  pricingRules: PricingRules
+}
+
+export function StoreOverlays({ pricingRules }: StoreOverlaysProps) {
   return (
     <>
-      <CartDrawer />
+      <CartDrawer pricingRules={pricingRules} />
       <ProductModal />
       <AuthModal />
     </>

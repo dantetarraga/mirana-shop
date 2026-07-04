@@ -123,136 +123,154 @@ export function CatalogFilters({
   ]
 
   const hasActiveFilters = chips.length > 0
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
-    <aside className="bg-surf border border-(--bd) sticky top-[calc(var(--nh)+20px)]">
-      <div className="px-5 py-4 border-b border-(--bd) flex items-center justify-between">
-        <span className="font-display text-[20px] font-black uppercase tracking-[0.5px]">Filtros</span>
+    <aside className="bg-surf border border-(--bd) lg:sticky lg:top-[calc(var(--nh)+20px)]">
+      <div className="sticky top-(--nh) z-40 bg-surf px-5 py-4 border-b border-(--bd) flex items-center justify-between gap-3 lg:static">
+        <button
+          type="button"
+          onClick={() => setMobileOpen((o) => !o)}
+          className="flex items-center gap-2 font-display text-[20px] font-black uppercase tracking-[0.5px]"
+        >
+          Filtros
+          {hasActiveFilters && (
+            <span className="text-[11px] font-display font-bold px-1.5 py-0.5 bg-(--gold) text-black">
+              {chips.length}
+            </span>
+          )}
+          <ChevronDown
+            size={16}
+            className={`text-muted transition-transform lg:hidden ${mobileOpen ? 'rotate-180' : ''}`}
+          />
+        </button>
         {hasActiveFilters && (
           <button
             onClick={clearAll}
-            className="flex items-center gap-1.5 text-[11px] tracking-[1px] uppercase text-muted hover:text-(--gold) transition-colors"
+            className="shrink-0 flex items-center gap-1.5 text-[11px] tracking-[1px] uppercase text-muted hover:text-(--gold) transition-colors"
           >
             <X size={12} /> Limpiar todo
           </button>
         )}
       </div>
 
-      {hasActiveFilters && (
-        <div className="px-4 py-3 border-b border-(--bd) flex flex-wrap gap-1.5">
-          {chips.map((chip) => (
-            <div
-              key={chip.key}
-              className="flex items-center gap-1.5 bg-(--gd) border border-[rgba(0,200,255,.25)] text-(--gold) text-[11px] px-2.5 py-1"
-            >
-              {chip.label}
-              <button onClick={chip.onRemove} className="opacity-70 hover:opacity-100">
-                <X size={12} />
-              </button>
+      <div className={`${mobileOpen ? 'block' : 'hidden'} lg:block`}>
+        {hasActiveFilters && (
+          <div className="px-4 py-3 border-b border-(--bd) flex flex-wrap gap-1.5">
+            {chips.map((chip) => (
+              <div
+                key={chip.key}
+                className="flex items-center gap-1.5 bg-(--gd) border border-[rgba(0,200,255,.25)] text-(--gold) text-[11px] px-2.5 py-1"
+              >
+                {chip.label}
+                <button onClick={chip.onRemove} className="opacity-70 hover:opacity-100">
+                  <X size={12} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Categoría */}
+        <FilterGroup id="categoria" label="Categoría" open={openGroups.has('categoria')} onToggle={toggleGroup}>
+          {categories.map((cat) => (
+            <FilterCheckbox
+              key={cat.id}
+              checked={currentCats.includes(cat.slug)}
+              onClick={() => go({ cat: toggle(currentCats, cat.slug) })}
+              label={cat.name}
+              count={cat.productCount}
+            />
+          ))}
+        </FilterGroup>
+
+        {/* Marca */}
+        <FilterGroup id="marca" label="Marca" open={openGroups.has('marca')} onToggle={toggleGroup}>
+          <input
+            value={brandSearch}
+            onChange={(e) => setBrandSearch(e.target.value)}
+            placeholder="Buscar marca…"
+            className="w-full bg-card border border-(--bd) text-text text-[12px] px-2.5 py-2 mb-2.5 outline-none focus:border-(--gold) placeholder:text-muted"
+          />
+          {filteredBrands.map((brand) => (
+            <FilterCheckbox
+              key={brand.id}
+              checked={currentBrands.includes(brand.slug)}
+              onClick={() => go({ brand: toggle(currentBrands, brand.slug) })}
+              label={brand.name}
+              count={brand.productCount}
+            />
+          ))}
+        </FilterGroup>
+
+        {/* Precio */}
+        <FilterGroup id="precio" label="Precio" open={openGroups.has('precio')} onToggle={toggleGroup}>
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <div className="relative">
+              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 font-display text-[13px] font-bold text-muted">
+                S/
+              </span>
+              <input
+                type="number"
+                min={0}
+                value={priceDraft.min}
+                onChange={(e) => setPriceDraft((d) => ({ ...d, min: e.target.value }))}
+                className="w-full bg-card border border-(--bd) text-text font-display text-[14px] font-bold pl-7 pr-2 py-2 outline-none focus:border-(--gold)"
+              />
             </div>
-          ))}
-        </div>
-      )}
-
-      {/* Categoría */}
-      <FilterGroup id="categoria" label="Categoría" open={openGroups.has('categoria')} onToggle={toggleGroup}>
-        {categories.map((cat) => (
-          <FilterCheckbox
-            key={cat.id}
-            checked={currentCats.includes(cat.slug)}
-            onClick={() => go({ cat: toggle(currentCats, cat.slug) })}
-            label={cat.name}
-            count={cat.productCount}
-          />
-        ))}
-      </FilterGroup>
-
-      {/* Marca */}
-      <FilterGroup id="marca" label="Marca" open={openGroups.has('marca')} onToggle={toggleGroup}>
-        <input
-          value={brandSearch}
-          onChange={(e) => setBrandSearch(e.target.value)}
-          placeholder="Buscar marca…"
-          className="w-full bg-card border border-(--bd) text-text text-[12px] px-2.5 py-2 mb-2.5 outline-none focus:border-(--gold) placeholder:text-muted"
-        />
-        {filteredBrands.map((brand) => (
-          <FilterCheckbox
-            key={brand.id}
-            checked={currentBrands.includes(brand.slug)}
-            onClick={() => go({ brand: toggle(currentBrands, brand.slug) })}
-            label={brand.name}
-            count={brand.productCount}
-          />
-        ))}
-      </FilterGroup>
-
-      {/* Precio */}
-      <FilterGroup id="precio" label="Precio" open={openGroups.has('precio')} onToggle={toggleGroup}>
-        <div className="grid grid-cols-2 gap-2 mb-3">
-          <div className="relative">
-            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 font-display text-[13px] font-bold text-muted">
-              S/
-            </span>
-            <input
-              type="number"
-              min={0}
-              value={priceDraft.min}
-              onChange={(e) => setPriceDraft((d) => ({ ...d, min: e.target.value }))}
-              className="w-full bg-card border border-(--bd) text-text font-display text-[14px] font-bold pl-7 pr-2 py-2 outline-none focus:border-(--gold)"
-            />
+            <div className="relative">
+              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 font-display text-[13px] font-bold text-muted">
+                S/
+              </span>
+              <input
+                type="number"
+                min={0}
+                value={priceDraft.max}
+                onChange={(e) => setPriceDraft((d) => ({ ...d, max: e.target.value }))}
+                className="w-full bg-card border border-(--bd) text-text font-display text-[14px] font-bold pl-7 pr-2 py-2 outline-none focus:border-(--gold)"
+              />
+            </div>
           </div>
-          <div className="relative">
-            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 font-display text-[13px] font-bold text-muted">
-              S/
-            </span>
-            <input
-              type="number"
-              min={0}
-              value={priceDraft.max}
-              onChange={(e) => setPriceDraft((d) => ({ ...d, max: e.target.value }))}
-              className="w-full bg-card border border-(--bd) text-text font-display text-[14px] font-bold pl-7 pr-2 py-2 outline-none focus:border-(--gold)"
-            />
+          <button
+            onClick={applyPrice}
+            className="w-full border border-(--bd) text-text font-display text-[12px] font-bold tracking-[1px] uppercase py-2 mb-3 hover:border-(--gold) hover:text-(--gold) transition-colors"
+          >
+            Aplicar
+          </button>
+          <div className="flex flex-wrap gap-1.5">
+            {PRICE_PRESETS.map(([min, max, label]) => (
+              <button
+                key={label}
+                onClick={() => {
+                  setPriceDraft({ min: min?.toString() ?? '', max: max?.toString() ?? '' })
+                  go({ priceMin: min, priceMax: max })
+                }}
+                className="border border-(--bd) text-muted text-[11px] px-2.5 py-1 hover:border-muted hover:text-text transition-colors"
+              >
+                {label}
+              </button>
+            ))}
           </div>
-        </div>
-        <button
-          onClick={applyPrice}
-          className="w-full border border-(--bd) text-text font-display text-[12px] font-bold tracking-[1px] uppercase py-2 mb-3 hover:border-(--gold) hover:text-(--gold) transition-colors"
+        </FilterGroup>
+
+        {/* Disponibilidad */}
+        <FilterGroup
+          id="disponibilidad"
+          label="Disponibilidad"
+          open={openGroups.has('disponibilidad')}
+          onToggle={toggleGroup}
+          last
         >
-          Aplicar
-        </button>
-        <div className="flex flex-wrap gap-1.5">
-          {PRICE_PRESETS.map(([min, max, label]) => (
-            <button
-              key={label}
-              onClick={() => {
-                setPriceDraft({ min: min?.toString() ?? '', max: max?.toString() ?? '' })
-                go({ priceMin: min, priceMax: max })
-              }}
-              className="border border-(--bd) text-muted text-[11px] px-2.5 py-1 hover:border-muted hover:text-text transition-colors"
-            >
-              {label}
-            </button>
+          {AVAILABILITY_OPTIONS.map((opt) => (
+            <FilterCheckbox
+              key={opt.value}
+              checked={currentAvail.includes(opt.value)}
+              onClick={() => go({ avail: toggle(currentAvail, opt.value) })}
+              label={opt.label}
+            />
           ))}
-        </div>
-      </FilterGroup>
-
-      {/* Disponibilidad */}
-      <FilterGroup
-        id="disponibilidad"
-        label="Disponibilidad"
-        open={openGroups.has('disponibilidad')}
-        onToggle={toggleGroup}
-        last
-      >
-        {AVAILABILITY_OPTIONS.map((opt) => (
-          <FilterCheckbox
-            key={opt.value}
-            checked={currentAvail.includes(opt.value)}
-            onClick={() => go({ avail: toggle(currentAvail, opt.value) })}
-            label={opt.label}
-          />
-        ))}
-      </FilterGroup>
+        </FilterGroup>
+      </div>
     </aside>
   )
 }

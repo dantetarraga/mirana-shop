@@ -4,9 +4,9 @@ function Bone({ className, style }: { className?: string; style?: React.CSSPrope
 
 export default function Loading() {
   return (
-    <div className="px-8 pt-7 pb-12">
+    <div className="px-4 sm:px-6 lg:px-8 pt-5 lg:pt-7 pb-12">
       {/* 4 KPI cards */}
-      <div className="grid grid-cols-4 gap-4 mb-5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-5">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="bg-card border border-(--bd) p-[20px_22px]">
             <Bone className="h-2.5 w-20 mb-3 rounded-sm" />
@@ -18,7 +18,7 @@ export default function Loading() {
       </div>
 
       {/* Área chart + Donut */}
-      <div className="grid grid-cols-[1.55fr_1fr] gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-[1.55fr_1fr] gap-4 mb-4">
         <div className="bg-card border border-(--bd) p-[22px_24px]">
           <div className="flex justify-between items-start mb-5">
             <div>
@@ -48,7 +48,7 @@ export default function Loading() {
       </div>
 
       {/* Barras + Top productos */}
-      <div className="grid grid-cols-[1.55fr_1fr] gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-[1.55fr_1fr] gap-4 mb-4">
         <div className="bg-card border border-(--bd) p-[22px_24px]">
           <div className="flex justify-between items-start mb-5">
             <div>
@@ -90,18 +90,26 @@ export default function Loading() {
           </div>
           <Bone className="h-3.5 w-20 rounded-sm" />
         </div>
-        <div className="bg-surf border-b border-(--bd) flex gap-4 px-4 py-3.5">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Bone key={i} className="h-2.5 flex-1 rounded-sm" />
-          ))}
-        </div>
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="flex gap-4 px-4 py-4 border-b border-(--bd) last:border-b-0">
-            {Array.from({ length: 6 }).map((_, j) => (
-              <Bone key={j} className="h-3.5 flex-1 rounded-sm" style={{ opacity: 1 - i * 0.1 }} />
+        <div className="overflow-x-auto">
+          <div className="min-w-150">
+            <div className="bg-surf border-b border-(--bd) flex gap-4 px-4 py-3.5">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Bone key={i} className="h-2.5 flex-1 rounded-sm" />
+              ))}
+            </div>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex gap-4 px-4 py-4 border-b border-(--bd) last:border-b-0">
+                {Array.from({ length: 6 }).map((_, j) => (
+                  <Bone
+                    key={j}
+                    className="h-3.5 flex-1 rounded-sm"
+                    style={{ opacity: 1 - i * 0.1 }}
+                  />
+                ))}
+              </div>
             ))}
           </div>
-        ))}
+        </div>
       </div>
     </div>
   )

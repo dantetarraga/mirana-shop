@@ -90,7 +90,7 @@ export function BannerFormDrawer({
           <input {...register('imageUrl')} className={cls.input} placeholder="https://..." />
         </FormField>
 
-        <div className="grid grid-cols-2 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <FormField label="Texto botón" error={errors.ctaLabel?.message}>
             <input {...register('ctaLabel')} className={cls.input} placeholder="Ver colección" />
           </FormField>
@@ -99,7 +99,7 @@ export function BannerFormDrawer({
           </FormField>
         </div>
 
-        <div className="grid grid-cols-2 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <FormField label="Posición (orden)" error={errors.position?.message}>
             <input
               {...register('position', { valueAsNumber: true })}

@@ -10,17 +10,19 @@ interface Props {
   items: CatalogProduct[]
 }
 
-const VISIBLE = 5
 const GAP = 16 // gap-4 = 16px
+// Mínimo de items visibles en el breakpoint más chico (mobile) — usado solo
+// para decidir si mostrar las flechas prev/next en desktop.
+const MIN_VISIBLE = 2
 
 export function ProductCarousel({ items }: Props) {
-  const hasControls = items.length > VISIBLE
+  const hasControls = items.length > MIN_VISIBLE
 
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: 'start',
     dragFree: false,
-    slidesToScroll: VISIBLE,
-    watchDrag: hasControls,
+    slidesToScroll: 1,
+    watchDrag: true,
   })
 
   const [canPrev, setCanPrev] = useState(false)
@@ -68,8 +70,7 @@ export function ProductCarousel({ items }: Props) {
           {items.map((p) => (
             <div
               key={p.id}
-              style={{ flex: `0 0 calc((100% - ${GAP * (VISIBLE - 1)}px) / ${VISIBLE})` }}
-              className={isScrolling ? 'pointer-events-none' : ''}
+              className={`flex-none w-[calc((100%-16px)/2)] sm:w-[calc((100%-32px)/3)] md:w-[calc((100%-48px)/4)] lg:w-[calc((100%-64px)/5)] ${isScrolling ? 'pointer-events-none' : ''}`}
             >
               <ProductCard product={p} noAnimation />
             </div>
@@ -83,8 +84,8 @@ export function ProductCarousel({ items }: Props) {
             onClick={scrollPrev}
             disabled={!canPrev}
             aria-label="Anterior"
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-5 z-10
-              size-10 rounded-full bg-(--surf) border border-(--bd) flex items-center justify-center
+            className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-5 z-10
+              size-10 rounded-full bg-(--surf) border border-(--bd) items-center justify-center
               shadow-md transition-all duration-200
               disabled:opacity-0 disabled:pointer-events-none
               hover:bg-(--gold) hover:border-(--gold) hover:text-black"
@@ -96,8 +97,8 @@ export function ProductCarousel({ items }: Props) {
             onClick={scrollNext}
             disabled={!canNext}
             aria-label="Siguiente"
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-5 z-10
-              size-10 rounded-full bg-(--surf) border border-(--bd) flex items-center justify-center
+            className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-5 z-10
+              size-10 rounded-full bg-(--surf) border border-(--bd) items-center justify-center
               shadow-md transition-all duration-200
               disabled:opacity-0 disabled:pointer-events-none
               hover:bg-(--gold) hover:border-(--gold) hover:text-black"

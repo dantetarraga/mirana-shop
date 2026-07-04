@@ -232,7 +232,8 @@ export function EntityProductsDrawer({
               Esta {entityLabel} no tiene productos aún.
             </div>
           ) : (
-            <div className="flex flex-col gap-0 border border-(--bd) overflow-hidden">
+            <div className="border border-(--bd) overflow-x-auto">
+              <div className="min-w-100 flex flex-col gap-0">
               {/* Cabecera */}
               <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 px-4 py-2.5 bg-surf border-b border-(--bd)">
                 <span className={cls.th + " bg-transparent border-none py-0 px-0"}>Producto</span>
@@ -314,6 +315,7 @@ export function EntityProductsDrawer({
                   </div>
                 </div>
               ))}
+              </div>
             </div>
           )}
 

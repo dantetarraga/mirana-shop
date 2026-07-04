@@ -89,7 +89,7 @@ export function AuthModal() {
   return (
     <Modal open={authOpen} onClose={closeAuth} size="md" hideClose={true}>
       {/* Tabs */}
-      <div className="flex border border-(--bd) mb-6 -mx-8">
+      <div className="flex border border-(--bd) mb-6 -mx-5 sm:-mx-8">
         {(['login', 'register'] as const).map((m) => (
           <Button
             key={m}

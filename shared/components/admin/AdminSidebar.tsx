@@ -1,10 +1,13 @@
 ﻿'use client'
 
 import { Button } from '@/shared/components/ui/Button'
+import { useAdminSidebarStore } from '@/shared/stores/admin-sidebar.store'
+import { cn } from '@/shared/lib/utils'
 import {
   Archive,
   ArrowLeft,
   BadgePercent,
+  BookText,
   FileText,
   Megaphone,
   Settings,
@@ -46,15 +49,26 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/admin/legal', label: 'Páginas legales', icon: FileText },
   { section: 'Clientes' },
   { href: '/admin/users', label: 'Usuarios', icon: Users },
+  { href: '/admin/complaints', label: 'Libro de Reclamaciones', icon: BookText },
   { section: 'Configuración' },
   { href: '/admin/settings', label: 'Tienda', icon: Settings },
 ]
 
 export function AdminSidebar() {
   const pathname = usePathname()
+  const { isOpen, close } = useAdminSidebarStore()
 
   return (
-    <aside className="w-62 fixed top-0 bottom-0 left-0 flex flex-col z-50 bg-surf border-r border-(--bd)">
+    <>
+      {isOpen && (
+        <div className="fixed inset-0 z-40 bg-black/60 lg:hidden" onClick={close} />
+      )}
+      <aside
+        className={cn(
+          'w-62 fixed top-0 bottom-0 left-0 flex flex-col z-50 bg-surf border-r border-(--bd) transition-transform duration-300 lg:translate-x-0',
+          isOpen ? 'translate-x-0' : '-translate-x-full',
+        )}
+      >
       {/* Logo */}
       <div className="px-6 pt-6 pb-5 flex items-center gap-2.5 border-b border-(--bd)">
         <span className="font-display font-black text-[26px] tracking-[4px] uppercase">
@@ -80,7 +94,7 @@ export function AdminSidebar() {
           }
           const link = n as NavLink
           return (
-            <Link key={link.href} href={link.href} className="no-underline">
+            <Link key={link.href} href={link.href} className="no-underline" onClick={close}>
               <Button
                 variant="ghost"
                 size="sm"
@@ -118,6 +132,7 @@ export function AdminSidebar() {
           </div>
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   )
 }

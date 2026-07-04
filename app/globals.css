@@ -177,10 +177,10 @@
    Shell — gutter centrado con max-width 1400px (ver docs/DESING.md)
    ============================================================= */
 @utility shell {
-  padding-inline: max(48px, calc((100vw - 1400px) / 2));
+  padding-inline: max(16px, min(4vw, 48px), calc((100vw - 1400px) / 2));
 }
 @utility shell-m {
-  margin-inline: max(48px, calc((100vw - 1400px) / 2));
+  margin-inline: max(16px, min(4vw, 48px), calc((100vw - 1400px) / 2));
 }
 
 /* =============================================================

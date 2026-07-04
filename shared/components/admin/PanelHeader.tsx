@@ -13,8 +13,8 @@ export function PanelHeader({ label, title, side, mb = 'mb-4.5', align = 'start'
   return (
     <div
       className={cn(
-        'flex justify-between',
-        align === 'center' ? 'items-center' : 'items-start',
+        'flex flex-col sm:flex-row justify-between gap-3',
+        align === 'center' ? 'sm:items-center' : 'sm:items-start',
         mb,
       )}
     >

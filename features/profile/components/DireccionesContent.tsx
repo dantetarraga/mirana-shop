@@ -165,7 +165,7 @@ export function DireccionesContent({
   return (
     <div className="max-w-200 mx-auto px-4 sm:px-6 pt-[calc(var(--nh)+48px)] pb-16">
       {/* Header */}
-      <div className="mb-8 flex items-end justify-between gap-4">
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
           <p className="text-[10px] tracking-[3px] uppercase text-(--gold) mb-1">Cuenta</p>
           <h1 className="font-display font-black uppercase text-[28px] sm:text-[34px] tracking-tight leading-none">
@@ -173,7 +173,12 @@ export function DireccionesContent({
           </h1>
         </div>
         {!showForm && editingId === null && (
-          <Button variant="accent" size="md" onClick={() => setShowForm(true)}>
+          <Button
+            variant="accent"
+            size="md"
+            onClick={() => setShowForm(true)}
+            className="self-start"
+          >
             <Plus size={14} className="mr-2" />
             Nueva direccion
           </Button>

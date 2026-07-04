@@ -30,15 +30,15 @@ export function ProductModal() {
   return (
     <div
       onClick={closeProductModal}
-      className="fixed inset-0 z-300 bg-black/82 backdrop-blur-[10px] flex items-center justify-center p-6"
+      className="fixed inset-0 z-300 bg-black/82 backdrop-blur-[10px] flex items-center justify-center p-3 sm:p-6"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-surf border border-(--bd) max-w-220 w-full max-h-[92vh] overflow-y-auto grid grid-cols-2 relative"
+        className="bg-surf border border-(--bd) max-w-220 w-full max-h-[92vh] overflow-y-auto grid grid-cols-1 sm:grid-cols-2 relative"
       >
         {/* Image */}
         <div
-          className={`${getCategoryStripe(p.category.slug)} min-h-110 flex items-center justify-center relative`}
+          className={`${getCategoryStripe(p.category.slug)} min-h-70 sm:min-h-110 flex items-center justify-center relative`}
         >
           {p.imageUrl ? (
             <img
@@ -62,17 +62,17 @@ export function ProductModal() {
         </div>
 
         {/* Info */}
-        <div className="p-11 flex flex-col gap-4.5">
+        <div className="p-5 sm:p-11 flex flex-col gap-4.5">
           <div>
             <div className="text-[10px] tracking-[3px] uppercase text-muted">
               {p.category.name} · {p.brand.name}
             </div>
-            <div className="font-display font-black uppercase leading-[0.95] tracking-[-1px] text-[clamp(32px,4vw,48px)]">
+            <div className="font-display font-black uppercase leading-[0.95] tracking-[-1px] text-[clamp(28px,4vw,48px)]">
               {p.name}
             </div>
           </div>
 
-          <div className="font-display text-[52px] font-black text-(--gold) leading-none">
+          <div className="font-display text-[38px] sm:text-[52px] font-black text-(--gold) leading-none">
             S/ {p.price.toFixed(2)}
           </div>
 

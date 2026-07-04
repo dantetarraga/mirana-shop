@@ -14,7 +14,7 @@
         {doubled.map((item, i) => (
           <span
             key={i}
-            className="font-display text-[13px] font-bold tracking-[2.5px] uppercase px-7 inline-flex items-center gap-3.5"
+            className="font-display text-[12px] sm:text-[13px] font-bold tracking-[2px] sm:tracking-[2.5px] uppercase px-4 sm:px-7 inline-flex items-center gap-3.5"
           >
             {item} <span className="opacity-35 text-[9px]">◆</span>
           </span>

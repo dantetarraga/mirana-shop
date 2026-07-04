@@ -36,7 +36,7 @@ export function CartView({ pricingRules }: CartViewProps) {
   /* ── Empty state ─────────────────────────────────── */
   if (cart.length === 0) {
     return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-6 px-6 pt-[calc(var(--nh)+36px)]">
+      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-6 px-4 sm:px-6 pt-[calc(var(--nh)+36px)]">
         <div className="text-[72px] opacity-20 select-none">
           <ShoppingBag size={96} strokeWidth={1} />
         </div>
@@ -59,9 +59,9 @@ export function CartView({ pricingRules }: CartViewProps) {
 
   return (
     <>
-      <div className="px-6 pt-[calc(var(--nh)+36px)] pb-12 max-w-360 mx-auto">
+      <div className="px-4 sm:px-6 pt-[calc(var(--nh)+36px)] pb-12 max-w-360 mx-auto">
         {/* ── Page header ── */}
-        <div className="flex items-center gap-4 mb-10">
+        <div className="flex items-center gap-4 mb-6 sm:mb-10">
           <button
             onClick={() => router.back()}
             className="text-muted hover:text-(--gold) transition-colors duration-200"
@@ -69,12 +69,12 @@ export function CartView({ pricingRules }: CartViewProps) {
           >
             <ArrowLeft size={20} />
           </button>
-          <h1 className="font-display text-[32px] font-black uppercase tracking-tight">
+          <h1 className="font-display text-[24px] sm:text-[32px] font-black uppercase tracking-tight">
             Mi Carrito <span className="text-(--gold)">({itemCount})</span>
           </h1>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 lg:gap-8 items-start">
           {/* ── Items list ──────────────────────────────── */}
           <div className="flex flex-col gap-4">
             {cart.map((item) => {
@@ -86,80 +86,82 @@ export function CartView({ pricingRules }: CartViewProps) {
               return (
                 <div
                   key={item.product.id}
-                  className="flex gap-5 p-5 bg-(--surf) border border-(--bd) items-center"
+                  className="flex flex-col sm:flex-row gap-4 sm:gap-5 p-4 sm:p-5 bg-(--surf) border border-(--bd) sm:items-center"
                 >
-                  {/* Image / stripe */}
-                  <Link
-                    href={`/catalogo/${item.product.slug}`}
-                    className="shrink-0 block w-24 h-24 overflow-hidden"
-                  >
-                    {item.product.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={item.product.imageUrl}
-                        alt={item.product.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className={`${stripe} w-full h-full`} />
-                    )}
-                  </Link>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[10px] tracking-[2px] uppercase text-muted mb-1">
-                      {catLabel} · {item.product.brand.name}
-                    </div>
-                    <Link href={`/catalogo/${item.product.slug}`}>
-                      <div className="font-display text-[18px] font-black uppercase leading-tight hover:text-(--gold) transition-colors duration-150 truncate">
-                        {item.product.name}
-                      </div>
+                  <div className="flex gap-4 sm:gap-5 sm:flex-1 min-w-0">
+                    {/* Image / stripe */}
+                    <Link
+                      href={`/catalogo/${item.product.slug}`}
+                      className="shrink-0 block w-20 h-20 sm:w-24 sm:h-24 overflow-hidden"
+                    >
+                      {item.product.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={item.product.imageUrl}
+                          alt={item.product.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className={`${stripe} w-full h-full`} />
+                      )}
                     </Link>
-                    <div className="text-(--gold) font-display text-[15px] font-bold mt-0.5">
-                      {formatCurrency(unitPrice)} c/u
-                    </div>
 
-                    {/* Qty controls */}
-                    <div className="flex items-center gap-3 mt-3">
-                      <div className="flex items-center border border-(--bd) bg-background">
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[10px] tracking-[2px] uppercase text-muted mb-1">
+                        {catLabel} · {item.product.brand.name}
+                      </div>
+                      <Link href={`/catalogo/${item.product.slug}`}>
+                        <div className="font-display text-[16px] sm:text-[18px] font-black uppercase leading-tight hover:text-(--gold) transition-colors duration-150 truncate">
+                          {item.product.name}
+                        </div>
+                      </Link>
+                      <div className="text-(--gold) font-display text-[15px] font-bold mt-0.5">
+                        {formatCurrency(unitPrice)} c/u
+                      </div>
+
+                      {/* Qty controls */}
+                      <div className="flex items-center gap-3 mt-3">
+                        <div className="flex items-center border border-(--bd) bg-background">
+                          <button
+                            onClick={() => updateQty(item.product.id, -1)}
+                            disabled={item.qty <= 1}
+                            className="px-3 py-2 text-muted hover:text-white disabled:opacity-30 transition-colors duration-150"
+                            aria-label="Disminuir cantidad"
+                          >
+                            <Minus size={13} />
+                          </button>
+                          <span className="font-display font-extrabold text-[15px] min-w-8 text-center">
+                            {item.qty}
+                          </span>
+                          <button
+                            onClick={() => updateQty(item.product.id, 1)}
+                            className="px-3 py-2 text-muted hover:text-white transition-colors duration-150"
+                            aria-label="Aumentar cantidad"
+                          >
+                            <Plus size={13} />
+                          </button>
+                        </div>
                         <button
-                          onClick={() => updateQty(item.product.id, -1)}
-                          disabled={item.qty <= 1}
-                          className="px-3 py-2 text-muted hover:text-white disabled:opacity-30 transition-colors duration-150"
-                          aria-label="Disminuir cantidad"
+                          onClick={() =>
+                            setPendingRemove({ id: item.product.id, name: item.product.name })
+                          }
+                          className="text-muted hover:text-red-400 transition-colors duration-200"
+                          aria-label="Eliminar producto"
                         >
-                          <Minus size={13} />
-                        </button>
-                        <span className="font-display font-extrabold text-[15px] min-w-8 text-center">
-                          {item.qty}
-                        </span>
-                        <button
-                          onClick={() => updateQty(item.product.id, 1)}
-                          className="px-3 py-2 text-muted hover:text-white transition-colors duration-150"
-                          aria-label="Aumentar cantidad"
-                        >
-                          <Plus size={13} />
+                          <Trash2 size={15} />
                         </button>
                       </div>
-                      <button
-                        onClick={() =>
-                          setPendingRemove({ id: item.product.id, name: item.product.name })
-                        }
-                        className="text-muted hover:text-red-400 transition-colors duration-200"
-                        aria-label="Eliminar producto"
-                      >
-                        <Trash2 size={15} />
-                      </button>
                     </div>
                   </div>
 
                   {/* Line total */}
-                  <div className="shrink-0 text-right">
-                    <div className="font-display text-[22px] font-black text-(--gold)">
+                  <div className="flex items-center justify-between sm:flex-col sm:items-end sm:justify-center shrink-0 pt-3 sm:pt-0 border-t border-(--bd) sm:border-t-0">
+                    <div className="font-display text-[20px] sm:text-[22px] font-black text-(--gold)">
                       {formatCurrency(lineTotal)}
                     </div>
                     {item.qty > 1 && (
-                      <div className="text-[11px] text-muted mt-0.5">
+                      <div className="text-[11px] text-muted sm:mt-0.5">
                         {item.qty} × {formatCurrency(unitPrice)}
                       </div>
                     )}
@@ -170,7 +172,7 @@ export function CartView({ pricingRules }: CartViewProps) {
           </div>
 
           {/* ── Order summary ────────────────────────────── */}
-          <div className="lg:sticky lg:top-24 bg-(--surf) border border-(--bd) p-7 flex flex-col gap-5">
+          <div className="lg:sticky lg:top-24 bg-(--surf) border border-(--bd) p-5 sm:p-7 flex flex-col gap-5">
             <h2 className="font-display text-[20px] font-black uppercase tracking-tight">
               Resumen del pedido
             </h2>

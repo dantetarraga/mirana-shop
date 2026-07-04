@@ -251,7 +251,7 @@ export function ProductsClient({
         title={`${total} producto${total !== 1 ? 's' : ''}`}
         align="center"
         side={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 justify-end">
             <Button variant="outline" size="md" onClick={handleExportPdf} disabled={exporting}>
               <FileDown size={15} className="mr-1.5" />
               {exporting ? 'Generando…' : 'Exportar PDF'}

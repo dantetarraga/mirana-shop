@@ -1,19 +1,23 @@
 'use client'
 
+import type { PaymentAccountData } from '@/features/settings/queries/payment-accounts.queries'
 import { Button } from '@/shared/components/ui/Button'
 import { formatCurrency } from '@/shared/lib/utils'
-import { BadgeCheck, Home, MessageCircle, ShoppingCart } from 'lucide-react'
+import { BadgeCheck, Home, Landmark, MessageCircle, ShoppingCart } from 'lucide-react'
 import Link from 'next/link'
 import { buildWhatsappOrderUrl, formatPhoneDisplay } from '../lib/whatsapp'
 import type { SuccessData } from '../types'
+import { CopyValue } from './PaymentSection'
 import { Step } from './ui'
 
 export function SuccessScreen({
   data,
   whatsappPhone,
+  accounts,
 }: {
   data: SuccessData
   whatsappPhone: string
+  accounts: PaymentAccountData[]
 }) {
   const whatsappUrl = buildWhatsappOrderUrl(data, whatsappPhone)
   const phoneDisplay = formatPhoneDisplay(whatsappPhone)
@@ -118,6 +122,41 @@ export function SuccessScreen({
             </Step>
             <Step n={3}>Una vez confirmado el pago, prepararemos y enviaremos tu pedido.</Step>
           </div>
+
+          {accounts.length > 0 && (
+            <div className="mb-5 border border-(--bd) bg-card">
+              <div className="px-4 py-3 border-b border-(--bd) flex items-center gap-2">
+                <Landmark size={14} className="text-(--gold)" />
+                <span className="text-[10px] tracking-[2px] uppercase text-muted">
+                  Cuentas para realizar tu pago
+                </span>
+              </div>
+              <ul className="divide-y divide-(--bd)">
+                {accounts.map((acc) => (
+                  <li key={acc.id} className="px-4 py-3 flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-display font-bold text-[13px] uppercase tracking-tight">
+                        {acc.name}
+                      </span>
+                      {acc.holder && <span className="text-[11px] text-muted">— {acc.holder}</span>}
+                    </div>
+                    <div className="flex flex-wrap gap-x-6 gap-y-1">
+                      <span className="text-[11px] text-muted">
+                        {acc.cci ? 'Cuenta: ' : 'Número: '}
+                        <CopyValue label="Número" value={acc.number} />
+                      </span>
+                      {acc.cci && (
+                        <span className="text-[11px] text-muted">
+                          CCI: <CopyValue label="CCI" value={acc.cci} />
+                        </span>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {whatsappPhone && (
             <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="block">
               <Button variant="accent" size="md" full>

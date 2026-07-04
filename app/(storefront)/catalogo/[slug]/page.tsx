@@ -53,9 +53,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   return (
     <>
-      <div className="px-6 py-12 max-w-360 mx-auto">
+      <div className="px-4 sm:px-6 py-8 sm:py-12 max-w-360 mx-auto">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-1.5 text-[11px] tracking-[1.5px] uppercase text-muted mb-10">
+        <nav className="flex flex-wrap items-center gap-1.5 text-[11px] tracking-[1.5px] uppercase text-muted mb-6 sm:mb-10">
           <Link href="/" className="hover:text-text transition-colors">
             Inicio
           </Link>
@@ -71,11 +71,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
             {catLabel}
           </Link>
           <ChevronRight size={12} />
-          <span className="text-text">{product.name}</span>
+          <span className="text-text truncate max-w-[160px] sm:max-w-none">{product.name}</span>
         </nav>
 
         {/* Main grid */}
-        <div className="grid grid-cols-2 gap-16 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-start">
           {/* Left — image */}
           <div
             className={`${stripe} glow-section glow-section--card aspect-square flex items-center justify-center relative`}
@@ -129,12 +129,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </div>
 
             {/* Price */}
-            <div className="flex items-baseline gap-4">
-              <div className="font-display text-[56px] font-black text-(--gold) leading-none">
+            <div className="flex items-baseline gap-4 flex-wrap">
+              <div className="font-display text-[40px] sm:text-[56px] font-black text-(--gold) leading-none">
                 S/ {(product.salePrice && product.salePrice < product.price ? product.salePrice : product.price).toFixed(2)}
               </div>
               {product.salePrice && product.salePrice < product.price && (
-                <div className="font-display text-[28px] font-bold text-muted line-through">
+                <div className="font-display text-[22px] sm:text-[28px] font-bold text-muted line-through">
                   S/ {product.price.toFixed(2)}
                 </div>
               )}

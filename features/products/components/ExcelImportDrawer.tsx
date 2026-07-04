@@ -262,7 +262,7 @@ export function ExcelImportDrawer({ categories, brands, onClose, onImport }: Pro
         className="w-175 max-w-full h-screen overflow-y-auto bg-surf border-l border-(--bd) flex flex-col"
       >
         {/* Header */}
-        <div className="px-7 py-6 flex justify-between items-start sticky top-0 z-5 bg-surf border-b border-(--bd)">
+        <div className="px-5 sm:px-7 py-6 flex justify-between items-start sticky top-0 z-5 bg-surf border-b border-(--bd)">
           <div>
             <div className={cls.label}>Importar productos</div>
             <div className="font-display text-[26px] font-black tracking-[-0.5px]">Subir Excel</div>
@@ -272,7 +272,7 @@ export function ExcelImportDrawer({ categories, brands, onClose, onImport }: Pro
           </Button>
         </div>
 
-        <div className="px-7 pt-6 pb-10 flex flex-col gap-5 flex-1">
+        <div className="px-5 sm:px-7 pt-6 pb-10 flex flex-col gap-5 flex-1">
           {/* Columnas esperadas */}
           <div className="bg-card border border-(--bd) p-4">
             <div className={cn(cls.label, 'mb-2')}>Columnas requeridas</div>
@@ -324,7 +324,7 @@ export function ExcelImportDrawer({ categories, brands, onClose, onImport }: Pro
             onDrop={onDrop}
             onClick={() => inputRef.current?.click()}
             className={cn(
-              'border-2 border-dashed p-10 flex flex-col items-center gap-3 cursor-pointer transition-colors',
+              'border-2 border-dashed p-6 sm:p-10 flex flex-col items-center gap-3 cursor-pointer transition-colors',
               dragging ? 'border-(--gold) bg-(--gold)/5' : 'border-(--bd) hover:border-(--gold)/50',
             )}
           >
@@ -351,7 +351,7 @@ export function ExcelImportDrawer({ categories, brands, onClose, onImport }: Pro
           {rows !== null && (
             <>
               {/* Resumen */}
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <div className="flex-1 bg-card border border-(--bd) p-4 flex items-center gap-3">
                   <CheckCircle2 size={20} className="text-emerald-400 shrink-0" />
                   <div>
@@ -441,7 +441,7 @@ export function ExcelImportDrawer({ categories, brands, onClose, onImport }: Pro
               </div>
 
               {/* Acciones */}
-              <div className="flex gap-2.5">
+              <div className="flex flex-wrap gap-2.5">
                 <Button
                   variant="accent"
                   size="md"

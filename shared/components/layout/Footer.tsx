@@ -24,18 +24,19 @@ const FOOTER_NAVIGATION = [
     links: [
       { label: 'Términos y Condiciones', href: '/terminos-y-condiciones' },
       { label: 'Política de Privacidad', href: '/politica-de-privacidad' },
+      { label: 'Libro de Reclamaciones', href: '/libro-de-reclamaciones' },
     ],
   },
 ] as const
 
 export function Footer() {
   return (
-    <footer className="border-t border-(--bd) pt-16 pb-8 shell grid gap-10 grid-cols-[1.4fr_1fr_1fr_1fr]">
-      <div>
-        <div className="font-display text-[36px] font-black tracking-[5px] mb-3.5">
+    <footer className="border-t border-(--bd) pt-12 md:pt-16 pb-8 shell grid gap-10 grid-cols-2 sm:grid-cols-3 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+      <div className="col-span-2 sm:col-span-3 md:col-span-1">
+        <div className="font-display text-[30px] md:text-[36px] font-black tracking-[5px] mb-3.5">
           MIRA<span className="text-(--gold)">NA</span>
         </div>
-        <p className="text-[13px] text-muted leading-[1.75] max-w-55">
+        <p className="text-[13px] text-muted leading-[1.75] max-w-sm md:max-w-55">
           Tu tienda premium de figuras de colección, sets LEGO y modelos a escala. Importación
           directa, calidad garantizada.
         </p>
@@ -59,9 +60,9 @@ export function Footer() {
         </div>
       ))}
 
-      <div className="col-span-full pt-7 border-t border-(--bd) flex justify-between items-center text-[12px] text-muted">
+      <div className="col-span-full pt-7 border-t border-(--bd) flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-[12px] text-muted">
         <span>© 2026 MIRANA. Todos los derechos reservados.</span>
-        <div className="flex gap-5">
+        <div className="flex gap-5 flex-wrap">
           {['Instagram', 'TikTok', 'YouTube', 'WhatsApp'].map((s) => (
             <a key={s} href="#" className="footer-link text-muted no-underline text-[12px] block">
               {s}

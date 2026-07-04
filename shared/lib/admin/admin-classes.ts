@@ -10,8 +10,8 @@ export const cls = {
   kpi: 'bg-card border border-(--bd) p-[20px_22px]',
 
   // Tabla
-  th: 'bg-surf font-display text-[11px] font-extrabold tracking-[1.5px] uppercase text-muted px-4 py-[13px] text-left border-b border-(--bd)',
-  td: 'px-4 py-[13px] border-b border-(--bd) text-[14px] align-middle',
+  th: 'bg-surf font-display text-[11px] font-extrabold tracking-[1.5px] uppercase text-muted px-2.5 sm:px-4 py-[13px] text-left border-b border-(--bd)',
+  td: 'px-2.5 sm:px-4 py-[13px] border-b border-(--bd) text-[14px] align-middle',
 
   // Tipografía
   label: 'text-[10px] tracking-[2px] uppercase text-(--gold) mb-1.5',

@@ -45,9 +45,9 @@ export async function RelatedProducts({
   const items = toProductCards(merged)
 
   return (
-    <section className="px-6 py-16 border-t border-(--bd)">
+    <section className="px-4 sm:px-6 py-10 sm:py-16 border-t border-(--bd)">
       <div className="max-w-360 mx-auto">
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <div className="text-[10px] font-bold tracking-[3px] uppercase mb-2.5 text-(--gold)">
             También te puede gustar
           </div>
@@ -56,7 +56,7 @@ export async function RelatedProducts({
           </h2>
         </div>
 
-        <div className="relative px-6">
+        <div className="relative px-0 sm:px-6">
           <ProductCarousel key={currentId} items={items} />
         </div>
       </div>

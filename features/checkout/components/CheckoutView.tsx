@@ -155,7 +155,7 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
   // ---------------------------------------------------------------------------
 
   if (success) {
-    return <SuccessScreen data={success} whatsappPhone={whatsappPhone} />
+    return <SuccessScreen data={success} whatsappPhone={whatsappPhone} accounts={paymentAccounts} />
   }
 
   // ---------------------------------------------------------------------------
@@ -215,7 +215,7 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 lg:gap-8 items-start">
           {/* ── Left column ──────────────────────────────── */}
           <div className="flex flex-col gap-6">
             {savedAddresses.length > 0 && (
@@ -239,7 +239,12 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
 
             <DeliveryForm register={register} errors={errors} />
 
-            <PaymentSection register={register} errors={errors} accounts={paymentAccounts} />
+            <PaymentSection
+              register={register}
+              errors={errors}
+              accounts={paymentAccounts}
+              whatsappPhone={whatsappPhone}
+            />
           </div>
 
           {/* ── Right column ───────────────────────────────── */}

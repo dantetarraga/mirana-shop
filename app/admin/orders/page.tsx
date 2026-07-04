@@ -59,9 +59,9 @@ export default async function OrdersPage({ searchParams }: PageProps) {
   const currentGroup = rawGroup ?? "";
 
   return (
-    <div className="px-8 pt-7 pb-12">
+    <div className="px-4 sm:px-6 lg:px-8 pt-5 lg:pt-7 pb-12">
       {/* KPIs */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <KpiCard label="Total pedidos" value={stats.total} valueClass="text-text" />
         <KpiCard label="Por procesar" value={stats.pending} valueClass="text-[#ffb84a]" />
         <KpiCard label="En tránsito" value={stats.shipped} valueClass="text-[#8b7cff]" />
@@ -80,7 +80,7 @@ export default async function OrdersPage({ searchParams }: PageProps) {
           paramName="q"
           extraParams={currentGroup ? { statusGroup: currentGroup } : {}}
         />
-        <div className="flex gap-1.5">
+        <div className="flex gap-1.5 flex-wrap">
           {FILTER_TABS.map(({ key, label }) => {
             const isActive = key === currentGroup;
             const href = buildUrl({
@@ -117,7 +117,7 @@ export default async function OrdersPage({ searchParams }: PageProps) {
 
       {/* Paginación */}
       {totalPages > 1 && (
-        <div className="flex gap-2 justify-end mt-4">
+        <div className="flex flex-wrap gap-2 justify-end mt-4">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
             <a
               key={p}

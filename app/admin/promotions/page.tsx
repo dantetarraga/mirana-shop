@@ -27,7 +27,7 @@ export default async function PromotionsPage() {
             <NewPromotionButton>Crear primera promoción</NewPromotionButton>
           </div>
         ) : (
-          <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(300px,1fr))]">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {promotions.map((promo) => (
               <PromotionCard key={promo.id} promotion={promo} />
             ))}

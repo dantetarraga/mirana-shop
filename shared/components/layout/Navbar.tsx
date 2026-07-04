@@ -38,27 +38,27 @@ export function Navbar() {
     : ''
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-200 flex items-center gap-8 shell transition-[background] duration-300 h-(--nh) bg-[rgba(3,4,9,.92)] backdrop-blur-[28px] border-b border-(--bd)">
-      <div className="flex items-center gap-7 shrink-0">
+    <nav className="fixed top-0 left-0 right-0 z-200 flex items-center gap-3 sm:gap-5 md:gap-8 shell transition-[background] duration-300 h-(--nh) bg-[rgba(3,4,9,.92)] backdrop-blur-[28px] border-b border-(--bd)">
+      <div className="flex items-center gap-4 md:gap-7 shrink-0">
         <Link
           href="/"
-          className="font-display font-black text-[26px] tracking-[5px] no-underline uppercase text-text"
+          className="font-display font-black text-[20px] sm:text-[24px] md:text-[26px] tracking-[3px] md:tracking-[5px] no-underline uppercase text-text"
         >
           MIRA<span className="text-(--gold)">NA</span>
         </Link>
         <Link
           href="/catalogo"
-          className="text-[12px] font-semibold tracking-[1px] no-underline uppercase transition-[color] duration-200 pb-1 border-b border-transparent text-muted hover:text-text"
+          className="hidden sm:inline-block text-[12px] font-semibold tracking-[1px] no-underline uppercase transition-[color] duration-200 pb-1 border-b border-transparent text-muted hover:text-text"
         >
           Catálogo
         </Link>
       </div>
 
-      <div className="flex-1 max-w-2xl mx-auto">
+      <div className="flex-1 min-w-0 max-w-2xl mx-auto">
         <SearchBox />
       </div>
 
-      <div className="flex items-center gap-3 shrink-0">
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         {/* Cart */}
         <Button variant="icon" size="md" onClick={() => setCartOpen(true)} className="relative">
           <ShoppingBag size={17} />

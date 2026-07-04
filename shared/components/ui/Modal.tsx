@@ -87,7 +87,7 @@ export function Modal({
       >
         {/* Header */}
         {(label || title || !hideClose) && (
-          <div className="px-8 pt-8 pb-0 shrink-0">
+          <div className="px-5 sm:px-8 pt-6 sm:pt-8 pb-0 shrink-0">
             {label && <div className={cn(cls.label, 'mb-1.5')}>{label}</div>}
             {title && (
               <div className="font-display text-[28px] font-black uppercase tracking-[-0.5px] leading-tight pr-8">
@@ -115,13 +115,13 @@ export function Modal({
 
         {/* Body — scrollable */}
         {children && (
-          <div className={cn('flex-1 overflow-y-auto px-8 pb-6', label || title ? 'pt-6' : 'pt-8')}>
+          <div className={cn('flex-1 overflow-y-auto px-5 sm:px-8 pb-6', label || title ? 'pt-6' : 'pt-6 sm:pt-8')}>
             {children}
           </div>
         )}
 
         {/* Footer */}
-        {footer && <div className="px-8 pb-8 pt-0 shrink-0 flex gap-2.5">{footer}</div>}
+        {footer && <div className="px-5 sm:px-8 pb-6 sm:pb-8 pt-0 shrink-0 flex flex-wrap gap-2.5">{footer}</div>}
       </div>
     </div>,
     document.body,

@@ -42,7 +42,7 @@ export function BrandsCarousel({ brands }: BrandsCarouselProps) {
             type="button"
             aria-label="Marcas anteriores"
             onClick={() => scrollByPage(-1)}
-            className="shrink-0 h-24 px-2.5 bg-transparent border-none text-muted transition-colors duration-200 hover:text-(--gold)"
+            className="shrink-0 h-18 sm:h-24 px-2 sm:px-2.5 bg-transparent border-none text-muted transition-colors duration-200 hover:text-(--gold)"
           >
             <ChevronLeft size={26} />
           </button>
@@ -60,7 +60,7 @@ export function BrandsCarousel({ brands }: BrandsCarouselProps) {
               key={b.id}
               href={`/catalogo?brand=${b.slug}`}
               title={b.name}
-              className="brand-item shrink-0 w-44 h-24 flex items-center justify-center border-r border-(--bd) px-6 no-underline first:border-l"
+              className="brand-item shrink-0 w-32 h-18 sm:w-44 sm:h-24 flex items-center justify-center border-r border-(--bd) px-4 sm:px-6 no-underline first:border-l"
             >
               {b.imageUrl ? (
                 <img src={b.imageUrl} alt={b.name} className="max-h-12 max-w-32 object-contain" />
@@ -85,7 +85,7 @@ export function BrandsCarousel({ brands }: BrandsCarouselProps) {
             type="button"
             aria-label="Más marcas"
             onClick={() => scrollByPage(1)}
-            className="shrink-0 h-24 px-2.5 bg-transparent border-none text-muted transition-colors duration-200 hover:text-(--gold)"
+            className="shrink-0 h-18 sm:h-24 px-2 sm:px-2.5 bg-transparent border-none text-muted transition-colors duration-200 hover:text-(--gold)"
           >
             <ChevronRight size={26} />
           </button>

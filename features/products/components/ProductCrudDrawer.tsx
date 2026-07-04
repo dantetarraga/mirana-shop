@@ -159,7 +159,7 @@ export function ProductCrudDrawer({
         </FormField>
 
         {/* ── SKU + Slug ── */}
-        <div className="grid grid-cols-2 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <FormField label="SKU" error={errors.sku?.message}>
             <input {...register('sku')} className={cls.input} placeholder="FIG-MAR-001" />
           </FormField>
@@ -169,7 +169,7 @@ export function ProductCrudDrawer({
         </div>
 
         {/* ── Precios ── */}
-        <div className="grid grid-cols-2 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <FormField label="Precio (S/)" error={errors.price?.message}>
             <input
               {...register('price', { valueAsNumber: true })}
@@ -206,7 +206,7 @@ export function ProductCrudDrawer({
         </FormField>
 
         {/* ── Categoría + Marca ── */}
-        <div className="grid grid-cols-2 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <FormField label="Categoría" error={errors.categoryId?.message}>
             <FilterMultiSelect
               singleSelect
@@ -317,7 +317,7 @@ export function ProductCrudDrawer({
         )}
 
         {/* ── Estado + Destacado ── */}
-        <div className="grid grid-cols-2 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <FormField label="Estado" error={errors.status?.message}>
             <FilterMultiSelect
               singleSelect

@@ -37,7 +37,7 @@ export function HomeCtaClient({ initial }: HomeCtaClientProps) {
             Vista previa
           </div>
           <div
-            className={`relative overflow-hidden px-8 py-9 flex items-center justify-between gap-6 [clip-path:polygon(0_0,calc(100%-14px)_0,100%_14px,100%_100%,14px_100%,0_calc(100%-14px))] ${
+            className={`relative overflow-hidden px-5 sm:px-8 py-6 sm:py-9 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 [clip-path:polygon(0_0,calc(100%-14px)_0,100%_14px,100%_100%,14px_100%,0_calc(100%-14px))] ${
               form.imageUrl ? 'bg-cover bg-center' : 'bg-(--gold)'
             }`}
             style={form.imageUrl ? { backgroundImage: `url(${form.imageUrl})` } : undefined}
@@ -86,7 +86,7 @@ export function HomeCtaClient({ initial }: HomeCtaClientProps) {
           />
         </FormField>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField label="Texto del botón">
             <input
               value={form.ctaLabel}
@@ -124,7 +124,7 @@ export function HomeCtaClient({ initial }: HomeCtaClientProps) {
           Mostrar la franja en el inicio
         </label>
 
-        <div className="flex items-center gap-2.5 mt-1">
+        <div className="flex items-center gap-2.5 mt-1 flex-wrap">
           <Button
             variant="accent"
             size="md"

@@ -50,7 +50,7 @@ function DocPanel({ doc, hidden }: { doc: LegalDoc; hidden: boolean }) {
 
       <RichTextEditor content={doc.content} onChange={setContent} />
 
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2.5 flex-wrap">
         <Button variant="accent" size="md" onClick={save} disabled={isPending || !title.trim()}>
           <Save size={15} className="mr-1.5" />
           {isPending ? 'Guardando…' : 'Guardar cambios'}
@@ -76,7 +76,7 @@ export function LegalPagesClient({ terms, privacy }: LegalPagesClientProps) {
       <PanelHeader label="Contenido" title="Páginas legales" align="center" />
 
       <div className="max-w-200">
-        <div className="flex border border-(--bd) mb-6">
+        <div className="flex flex-col sm:flex-row border border-(--bd) mb-6">
           {(
             [
               ['terms', 'Términos y Condiciones'],

@@ -78,7 +78,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
     collectionSlugs.length > 0
 
   return (
-    <div className="px-8 pt-7 pb-12">
+    <div className="px-4 sm:px-6 lg:px-8 pt-5 lg:pt-7 pb-12">
       {/* Filtros */}
       <div className="flex flex-col gap-2.5 mb-4.5">
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -205,7 +205,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
 
       {/* Paginación */}
       {totalPages > 1 && (
-        <div className="flex gap-2 justify-end mt-4">
+        <div className="flex flex-wrap gap-2 justify-end mt-4">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
             <a
               key={p}

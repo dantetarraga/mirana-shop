@@ -5,12 +5,12 @@ import type { PaymentAccountData } from '@/features/settings/queries/payment-acc
 import { Copy, Landmark, MessageCircle } from 'lucide-react'
 import type { FieldErrors, UseFormRegister } from 'react-hook-form'
 import { toast } from 'sonner'
+import { formatPhoneDisplay } from '../lib/whatsapp'
 
 const PAYMENT_METHODS = [
   {
     value: 'WHATSAPP_TRANSFER',
     label: 'Transferencia / Depósito',
-    desc: 'Realiza el pago y envíanos tu comprobante por WhatsApp para confirmar tu pedido.',
     icon: MessageCircle,
     available: true,
   },
@@ -21,9 +21,11 @@ type Props = {
   errors: FieldErrors<CheckoutInput>
   /** Cuentas administradas en /admin/settings */
   accounts: PaymentAccountData[]
+  /** Número administrado en /admin/settings */
+  whatsappPhone: string
 }
 
-function CopyValue({ label, value }: { label: string; value: string }) {
+export function CopyValue({ label, value }: { label: string; value: string }) {
   return (
     <button
       type="button"
@@ -42,7 +44,9 @@ function CopyValue({ label, value }: { label: string; value: string }) {
   )
 }
 
-export function PaymentSection({ register, errors, accounts }: Props) {
+export function PaymentSection({ register, errors, accounts, whatsappPhone }: Props) {
+  const phoneDisplay = formatPhoneDisplay(whatsappPhone)
+
   return (
     <section className="bg-card border border-(--bd) p-6">
       <h2 className="font-display font-black uppercase text-[14px] tracking-[2px] text-(--gold) mb-5">
@@ -50,7 +54,7 @@ export function PaymentSection({ register, errors, accounts }: Props) {
       </h2>
 
       <div className="flex flex-col gap-3">
-        {PAYMENT_METHODS.map(({ value, label, desc, icon: Icon, available }) => (
+        {PAYMENT_METHODS.map(({ value, label, icon: Icon, available }) => (
           <label
             key={value}
             className={`flex items-start gap-4 border p-4 cursor-pointer transition-colors duration-150 ${
@@ -78,7 +82,16 @@ export function PaymentSection({ register, errors, accounts }: Props) {
                   </span>
                 )}
               </div>
-              <p className="text-[12px] text-muted mt-0.5 leading-snug">{desc}</p>
+              <p className="text-[12px] text-muted mt-0.5 leading-snug">
+                Realiza el pago y envíanos tu comprobante por WhatsApp
+                {phoneDisplay ? (
+                  <>
+                    {' '}
+                    al <span className="font-semibold text-text">{phoneDisplay}</span>
+                  </>
+                ) : null}{' '}
+                para confirmar tu pedido.
+              </p>
             </div>
           </label>
         ))}

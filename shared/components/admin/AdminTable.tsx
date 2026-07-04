@@ -19,11 +19,11 @@ interface Props<T> {
 
 export function AdminTable<T>({ columns, data, keyExtractor, onRowClick, noWrapper }: Props<T>) {
   const table = (
-    <table className="w-full border-collapse">
+    <table className="w-full min-w-max border-collapse">
       <thead>
         <tr>
           {columns.map((col, i) => (
-            <th key={i} className={cn(cls.th, col.headerClassName)}>
+            <th key={i} className={cn(cls.th, 'whitespace-nowrap', col.headerClassName)}>
               {col.header}
             </th>
           ))}
@@ -47,6 +47,11 @@ export function AdminTable<T>({ columns, data, keyExtractor, onRowClick, noWrapp
     </table>
   )
 
-  if (noWrapper) return table
-  return <div className={cls.panelTable}>{table}</div>
+  // Contenedor con scroll horizontal: en mobile/tablet la tabla puede exceder
+  // el ancho de pantalla (muchas columnas) — se prefiere scroll contenido
+  // antes que comprimir columnas ilegibles o desbordar el layout de la página.
+  const scrollable = <div className="overflow-x-auto">{table}</div>
+
+  if (noWrapper) return scrollable
+  return <div className={cls.panelTable}>{scrollable}</div>
 }

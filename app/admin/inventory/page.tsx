@@ -97,9 +97,9 @@ export default async function InventoryPage({ searchParams }: PageProps) {
   }))
 
   return (
-    <div className="px-8 pt-7 pb-12">
+    <div className="px-4 sm:px-6 lg:px-8 pt-5 lg:pt-7 pb-12">
       {/* KPIs */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <KpiCard label="Unidades totales" value={stats.totalUnits} valueClass="text-text" />
         <KpiCard
           label="Valor inventario"
@@ -111,7 +111,7 @@ export default async function InventoryPage({ searchParams }: PageProps) {
       </div>
 
       {/* Tabs — GET navigation, sin estado cliente */}
-      <div className="flex gap-1.5 mb-5">
+      <div className="flex gap-1.5 mb-5 flex-wrap">
         {FILTER_TABS.map(({ key, label, href }) => (
           <a
             key={key}

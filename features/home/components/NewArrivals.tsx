@@ -17,13 +17,13 @@ export async function NewArrivals() {
   if (items.length === 0) return null
 
   return (
-    <section className="shell py-20">
-      <div className="flex justify-between items-end mb-8">
+    <section className="shell py-14 md:py-20">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-6 md:mb-8">
         <div>
           <div className="text-[10px] font-bold tracking-[3px] uppercase mb-2.5 text-(--gold)">
             Recién llegados
           </div>
-          <h2 className="font-display font-black uppercase tracking-[-1px] leading-[0.95] text-[clamp(36px,5vw,64px)]">
+          <h2 className="font-display font-black uppercase tracking-[-1px] leading-[0.95] text-[clamp(32px,5vw,64px)]">
             Novedades
           </h2>
         </div>

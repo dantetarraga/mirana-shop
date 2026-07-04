@@ -19,7 +19,7 @@ export function CategoryStrips({ categories }: CategoryStripsProps) {
   if (featured.length === 0) return null
 
   return (
-    <section className="shell pb-20 grid grid-cols-3 gap-4">
+    <section className="shell pb-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {featured.map((cat) => (
         <Link
           key={cat.id}
@@ -27,10 +27,10 @@ export function CategoryStrips({ categories }: CategoryStripsProps) {
           className="no-underline cursor-pointer block"
         >
           <div
-            className={`${STRIPE_MAP[cat.slug] ?? 'stripe-fig'} h-45 flex items-end px-6 pb-6 relative border border-(--bd) transition-[border-color] duration-[.25s]`}
+            className={`${STRIPE_MAP[cat.slug] ?? 'stripe-fig'} h-36 sm:h-40 lg:h-45 flex items-end px-5 sm:px-6 pb-5 sm:pb-6 relative border border-(--bd) transition-[border-color] duration-[.25s]`}
           >
             <div>
-              <div className="font-display text-[28px] font-black uppercase tracking-[-0.5px] text-text leading-none">
+              <div className="font-display text-[22px] sm:text-[25px] lg:text-[28px] font-black uppercase tracking-[-0.5px] text-text leading-none">
                 {cat.name}
               </div>
               {cat.description && (

@@ -24,7 +24,7 @@ export default async function CategoriesPage({ searchParams }: PageProps) {
 
   return (
     <div>
-      <div className="px-8 pt-6 flex items-center gap-3.5 mb-0">
+      <div className="px-8 pt-6 flex items-center gap-3.5 flex-wrap mb-0">
         <ServerSearchForm placeholder="Buscar categorías..." defaultValue={q ?? ''} paramName="q" />
         {q && (
           <Link

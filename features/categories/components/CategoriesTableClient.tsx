@@ -167,7 +167,7 @@ export function CategoriesTableClient({
         title={`${total} categoría${total !== 1 ? 's' : ''}`}
         align="center"
         side={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="md" onClick={() => setShowImport(true)}>
               <FileSpreadsheet size={15} className="mr-1.5" /> Importar Excel
             </Button>

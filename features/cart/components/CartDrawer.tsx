@@ -1,7 +1,7 @@
 'use client'
 
 import { useCartStore } from '@/features/cart/stores/cart.store'
-import { effectivePrice } from '@/features/checkout/lib/pricing'
+import { computeTotals, effectivePrice, type PricingRules } from '@/features/checkout/lib/pricing'
 import { getCategoryStripe } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
@@ -11,9 +11,14 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
-export function CartDrawer() {
+interface CartDrawerProps {
+  pricingRules: PricingRules
+}
+
+export function CartDrawer({ pricingRules }: CartDrawerProps) {
   const { cart, cartCount, cartOpen, setCartOpen, updateQty, removeItem } = useCartStore()
-  const total = cart.reduce((s, i) => s + effectivePrice(i.product) * i.qty, 0)
+  const subtotal = cart.reduce((s, i) => s + effectivePrice(i.product) * i.qty, 0)
+  const { shippingFree, discount, discountName, total } = computeTotals(subtotal, pricingRules)
   const [pendingRemove, setPendingRemove] = useState<{ id: string; name: string } | null>(null)
 
   useEffect(() => {
@@ -36,9 +41,9 @@ export function CartDrawer() {
         onClick={() => setCartOpen(false)}
         className="fixed inset-0 z-400 bg-black/65 backdrop-blur-[6px]"
       />
-      <div className="fixed top-0 right-0 bottom-0 z-401 w-105 bg-surf border-l border-(--bd) flex flex-col animate-slide-right">
+      <div className="fixed top-0 right-0 bottom-0 z-401 w-full sm:w-105 bg-surf border-l border-(--bd) flex flex-col animate-slide-right">
         {/* Header */}
-        <div className="px-7 py-6 border-b border-(--bd) flex items-center justify-between">
+        <div className="px-5 sm:px-7 py-6 border-b border-(--bd) flex items-center justify-between">
           <div className="font-display text-[26px] font-black uppercase tracking-[1px]">
             Carrito <span className="text-(--gold)">({cartCount})</span>
           </div>
@@ -48,7 +53,7 @@ export function CartDrawer() {
         </div>
 
         {/* Items */}
-        <div className="flex-1 overflow-y-auto px-7 py-5 flex flex-col gap-3.5">
+        <div className="flex-1 overflow-y-auto px-5 sm:px-7 py-5 flex flex-col gap-3.5">
           {cart.length === 0 ? (
             <div className="text-center py-16 px-5 text-muted">
               <div className="text-[52px] mb-4 opacity-25">🛒</div>
@@ -118,7 +123,13 @@ export function CartDrawer() {
 
         {/* Footer */}
         {cart.length > 0 && (
-          <div className="px-7 py-6 border-t border-(--bd)">
+          <div className="px-5 sm:px-7 py-6 border-t border-(--bd)">
+            {discount > 0 && (
+              <div className="flex justify-between items-baseline mb-2 text-[13px]">
+                <span className="text-muted">Descuento{discountName ? ` — ${discountName}` : ''}</span>
+                <span className="text-green-400 font-semibold">−{formatCurrency(discount)}</span>
+              </div>
+            )}
             <div className="flex justify-between items-baseline mb-5">
               <span className="text-[12px] uppercase tracking-[1px] text-muted">Total</span>
               <span className="font-display text-[38px] font-black text-(--gold)">
@@ -135,9 +146,13 @@ export function CartDrawer() {
                 <ArrowRight size={14} className="ml-1" strokeWidth={3} />
               </Link>
             </Button>
-            <div className="text-center mt-3 text-[12px] text-muted">
-              Envío gratis en pedidos +S/ 75
-            </div>
+            {pricingRules.freeShippingThreshold != null && (
+              <div className="text-center mt-3 text-[12px] text-muted">
+                {shippingFree
+                  ? '¡Envío gratis aplicado!'
+                  : `Envío gratis en pedidos +${formatCurrency(pricingRules.freeShippingThreshold)}`}
+              </div>
+            )}
           </div>
         )}
       </div>

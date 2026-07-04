@@ -2,6 +2,7 @@ generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
 }
+
 datasource db {
   provider = "postgresql"
 }
@@ -59,10 +60,10 @@ enum InventoryStockType {
 }
 
 enum PreorderStatus {
-  PENDING    // Reserva creada, pendiente de depósito
-  CONFIRMED  // Depósito recibido y confirmado
-  READY      // Producto en stock, listo para cobrar saldo
-  CONVERTED  // Convertida en Order final
+  PENDING // Reserva creada, pendiente de depósito
+  CONFIRMED // Depósito recibido y confirmado
+  READY // Producto en stock, listo para cobrar saldo
+  CONVERTED // Convertida en Order final
   CANCELLED
   EXPIRED
 }
@@ -81,9 +82,9 @@ model User {
   role          Role      @default(CUSTOMER)
 
   termsAcceptedAt DateTime? // Fecha en que aceptó los Términos y Condiciones
-  termsVersion    String?   // Versión del documento aceptado, e.g. "v1.0"
+  termsVersion    String? // Versión del documento aceptado, e.g. "v1.0"
 
-  profile  Profile?
+  profile   Profile?
   accounts  Account[]
   sessions  Session[]
   orders    Order[]
@@ -194,7 +195,7 @@ model Brand {
   id          String  @id @default(cuid())
   name        String  @unique
   slug        String  @unique
-  tagline     String?           /// Subtítulo corto para el carrusel: "TAMASHII NATIONS", "ARTFX SERIES"
+  tagline     String? /// Subtítulo corto para el carrusel: "TAMASHII NATIONS", "ARTFX SERIES"
   description String? @db.Text
   imageUrl    String?
 
@@ -207,21 +208,21 @@ model Brand {
 }
 
 model Product {
-  id             String        @id @default(cuid())
-  sku            String        @unique
-  slug           String        @unique
-  name           String
-  description    String        @db.Text
-  price          Decimal       @db.Decimal(10, 2)
-  salePrice      Decimal?      @db.Decimal(10, 2)
-  currency       String        @default("PEN")
-  status         ProductStatus @default(AVAILABLE)
-  featured       Boolean       @default(false)
-  categoryId     String
-  brandId        String
+  id          String        @id @default(cuid())
+  sku         String        @unique
+  slug        String        @unique
+  name        String
+  description String        @db.Text
+  price       Decimal       @db.Decimal(10, 2)
+  salePrice   Decimal?      @db.Decimal(10, 2)
+  currency    String        @default("PEN")
+  status      ProductStatus @default(AVAILABLE)
+  featured    Boolean       @default(false)
+  categoryId  String
+  brandId     String
 
-  category    Category           @relation(fields: [categoryId], references: [id])
-  brand       Brand              @relation(fields: [brandId], references: [id])
+  category    Category            @relation(fields: [categoryId], references: [id])
+  brand       Brand               @relation(fields: [brandId], references: [id])
   images      ProductImage[]
   inventory   ProductInventory?
   orderItems  OrderItem[]
@@ -277,7 +278,7 @@ model ProductImage {
 // ---------------------------------------------------------------------------
 
 model Cart {
-  id String @id @default(cuid())
+  id        String  @id @default(cuid())
   // Carrito anónimo: sessionId set, userId null. Carrito de cuenta: userId
   // set, sessionId null — nunca ambos a la vez (ver mergeAnonymousCartIntoUser),
   // así un dispositivo compartido no hereda el carrito de otra cuenta tras logout.
@@ -294,12 +295,12 @@ model Cart {
 }
 
 model CartItem {
-  id        String @id @default(cuid())
+  id        String  @id @default(cuid())
   cartId    String
-  cart      Cart   @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  quantity  Int    @default(1)
+  quantity  Int     @default(1)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -330,9 +331,9 @@ model Order {
   total         Decimal @db.Decimal(10, 2)
   currency      String  @default("PEN")
 
-  items    OrderItem[]
-  payment  Payment?
-  shipping ShippingAddress?
+  items     OrderItem[]
+  payment   Payment?
+  shipping  ShippingAddress?
   movements InventoryMovement[]
   preorder  Preorder?
 
@@ -350,7 +351,7 @@ model Order {
 }
 
 model OrderItem {
-  id        String  @id @default(cuid())
+  id        String @id @default(cuid())
   orderId   String
   productId String
 
@@ -394,7 +395,7 @@ model ShippingAddress {
   phone     String
   address   String
   district  String
-  city      String @default("Lima")
+  city      String  @default("Lima")
   reference String?
 }
 
@@ -403,7 +404,7 @@ model ShippingAddress {
 // ---------------------------------------------------------------------------
 
 model InventoryMovement {
-  id        String @id @default(cuid())
+  id        String  @id @default(cuid())
   productId String
   product   Product @relation(fields: [productId], references: [id])
   orderId   String?
@@ -524,11 +525,11 @@ model Promotion {
   active      Boolean       @default(true)
 
   /// Monto mínimo de compra (en PEN) para activar la promoción
-  minAmount       Decimal?  @db.Decimal(10, 2)
+  minAmount       Decimal? @db.Decimal(10, 2)
   /// Descuento fijo en soles (para FIXED_DISCOUNT)
-  discountAmount  Decimal?  @db.Decimal(10, 2)
+  discountAmount  Decimal? @db.Decimal(10, 2)
   /// Porcentaje de descuento 0-100 (para PERCENT_DISCOUNT)
-  discountPercent Decimal?  @db.Decimal(5, 2)
+  discountPercent Decimal? @db.Decimal(5, 2)
 
   startsAt DateTime?
   endsAt   DateTime?
@@ -544,14 +545,14 @@ model Promotion {
 // ---------------------------------------------------------------------------
 
 model Banner {
-  id       String  @id @default(cuid())
+  id       String    @id @default(cuid())
   title    String
   subtitle String?
   imageUrl String
   ctaLabel String?
   ctaHref  String?
-  position Int     @default(0)
-  active   Boolean @default(true)
+  position Int       @default(0)
+  active   Boolean   @default(true)
   startsAt DateTime?
   endsAt   DateTime?
 
@@ -646,4 +647,52 @@ model AdminAlert {
   createdAt DateTime @default(now())
 
   @@index([readAt, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Libro de Reclamaciones Virtual — formato exigido por Indecopi (Perú,
+// DS 011-2011-PCM). El cliente llena el formulario público sin necesidad de
+// cuenta; el admin responde desde /admin/complaints dentro del plazo legal.
+// ---------------------------------------------------------------------------
+
+enum ComplaintType {
+  RECLAMO
+  QUEJA
+}
+
+enum ComplaintStatus {
+  PENDING
+  ANSWERED
+}
+
+model Complaint {
+  id   String @id @default(cuid())
+  code String @unique
+
+  // Datos del consumidor reclamante
+  fullName  String
+  docType   String @default("DNI")
+  docNumber String
+  address   String
+  phone     String
+  email     String
+
+  // Datos del bien contratado
+  productDescription String   @db.Text
+  claimedAmount      Decimal? @db.Decimal(10, 2)
+
+  // Detalle de la reclamación
+  type    ComplaintType
+  detail  String        @db.Text
+  request String        @db.Text
+
+  // Gestión del proveedor (admin)
+  status      ComplaintStatus @default(PENDING)
+  response    String?         @db.Text
+  respondedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
 }

@@ -84,7 +84,7 @@ export default async function CatalogPage({ searchParams }: PageProps) {
         Catálogo
       </h1>
 
-      <div className="grid grid-cols-[280px_1fr] gap-8 items-start">
+      <div className="flex flex-col lg:grid lg:grid-cols-[260px_1fr] gap-6 lg:gap-8 lg:items-start">
         <CatalogFilters
           categories={categories}
           brands={brands}
@@ -122,7 +122,7 @@ export default async function CatalogPage({ searchParams }: PageProps) {
               <div className="text-[14px]">Prueba ajustando los filtros</div>
             </div>
           ) : (
-            <div className="grid gap-3.5 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
+            <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
               {items.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}

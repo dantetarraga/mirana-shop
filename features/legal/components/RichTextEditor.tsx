@@ -143,7 +143,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
     content,
     immediatelyRender: false,
     editorProps: {
-      attributes: { class: 'legal-prose min-h-90 px-6 py-5 outline-none' },
+      attributes: { class: 'legal-prose min-h-90 px-4 sm:px-6 py-5 outline-none' },
     },
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
   })

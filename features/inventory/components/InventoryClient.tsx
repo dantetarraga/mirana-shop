@@ -148,9 +148,9 @@ export function InventoryClient({
   ) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="px-8 pt-7 pb-12">
+    <div className="px-4 sm:px-6 lg:px-8 pt-5 lg:pt-7 pb-12">
       {/* KPIs — vienen del servidor */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <KpiCard label="Unidades totales" value={initialStats.totalUnits} valueClass="text-text" />
         <KpiCard
           label="Valor inventario"
@@ -170,7 +170,7 @@ export function InventoryClient({
       </div>
 
       {/* Tabs server-side — navegación GET */}
-      <div className="flex gap-1.5 mb-5">
+      <div className="flex gap-1.5 mb-5 flex-wrap">
         {FILTER_TABS.map(({ key, label }) => {
           const isActive = key === currentFilter
           return (

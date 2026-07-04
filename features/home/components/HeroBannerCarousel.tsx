@@ -1,12 +1,15 @@
 'use client'
 
 import type { BannerRow } from '@/features/banners/types'
+import useEmblaCarousel from 'embla-carousel-react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
 
-const PER_VIEW = 3
+// Mínimo de tarjetas a mostrar — si hay menos banners reales, se completa
+// con promos por defecto para no dejar la vista de escritorio incompleta.
+const MIN_CARDS = 3
 const AUTOPLAY_MS = 7000
 
 interface HeroBannerCarouselProps {
@@ -62,49 +65,81 @@ function toCards(banners: BannerRow[]): SlideCard[] {
     ctaLabel: b.ctaLabel ?? 'Comprar ahora',
     ctaHref: b.ctaHref ?? '/catalogo',
   }))
-  // Completa la primera vista con promos por defecto si hay menos de 3 banners
+  // Completa con promos por defecto si hay menos de MIN_CARDS banners reales
   for (const fb of FALLBACK_CARDS) {
-    if (cards.length >= PER_VIEW) break
+    if (cards.length >= MIN_CARDS) break
     cards.push(fb)
   }
   return cards
 }
 
-function chunk<T>(items: T[], size: number): T[][] {
-  const out: T[][] = []
-  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size))
-  return out
-}
-
 export function HeroBannerCarousel({ banners }: HeroBannerCarouselProps) {
-  const slides = chunk(toCards(banners), PER_VIEW)
-  const [page, setPage] = useState(0)
-  const total = slides.length
+  const cards = toCards(banners)
 
-  const goTo = useCallback(
-    (next: number) => setPage(((next % total) + total) % total),
-    [total],
-  )
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    align: 'start',
+    slidesToScroll: 1,
+    breakpoints: {
+      '(min-width: 768px)': { slidesToScroll: 3 },
+    },
+  })
+
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const [scrollSnaps, setScrollSnaps] = useState<number[]>([])
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return
+    setSelectedIndex(emblaApi.selectedScrollSnap())
+  }, [emblaApi])
 
   useEffect(() => {
-    if (total <= 1) return
-    const id = setInterval(() => setPage((p) => (p + 1) % total), AUTOPLAY_MS)
+    if (!emblaApi) return
+    const sync = () => {
+      setScrollSnaps(emblaApi.scrollSnapList())
+      onSelect()
+    }
+    sync()
+    emblaApi.on('select', onSelect)
+    emblaApi.on('reInit', sync)
+    return () => {
+      emblaApi.off('select', onSelect)
+      emblaApi.off('reInit', sync)
+    }
+  }, [emblaApi, onSelect])
+
+  useEffect(() => {
+    if (!emblaApi || scrollSnaps.length <= 1) return
+    const id = setInterval(() => {
+      if (emblaApi.canScrollNext()) emblaApi.scrollNext()
+      else emblaApi.scrollTo(0)
+    }, AUTOPLAY_MS)
     return () => clearInterval(id)
-  }, [total, page])
+  }, [emblaApi, scrollSnaps.length])
+
+  const scrollPrev = useCallback(() => {
+    if (!emblaApi) return
+    if (emblaApi.canScrollPrev()) emblaApi.scrollPrev()
+    else emblaApi.scrollTo(scrollSnaps.length - 1)
+  }, [emblaApi, scrollSnaps.length])
+
+  const scrollNext = useCallback(() => {
+    if (!emblaApi) return
+    if (emblaApi.canScrollNext()) emblaApi.scrollNext()
+    else emblaApi.scrollTo(0)
+  }, [emblaApi])
+
+  const scrollTo = useCallback((i: number) => emblaApi?.scrollTo(i), [emblaApi])
+  const showControls = scrollSnaps.length > 1
 
   return (
     <section className="relative overflow-hidden group/hero">
-      <div
-        className="flex transition-transform duration-500 ease-out"
-        style={{ transform: `translateX(-${page * 100}%)` }}
-      >
-        {slides.map((cards, i) => (
-          <div key={i} className="w-full shrink-0 grid grid-cols-1 md:grid-cols-3 gap-1 px-1 pt-1">
-            {cards.map((card) => (
+      <div className="overflow-hidden px-1 pt-1" ref={emblaRef}>
+        <div className="flex gap-1">
+          {cards.map((card, i) => (
+            <div key={card.key} className="flex-none w-full md:w-1/3 min-w-0">
               <Link
-                key={card.key}
                 href={card.ctaHref}
-                className={`relative overflow-hidden flex flex-col justify-end no-underline h-[clamp(300px,38vw,500px)] border border-(--bd) ${card.stripe ?? 'bg-card'}`}
+                className={`relative overflow-hidden flex flex-col justify-end no-underline h-[220px] sm:h-[280px] md:h-[clamp(300px,38vw,500px)] border border-(--bd) ${card.stripe ?? 'bg-card'}`}
               >
                 {card.imageUrl && (
                   <Image
@@ -112,37 +147,37 @@ export function HeroBannerCarousel({ banners }: HeroBannerCarouselProps) {
                     alt={card.title}
                     fill
                     sizes="(max-width: 768px) 100vw, 33vw"
-                    className="object-cover transition-transform duration-500 group-hover/hero:scale-100 hover:scale-[1.03]"
+                    className="object-cover transition-transform duration-500 hover:scale-[1.03]"
                     priority={i === 0}
                   />
                 )}
                 <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-[rgba(3,4,9,.85)] to-transparent pointer-events-none" />
 
-                <div className="relative z-1 p-7 pb-8 text-center">
-                  <h3 className="font-display font-black uppercase tracking-[-0.5px] leading-[0.95] text-[clamp(24px,2.2vw,34px)] mb-1.5">
+                <div className="relative z-1 p-5 pb-6 sm:p-7 sm:pb-8 text-center">
+                  <h3 className="font-display font-black uppercase tracking-[-0.5px] leading-[0.95] text-[clamp(20px,2.2vw,34px)] mb-1.5">
                     {card.title}
                   </h3>
                   {card.subtitle && (
-                    <p className="text-[13px] text-muted font-light mb-5 max-w-70 mx-auto">
+                    <p className="text-[13px] text-muted font-light mb-4 sm:mb-5 max-w-70 mx-auto">
                       {card.subtitle}
                     </p>
                   )}
-                  <span className="inline-block border border-(--bdh) bg-[rgba(3,4,9,.55)] px-8 py-3 font-display font-extrabold uppercase text-[13px] tracking-[2px] text-text transition-colors duration-200 hover:bg-(--gold) hover:text-black hover:border-(--gold)">
+                  <span className="inline-block border border-(--bdh) bg-[rgba(3,4,9,.55)] px-6 sm:px-8 py-2.5 sm:py-3 font-display font-extrabold uppercase text-[12px] sm:text-[13px] tracking-[2px] text-text transition-colors duration-200 hover:bg-(--gold) hover:text-black hover:border-(--gold)">
                     {card.ctaLabel}
                   </span>
                 </div>
               </Link>
-            ))}
-          </div>
-        ))}
+            </div>
+          ))}
+        </div>
       </div>
 
-      {total > 1 && (
+      {showControls && (
         <>
           <button
             type="button"
             aria-label="Banner anterior"
-            onClick={() => goTo(page - 1)}
+            onClick={scrollPrev}
             className="absolute left-3 top-1/2 -translate-y-1/2 z-2 w-11 h-11 flex items-center justify-center bg-[rgba(3,4,9,.6)] border border-(--bd) text-text backdrop-blur-sm transition-all duration-200 hover:border-(--gold) hover:text-(--gold)"
           >
             <ChevronLeft size={22} />
@@ -150,21 +185,21 @@ export function HeroBannerCarousel({ banners }: HeroBannerCarouselProps) {
           <button
             type="button"
             aria-label="Banner siguiente"
-            onClick={() => goTo(page + 1)}
+            onClick={scrollNext}
             className="absolute right-3 top-1/2 -translate-y-1/2 z-2 w-11 h-11 flex items-center justify-center bg-[rgba(3,4,9,.6)] border border-(--bd) text-text backdrop-blur-sm transition-all duration-200 hover:border-(--gold) hover:text-(--gold)"
           >
             <ChevronRight size={22} />
           </button>
 
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-2 flex gap-2">
-            {slides.map((_, i) => (
+            {scrollSnaps.map((_, i) => (
               <button
                 key={i}
                 type="button"
                 aria-label={`Ir a la vista ${i + 1}`}
-                onClick={() => goTo(i)}
+                onClick={() => scrollTo(i)}
                 className={`h-1.5 border-none transition-all duration-300 ${
-                  i === page ? 'w-7 bg-(--gold)' : 'w-3 bg-[rgba(228,240,255,.25)] hover:bg-[rgba(228,240,255,.5)]'
+                  i === selectedIndex ? 'w-7 bg-(--gold)' : 'w-3 bg-[rgba(228,240,255,.25)] hover:bg-[rgba(228,240,255,.5)]'
                 }`}
               />
             ))}

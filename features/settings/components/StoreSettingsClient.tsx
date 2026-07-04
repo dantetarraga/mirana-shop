@@ -94,7 +94,7 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
 
         {/* ── Métodos de pago ─────────────────────────────── */}
         <div className="bg-card border border-(--bd) p-5 flex flex-col gap-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-2">
               <Landmark size={15} className="text-(--gold)" />
               <span className="text-[10px] font-bold tracking-[2px] uppercase text-muted">

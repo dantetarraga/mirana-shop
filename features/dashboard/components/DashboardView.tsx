@@ -101,13 +101,13 @@ export function DashboardView({
   ]
 
   return (
-    <div className="px-8 pt-7 pb-12">
+    <div className="px-4 sm:px-6 lg:px-8 pt-5 lg:pt-7 pb-12">
       {/* KPIs */}
-      <div className="grid grid-cols-4 gap-4 mb-5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-5">
         {kpis.map((k) => (
           <KpiCard key={k.label} label={k.label} value={k.value}>
-            <div className="flex justify-between items-center mb-2.5">
-              <span className="font-display font-extrabold text-[12px] text-[#3fcf7f]">
+            <div className="flex justify-between items-center mb-2.5 min-w-0">
+              <span className="font-display font-extrabold text-[12px] text-[#3fcf7f] truncate">
                 {k.delta}
               </span>
             </div>
@@ -117,7 +117,7 @@ export function DashboardView({
       </div>
 
       {/* Área + Donut */}
-      <div className="grid grid-cols-[1.55fr_1fr] gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-[1.55fr_1fr] gap-4 mb-4">
         <div className={cls.panel}>
           <PanelHeader
             label="Ingresos"
@@ -158,7 +158,7 @@ export function DashboardView({
       </div>
 
       {/* Barras + Top productos */}
-      <div className="grid grid-cols-[1.55fr_1fr] gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-[1.55fr_1fr] gap-4 mb-4">
         <div className={cls.panel}>
           <PanelHeader
             label="Rendimiento"
@@ -246,53 +246,55 @@ export function DashboardView({
           </Link>
         </div>
 
-        <table className="w-full">
-          <thead>
-            <tr>
-              {['Código', 'Cliente', 'Productos', 'Total', 'Estado', 'Fecha'].map((h) => (
-                <th key={h} className={cls.th}>
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {recentOrders.length === 0 ? (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-150">
+            <thead>
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-muted text-[13px]">
-                  Sin pedidos registrados aún
-                </td>
+                {['Código', 'Cliente', 'Productos', 'Total', 'Estado', 'Fecha'].map((h) => (
+                  <th key={h} className={cls.th}>
+                    {h}
+                  </th>
+                ))}
               </tr>
-            ) : (
-              recentOrders.map((o) => {
-                const cfg = ORDER_STATUS_CFG[o.status] ?? { label: o.status, color: 'text-muted' }
-                return (
-                  <tr key={o.id} className="hover:bg-white/2 transition-colors">
-                    <td className={cn(cls.td, cls.monoGold)}>{o.code}</td>
-                    <td className={cls.td}>
-                      <div className="text-[14px]">{orderCustomer(o)}</div>
-                      {o.shipping?.district && (
-                        <div className="text-[11px] text-muted">{o.shipping.district}</div>
-                      )}
-                    </td>
-                    <td className={cn(cls.td, cls.mono)}>
-                      {o._count.items} {o._count.items === 1 ? 'ítem' : 'ítems'}
-                    </td>
-                    <td className={cn(cls.td, cls.valGold)}>S/ {o.total.toFixed(2)}</td>
-                    <td className={cls.td}>
-                      <span className={cn('text-[12px] font-semibold tracking-wide', cfg.color)}>
-                        {cfg.label}
-                      </span>
-                    </td>
-                    <td className={cn(cls.td, cls.mono, 'text-muted')}>
-                      {formatDate(new Date(o.createdAt), 'd MMM yyyy')}
-                    </td>
-                  </tr>
-                )
-              })
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {recentOrders.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-muted text-[13px]">
+                    Sin pedidos registrados aún
+                  </td>
+                </tr>
+              ) : (
+                recentOrders.map((o) => {
+                  const cfg = ORDER_STATUS_CFG[o.status] ?? { label: o.status, color: 'text-muted' }
+                  return (
+                    <tr key={o.id} className="hover:bg-white/2 transition-colors">
+                      <td className={cn(cls.td, cls.monoGold)}>{o.code}</td>
+                      <td className={cls.td}>
+                        <div className="text-[14px]">{orderCustomer(o)}</div>
+                        {o.shipping?.district && (
+                          <div className="text-[11px] text-muted">{o.shipping.district}</div>
+                        )}
+                      </td>
+                      <td className={cn(cls.td, cls.mono)}>
+                        {o._count.items} {o._count.items === 1 ? 'ítem' : 'ítems'}
+                      </td>
+                      <td className={cn(cls.td, cls.valGold)}>S/ {o.total.toFixed(2)}</td>
+                      <td className={cls.td}>
+                        <span className={cn('text-[12px] font-semibold tracking-wide', cfg.color)}>
+                          {cfg.label}
+                        </span>
+                      </td>
+                      <td className={cn(cls.td, cls.mono, 'text-muted')}>
+                        {formatDate(new Date(o.createdAt), 'd MMM yyyy')}
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   )

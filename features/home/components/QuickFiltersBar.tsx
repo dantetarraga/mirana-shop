@@ -19,12 +19,12 @@ export function QuickFiltersBar({ categories }: QuickFiltersBarProps) {
 
   return (
     <div className="bg-surf border-b border-(--bd)">
-      <div className="shell flex items-center justify-center gap-1 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="shell flex items-center justify-start sm:justify-center gap-1 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {QUICK_LINKS.map(({ label, href, accent }) => (
           <Link
             key={label}
             href={href}
-            className={`px-5 py-3.5 text-[12px] font-display font-bold tracking-[1.5px] uppercase no-underline transition-colors duration-200 hover:bg-(--sub) ${
+            className={`shrink-0 px-4 sm:px-5 py-3.5 text-[12px] font-display font-bold tracking-[1.5px] uppercase no-underline transition-colors duration-200 hover:bg-(--sub) ${
               accent ? 'text-(--gold) hover:text-(--gl)' : 'text-text hover:text-(--gold)'
             }`}
           >
@@ -40,7 +40,7 @@ export function QuickFiltersBar({ categories }: QuickFiltersBarProps) {
           <Link
             key={cat.id}
             href={`/catalogo?cat=${cat.slug}`}
-            className="px-5 py-3.5 text-[12px] font-display font-bold tracking-[1.5px] uppercase no-underline text-muted transition-colors duration-200 hover:text-text hover:bg-(--sub)"
+            className="shrink-0 px-4 sm:px-5 py-3.5 text-[12px] font-display font-bold tracking-[1.5px] uppercase no-underline text-muted transition-colors duration-200 hover:text-text hover:bg-(--sub)"
           >
             {cat.name}
           </Link>

@@ -14,7 +14,7 @@ export async function CTABand() {
   return (
     <div
       className={cn(
-        'relative shell-m mb-20 shell py-12 flex items-center justify-between gap-6 overflow-hidden',
+        'relative shell-m mb-20 shell py-10 sm:py-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 overflow-hidden',
         '[clip-path:polygon(0_0,calc(100%-16px)_0,100%_16px,100%_100%,16px_100%,0_calc(100%-16px))]',
         hasImage ? 'bg-cover bg-center' : 'bg-(--gold)',
       )}
@@ -26,7 +26,7 @@ export async function CTABand() {
       <div className="relative z-1">
         <h2
           className={cn(
-            'font-display font-black uppercase leading-[0.95] tracking-[-1px] text-[clamp(28px,4vw,54px)] whitespace-pre-line',
+            'font-display font-black uppercase leading-[0.95] tracking-[-1px] text-[clamp(26px,4vw,54px)] whitespace-pre-line',
             hasImage ? 'text-white' : 'text-black',
           )}
         >

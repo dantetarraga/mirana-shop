@@ -88,7 +88,7 @@ export function SearchBox() {
           }}
           placeholder="Buscar figura, marca, categoría…"
           autoComplete="off"
-          className="flex-1 bg-transparent border-none outline-none font-sans text-[14px] text-text placeholder:text-muted"
+          className="flex-1 min-w-0 w-full bg-transparent border-none outline-none font-sans text-[14px] text-text placeholder:text-muted placeholder:truncate"
         />
         {query && (
           <button
