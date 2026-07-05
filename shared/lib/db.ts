@@ -1,5 +1,5 @@
 import { PrismaClient } from "../../generated/prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
 // ---------------------------------------------------------------------------
 // Singleton de PrismaClient para Next.js.
@@ -12,7 +12,16 @@ function createPrismaClient() {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) throw new Error("DATABASE_URL no definida");
 
-  const adapter = new PrismaPg({ connectionString });
+  const url = new URL(connectionString);
+  const adapter = new PrismaMariaDb({
+    host: url.hostname,
+    port: url.port ? Number(url.port) : 3306,
+    user: decodeURIComponent(url.username),
+    password: decodeURIComponent(url.password),
+    database: url.pathname.replace(/^\//, ""),
+    decimalAsNumber: true,
+    bigIntAsNumber: true,
+  });
   return new PrismaClient({ adapter });
 }
 

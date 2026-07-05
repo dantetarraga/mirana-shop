@@ -42,8 +42,8 @@ export async function getBrands(filters: BrandFilters = {}): Promise<BrandRow[]>
       ...(search
         ? {
             OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { slug: { contains: search, mode: 'insensitive' } },
+              { name: { contains: search } },
+              { slug: { contains: search } },
             ],
           }
         : {}),
@@ -65,8 +65,8 @@ export async function countBrands(filters: Pick<BrandFilters, 'search'> = {}): P
       ...(search
         ? {
             OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { slug: { contains: search, mode: 'insensitive' } },
+              { name: { contains: search } },
+              { slug: { contains: search } },
             ],
           }
         : {}),

@@ -418,8 +418,8 @@ export async function searchAvailableProducts(
         deletedAt: null,
         id: excludeIds.length > 0 ? { notIn: excludeIds } : undefined,
         OR: [
-          { name: { contains: query.trim(), mode: 'insensitive' } },
-          { sku: { contains: query.trim(), mode: 'insensitive' } },
+          { name: { contains: query.trim() } },
+          { sku: { contains: query.trim() } },
         ],
       },
       select: {

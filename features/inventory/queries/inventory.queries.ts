@@ -65,10 +65,10 @@ export async function getInventoryStats(): Promise<{
   ])
 
   const valueAgg = await db.$queryRaw<{ total_value: number }[]>`
-    SELECT COALESCE(SUM(pi."availableStock" * p.price), 0)::float AS total_value
-    FROM "ProductInventory" pi
-    JOIN "Product" p ON p.id = pi."productId"
-    WHERE p."deletedAt" IS NULL
+    SELECT CAST(COALESCE(SUM(pi.availableStock * p.price), 0) AS DOUBLE) AS total_value
+    FROM \`ProductInventory\` pi
+    JOIN \`Product\` p ON p.id = pi.productId
+    WHERE p.deletedAt IS NULL
   `
 
   return {

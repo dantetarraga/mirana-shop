@@ -58,8 +58,8 @@ export async function getCollections(filters: CollectionFilters = {}): Promise<C
       ...(search
         ? {
             OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { slug: { contains: search, mode: 'insensitive' } },
+              { name: { contains: search } },
+              { slug: { contains: search } },
             ],
           }
         : {}),
@@ -84,8 +84,8 @@ export async function countCollections(
       ...(search
         ? {
             OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { slug: { contains: search, mode: 'insensitive' } },
+              { name: { contains: search } },
+              { slug: { contains: search } },
             ],
           }
         : {}),

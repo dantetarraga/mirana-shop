@@ -105,7 +105,7 @@ function buildWhere(filters: Omit<ProductFilters, 'take' | 'skip'>) {
     collections: colSlugs?.length
       ? { some: { collection: { slug: { in: colSlugs } } } }
       : undefined,
-    name: search ? { contains: search, mode: 'insensitive' as const } : undefined,
+    name: search ? { contains: search } : undefined,
     salePrice: onSale ? { not: null } : undefined,
     ...inventoryWhere,
     ...priceWhere,

@@ -30,10 +30,10 @@ export async function getComplaints(filters: ComplaintFilters = {}): Promise<Com
       status: status ?? undefined,
       OR: search
         ? [
-            { code: { contains: search, mode: 'insensitive' } },
-            { fullName: { contains: search, mode: 'insensitive' } },
-            { email: { contains: search, mode: 'insensitive' } },
-            { docNumber: { contains: search, mode: 'insensitive' } },
+            { code: { contains: search } },
+            { fullName: { contains: search } },
+            { email: { contains: search } },
+            { docNumber: { contains: search } },
           ]
         : undefined,
     },
@@ -52,10 +52,10 @@ export async function countComplaints(filters: Omit<ComplaintFilters, 'take' | '
       status: status ?? undefined,
       OR: search
         ? [
-            { code: { contains: search, mode: 'insensitive' } },
-            { fullName: { contains: search, mode: 'insensitive' } },
-            { email: { contains: search, mode: 'insensitive' } },
-            { docNumber: { contains: search, mode: 'insensitive' } },
+            { code: { contains: search } },
+            { fullName: { contains: search } },
+            { email: { contains: search } },
+            { docNumber: { contains: search } },
           ]
         : undefined,
     },

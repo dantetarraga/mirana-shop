@@ -71,11 +71,11 @@ export async function getOrders(filters: OrderFilters = {}): Promise<OrderListIt
       paymentStatus: paymentStatus ?? undefined,
       OR: search
         ? [
-            { code: { contains: search, mode: 'insensitive' } },
-            { user: { name: { contains: search, mode: 'insensitive' } } },
-            { user: { email: { contains: search, mode: 'insensitive' } } },
-            { guestEmail: { contains: search, mode: 'insensitive' } },
-            { shipping: { fullName: { contains: search, mode: 'insensitive' } } },
+            { code: { contains: search } },
+            { user: { name: { contains: search } } },
+            { user: { email: { contains: search } } },
+            { guestEmail: { contains: search } },
+            { shipping: { fullName: { contains: search } } },
           ]
         : undefined,
     },
@@ -104,8 +104,8 @@ export async function getOrdersByEmail(email: string, take = 20): Promise<OrderL
   return db.order.findMany({
     where: {
       OR: [
-        { guestEmail: { equals: email, mode: 'insensitive' } },
-        { user: { email: { equals: email, mode: 'insensitive' } } },
+        { guestEmail: { equals: email } },
+        { user: { email: { equals: email } } },
       ],
     },
     select: ORDER_LIST_SELECT,
@@ -129,9 +129,9 @@ export async function countOrders(filters: Omit<OrderFilters, 'take' | 'skip'> =
       paymentStatus: paymentStatus ?? undefined,
       OR: search
         ? [
-            { code: { contains: search, mode: 'insensitive' } },
-            { user: { name: { contains: search, mode: 'insensitive' } } },
-            { guestEmail: { contains: search, mode: 'insensitive' } },
+            { code: { contains: search } },
+            { user: { name: { contains: search } } },
+            { guestEmail: { contains: search } },
           ]
         : undefined,
     },
@@ -173,12 +173,12 @@ export async function getOrderStats(): Promise<{
 export async function getRevenueByMonth(): Promise<{ m: string; v: number }[]> {
   const rows = await db.$queryRaw<{ month: Date; revenue: number }[]>`
     SELECT
-      DATE_TRUNC('month', "createdAt") AS month,
-      COALESCE(SUM(total)::float, 0)   AS revenue
-    FROM "Order"
-    WHERE "createdAt" >= NOW() - INTERVAL '12 months'
+      CAST(DATE_FORMAT(createdAt, '%Y-%m-01') AS DATE) AS month,
+      CAST(COALESCE(SUM(total), 0) AS DOUBLE)          AS revenue
+    FROM \`Order\`
+    WHERE createdAt >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
       AND status NOT IN ('CANCELLED', 'REFUNDED')
-    GROUP BY DATE_TRUNC('month', "createdAt")
+    GROUP BY DATE_FORMAT(createdAt, '%Y-%m-01')
     ORDER BY month ASC
   `
   return rows.map((r) => ({
@@ -191,11 +191,11 @@ export async function getRevenueByMonth(): Promise<{ m: string; v: number }[]> {
 export async function getOrdersByDay(days = 14): Promise<{ d: string; v: number }[]> {
   const rows = await db.$queryRaw<{ day: Date; count: number }[]>`
     SELECT
-      DATE_TRUNC('day', "createdAt") AS day,
-      COUNT(*)::int                  AS count
-    FROM "Order"
-    WHERE "createdAt" >= NOW() - INTERVAL '1 day' * ${days}
-    GROUP BY DATE_TRUNC('day', "createdAt")
+      DATE(createdAt)              AS day,
+      CAST(COUNT(*) AS SIGNED)     AS count
+    FROM \`Order\`
+    WHERE createdAt >= DATE_SUB(NOW(), INTERVAL ${days} DAY)
+    GROUP BY DATE(createdAt)
     ORDER BY day ASC
   `
   // Rellenar días sin pedidos con 0
@@ -215,11 +215,11 @@ export async function getOrdersByDay(days = 14): Promise<{ d: string; v: number 
 export async function getOrdersByCategory(): Promise<{ name: string; value: number }[]> {
   const rows = await db.$queryRaw<{ category: string; total: number }[]>`
     SELECT
-      c.name              AS category,
-      COUNT(oi.id)::int   AS total
-    FROM "OrderItem" oi
-    JOIN "Product"  p ON p.id = oi."productId"
-    JOIN "Category" c ON c.id = p."categoryId"
+      c.name                      AS category,
+      CAST(COUNT(oi.id) AS SIGNED) AS total
+    FROM \`OrderItem\` oi
+    JOIN \`Product\`  p ON p.id = oi.productId
+    JOIN \`Category\` c ON c.id = p.categoryId
     GROUP BY c.id, c.name
     ORDER BY total DESC
     LIMIT 5

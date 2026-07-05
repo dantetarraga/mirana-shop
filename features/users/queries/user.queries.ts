@@ -12,18 +12,18 @@ async function getUserIdsBySegment(segment: UserSegment): Promise<string[] | nul
 
   if (segment === 'vip') {
     const rows = await db.$queryRaw<{ id: string }[]>`
-      SELECT id FROM "User"
-      WHERE "deletedAt" IS NULL
-        AND (SELECT COUNT(*) FROM "Order" WHERE "userId" = "User".id) >= 10
+      SELECT id FROM \`User\`
+      WHERE deletedAt IS NULL
+        AND (SELECT COUNT(*) FROM \`Order\` WHERE userId = \`User\`.id) >= 10
     `
     return rows.map((r) => r.id)
   }
 
   if (segment === 'activo') {
     const rows = await db.$queryRaw<{ id: string }[]>`
-      SELECT id FROM "User"
-      WHERE "deletedAt" IS NULL
-        AND (SELECT COUNT(*) FROM "Order" WHERE "userId" = "User".id) BETWEEN 1 AND 9
+      SELECT id FROM \`User\`
+      WHERE deletedAt IS NULL
+        AND (SELECT COUNT(*) FROM \`Order\` WHERE userId = \`User\`.id) BETWEEN 1 AND 9
     `
     return rows.map((r) => r.id)
   }
@@ -54,8 +54,8 @@ export async function getUsers(filters: UserFilters = {}): Promise<UserRow[]> {
       ...(search
         ? {
             OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { email: { contains: search, mode: 'insensitive' } },
+              { name: { contains: search } },
+              { email: { contains: search } },
             ],
           }
         : {}),
@@ -80,8 +80,8 @@ export async function countUsers(filters: Omit<UserFilters, 'take' | 'skip'> = {
       ...(search
         ? {
             OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { email: { contains: search, mode: 'insensitive' } },
+              { name: { contains: search } },
+              { email: { contains: search } },
             ],
           }
         : {}),

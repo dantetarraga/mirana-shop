@@ -42,8 +42,8 @@ export async function getCategories(filters: CategoryFilters = {}): Promise<Cate
       ...(search
         ? {
             OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { slug: { contains: search, mode: 'insensitive' } },
+              { name: { contains: search } },
+              { slug: { contains: search } },
             ],
           }
         : {}),
@@ -67,8 +67,8 @@ export async function countCategories(
       ...(search
         ? {
             OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { slug: { contains: search, mode: 'insensitive' } },
+              { name: { contains: search } },
+              { slug: { contains: search } },
             ],
           }
         : {}),
