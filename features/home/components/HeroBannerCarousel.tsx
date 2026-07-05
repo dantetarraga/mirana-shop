@@ -7,9 +7,9 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
 
-// Mínimo de tarjetas a mostrar — si hay menos banners reales, se completa
-// con promos por defecto para no dejar la vista de escritorio incompleta.
-const MIN_CARDS = 3
+// A partir de este número de banners reales se usa carrusel; por debajo,
+// grid estático que se acomoda al número de tarjetas disponibles.
+const CAROUSEL_THRESHOLD = 3
 const AUTOPLAY_MS = 7000
 
 interface HeroBannerCarouselProps {
@@ -20,62 +20,70 @@ type SlideCard = {
   key: string
   title: string
   subtitle: string | null
-  imageUrl: string | null
+  imageUrl: string
   ctaLabel: string
   ctaHref: string
-  stripe?: string
 }
 
-const FALLBACK_CARDS: SlideCard[] = [
-  {
-    key: 'fb-preorder',
-    title: 'Preventas Exclusivas',
-    subtitle: 'Asegura tu figura antes que nadie',
-    imageUrl: null,
-    ctaLabel: 'Ver preventas',
-    ctaHref: '/catalogo?avail=preorder',
-    stripe: 'stripe-fig',
-  },
-  {
-    key: 'fb-new',
-    title: 'Recién Llegados',
-    subtitle: 'Lo último en figuras y coleccionables',
-    imageUrl: null,
-    ctaLabel: 'Ver novedades',
-    ctaHref: '/catalogo?sort=newest',
-    stripe: 'stripe-lego',
-  },
-  {
-    key: 'fb-stock',
-    title: 'Entrega Inmediata',
-    subtitle: 'Productos en stock listos para enviar',
-    imageUrl: null,
-    ctaLabel: 'Comprar ahora',
-    ctaHref: '/catalogo?avail=in_stock',
-    stripe: 'stripe-veh',
-  },
-]
-
 function toCards(banners: BannerRow[]): SlideCard[] {
-  const cards: SlideCard[] = banners.map((b) => ({
+  return banners.map((b) => ({
     key: b.id,
     title: b.title,
     subtitle: b.subtitle,
-    imageUrl: b.imageUrl || null,
+    imageUrl: b.imageUrl,
     ctaLabel: b.ctaLabel ?? 'Comprar ahora',
     ctaHref: b.ctaHref ?? '/catalogo',
   }))
-  // Completa con promos por defecto si hay menos de MIN_CARDS banners reales
-  for (const fb of FALLBACK_CARDS) {
-    if (cards.length >= MIN_CARDS) break
-    cards.push(fb)
-  }
-  return cards
 }
 
-export function HeroBannerCarousel({ banners }: HeroBannerCarouselProps) {
-  const cards = toCards(banners)
+function BannerCard({ card, priority, className }: { card: SlideCard; priority: boolean; className?: string }) {
+  return (
+    <Link
+      href={card.ctaHref}
+      className={`relative overflow-hidden flex flex-col justify-end no-underline h-[220px] sm:h-[280px] md:h-[clamp(300px,38vw,500px)] border border-(--bd) bg-card ${className ?? ''}`}
+    >
+      <Image
+        src={card.imageUrl}
+        alt={card.title}
+        fill
+        sizes="(max-width: 768px) 100vw, 33vw"
+        className="object-cover transition-transform duration-500 hover:scale-[1.03]"
+        priority={priority}
+      />
+      <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-[rgba(3,4,9,.85)] to-transparent pointer-events-none" />
 
+      <div className="relative z-1 p-5 pb-6 sm:p-7 sm:pb-8 text-center">
+        <h3 className="font-display font-black uppercase tracking-[-0.5px] leading-[0.95] text-[clamp(20px,2.2vw,34px)] mb-1.5">
+          {card.title}
+        </h3>
+        {card.subtitle && (
+          <p className="text-[13px] text-muted font-light mb-4 sm:mb-5 max-w-70 mx-auto">{card.subtitle}</p>
+        )}
+        <span className="inline-block border border-(--bdh) bg-[rgba(3,4,9,.55)] px-6 sm:px-8 py-2.5 sm:py-3 font-display font-extrabold uppercase text-[12px] sm:text-[13px] tracking-[2px] text-text transition-colors duration-200 hover:bg-(--gold) hover:text-black hover:border-(--gold)">
+          {card.ctaLabel}
+        </span>
+      </div>
+    </Link>
+  )
+}
+
+function gridColsClass(count: number) {
+  if (count === 1) return 'grid-cols-1'
+  if (count === 2) return 'grid-cols-1 sm:grid-cols-2'
+  return 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'
+}
+
+function HeroBannerGrid({ cards }: { cards: SlideCard[] }) {
+  return (
+    <section className={`grid ${gridColsClass(cards.length)} gap-1 px-1 pt-1`}>
+      {cards.map((card, i) => (
+        <BannerCard key={card.key} card={card} priority={i === 0} />
+      ))}
+    </section>
+  )
+}
+
+function HeroBannerSlider({ cards }: { cards: SlideCard[] }) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: 'start',
     slidesToScroll: 1,
@@ -137,36 +145,7 @@ export function HeroBannerCarousel({ banners }: HeroBannerCarouselProps) {
         <div className="flex gap-1">
           {cards.map((card, i) => (
             <div key={card.key} className="flex-none w-full md:w-1/3 min-w-0">
-              <Link
-                href={card.ctaHref}
-                className={`relative overflow-hidden flex flex-col justify-end no-underline h-[220px] sm:h-[280px] md:h-[clamp(300px,38vw,500px)] border border-(--bd) ${card.stripe ?? 'bg-card'}`}
-              >
-                {card.imageUrl && (
-                  <Image
-                    src={card.imageUrl}
-                    alt={card.title}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                    className="object-cover transition-transform duration-500 hover:scale-[1.03]"
-                    priority={i === 0}
-                  />
-                )}
-                <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-[rgba(3,4,9,.85)] to-transparent pointer-events-none" />
-
-                <div className="relative z-1 p-5 pb-6 sm:p-7 sm:pb-8 text-center">
-                  <h3 className="font-display font-black uppercase tracking-[-0.5px] leading-[0.95] text-[clamp(20px,2.2vw,34px)] mb-1.5">
-                    {card.title}
-                  </h3>
-                  {card.subtitle && (
-                    <p className="text-[13px] text-muted font-light mb-4 sm:mb-5 max-w-70 mx-auto">
-                      {card.subtitle}
-                    </p>
-                  )}
-                  <span className="inline-block border border-(--bdh) bg-[rgba(3,4,9,.55)] px-6 sm:px-8 py-2.5 sm:py-3 font-display font-extrabold uppercase text-[12px] sm:text-[13px] tracking-[2px] text-text transition-colors duration-200 hover:bg-(--gold) hover:text-black hover:border-(--gold)">
-                    {card.ctaLabel}
-                  </span>
-                </div>
-              </Link>
+              <BannerCard card={card} priority={i === 0} />
             </div>
           ))}
         </div>
@@ -208,4 +187,12 @@ export function HeroBannerCarousel({ banners }: HeroBannerCarouselProps) {
       )}
     </section>
   )
+}
+
+export function HeroBannerCarousel({ banners }: HeroBannerCarouselProps) {
+  if (banners.length === 0) return null
+
+  const cards = toCards(banners)
+
+  return cards.length > CAROUSEL_THRESHOLD ? <HeroBannerSlider cards={cards} /> : <HeroBannerGrid cards={cards} />
 }

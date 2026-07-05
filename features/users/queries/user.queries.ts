@@ -49,6 +49,7 @@ export async function getUsers(filters: UserFilters = {}): Promise<UserRow[]> {
   return db.user.findMany({
     where: {
       deletedAt: null,
+      role: 'CUSTOMER',
       ...(segment === 'nuevo' ? { orders: { none: {} } } : {}),
       ...(segmentIds !== null ? { id: { in: segmentIds } } : {}),
       ...(search
@@ -75,6 +76,7 @@ export async function countUsers(filters: Omit<UserFilters, 'take' | 'skip'> = {
   return db.user.count({
     where: {
       deletedAt: null,
+      role: 'CUSTOMER',
       ...(segment === 'nuevo' ? { orders: { none: {} } } : {}),
       ...(segmentIds !== null ? { id: { in: segmentIds } } : {}),
       ...(search
