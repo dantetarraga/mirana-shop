@@ -11,12 +11,28 @@ import { PreorderSection } from '@/features/home/components/PreorderSection'
 import { PromoBanner } from '@/features/home/components/PromoBanner'
 import { QuickFiltersBar } from '@/features/home/components/QuickFiltersBar'
 import { ReviewsSection } from '@/features/home/components/ReviewsSection'
-import type { Metadata } from 'next'
+import { JsonLd } from '@/shared/components/JsonLd'
 
-export const metadata: Metadata = {
-  title: 'MIRANA — Juguetes & Figuras',
-  description:
-    'Figuras de colección, preventas exclusivas e importaciones directas. Tu tienda premium de coleccionables.',
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+
+const organizationJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'MIRANA',
+  url: BASE_URL,
+  logo: `${BASE_URL}/logo.svg`,
+}
+
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'MIRANA',
+  url: BASE_URL,
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: `${BASE_URL}/catalogo?q={search_term_string}`,
+    'query-input': 'required name=search_term_string',
+  },
 }
 
 export default async function HomePage() {
@@ -28,6 +44,9 @@ export default async function HomePage() {
 
   return (
     <>
+      <JsonLd data={organizationJsonLd} />
+      <JsonLd data={websiteJsonLd} />
+
       {/* Header extendido: filtros rápidos + marcas + banners (estructura tipo Entertainment Earth) */}
       <div className="pt-(--nh)">
         <QuickFiltersBar categories={categories} />

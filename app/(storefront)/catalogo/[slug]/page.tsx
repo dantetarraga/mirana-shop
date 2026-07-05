@@ -3,11 +3,15 @@ import { RelatedProducts } from '@/features/products/components/RelatedProducts'
 import { getProductBySlug } from '@/features/products/queries/product.queries'
 import type { CatalogProduct } from '@/features/products/types/catalog.types'
 import { getCategoryLabel, getCategoryStripe } from '@/features/products/types/catalog.types'
+import { JsonLd } from '@/shared/components/JsonLd'
 import { Dates } from '@/shared/lib/dates'
 import { ChevronRight } from 'lucide-react'
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -17,9 +21,27 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params
   const product = await getProductBySlug(slug)
   if (!product) return { title: 'Producto no encontrado' }
+
+  const description = product.description || `${product.name} — ${product.brand.name}`
+  const imageUrl = product.images[0]?.url
+  const url = `/catalogo/${product.slug}`
+
   return {
     title: product.name,
-    description: product.description || `${product.name} — ${product.brand.name}`,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title: product.name,
+      description,
+      url,
+      images: imageUrl ? [{ url: imageUrl, alt: product.name }] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: product.name,
+      description,
+      images: imageUrl ? [imageUrl] : undefined,
+    },
   }
 }
 
@@ -50,9 +72,58 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const stripe = getCategoryStripe(product.category.slug)
   const catLabel = getCategoryLabel(product.category.slug)
   const isOutOfStock = product.stock === 0 || product.status === 'SOLD_OUT'
+  const displayPrice = product.salePrice && product.salePrice < product.price
+    ? product.salePrice
+    : product.price
+
+  const productJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: raw.description || undefined,
+    sku: product.sku,
+    image: product.imageUrl ? [product.imageUrl] : undefined,
+    brand: { '@type': 'Brand', name: product.brand.name },
+    offers: {
+      '@type': 'Offer',
+      url: `${BASE_URL}/catalogo/${product.slug}`,
+      priceCurrency: raw.currency ?? 'PEN',
+      price: displayPrice.toFixed(2),
+      availability:
+        product.status === 'PREORDER'
+          ? 'https://schema.org/PreOrder'
+          : isOutOfStock
+            ? 'https://schema.org/OutOfStock'
+            : 'https://schema.org/InStock',
+    },
+  }
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: BASE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Catálogo', item: `${BASE_URL}/catalogo` },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: catLabel,
+        item: `${BASE_URL}/catalogo?cat=${product.category.slug}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 4,
+        name: product.name,
+        item: `${BASE_URL}/catalogo/${product.slug}`,
+      },
+    ],
+  }
 
   return (
     <>
+      <JsonLd data={productJsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
+
       <div className="px-4 sm:px-6 py-8 sm:py-12 max-w-360 mx-auto">
         {/* Breadcrumb */}
         <nav className="flex flex-wrap items-center gap-1.5 text-[11px] tracking-[1.5px] uppercase text-muted mb-6 sm:mb-10">
@@ -81,11 +152,13 @@ export default async function ProductDetailPage({ params }: PageProps) {
             className={`${stripe} glow-section glow-section--card aspect-square flex items-center justify-center relative`}
           >
             {product.imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Image
                 src={product.imageUrl}
                 alt={product.name}
-                className="relative z-1 w-full h-full object-cover absolute inset-0"
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="relative z-1 object-cover"
               />
             ) : (
               <div className="relative z-1 font-mono text-[12px] tracking-[2px] text-muted uppercase">
@@ -131,7 +204,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             {/* Price */}
             <div className="flex items-baseline gap-4 flex-wrap">
               <div className="font-display text-[40px] sm:text-[56px] font-black text-(--gold) leading-none">
-                S/ {(product.salePrice && product.salePrice < product.price ? product.salePrice : product.price).toFixed(2)}
+                S/ {displayPrice.toFixed(2)}
               </div>
               {product.salePrice && product.salePrice < product.price && (
                 <div className="font-display text-[22px] sm:text-[28px] font-bold text-muted line-through">

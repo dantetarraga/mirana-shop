@@ -9,6 +9,7 @@ import { toProductCards } from "@/features/products/lib/product-card";
 import { countProducts, getProducts } from "@/features/products/queries/product.queries";
 import { getPublicStockFilter } from "@/features/settings/queries/store-settings.queries";
 import type { ProductSort } from "@/features/products/types";
+import type { Metadata } from "next";
 
 const PAGE_SIZE = 24;
 const VALID_SORTS: ProductSort[] = ["relevance", "price_asc", "price_desc", "newest"];
@@ -30,6 +31,23 @@ interface PageProps {
 
 function parseCsv(value: string | undefined): string[] {
   return value ? value.split(",").filter(Boolean) : [];
+}
+
+export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+  const params = await searchParams;
+  // Canonical siempre apunta a /catalogo sin query params — el listado filtrado
+  // no debe indexarse como URL propia, evita duplicación por combinatoria de filtros.
+  const base: Metadata = { alternates: { canonical: "/catalogo" } };
+
+  const cats = parseCsv(params.cat);
+  const brandSlugs = parseCsv(params.brand);
+  if (brandSlugs.length === 1 && cats.length === 0) {
+    const brands = await getBrands({ perPage: 50 });
+    const brand = brands.find((b) => b.slug === brandSlugs[0]);
+    if (brand) return { ...base, title: `Figuras de ${brand.name}` };
+  }
+
+  return base;
 }
 
 export default async function CatalogPage({ searchParams }: PageProps) {

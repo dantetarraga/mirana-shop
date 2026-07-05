@@ -1,9 +1,14 @@
 import { Providers } from '@/shared/components/Providers'
 import { AlertTriangle, CheckCircle2, Info, XCircle } from 'lucide-react'
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Barlow_Condensed, Plus_Jakarta_Sans } from 'next/font/google'
 import { Toaster } from 'sonner'
 import './globals.css'
+
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+const SITE_TITLE = 'MIRANA — Juguetes & Figuras'
+const SITE_DESCRIPTION =
+  'Figuras de colección, preventas exclusivas e importaciones directas. Tu tienda premium de coleccionables.'
 
 const barlowCondensed = Barlow_Condensed({
   variable: '--font-barlow-condensed',
@@ -21,18 +26,32 @@ const plusJakarta = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(BASE_URL),
   title: {
-    default: 'MIRANA — Juguetes & Figuras',
+    default: SITE_TITLE,
     template: '%s | MIRANA',
   },
-  description:
-    'Figuras de colección, preventas exclusivas e importaciones directas. Tu tienda premium de coleccionables.',
+  description: SITE_DESCRIPTION,
   keywords: ['figuras', 'colección', 'anime', 'LEGO', 'preventa', 'importación', 'premium'],
   openGraph: {
     type: 'website',
     locale: 'es_PE',
     siteName: 'MIRANA',
+    url: BASE_URL,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'MIRANA' }],
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: ['/opengraph-image'],
+  },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#0b1830',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
