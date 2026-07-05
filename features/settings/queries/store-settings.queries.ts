@@ -1,3 +1,4 @@
+import { BASE_SHIPPING_COST } from '@/features/checkout/lib/pricing'
 import { db } from '@/shared/lib/db'
 
 // ---------------------------------------------------------------------------
@@ -9,19 +10,21 @@ export const STORE_SETTINGS_ID = 'store'
 export interface StoreSettingsData {
   showOutOfStock: boolean
   whatsappNumber: string
+  baseShippingCost: number
 }
 
 const DEFAULTS: StoreSettingsData = {
   showOutOfStock: true,
   whatsappNumber: '',
+  baseShippingCost: BASE_SHIPPING_COST,
 }
 
 export async function getStoreSettings(): Promise<StoreSettingsData> {
   const row = await db.storeSettings.findUnique({
     where: { id: STORE_SETTINGS_ID },
-    select: { showOutOfStock: true, whatsappNumber: true },
+    select: { showOutOfStock: true, whatsappNumber: true, baseShippingCost: true },
   })
-  return row ?? DEFAULTS
+  return row ? { ...row, baseShippingCost: Number(row.baseShippingCost) } : DEFAULTS
 }
 
 /**

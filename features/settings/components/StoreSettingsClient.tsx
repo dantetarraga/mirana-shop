@@ -84,6 +84,22 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
             Se usa en el botón flotante de WhatsApp y en el envío de comprobantes del checkout.
           </p>
 
+          <FormField label="Costo de envío base (S/)">
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              value={form.baseShippingCost}
+              onChange={(e) => setForm({ ...form, baseShippingCost: Number(e.target.value) })}
+              className="adm-input"
+              placeholder="15.00"
+              inputMode="decimal"
+            />
+          </FormField>
+          <p className="text-[12px] text-muted -mt-3">
+            Se cobra en el checkout salvo que una promoción de envío gratis lo anule.
+          </p>
+
           <div>
             <Button variant="accent" size="md" onClick={saveGeneral} disabled={general.isPending}>
               <Save size={15} className="mr-1.5" />

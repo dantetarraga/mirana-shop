@@ -1,10 +1,7 @@
 import 'server-only'
-import {
-  BASE_SHIPPING_COST,
-  type DiscountPromoRule,
-  type PricingRules,
-} from '@/features/checkout/lib/pricing'
+import type { DiscountPromoRule, PricingRules } from '@/features/checkout/lib/pricing'
 import { getActivePromotions } from '@/features/promotions/queries/promotion.queries'
+import { getStoreSettings } from '@/features/settings/queries/store-settings.queries'
 
 /**
  * Reglas de precios vigentes según las promociones activas en la BD.
@@ -12,7 +9,10 @@ import { getActivePromotions } from '@/features/promotions/queries/promotion.que
  * - FIXED/PERCENT_DISCOUNT: se pasan todas; computeTotals aplica la mejor.
  */
 export async function getPricingRules(): Promise<PricingRules> {
-  const promos = await getActivePromotions()
+  const [promos, { baseShippingCost }] = await Promise.all([
+    getActivePromotions(),
+    getStoreSettings(),
+  ])
 
   const freeShipping = promos
     .filter((p) => p.type === 'FREE_SHIPPING' && p.minAmount != null)
@@ -29,7 +29,7 @@ export async function getPricingRules(): Promise<PricingRules> {
     }))
 
   return {
-    shippingCost: BASE_SHIPPING_COST,
+    shippingCost: baseShippingCost,
     freeShippingThreshold: freeShipping?.minAmount ?? null,
     discountPromos,
   }
