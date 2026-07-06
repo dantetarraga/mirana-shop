@@ -277,9 +277,10 @@ export async function importProducts(
             })
           }
 
+          const currentStock = match.inventory?.availableStock ?? 0
           await tx.productInventory.upsert({
             where: { productId: match.id },
-            update: { availableStock: row.stock },
+            update: { availableStock: currentStock + row.stock },
             create: { productId: match.id, availableStock: row.stock },
           })
         })

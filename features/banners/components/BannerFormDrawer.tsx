@@ -20,7 +20,7 @@ const EMPTY_FORM = {
   subtitle: '',
   ctaLabel: '',
   ctaHref: '',
-  imageUrl: 'https://placehold.co/1200x400/111111/FFFFFF?text=Banner',
+  imageUrl: '',
   position: 0,
   active: false,
 } satisfies BannerFormValues
