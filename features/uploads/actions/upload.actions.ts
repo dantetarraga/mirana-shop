@@ -15,7 +15,7 @@ const ALLOWED_TYPES: Record<string, string> = {
   'image/avif': 'avif',
 }
 
-const ALLOWED_FOLDERS = ['products', 'brands', 'categories', 'banners'] as const
+const ALLOWED_FOLDERS = ['products', 'brands', 'categories', 'banners', 'cta'] as const
 type UploadFolder = (typeof ALLOWED_FOLDERS)[number]
 
 export async function uploadImage(formData: FormData): Promise<ActionResult<{ url: string }>> {

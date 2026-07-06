@@ -8,7 +8,7 @@ import { Loader2, Upload } from 'lucide-react'
 import { useRef, useTransition, type ChangeEvent } from 'react'
 import { toast } from 'sonner'
 
-type UploadFolder = 'products' | 'brands' | 'categories' | 'banners'
+type UploadFolder = 'products' | 'brands' | 'categories' | 'banners' | 'cta'
 
 interface ImageUploadFieldProps {
   value: string

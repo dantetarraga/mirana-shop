@@ -2,6 +2,7 @@
 
 import { saveHomeCta } from '@/features/home/actions/home-cta.actions'
 import type { HomeCtaData } from '@/features/home/queries/home-cta.queries'
+import { ImageUploadField } from '@/shared/components/admin/ImageUploadField'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
@@ -105,11 +106,11 @@ export function HomeCtaClient({ initial }: HomeCtaClientProps) {
           </FormField>
         </div>
 
-        <FormField label="Imagen de fondo (URL, opcional — sin imagen se usa el fondo de color)">
-          <input
+        <FormField label="Imagen de fondo (opcional — sin imagen se usa el fondo de color)">
+          <ImageUploadField
             value={form.imageUrl}
-            onChange={(e) => set('imageUrl', e.target.value.trim())}
-            className="adm-input"
+            onChange={(url) => set('imageUrl', url)}
+            folder="cta"
             placeholder="https://…/banner.jpg"
           />
         </FormField>
