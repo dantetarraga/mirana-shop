@@ -1,5 +1,6 @@
 import type { CategoryRow } from '@/features/categories/types'
 import { ArrowRight } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 
 const STRIPE_MAP: Record<string, string> = {
@@ -27,8 +28,18 @@ export function CategoryStrips({ categories }: CategoryStripsProps) {
           className="no-underline cursor-pointer block"
         >
           <div
-            className={`${STRIPE_MAP[cat.slug] ?? 'stripe-fig'} h-36 sm:h-40 lg:h-45 flex items-end px-5 sm:px-6 pb-5 sm:pb-6 relative border border-(--bd) transition-[border-color] duration-[.25s]`}
+            className={`${cat.imageUrl ? '' : (STRIPE_MAP[cat.slug] ?? 'stripe-fig')} h-36 sm:h-40 lg:h-45 flex items-end px-5 sm:px-6 pb-5 sm:pb-6 relative overflow-hidden border border-(--bd) transition-[border-color] duration-[.25s]`}
           >
+            {cat.imageUrl && (
+              <Image
+                src={cat.imageUrl}
+                alt={cat.name}
+                fill
+                className="object-cover -z-10"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              />
+            )}
+            {cat.imageUrl && <div className="absolute inset-0 bg-black/45 -z-10" />}
             <div>
               <div className="font-display text-[22px] sm:text-[25px] lg:text-[28px] font-black uppercase tracking-[-0.5px] text-text leading-none">
                 {cat.name}

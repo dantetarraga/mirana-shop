@@ -113,6 +113,34 @@ export function ProductsClient({
           if (images.length > 1) {
             await updateProduct(created.id, {}, images)
           }
+          const category = categories.find((c) => c.id === data.categoryId)
+          const brand = brands.find((b) => b.id === data.brandId)
+          const selectedCollections = collections.filter((c) => collectionIds.includes(c.id))
+          setProducts((prev) => [
+            {
+              id: created.id,
+              sku: data.sku,
+              slug: created.slug,
+              name: data.name,
+              price: data.price ?? 0,
+              salePrice: data.salePrice != null ? Number(data.salePrice) : null,
+              status: data.status ?? 'AVAILABLE',
+              featured: data.featured ?? false,
+              createdAt: new Date(),
+              category: category
+                ? { id: category.id, name: category.name, slug: category.slug }
+                : { id: data.categoryId, name: '', slug: '' },
+              brand: brand
+                ? { id: brand.id, name: brand.name, slug: brand.slug }
+                : { id: data.brandId, name: '', slug: '' },
+              images: images.map((img, i) => ({ id: `tmp-${i}`, url: img.url, alt: img.alt, position: i })),
+              inventory: { availableStock: data.stock ?? 0 },
+              collections: selectedCollections.map((c) => ({
+                collection: { id: c.id, name: c.name, slug: c.slug },
+              })),
+            },
+            ...prev,
+          ])
           crud.closeDrawer()
         },
         refresh: true,
@@ -176,7 +204,15 @@ export function ProductsClient({
         header: 'Producto',
         render: (p) => (
           <div className="flex items-center gap-3">
-            <div className={`${getCategoryStripe(p.category.slug)} w-10.5 h-10.5`} />
+            {p.images[0]?.url ? (
+              <img
+                src={p.images[0].url}
+                alt={p.images[0].alt ?? p.name}
+                className="w-10.5 h-10.5 object-cover shrink-0 border border-(--bd)"
+              />
+            ) : (
+              <div className={`${getCategoryStripe(p.category.slug)} w-10.5 h-10.5 shrink-0`} />
+            )}
             <div>
               <div className={cls.rowName}>{p.name}</div>
               <div className={cls.rowSub}>{STATUS_LABELS[p.status] ?? p.status}</div>
