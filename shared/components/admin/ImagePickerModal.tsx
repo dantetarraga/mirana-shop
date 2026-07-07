@@ -1,7 +1,7 @@
 'use client'
 
 import { listImages, type MediaImage } from '@/features/uploads/actions/media.actions'
-import type { UploadFolder } from '@/features/uploads/lib/media-folder'
+import { FOLDER_LABELS, type UploadFolder } from '@/features/uploads/lib/media-folder'
 import { MediaImageGrid } from '@/shared/components/admin/MediaImageGrid'
 import { Button } from '@/shared/components/ui/Button'
 import { Modal } from '@/shared/components/ui/Modal'
@@ -17,16 +17,22 @@ interface ImagePickerModalProps {
 }
 
 export function ImagePickerModal({ open, onClose, folder, onSelect }: ImagePickerModalProps) {
+  const [scope, setScope] = useState<UploadFolder | 'all'>(folder)
   const [images, setImages] = useState<MediaImage[]>([])
   const [cursor, setCursor] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (!open) return
+    setScope(folder)
+  }, [open, folder])
+
+  useEffect(() => {
+    if (!open) return
     setImages([])
     setCursor(null)
     setLoading(true)
-    listImages(folder).then((result) => {
+    listImages(scope).then((result) => {
       setLoading(false)
       if (result.success) {
         setImages(result.data.images)
@@ -35,12 +41,12 @@ export function ImagePickerModal({ open, onClose, folder, onSelect }: ImagePicke
         toast.error(result.error)
       }
     })
-  }, [open, folder])
+  }, [open, scope])
 
   const loadMore = async () => {
     if (!cursor) return
     setLoading(true)
-    const result = await listImages(folder, cursor)
+    const result = await listImages(scope, cursor)
     setLoading(false)
     if (result.success) {
       setImages((prev) => [...prev, ...result.data.images])
@@ -52,6 +58,19 @@ export function ImagePickerModal({ open, onClose, folder, onSelect }: ImagePicke
 
   return (
     <Modal open={open} onClose={onClose} title="Elegir imagen existente" size="xl">
+      <div className="flex gap-2 mb-4">
+        <Button
+          variant={scope === folder ? 'accent' : 'outline'}
+          size="sm"
+          onClick={() => setScope(folder)}
+        >
+          {FOLDER_LABELS[folder]}
+        </Button>
+        <Button variant={scope === 'all' ? 'accent' : 'outline'} size="sm" onClick={() => setScope('all')}>
+          Todos
+        </Button>
+      </div>
+
       {loading && images.length === 0 ? (
         <div className="flex items-center justify-center py-16">
           <Loader2 size={20} className="animate-spin text-muted" />

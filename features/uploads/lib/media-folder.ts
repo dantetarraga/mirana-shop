@@ -1,4 +1,11 @@
-export const ALLOWED_FOLDERS = ['products', 'brands', 'categories', 'banners', 'cta'] as const
+export const ALLOWED_FOLDERS = [
+  'products',
+  'brands',
+  'categories',
+  'banners',
+  'cta',
+  'collections',
+] as const
 export type UploadFolder = (typeof ALLOWED_FOLDERS)[number]
 
 export const FOLDER_LABELS: Record<UploadFolder, string> = {
@@ -7,6 +14,7 @@ export const FOLDER_LABELS: Record<UploadFolder, string> = {
   categories: 'Categorías',
   banners: 'Banners',
   cta: 'CTA',
+  collections: 'Colecciones',
 }
 
 /** Inyecta f_auto,q_auto (formato/calidad automáticos) en una URL de Cloudinary. */

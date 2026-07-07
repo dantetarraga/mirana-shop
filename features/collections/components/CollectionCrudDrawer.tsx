@@ -8,6 +8,7 @@ import type { CollectionRow } from '@/features/collections/types'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { EntityProductsPanel } from '@/shared/components/admin/EntityProductsPanel'
 import { FilterMultiSelect } from '@/shared/components/admin/FilterMultiSelect'
+import { ImageUploadField } from '@/shared/components/admin/ImageUploadField'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
 import { useAutoSlug, useFormEntity, useServerAction } from '@/shared/hooks/admin'
@@ -120,8 +121,12 @@ export function CollectionCrudDrawer({ collection, isNew, onClose }: CollectionC
           />
         </FormField>
 
-        <FormField label="URL de imagen" error={errors.imageUrl?.message}>
-          <input {...register('imageUrl')} className={cls.input} placeholder="https://..." />
+        <FormField label="Imagen" error={errors.imageUrl?.message}>
+          <ImageUploadField
+            value={watch('imageUrl') ?? ''}
+            onChange={(url) => setValue('imageUrl', url, { shouldValidate: true })}
+            folder="collections"
+          />
         </FormField>
 
         <FormField label="Estado" error={errors.active?.message}>
