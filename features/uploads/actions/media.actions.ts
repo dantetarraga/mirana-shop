@@ -21,20 +21,20 @@ export interface MediaImage {
 }
 
 export async function listImages(
-  folder: UploadFolder,
+  folder: UploadFolder | 'all',
   cursor?: string,
 ): Promise<ActionResult<{ images: MediaImage[]; nextCursor: string | null }>> {
   const denied = await requireAdmin()
   if (denied) return denied
 
-  if (!ALLOWED_FOLDERS.includes(folder)) {
+  if (folder !== 'all' && !ALLOWED_FOLDERS.includes(folder)) {
     return { success: false, error: 'Carpeta inválida', code: 400 }
   }
 
   try {
     const result: ResourceApiResponse = await cloudinary.api.resources({
       type: 'upload',
-      prefix: `mirana/${folder}/`,
+      ...(folder !== 'all' && { prefix: `mirana/${folder}/` }),
       max_results: PAGE_SIZE,
       next_cursor: cursor,
     })

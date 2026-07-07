@@ -1,7 +1,7 @@
 'use client'
 
 import { deleteImage, listImages, type MediaImage } from '@/features/uploads/actions/media.actions'
-import { ALLOWED_FOLDERS, FOLDER_LABELS, type UploadFolder } from '@/features/uploads/lib/media-folder'
+import { ALLOWED_FOLDERS, FOLDER_LABELS } from '@/features/uploads/lib/media-folder'
 import { MediaImageGrid } from '@/shared/components/admin/MediaImageGrid'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { Button } from '@/shared/components/ui/Button'
@@ -10,8 +10,10 @@ import { Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
+const TABS = ['all', ...ALLOWED_FOLDERS] as const
+
 export function MediaLibraryClient() {
-  const [folder, setFolder] = useState<UploadFolder>('products')
+  const [folder, setFolder] = useState<(typeof TABS)[number]>('all')
   const [images, setImages] = useState<MediaImage[]>([])
   const [cursor, setCursor] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -65,14 +67,14 @@ export function MediaLibraryClient() {
       <PanelHeader label="Contenido" title="Imágenes" align="center" />
 
       <div className="flex gap-2 flex-wrap mb-5">
-        {ALLOWED_FOLDERS.map((f) => (
+        {TABS.map((f) => (
           <Button
             key={f}
             variant={f === folder ? 'accent' : 'outline'}
             size="sm"
             onClick={() => setFolder(f)}
           >
-            {FOLDER_LABELS[f]}
+            {f === 'all' ? 'Todos' : FOLDER_LABELS[f]}
           </Button>
         ))}
       </div>
