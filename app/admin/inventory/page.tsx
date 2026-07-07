@@ -7,6 +7,7 @@ import { KpiCard } from '@/features/dashboard/components/KpiCard'
 import { StockBadge } from '@/features/inventory/components/StockBadge'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { cn } from '@/shared/lib/utils'
+import Image from 'next/image'
 
 type SerializedProduct = Omit<ProductListItem, 'price' | 'salePrice'> & {
   price: number
@@ -47,9 +48,19 @@ const columns: Column<SerializedProduct>[] = [
     header: 'Producto',
     render: (p) => (
       <div className="flex items-center gap-3">
-        <div
-          className={`${CATEGORY_STRIPE[p.category.slug] ?? 'stripe-fig'} w-10.5 h-10.5 shrink-0`}
-        />
+        {p.images[0]?.url ? (
+          <Image
+            src={p.images[0].url}
+            alt={p.images[0].alt ?? p.name}
+            width={42}
+            height={42}
+            className="w-10.5 h-10.5 object-cover shrink-0 border border-(--bd)"
+          />
+        ) : (
+          <div
+            className={`${CATEGORY_STRIPE[p.category.slug] ?? 'stripe-fig'} w-10.5 h-10.5 shrink-0`}
+          />
+        )}
         <div>
           <div className={cls.rowName}>{p.name}</div>
           <div className={cls.rowSub}>{p.brand.name}</div>

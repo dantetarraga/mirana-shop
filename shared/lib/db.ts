@@ -21,6 +21,8 @@ function createPrismaClient() {
     database: url.pathname.replace(/^\//, ""),
     decimalAsNumber: true,
     bigIntAsNumber: true,
+    connectionLimit: 10,
+    acquireTimeout: 15000,
   });
   return new PrismaClient({ adapter });
 }
