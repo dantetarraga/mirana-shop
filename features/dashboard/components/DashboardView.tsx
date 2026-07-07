@@ -15,6 +15,7 @@ import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { cn, formatDate } from '@/shared/lib/utils'
 import { ArrowRight } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 
 // Versión serializable de ProductListItem — Decimals ya convertidos a number
@@ -198,7 +199,17 @@ export function DashboardView({
                   <span className="font-display font-black text-[18px] w-4.5 text-muted">
                     {i + 1}
                   </span>
-                  <div className={`${getCategoryStripe(p.category.slug)} w-10 h-10 shrink-0`} />
+                  {p.images[0]?.url ? (
+                    <Image
+                      src={p.images[0].url}
+                      alt={p.images[0].alt ?? p.name}
+                      width={40}
+                      height={40}
+                      className="w-10 h-10 object-cover shrink-0 border border-(--bd)"
+                    />
+                  ) : (
+                    <div className={`${getCategoryStripe(p.category.slug)} w-10 h-10 shrink-0`} />
+                  )}
                   <div className="flex-1 min-w-0">
                     <div
                       className={cn(
