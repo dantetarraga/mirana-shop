@@ -13,6 +13,7 @@ import {
 import { searchAvailableProducts } from '@/features/products/actions/product.actions'
 import type { DrawerProduct } from '@/shared/types/entity-products.types'
 import { Loader2, Package, Plus, Search, X } from 'lucide-react'
+import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -204,7 +205,13 @@ export function EntityProductsPanel({ entityId, entityType }: EntityProductsPane
                 >
                   <div className="size-8 bg-card shrink-0 overflow-hidden flex items-center justify-center">
                     {p.imageUrl ? (
-                      <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                      <Image
+                        src={p.imageUrl}
+                        alt={p.name}
+                        width={32}
+                        height={32}
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
                       <Package size={13} className="text-muted" />
                     )}
@@ -246,7 +253,13 @@ export function EntityProductsPanel({ entityId, entityType }: EntityProductsPane
             >
               <div className="size-9 bg-card shrink-0 overflow-hidden flex items-center justify-center">
                 {p.imageUrl ? (
-                  <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                  <Image
+                    src={p.imageUrl}
+                    alt={p.name}
+                    width={36}
+                    height={36}
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   <Package size={13} className="text-muted" />
                 )}

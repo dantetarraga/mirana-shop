@@ -11,6 +11,7 @@ import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
 import { formatCurrency } from '@/shared/lib/utils'
 import { ArrowLeft, CreditCard, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -92,14 +93,15 @@ export function CartView({ pricingRules }: CartViewProps) {
                     {/* Image / stripe */}
                     <Link
                       href={`/catalogo/${item.product.slug}`}
-                      className="shrink-0 block w-20 h-20 sm:w-24 sm:h-24 overflow-hidden"
+                      className="relative shrink-0 block w-20 h-20 sm:w-24 sm:h-24 overflow-hidden"
                     >
                       {item.product.imageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
+                        <Image
                           src={item.product.imageUrl}
                           alt={item.product.name}
-                          className="w-full h-full object-cover"
+                          fill
+                          sizes="96px"
+                          className="object-cover"
                         />
                       ) : (
                         <div className={`${stripe} w-full h-full`} />

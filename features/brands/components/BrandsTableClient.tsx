@@ -16,6 +16,7 @@ import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
 import { useEntityCrud, useServerAction } from '@/shared/hooks/admin'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { FileSpreadsheet, Pencil, Plus, Trash2 } from 'lucide-react'
+import Image from 'next/image'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
@@ -78,9 +79,11 @@ export function BrandsTableClient({ brands, total, allBrands }: BrandsTableClien
       render: (b) => (
         <div className="flex items-center gap-3">
           {b.imageUrl ? (
-            <img
+            <Image
               src={b.imageUrl}
               alt={b.name}
+              width={32}
+              height={32}
               className="w-8 h-8 object-cover shrink-0 border border-(--bd)"
             />
           ) : (

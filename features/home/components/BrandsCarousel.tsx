@@ -3,6 +3,7 @@
 import type { BrandRow } from '@/features/brands/types'
 import { cn } from '@/shared/lib/utils'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 
@@ -63,7 +64,13 @@ export function BrandsCarousel({ brands }: BrandsCarouselProps) {
               className="brand-item shrink-0 w-32 h-18 sm:w-44 sm:h-24 flex items-center justify-center border-r border-(--bd) px-4 sm:px-6 no-underline first:border-l"
             >
               {b.imageUrl ? (
-                <img src={b.imageUrl} alt={b.name} className="max-h-12 max-w-32 object-contain" />
+                <Image
+                  src={b.imageUrl}
+                  alt={b.name}
+                  width={128}
+                  height={48}
+                  className="w-auto h-auto max-h-12 max-w-32 object-contain"
+                />
               ) : (
                 <div className="text-center">
                   <div className="font-display font-black uppercase tracking-[1px] leading-none text-text text-[18px]">

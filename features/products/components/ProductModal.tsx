@@ -5,6 +5,7 @@ import { useProductModalStore } from '@/features/products/stores/product-modal.s
 import { getCategoryStripe } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
 import { ArrowRight, Minus, Plus, X } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -41,10 +42,12 @@ export function ProductModal() {
           className={`${getCategoryStripe(p.category.slug)} min-h-70 sm:min-h-110 flex items-center justify-center relative`}
         >
           {p.imageUrl ? (
-            <img
+            <Image
               src={p.imageUrl}
               alt={p.name}
-              className="w-full h-full object-cover absolute inset-0"
+              fill
+              sizes="(max-width: 640px) 100vw, 50vw"
+              className="object-cover"
             />
           ) : (
             <div className="font-mono text-[12px] tracking-[2px] text-muted uppercase">

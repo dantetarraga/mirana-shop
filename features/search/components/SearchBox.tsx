@@ -5,6 +5,7 @@ import { useRecentSearchesStore } from '@/features/search/stores/recent-searches
 import { getCategoryStripe } from '@/features/products/types/catalog.types'
 import { useDebounce } from '@/shared/hooks'
 import { ArrowRight, Clock, History, Search, SearchX, X } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
@@ -173,8 +174,13 @@ export function SearchBox() {
                       className={`w-9 h-9 shrink-0 border border-(--bd) ${getCategoryStripe(p.category.slug)}`}
                     >
                       {p.imageUrl && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                        <Image
+                          src={p.imageUrl}
+                          alt={p.name}
+                          width={36}
+                          height={36}
+                          className="w-full h-full object-cover"
+                        />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">

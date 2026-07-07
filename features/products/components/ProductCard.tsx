@@ -58,9 +58,17 @@ export function ProductCard({
       onClick={() => openProductModal(p)}
     >
       <div className="relative">
-        <div className={`${stripe} h-55 flex items-center justify-center`}>
+        <div
+          className={`${stripe} h-55 flex items-center justify-center relative overflow-hidden`}
+        >
           {p.imageUrl ? (
-            <Image src={p.imageUrl} alt={p.name} className="h-full w-full object-cover" fill />
+            <Image
+              src={p.imageUrl}
+              alt={p.name}
+              fill
+              className="object-cover"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            />
           ) : (
             <span className="font-mono text-[10px] tracking-[2px] uppercase text-muted">
               {catLabel}

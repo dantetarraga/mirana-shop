@@ -1,22 +1,15 @@
 'use server'
 
+import { ALLOWED_FOLDERS, withAutoFormat, type UploadFolder } from '@/features/uploads/lib/media-folder'
 import { requireAdmin } from '@/shared/lib/require-admin'
 import type { ActionResult } from '@/shared/types/action-result.types'
-import { randomUUID } from 'crypto'
-import { mkdir, writeFile } from 'fs/promises'
-import path from 'path'
+import { v2 as cloudinary } from 'cloudinary'
+
+// Config se toma automáticamente de la env var CLOUDINARY_URL (formato del dashboard de Cloudinary)
 
 const MAX_SIZE = 5 * 1024 * 1024 // 5MB
 
-const ALLOWED_TYPES: Record<string, string> = {
-  'image/jpeg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp',
-  'image/avif': 'avif',
-}
-
-const ALLOWED_FOLDERS = ['products', 'brands', 'categories', 'banners', 'cta'] as const
-type UploadFolder = (typeof ALLOWED_FOLDERS)[number]
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif']
 
 export async function uploadImage(formData: FormData): Promise<ActionResult<{ url: string }>> {
   const denied = await requireAdmin()
@@ -31,25 +24,26 @@ export async function uploadImage(formData: FormData): Promise<ActionResult<{ ur
   if (typeof folder !== 'string' || !ALLOWED_FOLDERS.includes(folder as UploadFolder)) {
     return { success: false, error: 'Destino de subida inválido', code: 400 }
   }
-
-  const ext = ALLOWED_TYPES[file.type]
-  if (!ext) {
+  if (!ALLOWED_TYPES.includes(file.type)) {
     return { success: false, error: 'Formato no permitido (usa JPG, PNG, WEBP o AVIF)', code: 400 }
   }
   if (file.size > MAX_SIZE) {
     return { success: false, error: 'La imagen no puede superar 5MB', code: 400 }
   }
 
-  const filename = `${randomUUID()}.${ext}`
-  const dir = path.join(process.cwd(), 'public', 'uploads', folder)
-
   try {
-    await mkdir(dir, { recursive: true })
     const buffer = Buffer.from(await file.arrayBuffer())
-    await writeFile(path.join(dir, filename), buffer)
-  } catch {
-    return { success: false, error: 'Error al guardar la imagen en el servidor', code: 500 }
-  }
+    const result = await new Promise<{ secure_url: string }>((resolve, reject) => {
+      cloudinary.uploader
+        .upload_stream({ folder: `mirana/${folder}` }, (error, uploadResult) => {
+          if (error || !uploadResult) reject(error ?? new Error('Sin respuesta de Cloudinary'))
+          else resolve(uploadResult)
+        })
+        .end(buffer)
+    })
 
-  return { success: true, data: { url: `/uploads/${folder}/${filename}` } }
+    return { success: true, data: { url: withAutoFormat(result.secure_url) } }
+  } catch {
+    return { success: false, error: 'Error al subir la imagen', code: 500 }
+  }
 }

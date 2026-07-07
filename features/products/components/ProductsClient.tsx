@@ -18,6 +18,7 @@ import type { CollectionRow } from '@/features/collections/types'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
 import { ExcelImportDrawer } from '@/features/products/components/ExcelImportDrawer'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
+import Image from 'next/image'
 import { StockBadge } from '@/features/inventory/components/StockBadge'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
@@ -205,9 +206,11 @@ export function ProductsClient({
         render: (p) => (
           <div className="flex items-center gap-3">
             {p.images[0]?.url ? (
-              <img
+              <Image
                 src={p.images[0].url}
                 alt={p.images[0].alt ?? p.name}
+                width={42}
+                height={42}
                 className="w-10.5 h-10.5 object-cover shrink-0 border border-(--bd)"
               />
             ) : (

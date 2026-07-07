@@ -4,6 +4,7 @@ import { effectivePrice } from '@/features/checkout/lib/pricing'
 import { Button } from '@/shared/components/ui/Button'
 import { formatCurrency } from '@/shared/lib/utils'
 import { ArrowLeft, Loader2, Truck } from 'lucide-react'
+import Image from 'next/image'
 
 type CartItem = {
   product: {
@@ -53,10 +54,11 @@ export function OrderSummary({
             <li key={item.product.id} className="flex gap-3 items-start">
               <div className="w-12 h-12 bg-surf border border-(--bd) shrink-0 overflow-hidden">
                 {item.product.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <Image
                     src={item.product.imageUrl}
                     alt={item.product.name}
+                    width={48}
+                    height={48}
                     className="w-full h-full object-cover"
                   />
                 ) : (
