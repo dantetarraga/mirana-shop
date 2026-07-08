@@ -49,6 +49,7 @@ export async function getInventoryStats(): Promise<{
   const [agg, low, out] = await Promise.all([
     db.productInventory.aggregate({
       _sum: { availableStock: true },
+      where: { product: { deletedAt: null } },
     }),
     db.productInventory.count({
       where: {

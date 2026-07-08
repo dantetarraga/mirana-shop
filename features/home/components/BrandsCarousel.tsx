@@ -2,7 +2,7 @@
 
 import type { BrandRow } from '@/features/brands/types'
 import { cn } from '@/shared/lib/utils'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
@@ -52,7 +52,7 @@ export function BrandsCarousel({ brands }: BrandsCarouselProps) {
         <div
           ref={trackRef}
           className={cn(
-            'flex-1 flex overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+            'flex-1 flex gap-2 sm:gap-3 py-3 px-3 sm:px-4 overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
             !hasOverflow && 'justify-center',
           )}
         >
@@ -61,7 +61,7 @@ export function BrandsCarousel({ brands }: BrandsCarouselProps) {
               key={b.id}
               href={`/catalogo?brand=${b.slug}`}
               title={b.name}
-              className="brand-item shrink-0 w-32 h-18 sm:w-44 sm:h-24 flex items-center justify-center border-r border-(--bd) px-4 sm:px-6 no-underline first:border-l"
+              className="brand-item shrink-0 w-32 h-18 sm:w-44 sm:h-24 flex items-center justify-center rounded-lg border bg-(--card) px-4 sm:px-6 no-underline"
             >
               {b.imageUrl ? (
                 <Image
@@ -85,6 +85,16 @@ export function BrandsCarousel({ brands }: BrandsCarouselProps) {
               )}
             </Link>
           ))}
+
+          <Link
+            href="/catalogo"
+            className="shrink-0 w-32 h-18 sm:w-44 sm:h-24 flex flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-(--bd) px-4 no-underline text-muted transition-colors duration-200 hover:text-(--gold) hover:border-(--gold)"
+          >
+            <ArrowRight size={18} />
+            <span className="font-sans text-[10px] tracking-[1.5px] uppercase font-semibold text-center leading-tight">
+              Ver todas
+            </span>
+          </Link>
         </div>
 
         {hasOverflow && (

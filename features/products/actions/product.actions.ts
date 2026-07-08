@@ -173,7 +173,27 @@ export async function deleteProduct(id: string): Promise<ActionResult> {
   if (!id) return { success: false, error: 'ID de producto requerido', code: 400 }
 
   try {
-    await db.product.update({ where: { id }, data: { deletedAt: new Date() } })
+    const [orderItemCount, preorderCount, movementCount] = await Promise.all([
+      db.orderItem.count({ where: { productId: id } }),
+      db.preorder.count({ where: { productId: id } }),
+      db.inventoryMovement.count({ where: { productId: id } }),
+    ])
+
+    if (orderItemCount === 0 && preorderCount === 0 && movementCount === 0) {
+      // Sin historial de pedidos/preórdenes/movimientos: borrado real y completo.
+      // La cascada de Prisma limpia ProductInventory, ProductImage, CartItem y ProductCollection.
+      await db.product.delete({ where: { id } })
+    } else {
+      // Tiene historial ligado (OrderItem/Preorder/InventoryMovement no cascadean
+      // a propósito, para no romper pedidos pasados) — soft delete, pero sin dejar
+      // basura: se elimina el inventario y los carritos que quedarían huérfanos.
+      await db.$transaction([
+        db.cartItem.deleteMany({ where: { productId: id } }),
+        db.productInventory.deleteMany({ where: { productId: id } }),
+        db.product.update({ where: { id }, data: { deletedAt: new Date() } }),
+      ])
+    }
+
     invalidateProductCaches()
     return { success: true, data: undefined }
   } catch (err) {
