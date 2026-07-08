@@ -2,7 +2,7 @@
 
 import type { BrandRow } from '@/features/brands/types'
 import { cn } from '@/shared/lib/utils'
-import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
@@ -43,7 +43,7 @@ export function BrandsCarousel({ brands }: BrandsCarouselProps) {
             type="button"
             aria-label="Marcas anteriores"
             onClick={() => scrollByPage(-1)}
-            className="shrink-0 h-18 sm:h-24 px-2 sm:px-2.5 bg-transparent border-none text-muted transition-colors duration-200 hover:text-(--gold)"
+            className="shrink-0 h-14 sm:h-18 px-2 sm:px-2.5 bg-transparent border-none text-muted transition-colors duration-200 hover:text-(--gold)"
           >
             <ChevronLeft size={26} />
           </button>
@@ -52,7 +52,7 @@ export function BrandsCarousel({ brands }: BrandsCarouselProps) {
         <div
           ref={trackRef}
           className={cn(
-            'flex-1 flex gap-2 sm:gap-3 py-3 px-3 sm:px-4 overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+            'flex-1 flex overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
             !hasOverflow && 'justify-center',
           )}
         >
@@ -61,16 +61,10 @@ export function BrandsCarousel({ brands }: BrandsCarouselProps) {
               key={b.id}
               href={`/catalogo?brand=${b.slug}`}
               title={b.name}
-              className="brand-item shrink-0 w-32 h-18 sm:w-44 sm:h-24 flex items-center justify-center rounded-lg border bg-(--card) px-4 sm:px-6 no-underline"
+              className="brand-item relative shrink-0 w-32 h-14 sm:w-44 sm:h-18 flex items-center justify-center border-r border-(--bd) no-underline first:border-l"
             >
               {b.imageUrl ? (
-                <Image
-                  src={b.imageUrl}
-                  alt={b.name}
-                  width={128}
-                  height={48}
-                  className="w-auto h-auto max-h-12 max-w-32 object-contain"
-                />
+                <Image src={b.imageUrl} alt={b.name} fill className="object-cover" />
               ) : (
                 <div className="text-center">
                   <div className="font-display font-black uppercase tracking-[1px] leading-none text-text text-[18px]">
@@ -85,16 +79,6 @@ export function BrandsCarousel({ brands }: BrandsCarouselProps) {
               )}
             </Link>
           ))}
-
-          <Link
-            href="/catalogo"
-            className="shrink-0 w-32 h-18 sm:w-44 sm:h-24 flex flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-(--bd) px-4 no-underline text-muted transition-colors duration-200 hover:text-(--gold) hover:border-(--gold)"
-          >
-            <ArrowRight size={18} />
-            <span className="font-sans text-[10px] tracking-[1.5px] uppercase font-semibold text-center leading-tight">
-              Ver todas
-            </span>
-          </Link>
         </div>
 
         {hasOverflow && (
@@ -102,7 +86,7 @@ export function BrandsCarousel({ brands }: BrandsCarouselProps) {
             type="button"
             aria-label="Más marcas"
             onClick={() => scrollByPage(1)}
-            className="shrink-0 h-18 sm:h-24 px-2 sm:px-2.5 bg-transparent border-none text-muted transition-colors duration-200 hover:text-(--gold)"
+            className="shrink-0 h-14 sm:h-18 px-2 sm:px-2.5 bg-transparent border-none text-muted transition-colors duration-200 hover:text-(--gold)"
           >
             <ChevronRight size={26} />
           </button>
