@@ -228,12 +228,19 @@ export async function importProducts(
   let created = 0
   let updated = 0
 
-  // Mapas dinámicos: la celda puede traer el nombre o el slug de la
-  // categoría/marca; se normaliza con slugify para comparar sin tildes ni case.
-  const [categories, brands] = await Promise.all([
-    getCategories({ perPage: 100 }),
-    getBrands({ perPage: 100 }),
-  ])
+  let categories: Awaited<ReturnType<typeof getCategories>>
+  let brands: Awaited<ReturnType<typeof getBrands>>
+  try {
+    // Mapas dinámicos: la celda puede traer el nombre o el slug de la
+    // categoría/marca; se normaliza con slugify para comparar sin tildes ni case.
+    ;[categories, brands] = await Promise.all([
+      getCategories({ perPage: 100 }),
+      getBrands({ perPage: 100 }),
+    ])
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'No se pudo cargar categorías/marcas'
+    return { success: false, error: message, code: 500 }
+  }
 
   const catMap = new Map<string, string>()
   for (const c of categories) {

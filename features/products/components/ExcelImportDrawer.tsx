@@ -133,12 +133,20 @@ function parseSheet(
     if (!normalized.name) errors.push('Nombre requerido')
 
     const rawPrice = Number(normalized.price)
-    if (isNaN(rawPrice) || rawPrice <= 0) errors.push('Precio inválido')
-    else normalized.price = rawPrice
+    if (isNaN(rawPrice) || rawPrice <= 0) {
+      errors.push('Precio inválido')
+      normalized.price = undefined
+    } else {
+      normalized.price = rawPrice
+    }
 
     const rawStock = Number(normalized.stock)
-    if (isNaN(rawStock) || rawStock < 0) errors.push('Cantidad inválida')
-    else normalized.stock = Math.floor(rawStock)
+    if (isNaN(rawStock) || rawStock < 0) {
+      errors.push('Cantidad inválida')
+      normalized.stock = undefined
+    } else {
+      normalized.stock = Math.floor(rawStock)
+    }
 
     const catRaw = String(normalized.cat ?? '').trim()
     const matchedCat = catRaw ? matchOption(catRaw, categories) : undefined
@@ -152,10 +160,14 @@ function parseSheet(
 
     const rawSale = Number(normalized.salePrice)
     if (normalized.salePrice != null && normalized.salePrice !== ('' as unknown as number)) {
-      if (isNaN(rawSale) || rawSale <= 0) errors.push('Precio de oferta inválido')
-      else normalized.salePrice = rawSale
+      if (isNaN(rawSale) || rawSale <= 0) {
+        errors.push('Precio de oferta inválido')
+        normalized.salePrice = undefined
+      } else {
+        normalized.salePrice = rawSale
+      }
     } else {
-      normalized.salePrice = undefined as unknown as number
+      normalized.salePrice = undefined
     }
 
     const statusRaw = String(normalized.status ?? '')
@@ -409,10 +421,12 @@ export function ExcelImportDrawer({ categories, brands, onClose, onImport }: Pro
                           </td>
                           <td className={cn(cls.td, cls.mono)}>{r.data.cat ?? '—'}</td>
                           <td className={cn(cls.td, cls.valGold)}>
-                            {r.data.price != null ? `S/ ${r.data.price.toFixed(2)}` : '—'}
+                            {typeof r.data.price === 'number' ? `S/ ${r.data.price.toFixed(2)}` : '—'}
                           </td>
                           <td className={cn(cls.td, cls.valGold)}>
-                            {r.data.salePrice != null ? `S/ ${r.data.salePrice.toFixed(2)}` : '—'}
+                            {typeof r.data.salePrice === 'number'
+                              ? `S/ ${r.data.salePrice.toFixed(2)}`
+                              : '—'}
                           </td>
                           <td className={cn(cls.td, 'text-[11px]')}>{r.data.status ?? '—'}</td>
                           <td className={cn(cls.td, 'text-center')}>

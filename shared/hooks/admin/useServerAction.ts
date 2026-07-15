@@ -18,15 +18,23 @@ export function useServerAction() {
     },
   ) {
     startTransition(async () => {
-      const result = await action()
-      if (result.success) {
-        if (options?.successMsg) toast.success(options.successMsg)
-        await options?.onSuccess?.(result.data)
-        if (options?.refresh) router.refresh()
-        return
-      }
+      try {
+        const result = await action()
+        if (result.success) {
+          if (options?.successMsg) toast.success(options.successMsg)
+          await options?.onSuccess?.(result.data)
+          if (options?.refresh) router.refresh()
+          return
+        }
 
-      toast.error(result.error)
+        toast.error(result.error)
+      } catch (err) {
+        // Red de seguridad: si la action lanza en vez de devolver un ActionResult
+        // (error de red, excepción no controlada en el servidor, etc.), evita que
+        // la excepción sin capturar tumbe la página con la pantalla de error de Next.
+        const message = err instanceof Error ? err.message : 'Ocurrió un error inesperado'
+        toast.error(message)
+      }
     })
   }
 
