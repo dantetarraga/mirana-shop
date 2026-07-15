@@ -77,6 +77,19 @@ export function ProductsClient({
   const [products, setProducts] = useState<SerializedProduct[]>(initialProducts)
   const { isPending, run } = useServerAction()
 
+  // `products` es un estado local para permitir updates optimistas (crear,
+  // editar, borrar). Pero como solo se inicializaba una vez desde el prop,
+  // acciones que dependen de router.refresh() para traer datos frescos del
+  // servidor (p. ej. la importación masiva) no se reflejaban sin recargar la
+  // página — el Server Component sí recibía los datos nuevos, pero este
+  // estado nunca se volvía a leer del prop. Se ajusta durante el render
+  // (no en un efecto) siguiendo el patrón de React para esto.
+  const [prevInitialProducts, setPrevInitialProducts] = useState(initialProducts)
+  if (initialProducts !== prevInitialProducts) {
+    setPrevInitialProducts(initialProducts)
+    setProducts(initialProducts)
+  }
+
   const handleExportPdf = async () => {
     if (exporting) return
     setExporting(true)
