@@ -3,7 +3,7 @@
 import { getBrands } from '@/features/brands/queries/brand.queries'
 import { getCategories } from '@/features/categories/queries/category.queries'
 import { findBestMatch } from '@/features/products/lib/catalog-match'
-import { PRODUCT_DETAIL_SELECT, getProducts } from '@/features/products/queries/product.queries'
+import { PRODUCT_DETAIL_SELECT } from '@/features/products/queries/product.queries'
 import { db } from '@/shared/lib/db'
 import { importProductRowSchema, productDbBaseSchema, productDbSchema } from '@/features/products/schemas/product.schema'
 import { requireAdmin } from '@/shared/lib/require-admin'
@@ -326,8 +326,14 @@ export async function importProducts(
       if (brandWasCreated) newBrands.push(brandRef.name)
 
       const slug = slugify(row.name) + '-' + row.sku.toLowerCase()
-      const existing = await getProducts({ search: row.sku, take: 1 })
-      const match = existing.find((p) => p.sku === row.sku)
+      // Búsqueda exacta por SKU (es @unique) — evita depender de `contains`,
+      // que en MySQL/MariaDB se traduce a `LIKE CONCAT(...)` y dispara un bug
+      // del driver ("Illegal mix of collations") con ciertas versiones del
+      // servidor.
+      const match = await db.product.findUnique({
+        where: { sku: row.sku },
+        select: { id: true, deletedAt: true, inventory: { select: { availableStock: true } } },
+      })
 
       if (match) {
         const newImages = (row.imageUrls ?? []).map((url, i) => ({
@@ -346,6 +352,9 @@ export async function importProducts(
               salePrice: row.salePrice ?? null,
               status: row.status ?? 'AVAILABLE',
               featured: row.featured ?? false,
+              // Reimportar un SKU que estaba soft-deleted lo reactiva — si el
+              // admin lo está subiendo de nuevo es porque quiere que vuelva.
+              ...(match.deletedAt !== null && { deletedAt: null }),
             },
           })
 
