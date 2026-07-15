@@ -2,6 +2,7 @@
 
 import { getBrands } from '@/features/brands/queries/brand.queries'
 import { getCategories } from '@/features/categories/queries/category.queries'
+import { findBestMatch } from '@/features/products/lib/catalog-match'
 import { PRODUCT_DETAIL_SELECT, getProducts } from '@/features/products/queries/product.queries'
 import { db } from '@/shared/lib/db'
 import { importProductRowSchema, productDbBaseSchema, productDbSchema } from '@/features/products/schemas/product.schema'
@@ -33,6 +34,44 @@ function invalidateProductCaches() {
   revalidatePath('/')
   revalidateTag('products', 'max')
   revalidateTag('catalog', 'max')
+}
+
+// ---------------------------------------------------------------------------
+// Resolución de categoría/marca durante la importación masiva: busca la
+// opción más cercana (ver catalog-match.ts) y, si no hay ninguna lo bastante
+// parecida, crea una nueva sobre la marcha.
+// ---------------------------------------------------------------------------
+
+interface CatalogRef {
+  id: string
+  name: string
+  slug: string
+}
+
+function uniqueSlug(name: string, taken: Set<string>): string {
+  const base = slugify(name) || 'item'
+  let candidate = base
+  let i = 2
+  while (taken.has(candidate)) candidate = `${base}-${i++}`
+  taken.add(candidate)
+  return candidate
+}
+
+async function resolveOrCreateCatalogRef(
+  rawName: string,
+  refs: CatalogRef[],
+  takenSlugs: Set<string>,
+  create: (name: string, slug: string) => Promise<{ id: string }>,
+): Promise<{ ref: CatalogRef; wasCreated: boolean }> {
+  const name = rawName.trim()
+  const matched = findBestMatch(name, refs)
+  if (matched) return { ref: matched, wasCreated: false }
+
+  const slug = uniqueSlug(name, takenSlugs)
+  const created = await create(name, slug)
+  const ref: CatalogRef = { id: created.id, name, slug }
+  refs.push(ref)
+  return { ref, wasCreated: true }
 }
 
 // ---------------------------------------------------------------------------
@@ -214,7 +253,15 @@ type ImportRow = z.infer<typeof importProductRowSchema>
 
 export async function importProducts(
   rawRows: unknown,
-): Promise<ActionResult<{ created: number; updated: number; errors: string[] }>> {
+): Promise<
+  ActionResult<{
+    created: number
+    updated: number
+    errors: string[]
+    newCategories: string[]
+    newBrands: string[]
+  }>
+> {
   const denied = await requireAdmin()
   if (denied) return denied
 
@@ -227,51 +274,56 @@ export async function importProducts(
   const errors: string[] = []
   let created = 0
   let updated = 0
+  const newCategories: string[] = []
+  const newBrands: string[] = []
 
-  let categories: Awaited<ReturnType<typeof getCategories>>
-  let brands: Awaited<ReturnType<typeof getBrands>>
+  let categoryRefs: CatalogRef[]
+  let brandRefs: CatalogRef[]
   try {
-    // Mapas dinámicos: la celda puede traer el nombre o el slug de la
-    // categoría/marca; se normaliza con slugify para comparar sin tildes ni case.
-    ;[categories, brands] = await Promise.all([
+    // Se cargan una sola vez y se van resolviendo/actualizando fila a fila:
+    // la celda puede traer el nombre, el slug, o una variante cercana
+    // (tildes/mayúsculas/typos/abreviaciones) de una categoría/marca
+    // existente — ver findBestMatch. Si no hay match, se crea una nueva y se
+    // agrega a la lista para que filas siguientes del mismo archivo la reusen
+    // en vez de crear duplicados.
+    const [categories, brands] = await Promise.all([
       getCategories({ perPage: 100 }),
       getBrands({ perPage: 100 }),
     ])
+    categoryRefs = categories.map((c) => ({ id: c.id, name: c.name, slug: c.slug }))
+    brandRefs = brands.map((b) => ({ id: b.id, name: b.name, slug: b.slug }))
   } catch (err) {
     const message = err instanceof Error ? err.message : 'No se pudo cargar categorías/marcas'
     return { success: false, error: message, code: 500 }
   }
 
-  const catMap = new Map<string, string>()
-  for (const c of categories) {
-    catMap.set(c.slug, c.id)
-    catMap.set(slugify(c.name), c.id)
-  }
-
-  const brandMap = new Map<string, string>()
-  for (const b of brands) {
-    brandMap.set(b.slug, b.id)
-    brandMap.set(slugify(b.name), b.id)
-  }
+  const takenCategorySlugs = new Set(categoryRefs.map((c) => c.slug))
+  const takenBrandSlugs = new Set(brandRefs.map((b) => b.slug))
 
   for (const row of rows) {
     try {
-      const categoryId = catMap.get(slugify(row.cat))
-      if (!categoryId) {
-        errors.push(`Fila "${row.name}": categoría "${row.cat}" no encontrada`)
-        continue
-      }
+      const { ref: categoryRef, wasCreated: categoryWasCreated } = await resolveOrCreateCatalogRef(
+        row.cat,
+        categoryRefs,
+        takenCategorySlugs,
+        (name, slug) => db.category.create({ data: { name, slug }, select: { id: true } }),
+      )
+      const categoryId = categoryRef.id
+      if (categoryWasCreated) newCategories.push(categoryRef.name)
 
       if (!row.brand) {
         errors.push(`Fila "${row.name}": marca requerida`)
         continue
       }
 
-      const brandId = brandMap.get(slugify(row.brand))
-      if (!brandId) {
-        errors.push(`Fila "${row.name}": marca "${row.brand}" no encontrada`)
-        continue
-      }
+      const { ref: brandRef, wasCreated: brandWasCreated } = await resolveOrCreateCatalogRef(
+        row.brand,
+        brandRefs,
+        takenBrandSlugs,
+        (name, slug) => db.brand.create({ data: { name, slug }, select: { id: true } }),
+      )
+      const brandId = brandRef.id
+      if (brandWasCreated) newBrands.push(brandRef.name)
 
       const slug = slugify(row.name) + '-' + row.sku.toLowerCase()
       const existing = await getProducts({ search: row.sku, take: 1 })
@@ -344,7 +396,12 @@ export async function importProducts(
   }
 
   invalidateProductCaches()
-  return { success: true, data: { created, updated, errors } }
+  // La importación puede haber creado categorías/marcas nuevas sobre la marcha.
+  revalidatePath('/admin/categories')
+  revalidatePath('/admin/brands')
+  revalidateTag('categories', 'max')
+  revalidateTag('brands', 'max')
+  return { success: true, data: { created, updated, errors, newCategories, newBrands } }
 }
 
 // ---------------------------------------------------------------------------

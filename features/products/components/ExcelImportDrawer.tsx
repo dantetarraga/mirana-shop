@@ -2,9 +2,10 @@
 
 import { Button } from '@/shared/components/ui/Button'
 import { cls } from '@/shared/lib/admin/admin-classes'
+import { findBestMatch } from '@/features/products/lib/catalog-match'
 import type { ImportProductRow } from '@/features/products/schemas/product.schema'
-import { cn, slugify } from '@/shared/lib/utils'
-import { AlertCircle, CheckCircle2, FileSpreadsheet, Star, Upload, X } from 'lucide-react'
+import { cn } from '@/shared/lib/utils'
+import { AlertCircle, AlertTriangle, CheckCircle2, FileSpreadsheet, Star, Upload, X } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
 import * as XLSX from 'xlsx'
 
@@ -69,15 +70,11 @@ const STATUS_MAP: Record<string, StatusKey> = {
 }
 
 // Opción de catálogo (categoría o marca) contra la que se valida cada fila.
-// Se acepta el nombre o el slug, comparados con slugify (sin tildes ni case).
+// Se acepta el nombre, el slug, o una variante cercana (tildes/mayúsculas/
+// typos/abreviaciones) vía findBestMatch — ver catalog-match.ts.
 interface CatalogOption {
   name: string
   slug: string
-}
-
-function matchOption(value: string, options: CatalogOption[]): CatalogOption | undefined {
-  const needle = slugify(value)
-  return options.find((o) => o.slug === needle || slugify(o.name) === needle)
 }
 
 interface ExcelRow {
@@ -98,11 +95,16 @@ interface ParsedRow {
   row: number
   data: Partial<ExcelRow>
   errors: string[]
+  warnings: string[]
+  isNewCategory: boolean
+  isNewBrand: boolean
 }
 
 interface Props {
   categories: CatalogOption[]
   brands: CatalogOption[]
+  /** SKUs ya existentes — para anticipar en el preview cuáles filas crean vs. actualizan */
+  existingSkus: string[]
   onClose: () => void
   onImport: (products: ImportProductRow[]) => void
 }
@@ -128,6 +130,9 @@ function parseSheet(
     }
 
     const errors: string[] = []
+    const warnings: string[] = []
+    let isNewCategory = false
+    let isNewBrand = false
 
     if (!normalized.sku) errors.push('SKU requerido')
     if (!normalized.name) errors.push('Nombre requerido')
@@ -148,15 +153,31 @@ function parseSheet(
       normalized.stock = Math.floor(rawStock)
     }
 
+    // Si no hay match cercano con una categoría/marca existente, no se bloquea
+    // la fila: se importa creando una nueva con ese nombre (ver importProducts).
     const catRaw = String(normalized.cat ?? '').trim()
-    const matchedCat = catRaw ? matchOption(catRaw, categories) : undefined
-    if (!matchedCat) errors.push(catRaw ? `Categoría desconocida: "${catRaw}"` : 'Categoría requerida')
-    else normalized.cat = matchedCat.name
+    if (!catRaw) {
+      errors.push('Categoría requerida')
+    } else {
+      const matchedCat = findBestMatch(catRaw, categories)
+      normalized.cat = matchedCat ? matchedCat.name : catRaw
+      if (!matchedCat) {
+        isNewCategory = true
+        warnings.push(`Categoría nueva: se creará "${catRaw}"`)
+      }
+    }
 
     const brandRaw = String(normalized.brand ?? '').trim()
-    const matchedBrand = brandRaw ? matchOption(brandRaw, brands) : undefined
-    if (!matchedBrand) errors.push(brandRaw ? `Marca desconocida: "${brandRaw}"` : 'Marca requerida')
-    else normalized.brand = matchedBrand.name
+    if (!brandRaw) {
+      errors.push('Marca requerida')
+    } else {
+      const matchedBrand = findBestMatch(brandRaw, brands)
+      normalized.brand = matchedBrand ? matchedBrand.name : brandRaw
+      if (!matchedBrand) {
+        isNewBrand = true
+        warnings.push(`Marca nueva: se creará "${brandRaw}"`)
+      }
+    }
 
     const rawSale = Number(normalized.salePrice)
     if (normalized.salePrice != null && normalized.salePrice !== ('' as unknown as number)) {
@@ -207,14 +228,14 @@ function parseSheet(
       }
     }
 
-    return { row: i + 2, data: normalized, errors }
+    return { row: i + 2, data: normalized, errors, warnings, isNewCategory, isNewBrand }
   })
 }
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export function ExcelImportDrawer({ categories, brands, onClose, onImport }: Props) {
+export function ExcelImportDrawer({ categories, brands, existingSkus, onClose, onImport }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
   const [rows, setRows] = useState<ParsedRow[] | null>(null)
@@ -240,6 +261,20 @@ export function ExcelImportDrawer({ categories, brands, onClose, onImport }: Pro
 
   const validRows = rows?.filter((r) => r.errors.length === 0) ?? []
   const errorRows = rows?.filter((r) => r.errors.length > 0) ?? []
+  const warningRows = validRows.filter((r) => r.warnings.length > 0)
+
+  // Resumen de lo que va a ocurrir al confirmar — el usuario debe poder
+  // anticipar el resultado antes de importar, no solo enterarse después.
+  const existingSkuSet = new Set(existingSkus)
+  const toUpdateCount = validRows.filter((r) => existingSkuSet.has(r.data.sku!)).length
+  const toCreateCount = validRows.length - toUpdateCount
+  const newCategoryNames = Array.from(
+    new Set(validRows.filter((r) => r.isNewCategory).map((r) => r.data.cat!)),
+  )
+  const newBrandNames = Array.from(
+    new Set(validRows.filter((r) => r.isNewBrand).map((r) => r.data.brand!)),
+  )
+  const uniqueErrors = Array.from(new Set(errorRows.flatMap((r) => r.errors)))
 
   const handleImport = () => {
     const products: ImportProductRow[] = validRows.map((r) => ({
@@ -315,7 +350,9 @@ export function ExcelImportDrawer({ categories, brands, onClose, onImport }: Pro
             </div>
             <p className="text-[12px] text-muted mt-2">
               Los encabezados aceptan variaciones en español o inglés. Categoría y Marca aceptan el
-              nombre o el slug tal como existen en el sistema. Soporta .xlsx, .xls y .csv.
+              nombre, el slug, o una variante cercana (tildes, mayúsculas, typos leves): si no
+              coincide con ninguna existente se creará una nueva automáticamente. Soporta .xlsx,
+              .xls y .csv.
             </p>
             <a
               href="/plantillas/plantilla-importar-productos.xlsx"
@@ -392,6 +429,19 @@ export function ExcelImportDrawer({ categories, brands, onClose, onImport }: Pro
                     </div>
                   </div>
                 </div>
+                {warningRows.length > 0 && (
+                  <div className="flex-1 bg-card border border-(--bd) p-4 flex items-center gap-3">
+                    <AlertTriangle size={20} className="text-(--gold) shrink-0" />
+                    <div>
+                      <div className="font-display font-black text-[22px] text-(--gold)">
+                        {warningRows.length}
+                      </div>
+                      <div className="text-[11px] text-muted uppercase tracking-widest">
+                        Categoría/marca nueva
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Tabla preview */}
@@ -412,7 +462,13 @@ export function ExcelImportDrawer({ categories, brands, onClose, onImport }: Pro
                       {rows.map((r) => (
                         <tr
                           key={r.row}
-                          className={cn(r.errors.length ? 'bg-red-950/20' : 'hover:bg-white/2')}
+                          className={cn(
+                            r.errors.length
+                              ? 'bg-red-950/20'
+                              : r.warnings.length
+                                ? 'bg-(--gold)/5'
+                                : 'hover:bg-white/2',
+                          )}
                         >
                           <td className={cn(cls.td, cls.mono)}>{r.row}</td>
                           <td className={cn(cls.td, cls.mono)}>{r.data.sku ?? '—'}</td>
@@ -439,12 +495,20 @@ export function ExcelImportDrawer({ categories, brands, onClose, onImport }: Pro
                           <td className={cls.td}>{r.data.stock ?? '—'}</td>
                           <td className={cn(cls.td, 'max-w-20 truncate')}>{r.data.brand ?? '—'}</td>
                           <td className={cls.td}>
-                            {r.errors.length === 0 ? (
-                              <CheckCircle2 size={14} className="text-emerald-400" />
-                            ) : (
+                            {r.errors.length > 0 ? (
                               <span className="text-[11px] text-red-400">
                                 {r.errors.join(' · ')}
                               </span>
+                            ) : r.warnings.length > 0 ? (
+                              <span
+                                className="inline-flex items-center gap-1 text-[11px] text-(--gold)"
+                                title={r.warnings.join(' · ')}
+                              >
+                                <AlertTriangle size={12} />
+                                {r.warnings.join(' · ')}
+                              </span>
+                            ) : (
+                              <CheckCircle2 size={14} className="text-emerald-400" />
                             )}
                           </td>
                         </tr>
@@ -452,6 +516,63 @@ export function ExcelImportDrawer({ categories, brands, onClose, onImport }: Pro
                     </tbody>
                   </table>
                 </div>
+              </div>
+
+              {/* Resumen antes de importar — qué va a pasar exactamente al confirmar */}
+              <div className="bg-card border border-(--bd) p-4 flex flex-col gap-2.5">
+                <div className={cls.label}>Resumen antes de importar</div>
+                <ul className="flex flex-col gap-2 text-[13px]">
+                  {toCreateCount > 0 && (
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
+                      {toCreateCount} producto{toCreateCount !== 1 ? 's' : ''} nuevo
+                      {toCreateCount !== 1 ? 's' : ''} se crearán
+                    </li>
+                  )}
+                  {toUpdateCount > 0 && (
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
+                      {toUpdateCount} producto{toUpdateCount !== 1 ? 's' : ''} existente
+                      {toUpdateCount !== 1 ? 's' : ''} (mismo SKU) se actualizará
+                      {toUpdateCount !== 1 ? 'n' : ''}
+                    </li>
+                  )}
+                  {newCategoryNames.length > 0 && (
+                    <li className="flex items-start gap-2">
+                      <AlertTriangle size={14} className="text-(--gold) shrink-0 mt-0.5" />
+                      <span>
+                        Categoría{newCategoryNames.length !== 1 ? 's' : ''} nueva
+                        {newCategoryNames.length !== 1 ? 's' : ''} a crear:{' '}
+                        <span className="text-(--gold)">{newCategoryNames.join(', ')}</span>
+                      </span>
+                    </li>
+                  )}
+                  {newBrandNames.length > 0 && (
+                    <li className="flex items-start gap-2">
+                      <AlertTriangle size={14} className="text-(--gold) shrink-0 mt-0.5" />
+                      <span>
+                        Marca{newBrandNames.length !== 1 ? 's' : ''} nueva
+                        {newBrandNames.length !== 1 ? 's' : ''} a crear:{' '}
+                        <span className="text-(--gold)">{newBrandNames.join(', ')}</span>
+                      </span>
+                    </li>
+                  )}
+                  {errorRows.length > 0 && (
+                    <li className="flex items-start gap-2">
+                      <AlertCircle size={14} className="text-red-400 shrink-0 mt-0.5" />
+                      <span>
+                        {errorRows.length} fila{errorRows.length !== 1 ? 's' : ''} con errores no se
+                        importará{errorRows.length !== 1 ? 'n' : ''} — corrígelas y vuelve a subir el
+                        archivo:
+                        <br />
+                        <span className="text-red-400/80">{uniqueErrors.join(' · ')}</span>
+                      </span>
+                    </li>
+                  )}
+                  {validRows.length === 0 && errorRows.length === 0 && (
+                    <li className="text-muted">No hay filas para importar.</li>
+                  )}
+                </ul>
               </div>
 
               {/* Acciones */}
@@ -478,13 +599,6 @@ export function ExcelImportDrawer({ categories, brands, onClose, onImport }: Pro
                   Limpiar
                 </Button>
               </div>
-
-              {errorRows.length > 0 && (
-                <p className="text-[12px] text-red-400">
-                  Las {errorRows.length} fila(s) con errores no se importarán. Corrige el archivo y
-                  vuelve a subirlo.
-                </p>
-              )}
             </>
           )}
         </div>

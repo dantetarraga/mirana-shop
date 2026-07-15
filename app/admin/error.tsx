@@ -35,7 +35,7 @@ export default function AdminError({
           archivo o los datos que estás usando.
         </p>
         {error.message && (
-          <p className="text-[12px] text-red-400/80 font-mono mt-3 max-w-120 break-words">
+          <p className="text-[12px] text-red-400/80 font-mono mt-3 max-w-120 wrap-break-word">
             {error.message}
           </p>
         )}

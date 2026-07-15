@@ -190,8 +190,14 @@ export function ProductsClient({
   const handleImport = (rows: ImportProductRow[]) => {
     run(() => importProducts(rows), {
       onSuccess: (data) => {
-        const { created, updated, errors } = data
-        toast.success(`${created} creados, ${updated} actualizados`)
+        const { created, updated, errors, newCategories, newBrands } = data
+        toast.success(`${created} producto(s) creado(s), ${updated} actualizado(s)`)
+        if (newCategories.length > 0) {
+          toast.success(`Categoría(s) nueva(s) creada(s): ${newCategories.join(', ')}`)
+        }
+        if (newBrands.length > 0) {
+          toast.success(`Marca(s) nueva(s) creada(s): ${newBrands.join(', ')}`)
+        }
         errors.forEach((e) => toast.error(e))
         setShowImport(false)
       },
@@ -325,6 +331,7 @@ export function ProductsClient({
         <ExcelImportDrawer
           categories={categories}
           brands={brands}
+          existingSkus={products.map((p) => p.sku)}
           onClose={() => setShowImport(false)}
           onImport={handleImport}
         />
