@@ -61,7 +61,7 @@ export function ProductImageCarousel({
               size="md"
               onClick={() => goTo(index - 1)}
               aria-label="Imagen anterior"
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-10"
+              className="absolute left-3 top-1/2 -translate-y-1/2 z-10 bg-black/55 hover:bg-black/75 border-white/10 hover:border-white/20 text-white"
             >
               <ChevronLeft size={16} />
             </Button>
@@ -71,7 +71,7 @@ export function ProductImageCarousel({
               size="md"
               onClick={() => goTo(index + 1)}
               aria-label="Imagen siguiente"
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-10"
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-10 bg-black/55 hover:bg-black/75 border-white/10 hover:border-white/20 text-white"
             >
               <ChevronRight size={16} />
             </Button>
