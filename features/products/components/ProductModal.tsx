@@ -27,6 +27,7 @@ export function ProductModal() {
   if (!p) return null
 
   const isPreorder = p.status === 'PREORDER'
+  const isOutOfStock = !isPreorder && (p.stock === 0 || p.status === 'SOLD_OUT')
 
   return (
     <div
@@ -69,25 +70,28 @@ export function ProductModal() {
             S/ {p.price.toFixed(2)}
           </div>
 
-          <div>
-            <div className="text-[10px] tracking-[2px] uppercase text-muted mb-2.5">Cantidad</div>
-            <div className="flex items-center border border-(--bd) w-fit">
-              <Button variant="icon" size="md" onClick={() => setQty((q) => Math.max(1, q - 1))}>
-                <Minus size={14} />
-              </Button>
-              <div className="w-13 text-center font-display text-[20px] font-extrabold border-l border-r border-(--bd) flex items-center justify-center h-10.5">
-                {qty}
+          {!isOutOfStock && (
+            <div>
+              <div className="text-[10px] tracking-[2px] uppercase text-muted mb-2.5">Cantidad</div>
+              <div className="flex items-center border border-(--bd) w-fit">
+                <Button variant="icon" size="md" onClick={() => setQty((q) => Math.max(1, q - 1))}>
+                  <Minus size={14} />
+                </Button>
+                <div className="w-13 text-center font-display text-[20px] font-extrabold border-l border-r border-(--bd) flex items-center justify-center h-10.5">
+                  {qty}
+                </div>
+                <Button variant="icon" size="md" onClick={() => setQty((q) => q + 1)}>
+                  <Plus size={14} />
+                </Button>
               </div>
-              <Button variant="icon" size="md" onClick={() => setQty((q) => q + 1)}>
-                <Plus size={14} />
-              </Button>
             </div>
-          </div>
+          )}
 
           <Button
             variant="accent"
             size="lg"
             full
+            disabled={isOutOfStock}
             onClick={() => {
               addToCart(p, qty)
               toast.success(
@@ -96,7 +100,9 @@ export function ProductModal() {
               closeProductModal()
             }}
           >
-            {isPreorder ? 'Reservar ahora' : 'Agregar al carrito'} · S/ {(p.price * qty).toFixed(2)}
+            {isOutOfStock
+              ? 'Sin stock'
+              : `${isPreorder ? 'Reservar ahora' : 'Agregar al carrito'} · S/ ${(p.price * qty).toFixed(2)}`}
           </Button>
 
           <Link
