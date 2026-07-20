@@ -13,17 +13,25 @@ function createPrismaClient() {
   if (!connectionString) throw new Error("DATABASE_URL no definida");
 
   const url = new URL(connectionString);
-  const adapter = new PrismaMariaDb({
-    host: url.hostname,
-    port: url.port ? Number(url.port) : 3306,
-    user: decodeURIComponent(url.username),
-    password: decodeURIComponent(url.password),
-    database: url.pathname.replace(/^\//, ""),
-    decimalAsNumber: true,
-    bigIntAsNumber: true,
-    connectionLimit: 10,
-    acquireTimeout: 15000,
-  });
+  const adapter = new PrismaMariaDb(
+    {
+      host: url.hostname,
+      port: url.port ? Number(url.port) : 3306,
+      user: decodeURIComponent(url.username),
+      password: decodeURIComponent(url.password),
+      database: url.pathname.replace(/^\//, ""),
+      decimalAsNumber: true,
+      bigIntAsNumber: true,
+      connectionLimit: 10,
+      acquireTimeout: 15000,
+    },
+    // El protocolo binario (execute) hace que el query compiler de Prisma
+    // fuerce collation utf8mb4_bin en filtros LIKE (contains/startsWith/endsWith),
+    // lo cual choca con las columnas utf8mb4_unicode_ci del schema y tira
+    // "Illegal mix of collations" (500 en cualquier buscador). El protocolo de
+    // texto evita el choque.
+    { useTextProtocol: true },
+  );
   return new PrismaClient({ adapter });
 }
 
