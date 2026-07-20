@@ -20,6 +20,7 @@ export function toProductCard(product: ProductListItem): CatalogProduct {
     category: product.category,
     brand: product.brand,
     imageUrl: product.images[0]?.url ?? null,
+    images: product.images.map((img) => ({ url: img.url, alt: img.alt })),
     stock: product.inventory?.availableStock ?? 0,
   }
 }

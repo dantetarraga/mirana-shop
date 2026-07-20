@@ -1,4 +1,5 @@
 import { AddToCartPanel } from '@/features/products/components/AddToCartPanel'
+import { ProductImageCarousel } from '@/features/products/components/ProductImageCarousel'
 import { RelatedProducts } from '@/features/products/components/RelatedProducts'
 import { getProductBySlug } from '@/features/products/queries/product.queries'
 import type { CatalogProduct } from '@/features/products/types/catalog.types'
@@ -7,7 +8,6 @@ import { JsonLd } from '@/shared/components/JsonLd'
 import { Dates } from '@/shared/lib/dates'
 import { ChevronRight } from 'lucide-react'
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
@@ -66,6 +66,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
     category: raw.category,
     brand: raw.brand,
     imageUrl: raw.images[0]?.url ?? null,
+    images: raw.images.map((img) => ({ url: img.url, alt: img.alt })),
     stock: raw.inventory?.availableStock ?? 0,
   }
 
@@ -148,24 +149,13 @@ export default async function ProductDetailPage({ params }: PageProps) {
         {/* Main grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-start">
           {/* Left — image */}
-          <div
+          <ProductImageCarousel
+            images={product.images}
+            name={product.name}
+            priority
+            sizes="(max-width: 1024px) 100vw, 50vw"
             className={`${stripe} glow-section glow-section--card aspect-square flex items-center justify-center relative`}
           >
-            {product.imageUrl ? (
-              <Image
-                src={product.imageUrl}
-                alt={product.name}
-                fill
-                priority
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                className="relative z-1 object-cover"
-              />
-            ) : (
-              <div className="relative z-1 font-mono text-[12px] tracking-[2px] text-muted uppercase">
-                {product.name.toUpperCase()}
-              </div>
-            )}
-
             {/* Badges */}
             {product.featured && !isOutOfStock && (
               <div className="z-1 absolute top-4 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-3 py-1.5 bg-(--gold) text-black">
@@ -182,7 +172,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 PREVENTA
               </div>
             )}
-          </div>
+          </ProductImageCarousel>
 
           {/* Right — info */}
           <div className="flex flex-col gap-6 pt-2">

@@ -1,11 +1,11 @@
 'use client'
 
 import { useCartStore } from '@/features/cart/stores/cart.store'
+import { ProductImageCarousel } from '@/features/products/components/ProductImageCarousel'
 import { useProductModalStore } from '@/features/products/stores/product-modal.store'
 import { getCategoryStripe } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
 import { ArrowRight, Minus, Plus, X } from 'lucide-react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -38,22 +38,12 @@ export function ProductModal() {
         className="bg-surf border border-(--bd) max-w-220 w-full max-h-[92vh] overflow-y-auto grid grid-cols-1 sm:grid-cols-2 relative"
       >
         {/* Image */}
-        <div
+        <ProductImageCarousel
+          images={p.images}
+          name={p.name}
+          sizes="(max-width: 640px) 100vw, 50vw"
           className={`${getCategoryStripe(p.category.slug)} min-h-70 sm:min-h-110 flex items-center justify-center relative`}
         >
-          {p.imageUrl ? (
-            <Image
-              src={p.imageUrl}
-              alt={p.name}
-              fill
-              sizes="(max-width: 640px) 100vw, 50vw"
-              className="object-cover"
-            />
-          ) : (
-            <div className="font-mono text-[12px] tracking-[2px] text-muted uppercase">
-              {p.name.toUpperCase()}
-            </div>
-          )}
           <Button
             variant="icon"
             size="md"
@@ -62,7 +52,7 @@ export function ProductModal() {
           >
             <X size={16} />
           </Button>
-        </div>
+        </ProductImageCarousel>
 
         {/* Info */}
         <div className="p-5 sm:p-11 flex flex-col gap-4.5">

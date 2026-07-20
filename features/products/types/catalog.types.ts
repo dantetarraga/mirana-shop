@@ -23,6 +23,7 @@ export type CatalogProduct = {
   category: { id: string; name: string; slug: string };
   brand: { id: string; name: string; slug: string };
   imageUrl: string | null;
+  images: { url: string; alt: string | null }[];
   stock: number;
 };
 
