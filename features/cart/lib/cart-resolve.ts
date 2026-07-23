@@ -1,5 +1,6 @@
 import 'server-only'
 import { auth } from '@/auth'
+import { isCartExpired } from '@/features/cart/lib/cart-ttl'
 import { getCartSessionId, getOrCreateCartSessionId } from '@/shared/lib/cart-session'
 import { db } from '@/shared/lib/db'
 
@@ -18,6 +19,12 @@ export async function mergeAnonymousCartIntoUser(email: string): Promise<void> {
 
   const anonCart = await db.cart.findUnique({ where: { sessionId }, include: { items: true } })
   if (!anonCart) return
+
+  // Un carrito anónimo caducado no aporta nada: se descarta sin fusionar.
+  if (isCartExpired(anonCart)) {
+    await db.cart.delete({ where: { id: anonCart.id } })
+    return
+  }
 
   const userCart = await db.cart.upsert({
     where: { userId: dbUser.id },
@@ -39,6 +46,18 @@ export async function mergeAnonymousCartIntoUser(email: string): Promise<void> {
   })
 }
 
+/**
+ * Marca actividad en el carrito (renueva su TTL) y, si ya estaba caducado,
+ * lo vacía antes de reutilizarlo para que no reaparezcan ítems viejos.
+ */
+async function touchCart(cart: { id: string; userId: string | null; updatedAt: Date }) {
+  if (isCartExpired(cart)) {
+    await db.cartItem.deleteMany({ where: { cartId: cart.id } })
+  }
+  await db.cart.update({ where: { id: cart.id }, data: { updatedAt: new Date() } })
+  return cart.id
+}
+
 /** Resuelve (y crea si falta) el id del Cart vigente: por cuenta si hay sesión, por cookie si no. */
 export async function getOrCreateCartId(): Promise<string> {
   const session = await auth()
@@ -46,8 +65,9 @@ export async function getOrCreateCartId(): Promise<string> {
 
   if (!email) {
     const sessionId = await getOrCreateCartSessionId()
-    const cart = await db.cart.upsert({ where: { sessionId }, update: {}, create: { sessionId } })
-    return cart.id
+    const cart = await db.cart.findUnique({ where: { sessionId } })
+    if (cart) return touchCart(cart)
+    return (await db.cart.create({ data: { sessionId } })).id
   }
 
   await mergeAnonymousCartIntoUser(email)
@@ -55,10 +75,7 @@ export async function getOrCreateCartId(): Promise<string> {
   const dbUser = await db.user.findUnique({ where: { email }, select: { id: true } })
   if (!dbUser) throw new Error('Usuario no encontrado')
 
-  const userCart = await db.cart.upsert({
-    where: { userId: dbUser.id },
-    update: {},
-    create: { userId: dbUser.id },
-  })
-  return userCart.id
+  const userCart = await db.cart.findUnique({ where: { userId: dbUser.id } })
+  if (userCart) return touchCart(userCart)
+  return (await db.cart.create({ data: { userId: dbUser.id } })).id
 }

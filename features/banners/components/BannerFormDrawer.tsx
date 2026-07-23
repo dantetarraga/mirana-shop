@@ -2,6 +2,7 @@
 
 import { bannerDbSchema } from '@/features/banners/schemas/banner.schema'
 import type { BannerRow } from '@/features/banners/types'
+import { LinkPicker } from '@/features/marketing/components/LinkPicker'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { FilterMultiSelect } from '@/shared/components/admin/FilterMultiSelect'
 import { ImageUploadField } from '@/shared/components/admin/ImageUploadField'
@@ -95,14 +96,16 @@ export function BannerFormDrawer({
           />
         </FormField>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          <FormField label="Texto botón" error={errors.ctaLabel?.message}>
-            <input {...register('ctaLabel')} className={cls.input} placeholder="Ver colección" />
-          </FormField>
-          <FormField label="URL botón" error={errors.ctaHref?.message}>
-            <input {...register('ctaHref')} className={cls.input} placeholder="/catalogo" />
-          </FormField>
-        </div>
+        <FormField label="Texto botón" error={errors.ctaLabel?.message}>
+          <input {...register('ctaLabel')} className={cls.input} placeholder="Ver colección" />
+        </FormField>
+
+        <FormField label="Destino del botón" error={errors.ctaHref?.message}>
+          <LinkPicker
+            value={watch('ctaHref') ?? ''}
+            onChange={(href) => setValue('ctaHref', href, { shouldValidate: true })}
+          />
+        </FormField>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <FormField label="Posición (orden)" error={errors.position?.message}>

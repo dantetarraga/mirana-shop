@@ -1,5 +1,6 @@
 import 'server-only'
 import { auth } from '@/auth'
+import { isCartExpired } from '@/features/cart/lib/cart-ttl'
 import { toProductCard } from '@/features/products/lib/product-card'
 import { PRODUCT_LIST_SELECT } from '@/features/products/queries/product.queries'
 import type { ProductListItem } from '@/features/products/types'
@@ -31,6 +32,10 @@ async function findCartWithItems() {
 export async function getCart(): Promise<CartLine[]> {
   const cart = await findCartWithItems()
   if (!cart) return []
+
+  // Caducado: se muestra vacío. El vaciado real ocurre al volver a escribir
+  // (`getOrCreateCartId`) o en el cron de limpieza — la lectura no muta la DB.
+  if (isCartExpired(cart)) return []
 
   return cart.items.map((item) => ({
     product: toProductCard(item.product as ProductListItem),

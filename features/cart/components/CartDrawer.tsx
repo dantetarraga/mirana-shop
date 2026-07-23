@@ -17,7 +17,17 @@ interface CartDrawerProps {
 }
 
 export function CartDrawer({ pricingRules }: CartDrawerProps) {
-  const { cart, cartCount, cartOpen, setCartOpen, updateQty, removeItem } = useCartStore()
+  const { cartOpen } = useCartStore()
+
+  if (!cartOpen) return null
+
+  // El contenido se desmonta al cerrar, así el borrado pendiente se descarta
+  // solo — sin resetear estado desde un efecto.
+  return <CartDrawerContent pricingRules={pricingRules} />
+}
+
+function CartDrawerContent({ pricingRules }: CartDrawerProps) {
+  const { cart, cartCount, setCartOpen, updateQty, removeItem } = useCartStore()
   const subtotal = cart.reduce((s, i) => s + effectivePrice(i.product) * i.qty, 0)
   const { shippingFree, discount, discountName, total } = computeTotals(subtotal, pricingRules)
   const [pendingRemove, setPendingRemove] = useState<{ id: string; name: string } | null>(null)
@@ -26,15 +36,9 @@ export function CartDrawer({ pricingRules }: CartDrawerProps) {
     const h = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setCartOpen(false)
     }
-    if (cartOpen) window.addEventListener('keydown', h)
+    window.addEventListener('keydown', h)
     return () => window.removeEventListener('keydown', h)
-  }, [cartOpen, setCartOpen])
-
-  useEffect(() => {
-    if (!cartOpen) setPendingRemove(null)
-  }, [cartOpen])
-
-  if (!cartOpen) return null
+  }, [setCartOpen])
 
   return (
     <>

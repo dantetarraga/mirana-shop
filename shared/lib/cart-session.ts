@@ -1,9 +1,11 @@
 import 'server-only'
+import { ANON_CART_TTL_DAYS } from '@/features/cart/lib/cart-ttl'
 import { cookies } from 'next/headers'
 import { randomUUID } from 'crypto'
 
 const CART_COOKIE = 'cart_sid'
-const CART_COOKIE_MAX_AGE = 60 * 60 * 24 * 180 // 180 días
+// Igual que el TTL del carrito anónimo en DB: cookie y fila caducan a la vez.
+const CART_COOKIE_MAX_AGE = 60 * 60 * 24 * ANON_CART_TTL_DAYS
 
 /** Lee el id de sesión anónima del carrito sin crearlo. Para Server Components. */
 export async function getCartSessionId(): Promise<string | null> {
@@ -11,13 +13,15 @@ export async function getCartSessionId(): Promise<string | null> {
   return store.get(CART_COOKIE)?.value ?? null
 }
 
-/** Lee o crea el id de sesión anónima del carrito. Solo desde Server Actions/Route Handlers. */
+/**
+ * Lee o crea el id de sesión anónima del carrito, renovando su caducidad en
+ * cada llamada (ventana deslizante: mientras el visitante siga usando el
+ * carrito, la cookie no expira). Solo desde Server Actions/Route Handlers.
+ */
 export async function getOrCreateCartSessionId(): Promise<string> {
   const store = await cookies()
-  const existing = store.get(CART_COOKIE)?.value
-  if (existing) return existing
+  const id = store.get(CART_COOKIE)?.value ?? randomUUID()
 
-  const id = randomUUID()
   store.set(CART_COOKIE, id, {
     httpOnly: true,
     sameSite: 'lax',

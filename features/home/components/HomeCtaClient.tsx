@@ -2,6 +2,7 @@
 
 import { saveHomeCta } from '@/features/home/actions/home-cta.actions'
 import type { HomeCtaData } from '@/features/home/queries/home-cta.queries'
+import { LinkPicker } from '@/features/marketing/components/LinkPicker'
 import { ImageUploadField } from '@/shared/components/admin/ImageUploadField'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { Button } from '@/shared/components/ui/Button'
@@ -87,24 +88,18 @@ export function HomeCtaClient({ initial }: HomeCtaClientProps) {
           />
         </FormField>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <FormField label="Texto del botón">
-            <input
-              value={form.ctaLabel}
-              onChange={(e) => set('ctaLabel', e.target.value)}
-              className="adm-input"
-              placeholder="Explorar ahora"
-            />
-          </FormField>
-          <FormField label="Enlace del botón">
-            <input
-              value={form.ctaHref}
-              onChange={(e) => set('ctaHref', e.target.value)}
-              className="adm-input"
-              placeholder="/catalogo?oferta=1"
-            />
-          </FormField>
-        </div>
+        <FormField label="Texto del botón">
+          <input
+            value={form.ctaLabel}
+            onChange={(e) => set('ctaLabel', e.target.value)}
+            className="adm-input"
+            placeholder="Explorar ahora"
+          />
+        </FormField>
+
+        <FormField label="Destino del botón">
+          <LinkPicker value={form.ctaHref} onChange={(href) => set('ctaHref', href)} />
+        </FormField>
 
         <FormField label="Imagen de fondo (opcional — sin imagen se usa el fondo de color)">
           <ImageUploadField

@@ -3,7 +3,7 @@
 import { useCartStore } from '@/features/cart/stores/cart.store'
 import { ProductImageCarousel } from '@/features/products/components/ProductImageCarousel'
 import { useProductModalStore } from '@/features/products/stores/product-modal.store'
-import { getCategoryStripe } from '@/features/products/types/catalog.types'
+import { getCategoryStripe, type CatalogProduct } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
 import { ArrowRight, Minus, Plus, X } from 'lucide-react'
 import Link from 'next/link'
@@ -12,26 +12,32 @@ import { toast } from 'sonner'
 
 export function ProductModal() {
   const { activeProduct: p, closeProductModal } = useProductModalStore()
+
+  if (!p) return null
+
+  // `key` remonta el contenido al cambiar de producto: la cantidad vuelve a 1
+  // sin necesidad de resetearla desde un efecto.
+  return <ProductModalContent key={p.id} p={p} onClose={closeProductModal} />
+}
+
+function ProductModalContent({ p, onClose }: { p: CatalogProduct; onClose: () => void }) {
   const { addToCart } = useCartStore()
   const [qty, setQty] = useState(1)
 
   useEffect(() => {
-    setQty(1)
     const h = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeProductModal()
+      if (e.key === 'Escape') onClose()
     }
-    if (p) window.addEventListener('keydown', h)
+    window.addEventListener('keydown', h)
     return () => window.removeEventListener('keydown', h)
-  }, [p, closeProductModal])
-
-  if (!p) return null
+  }, [onClose])
 
   const isPreorder = p.status === 'PREORDER'
   const isOutOfStock = !isPreorder && (p.stock === 0 || p.status === 'SOLD_OUT')
 
   return (
     <div
-      onClick={closeProductModal}
+      onClick={onClose}
       className="fixed inset-0 z-300 bg-black/82 backdrop-blur-[10px] flex items-center justify-center p-3 sm:p-6"
     >
       <div
@@ -48,7 +54,7 @@ export function ProductModal() {
           <Button
             variant="icon"
             size="md"
-            onClick={closeProductModal}
+            onClick={onClose}
             className="absolute top-4 right-4 z-10"
           >
             <X size={16} />
@@ -97,7 +103,7 @@ export function ProductModal() {
               toast.success(
                 isPreorder ? `"${p.name}" reservado` : `"${p.name}" agregado al carrito`,
               )
-              closeProductModal()
+              onClose()
             }}
           >
             {isOutOfStock
@@ -107,14 +113,14 @@ export function ProductModal() {
 
           <Link
             href={`/catalogo/${p.slug}`}
-            onClick={closeProductModal}
+            onClick={onClose}
             className="inline-flex justify-center items-center w-full text-center border border-(--bd) px-6 py-3 text-[12px] tracking-[2px] uppercase font-display font-extrabold hover:border-(--gold) hover:text-(--gold) transition-colors duration-300"
           >
             Ver detalles del producto
             <ArrowRight className="ml-1" size={14} strokeWidth={3} />
           </Link>
 
-          <Button variant="ghost" size="lg" full onClick={closeProductModal}>
+          <Button variant="ghost" size="lg" full onClick={onClose}>
             Seguir explorando
           </Button>
         </div>
