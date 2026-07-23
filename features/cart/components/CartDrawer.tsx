@@ -7,6 +7,7 @@ import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
 import { formatCurrency } from '@/shared/lib/utils'
 import { ArrowRight, Minus, Plus, X } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -68,9 +69,21 @@ export function CartDrawer({ pricingRules }: CartDrawerProps) {
                 key={item.product.id}
                 className="flex gap-3.5 items-center pb-3.5 border-b border-(--bd)"
               >
-                <div
-                  className={`${getCategoryStripe(item.product.category.slug)} w-17.5 h-17.5 shrink-0`}
-                />
+                <div className="relative w-17.5 h-17.5 shrink-0 overflow-hidden">
+                  {item.product.imageUrl ? (
+                    <Image
+                      src={item.product.imageUrl}
+                      alt={item.product.name}
+                      fill
+                      sizes="70px"
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div
+                      className={`${getCategoryStripe(item.product.category.slug)} w-full h-full`}
+                    />
+                  )}
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-display text-[17px] font-extrabold uppercase whitespace-nowrap overflow-hidden text-ellipsis">
                     {item.product.name}
