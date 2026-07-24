@@ -5,10 +5,12 @@ const nextConfig: NextConfig = {
     // Cloudinary ya optimiza/redimensiona/convierte formato vía parámetros de URL
     // (f_auto,q_auto) — reprocesar con sharp en el servidor sería trabajo duplicado
     // y depende de que sharp funcione en el hosting, que es justo lo que fallaba.
+    //
+    // Con unoptimized:true las imágenes se sirven directo desde el host remoto
+    // (no pasan por el optimizador de Next), así que dangerouslyAllowSVG /
+    // contentDispositionType / contentSecurityPolicy del bloque images no
+    // aplicaban — se quitaron para no dar falsa sensación de protección.
     unoptimized: true,
-    dangerouslyAllowSVG: true,
-    contentDispositionType: 'attachment',
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
       {
         protocol: 'https',
