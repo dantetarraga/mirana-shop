@@ -1,6 +1,7 @@
 'use client'
 
 import { useCartStore } from '@/features/cart/stores/cart.store'
+import { remainingStock, stockLimitMessage } from '@/features/products/lib/stock'
 import type { CatalogProduct } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
 import { Minus, Plus } from 'lucide-react'
@@ -12,9 +13,23 @@ interface Props {
 }
 
 export function AddToCartPanel({ product: p }: Props) {
-  const { addToCart } = useCartStore()
+  const { cart, addToCart } = useCartStore()
   const [qty, setQty] = useState(1)
   const isOutOfStock = p.stock === 0 || p.status === 'SOLD_OUT'
+
+  // El tope descuenta lo que ya está en el carrito: con 2 en stock y 1 ya
+  // agregado, aquí solo se puede elegir 1 más.
+  const inCart = cart.find((i) => i.product.id === p.id)?.qty ?? 0
+  const remaining = remainingStock(p, inCart)
+  const atLimit = remaining !== null && qty >= remaining
+
+  const increase = () => {
+    if (atLimit) {
+      toast.warning(stockLimitMessage(p.name))
+      return
+    }
+    setQty((q) => q + 1)
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -28,7 +43,7 @@ export function AddToCartPanel({ product: p }: Props) {
             <div className="w-13 text-center font-display text-[20px] font-extrabold border-l border-r border-(--bd) flex items-center justify-center h-10.5">
               {qty}
             </div>
-            <Button variant="icon" size="md" onClick={() => setQty((q) => q + 1)}>
+            <Button variant="icon" size="md" onClick={increase}>
               <Plus size={14} />
             </Button>
           </div>
@@ -41,8 +56,8 @@ export function AddToCartPanel({ product: p }: Props) {
         full
         disabled={isOutOfStock}
         onClick={() => {
-          addToCart(p, qty)
-          toast.success(`"${p.name}" agregado al carrito`)
+          // El store vuelve a aplicar el tope y avisa si ya no cabe nada.
+          if (addToCart(p, qty) > 0) toast.success(`"${p.name}" agregado al carrito`)
         }}
       >
         {isOutOfStock ? 'Sin stock' : `Agregar al carrito · S/ ${(p.price * qty).toFixed(2)}`}

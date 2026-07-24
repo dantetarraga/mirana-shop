@@ -2,6 +2,7 @@
 
 import { useCartStore } from '@/features/cart/stores/cart.store'
 import { ProductImageCarousel } from '@/features/products/components/ProductImageCarousel'
+import { remainingStock, stockLimitMessage } from '@/features/products/lib/stock'
 import { useProductModalStore } from '@/features/products/stores/product-modal.store'
 import { getCategoryStripe, type CatalogProduct } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
@@ -21,7 +22,7 @@ export function ProductModal() {
 }
 
 function ProductModalContent({ p, onClose }: { p: CatalogProduct; onClose: () => void }) {
-  const { addToCart } = useCartStore()
+  const { cart, addToCart } = useCartStore()
   const [qty, setQty] = useState(1)
 
   useEffect(() => {
@@ -34,6 +35,19 @@ function ProductModalContent({ p, onClose }: { p: CatalogProduct; onClose: () =>
 
   const isPreorder = p.status === 'PREORDER'
   const isOutOfStock = !isPreorder && (p.stock === 0 || p.status === 'SOLD_OUT')
+
+  // El tope descuenta lo que ya está en el carrito.
+  const inCart = cart.find((i) => i.product.id === p.id)?.qty ?? 0
+  const remaining = remainingStock(p, inCart)
+  const atLimit = remaining !== null && qty >= remaining
+
+  const increase = () => {
+    if (atLimit) {
+      toast.warning(stockLimitMessage(p.name))
+      return
+    }
+    setQty((q) => q + 1)
+  }
 
   return (
     <div
@@ -86,7 +100,7 @@ function ProductModalContent({ p, onClose }: { p: CatalogProduct; onClose: () =>
                 <div className="w-13 text-center font-display text-[20px] font-extrabold border-l border-r border-(--bd) flex items-center justify-center h-10.5">
                   {qty}
                 </div>
-                <Button variant="icon" size="md" onClick={() => setQty((q) => q + 1)}>
+                <Button variant="icon" size="md" onClick={increase}>
                   <Plus size={14} />
                 </Button>
               </div>
@@ -99,11 +113,13 @@ function ProductModalContent({ p, onClose }: { p: CatalogProduct; onClose: () =>
             full
             disabled={isOutOfStock}
             onClick={() => {
-              addToCart(p, qty)
-              toast.success(
-                isPreorder ? `"${p.name}" reservado` : `"${p.name}" agregado al carrito`,
-              )
-              onClose()
+              // El store vuelve a aplicar el tope y avisa si ya no cabe nada.
+              if (addToCart(p, qty) > 0) {
+                toast.success(
+                  isPreorder ? `"${p.name}" reservado` : `"${p.name}" agregado al carrito`,
+                )
+                onClose()
+              }
             }}
           >
             {isOutOfStock

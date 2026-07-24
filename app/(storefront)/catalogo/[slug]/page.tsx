@@ -13,6 +13,9 @@ import { notFound } from 'next/navigation'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
+/** Bajo este stock se muestra el aviso de urgencia (sin decir la cifra exacta). */
+const LOW_STOCK_HINT_THRESHOLD = 8
+
 interface PageProps {
   params: Promise<{ slug: string }>
 }
@@ -203,10 +206,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
               )}
             </div>
 
-            {/* Stock indicator */}
-            {!isOutOfStock && product.stock <= 8 && (
+            {/* Aviso de urgencia — sin revelar cuántas unidades quedan */}
+            {!isOutOfStock && product.stock <= LOW_STOCK_HINT_THRESHOLD && (
               <div className="text-[12px] text-[#ffb84a] font-semibold tracking-[0.5px]">
-                ⚠ Solo quedan {product.stock} unidades
+                ⚠ ¡Últimas unidades disponibles!
               </div>
             )}
 

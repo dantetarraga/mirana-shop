@@ -128,8 +128,9 @@ export function ProductCard({
                 className="flex-1"
                 onClick={(e) => {
                   e.stopPropagation()
-                  updateQty(p.id, -1)
-                  toast.success(`"${p.name}" — ${qtyInCart - 1} en el carrito`)
+                  if (updateQty(p.id, -1)) {
+                    toast.success(`"${p.name}" — ${qtyInCart - 1} en el carrito`)
+                  }
                 }}
               >
                 <Minus size={14} />
@@ -144,8 +145,10 @@ export function ProductCard({
               className="flex-1"
               onClick={(e) => {
                 e.stopPropagation()
-                updateQty(p.id, 1)
-                toast.success(`"${p.name}" agregado — ${qtyInCart + 1} en el carrito`)
+                // updateQty avisa por sí solo cuando se llegó al tope de stock.
+                if (updateQty(p.id, 1)) {
+                  toast.success(`"${p.name}" agregado — ${qtyInCart + 1} en el carrito`)
+                }
               }}
             >
               <Plus size={14} />
@@ -159,8 +162,7 @@ export function ProductCard({
             disabled={isOutOfStock}
             onClick={(e) => {
               e.stopPropagation()
-              if (!isOutOfStock) {
-                addToCart(p, 1)
+              if (!isOutOfStock && addToCart(p, 1) > 0) {
                 toast.success(
                   isPreorder ? `"${p.name}" reservado` : `"${p.name}" agregado al carrito`,
                 )

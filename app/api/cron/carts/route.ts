@@ -2,13 +2,15 @@ import { purgeExpiredCarts } from '@/features/cart/lib/cart-ttl'
 import { NextResponse, type NextRequest } from 'next/server'
 
 // ---------------------------------------------------------------------------
-// GET /api/cron/carts — borra los carritos caducados (30 días anónimos,
-// 90 días de cuenta, contados desde la última actividad).
+// GET /api/cron/carts — borra los carritos caducados (1 día sin actividad).
 //
 // Protegida con CRON_SECRET (.env). En Hostinger (hPanel → Cron Jobs) crear
-// un job diario (p. ej. 3:00) que ejecute:
+// un job cada pocas horas (p. ej. cada 6) que ejecute:
 //   curl -s "https://TU-DOMINIO.com/api/cron/carts?secret=CRON_SECRET"
 // (o con header: curl -H "Authorization: Bearer CRON_SECRET" …)
+//
+// La frecuencia solo afecta cuánto tarda en liberarse la fila: leer o escribir
+// un carrito caducado ya lo trata como vacío sin esperar al cron.
 // ---------------------------------------------------------------------------
 
 export async function GET(req: NextRequest) {
