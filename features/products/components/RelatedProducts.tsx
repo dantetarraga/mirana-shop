@@ -1,6 +1,6 @@
 import { toProductCards } from '@/features/products/lib/product-card'
 import { getProducts } from '@/features/products/queries/product.queries'
-import { getPublicStockFilter } from '@/features/settings/queries/store-settings.queries'
+import { getHideOutOfStock } from '@/features/settings/queries/store-settings.queries'
 import { ProductCarousel } from './ProductCarousel'
 
 interface Props {
@@ -19,13 +19,13 @@ export async function RelatedProducts({
   // Prioridad: misma colección > misma marca > misma categoría
   // Hacemos las 3 queries y combinamos, deduplificando y excluyendo el producto actual
 
-  const stockFilter = await getPublicStockFilter()
+  const hideOutOfStock = await getHideOutOfStock()
 
   const [byCat, byBrand, byCollection] = await Promise.all([
-    getProducts({ categorySlug, stockFilter, take: 12 }),
-    getProducts({ brandSlug, stockFilter, take: 12 }),
+    getProducts({ categorySlug, hideOutOfStock, take: 12 }),
+    getProducts({ brandSlug, hideOutOfStock, take: 12 }),
     collectionSlugs.length > 0
-      ? getProducts({ collectionSlug: collectionSlugs, stockFilter, take: 12 })
+      ? getProducts({ collectionSlug: collectionSlugs, hideOutOfStock, take: 12 })
       : Promise.resolve([]),
   ])
 

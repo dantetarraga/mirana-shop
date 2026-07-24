@@ -5,7 +5,7 @@ import type { CategoryRow } from '@/features/categories/types'
 import { toProductCards } from '@/features/products/lib/product-card'
 import { countProducts, getProducts } from '@/features/products/queries/product.queries'
 import type { CatalogProduct } from '@/features/products/types/catalog.types'
-import { getPublicStockFilter } from '@/features/settings/queries/store-settings.queries'
+import { getHideOutOfStock } from '@/features/settings/queries/store-settings.queries'
 
 const MIN_QUERY_LENGTH = 2
 const PRODUCT_SUGGESTIONS_TAKE = 6
@@ -39,12 +39,12 @@ export async function getSearchSuggestions(rawQuery: string): Promise<SearchSugg
     }
   }
 
-  const stockFilter = await getPublicStockFilter()
+  const hideOutOfStock = await getHideOutOfStock()
 
   const [products, matchingCategories, total] = await Promise.all([
-    getProducts({ search: query, stockFilter, take: PRODUCT_SUGGESTIONS_TAKE }),
+    getProducts({ search: query, hideOutOfStock, take: PRODUCT_SUGGESTIONS_TAKE }),
     getCategories({ search: query, perPage: MATCHING_CATEGORIES_TAKE }),
-    countProducts({ search: query, stockFilter }),
+    countProducts({ search: query, hideOutOfStock }),
   ])
 
   // Sin coincidencias de producto: usar categorías populares como sugerencia de

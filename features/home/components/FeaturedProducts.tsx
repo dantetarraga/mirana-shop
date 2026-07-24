@@ -1,7 +1,7 @@
 import { ProductCard } from '@/features/products/components/ProductCard'
 import { toProductCards } from '@/features/products/lib/product-card'
 import { getFeaturedProducts, getProducts } from '@/features/products/queries/product.queries'
-import { getPublicStockFilter } from '@/features/settings/queries/store-settings.queries'
+import { getHideOutOfStock } from '@/features/settings/queries/store-settings.queries'
 import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
@@ -17,7 +17,7 @@ export async function FeaturedProducts() {
   if (featured.length < FEATURED_COUNT) {
     const recent = await getProducts({
       take: FEATURED_COUNT,
-      stockFilter: await getPublicStockFilter(),
+      hideOutOfStock: await getHideOutOfStock(),
     })
 
     source = [

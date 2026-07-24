@@ -44,6 +44,12 @@ export type ProductFilters = {
   /** Por defecto (clave omitida) solo `AVAILABLE`. Pasar 'ALL' para no filtrar por status. */
   status?: ProductStatus | ProductStatus[] | 'ALL'
   stockFilter?: StockFilter
+  /**
+   * Oculta lo que no se puede comprar: agotados (SOLD_OUT o stock 0). La
+   * preventa sigue visible — se reserva, no se despacha de stock.
+   * Refleja el ajuste "Mostrar productos sin stock" de /admin/settings.
+   */
+  hideOutOfStock?: boolean
   priceMin?: number
   priceMax?: number
   /** Solo productos con precio de oferta (salePrice) */

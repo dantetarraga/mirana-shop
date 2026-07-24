@@ -7,7 +7,7 @@ import { ProductCard } from "@/features/products/components/ProductCard";
 import { resolveAvailability, type AvailabilityOption } from "@/features/products/lib/availability";
 import { toProductCards } from "@/features/products/lib/product-card";
 import { countProducts, getProducts } from "@/features/products/queries/product.queries";
-import { getPublicStockFilter } from "@/features/settings/queries/store-settings.queries";
+import { getHideOutOfStock } from "@/features/settings/queries/store-settings.queries";
 import type { ProductSort } from "@/features/products/types";
 import type { Metadata } from "next";
 
@@ -67,7 +67,7 @@ export default async function CatalogPage({ searchParams }: PageProps) {
   const onSale = params.oferta === "1" || undefined;
 
   const { status, stockFilter } = resolveAvailability(avail);
-  const publicStockFilter = await getPublicStockFilter();
+  const hideOutOfStock = await getHideOutOfStock();
 
   const productFilters = {
     categorySlug: cats.length > 0 ? cats : undefined,
@@ -76,7 +76,8 @@ export default async function CatalogPage({ searchParams }: PageProps) {
     priceMin,
     priceMax,
     status,
-    stockFilter: stockFilter ?? publicStockFilter,
+    stockFilter,
+    hideOutOfStock,
     onSale,
     sort,
   };

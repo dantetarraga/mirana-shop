@@ -28,12 +28,12 @@ export async function getStoreSettings(): Promise<StoreSettingsData> {
 }
 
 /**
- * stockFilter a aplicar en los listados públicos del storefront:
- * 'in' (solo con stock) cuando el admin ocultó los productos agotados.
+ * ¿Los listados públicos deben ocultar lo agotado? Refleja el ajuste
+ * "Mostrar productos sin stock" de /admin/settings, invertido.
  */
-export async function getPublicStockFilter(): Promise<'in' | undefined> {
+export async function getHideOutOfStock(): Promise<boolean> {
   const { showOutOfStock } = await getStoreSettings()
-  return showOutOfStock ? undefined : 'in'
+  return !showOutOfStock
 }
 
 /**

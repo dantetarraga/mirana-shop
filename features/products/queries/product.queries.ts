@@ -1,9 +1,4 @@
-import type {
-  ProductDetail,
-  ProductFilters,
-  ProductListItem,
-  StockFilter,
-} from '@/features/products/types'
+import type { ProductDetail, ProductFilters, ProductListItem } from '@/features/products/types'
 import { db } from '@/shared/lib/db'
 import 'server-only'
 
@@ -56,6 +51,7 @@ function buildWhere(filters: Omit<ProductFilters, 'take' | 'skip'>) {
     featured,
     status,
     stockFilter,
+    hideOutOfStock,
     priceMin,
     priceMax,
     onSale,
@@ -96,6 +92,19 @@ function buildWhere(filters: Omit<ProductFilters, 'take' | 'skip'>) {
       ? { price: { gte: priceMin ?? undefined, lte: priceMax ?? undefined } }
       : {}
 
+  // "No mostrar productos sin stock": fuera los SOLD_OUT y los que se quedaron
+  // en cero. La preventa se salva del filtro de inventario porque por
+  // definición aún no tiene unidades — se reserva.
+  const purchasableWhere = hideOutOfStock
+    ? {
+        NOT: { status: 'SOLD_OUT' as const },
+        OR: [
+          { status: 'PREORDER' as const },
+          { inventory: { availableStock: { gt: 0 } } },
+        ],
+      }
+    : {}
+
   return {
     deletedAt: null,
     status: statusWhere,
@@ -109,6 +118,7 @@ function buildWhere(filters: Omit<ProductFilters, 'take' | 'skip'>) {
     salePrice: onSale ? { not: null } : undefined,
     ...inventoryWhere,
     ...priceWhere,
+    ...purchasableWhere,
   }
 }
 
@@ -153,13 +163,13 @@ export async function getFeaturedProducts(take = 8): Promise<ProductListItem[]> 
 
 export async function getNewProducts(
   take = 6,
-  stockFilter?: StockFilter,
+  hideOutOfStock = false,
 ): Promise<ProductListItem[]> {
   return db.product.findMany({
     where: {
       deletedAt: null,
       status: 'AVAILABLE',
-      ...(stockFilter === 'in' ? { inventory: { availableStock: { gt: 0 } } } : {}),
+      ...(hideOutOfStock ? { inventory: { availableStock: { gt: 0 } } } : {}),
     },
     select: PRODUCT_LIST_SELECT,
     orderBy: { createdAt: 'desc' },
