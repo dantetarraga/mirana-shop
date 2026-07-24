@@ -152,7 +152,9 @@ export function CatalogFilters({
         <button
           type="button"
           onClick={() => setMobileOpen((o) => !o)}
-          className="flex-1 flex items-center gap-3 font-display text-[20px] font-black uppercase tracking-[0.5px] text-left justify-between"
+          aria-expanded={mobileOpen}
+          aria-controls="catalog-filters-body"
+          className="flex-1 flex items-center gap-3 font-display text-[20px] font-black uppercase tracking-[0.5px] text-left justify-between lg:cursor-default"
         >
           Filtros
           {hasActiveFilters && (
@@ -175,7 +177,7 @@ export function CatalogFilters({
         )}
       </div>
 
-      <div className={`${mobileOpen ? 'block' : 'hidden'} lg:block`}>
+      <div id="catalog-filters-body" className={`${mobileOpen ? 'block' : 'hidden'} lg:block`}>
         {hasActiveFilters && (
           <div className="px-4 py-3 border-b border-(--bd) flex flex-wrap gap-1.5">
             {chips.map((chip) => (
@@ -184,7 +186,11 @@ export function CatalogFilters({
                 className="flex items-center gap-1.5 bg-(--gd) border border-[rgba(0,200,255,.25)] text-(--gold) text-[11px] px-2.5 py-1"
               >
                 {chip.label}
-                <button onClick={chip.onRemove} className="opacity-70 hover:opacity-100">
+                <button
+                  onClick={chip.onRemove}
+                  aria-label={`Quitar filtro ${chip.label}`}
+                  className="opacity-70 hover:opacity-100"
+                >
                   <X size={12} />
                 </button>
               </div>
@@ -216,6 +222,7 @@ export function CatalogFilters({
             value={brandSearch}
             onChange={(e) => setBrandSearch(e.target.value)}
             placeholder="Buscar marca…"
+            aria-label="Buscar marca"
             className="w-full bg-card border border-(--bd) text-text text-[12px] px-2.5 py-2 mb-2.5 outline-none focus:border-(--gold) placeholder:text-muted"
           />
           {filteredBrands.map((brand) => (
@@ -238,24 +245,40 @@ export function CatalogFilters({
         >
           <div className="grid grid-cols-2 gap-2 mb-3">
             <div className="relative">
-              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 font-display text-[13px] font-bold text-muted">
+              <label htmlFor="price-min" className="sr-only">
+                Precio mínimo en soles
+              </label>
+              <span
+                aria-hidden
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 font-display text-[13px] font-bold text-muted"
+              >
                 S/
               </span>
               <input
+                id="price-min"
                 type="number"
                 min={0}
+                placeholder="Mín"
                 value={priceDraft.min}
                 onChange={(e) => setPriceDraft((d) => ({ ...d, min: e.target.value }))}
                 className="w-full bg-card border border-(--bd) text-text font-display text-[14px] font-bold pl-7 pr-2 py-2 outline-none focus:border-(--gold)"
               />
             </div>
             <div className="relative">
-              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 font-display text-[13px] font-bold text-muted">
+              <label htmlFor="price-max" className="sr-only">
+                Precio máximo en soles
+              </label>
+              <span
+                aria-hidden
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 font-display text-[13px] font-bold text-muted"
+              >
                 S/
               </span>
               <input
+                id="price-max"
                 type="number"
                 min={0}
+                placeholder="Máx"
                 value={priceDraft.max}
                 onChange={(e) => setPriceDraft((d) => ({ ...d, max: e.target.value }))}
                 className="w-full bg-card border border-(--bd) text-text font-display text-[14px] font-bold pl-7 pr-2 py-2 outline-none focus:border-(--gold)"
@@ -325,6 +348,8 @@ function FilterGroup({
     <div className={last ? '' : 'border-b border-(--bd)'}>
       <button
         onClick={() => onToggle(id)}
+        aria-expanded={open}
+        aria-controls={`filter-group-${id}`}
         className="w-full flex items-center justify-between px-5 py-3.5 font-display text-[15px] font-extrabold uppercase tracking-[0.5px] text-text hover:text-(--gold) transition-colors"
       >
         {label}
@@ -333,7 +358,11 @@ function FilterGroup({
           className={`text-muted transition-transform ${open ? 'rotate-180' : ''}`}
         />
       </button>
-      {open && <div className="px-5 pb-4">{children}</div>}
+      {open && (
+        <div id={`filter-group-${id}`} className="px-5 pb-4">
+          {children}
+        </div>
+      )}
     </div>
   )
 }
@@ -349,10 +378,14 @@ function FilterCheckbox({
   label: string
   count?: number
 }) {
+  // Checkbox nativo `sr-only peer`: el <span> es solo la caja visual. Antes era
+  // un <label onClick> con un span dibujado — sin foco ni semántica, todo el
+  // panel de filtros quedaba inoperable con teclado y lectores de pantalla.
   return (
-    <label onClick={onClick} className="flex items-center gap-2.5 py-1.5 cursor-pointer group">
+    <label className="flex items-center gap-2.5 py-1.5 cursor-pointer group">
+      <input type="checkbox" checked={checked} onChange={onClick} className="sr-only peer" />
       <span
-        className={`w-4 h-4 shrink-0 border flex items-center justify-center transition-colors ${
+        className={`w-4 h-4 shrink-0 border flex items-center justify-center transition-colors peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--gold) ${
           checked ? 'bg-(--gold) border-(--gold)' : 'border-(--bd) bg-transparent'
         }`}
       >

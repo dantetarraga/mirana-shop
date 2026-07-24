@@ -58,6 +58,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es" className={`${barlowCondensed.variable} ${plusJakarta.variable} h-full`}>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[1000] focus:bg-(--gold) focus:text-black focus:px-4 focus:py-2 focus:font-display focus:font-bold focus:uppercase focus:tracking-[1px]"
+        >
+          Saltar al contenido
+        </a>
         <Providers>
           {children}
 

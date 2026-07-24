@@ -1,10 +1,11 @@
 'use client'
 
 import { Button } from '@/shared/components/ui/Button'
+import { useFocusTrap } from '@/shared/hooks/useFocusTrap'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { cn } from '@/shared/lib/utils'
 import { X } from 'lucide-react'
-import { useEffect, useRef } from 'react'
+import { useEffect, useId } from 'react'
 import { createPortal } from 'react-dom'
 
 const SIZES = {
@@ -41,7 +42,8 @@ export function Modal({
   hideClose = false,
   className,
 }: ModalProps) {
-  const panelRef = useRef<HTMLDivElement>(null)
+  const panelRef = useFocusTrap<HTMLDivElement>(open)
+  const titleId = useId()
 
   useEffect(() => {
     if (!open) return
@@ -68,8 +70,6 @@ export function Modal({
   return createPortal(
     // Overlay
     <div
-      role="dialog"
-      aria-modal="true"
       onClick={onClose}
       className="fixed inset-0 z-500 flex items-center justify-center p-4 sm:p-6
                  bg-black/82 backdrop-blur-[10px] animate-fade-in"
@@ -77,6 +77,10 @@ export function Modal({
       {/* Panel */}
       <div
         ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? titleId : undefined}
+        aria-label={!title && label ? label : undefined}
         onClick={(e) => e.stopPropagation()}
         className={cn(
           'relative w-full bg-surf border border-(--bd)',
@@ -90,7 +94,10 @@ export function Modal({
           <div className="px-5 sm:px-8 pt-6 sm:pt-8 pb-0 shrink-0">
             {label && <div className={cn(cls.label, 'mb-1.5')}>{label}</div>}
             {title && (
-              <div className="font-display text-[28px] font-black uppercase tracking-[-0.5px] leading-tight pr-8">
+              <div
+                id={titleId}
+                className="font-display text-[28px] font-black uppercase tracking-[-0.5px] leading-tight pr-8"
+              >
                 {title}
               </div>
             )}

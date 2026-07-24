@@ -111,13 +111,13 @@ export function EntityProductsDrawer({
   useEffect(() => {
     if (searchTimer.current) clearTimeout(searchTimer.current);
 
-    if (searchQuery.trim().length < 2) {
-      setSearchResults([]);
-      return;
-    }
+    // Query demasiado corta: no se busca. No se resetea aquí (evita setState
+    // síncrono en el efecto) — el render ya oculta resultados por longitud.
+    if (searchQuery.trim().length < 2) return;
 
-    setSearching(true);
+    // Todos los setState viven dentro del callback async del setTimeout.
     searchTimer.current = setTimeout(async () => {
+      setSearching(true);
       const currentIds = products.map((p) => p.id);
       const result = await searchAvailableProducts(searchQuery.trim(), currentIds);
       setSearching(false);
@@ -354,7 +354,7 @@ export function EntityProductsDrawer({
                 </div>
 
                 {/* Resultados */}
-                {searchResults.length > 0 && (
+                {searchQuery.trim().length >= 2 && searchResults.length > 0 && (
                   <div className="border border-(--bd) overflow-hidden">
                     {searchResults.map((r) => (
                       <button

@@ -1,14 +1,16 @@
 'use client'
 
 import { useCartStore } from '@/features/cart/stores/cart.store'
+import { effectivePrice } from '@/features/checkout/lib/pricing'
 import { ProductImageCarousel } from '@/features/products/components/ProductImageCarousel'
 import { remainingStock, stockLimitMessage } from '@/features/products/lib/stock'
 import { useProductModalStore } from '@/features/products/stores/product-modal.store'
 import { getCategoryStripe, type CatalogProduct } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
+import { useFocusTrap } from '@/shared/hooks/useFocusTrap'
 import { ArrowRight, Minus, Plus, X } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { toast } from 'sonner'
 
 export function ProductModal() {
@@ -24,6 +26,8 @@ export function ProductModal() {
 function ProductModalContent({ p, onClose }: { p: CatalogProduct; onClose: () => void }) {
   const { cart, addToCart } = useCartStore()
   const [qty, setQty] = useState(1)
+  const panelRef = useFocusTrap<HTMLDivElement>(true)
+  const titleId = useId()
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
@@ -33,8 +37,21 @@ function ProductModalContent({ p, onClose }: { p: CatalogProduct; onClose: () =>
     return () => window.removeEventListener('keydown', h)
   }, [onClose])
 
+  // Bloquea el scroll del fondo mientras el modal está abierto.
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [])
+
   const isPreorder = p.status === 'PREORDER'
   const isOutOfStock = !isPreorder && (p.stock === 0 || p.status === 'SOLD_OUT')
+
+  // Precio con oferta aplicada — igual que carrito y checkout. Antes mostraba
+  // p.price (sin descuento) mientras el carrito cobraba el precio rebajado.
+  const unitPrice = effectivePrice(p)
+  const hasDiscount = p.salePrice != null && p.salePrice < p.price
 
   // El tope descuenta lo que ya está en el carrito.
   const inCart = cart.find((i) => i.product.id === p.id)?.qty ?? 0
@@ -55,6 +72,10 @@ function ProductModalContent({ p, onClose }: { p: CatalogProduct; onClose: () =>
       className="fixed inset-0 z-300 bg-black/82 backdrop-blur-[10px] flex items-center justify-center p-3 sm:p-6"
     >
       <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         onClick={(e) => e.stopPropagation()}
         className="bg-surf border border-(--bd) max-w-220 w-full max-h-[92vh] overflow-y-auto grid grid-cols-1 sm:grid-cols-2 relative"
       >
@@ -68,6 +89,7 @@ function ProductModalContent({ p, onClose }: { p: CatalogProduct; onClose: () =>
           <Button
             variant="icon"
             size="md"
+            aria-label="Cerrar"
             onClick={onClose}
             className="absolute top-4 right-4 z-10"
           >
@@ -81,26 +103,41 @@ function ProductModalContent({ p, onClose }: { p: CatalogProduct; onClose: () =>
             <div className="text-[10px] tracking-[3px] uppercase text-muted">
               {p.category.name} · {p.brand.name}
             </div>
-            <div className="font-display font-black uppercase leading-[0.95] tracking-[-1px] text-[clamp(28px,4vw,48px)]">
+            <h2
+              id={titleId}
+              className="font-display font-black uppercase leading-[0.95] tracking-[-1px] text-[clamp(28px,4vw,48px)]"
+            >
               {p.name}
-            </div>
+            </h2>
           </div>
 
-          <div className="font-display text-[38px] sm:text-[52px] font-black text-(--gold) leading-none">
-            S/ {p.price.toFixed(2)}
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <div className="font-display text-[38px] sm:text-[52px] font-black text-(--gold) leading-none">
+              S/ {unitPrice.toFixed(2)}
+            </div>
+            {hasDiscount && (
+              <div className="font-display text-[20px] sm:text-[26px] font-normal text-muted line-through leading-none">
+                S/ {p.price.toFixed(2)}
+              </div>
+            )}
           </div>
 
           {!isOutOfStock && (
             <div>
               <div className="text-[10px] tracking-[2px] uppercase text-muted mb-2.5">Cantidad</div>
               <div className="flex items-center border border-(--bd) w-fit">
-                <Button variant="icon" size="md" onClick={() => setQty((q) => Math.max(1, q - 1))}>
+                <Button
+                  variant="icon"
+                  size="md"
+                  aria-label="Quitar una unidad"
+                  onClick={() => setQty((q) => Math.max(1, q - 1))}
+                >
                   <Minus size={14} />
                 </Button>
                 <div className="w-13 text-center font-display text-[20px] font-extrabold border-l border-r border-(--bd) flex items-center justify-center h-10.5">
                   {qty}
                 </div>
-                <Button variant="icon" size="md" onClick={increase}>
+                <Button variant="icon" size="md" aria-label="Agregar una unidad" onClick={increase}>
                   <Plus size={14} />
                 </Button>
               </div>
@@ -124,7 +161,7 @@ function ProductModalContent({ p, onClose }: { p: CatalogProduct; onClose: () =>
           >
             {isOutOfStock
               ? 'Sin stock'
-              : `${isPreorder ? 'Reservar ahora' : 'Agregar al carrito'} · S/ ${(p.price * qty).toFixed(2)}`}
+              : `${isPreorder ? 'Reservar ahora' : 'Agregar al carrito'} · S/ ${(unitPrice * qty).toFixed(2)}`}
           </Button>
 
           <Link

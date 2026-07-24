@@ -17,47 +17,74 @@ interface ImagePickerModalProps {
 }
 
 export function ImagePickerModal({ open, onClose, folder, onSelect }: ImagePickerModalProps) {
+  return (
+    <Modal open={open} onClose={onClose} title="Elegir imagen existente" size="xl">
+      {/* El cuerpo es hijo del Modal: se monta fresco en cada apertura (Modal
+          devuelve null al cerrar), así el scope vuelve a `folder` sin refs. */}
+      <PickerBody folder={folder} onSelect={onSelect} onClose={onClose} />
+    </Modal>
+  )
+}
+
+function PickerBody({
+  folder,
+  onSelect,
+  onClose,
+}: {
+  folder: UploadFolder
+  onSelect: (url: string) => void
+  onClose: () => void
+}) {
   const [scope, setScope] = useState<UploadFolder | 'all'>(folder)
-  const [images, setImages] = useState<MediaImage[]>([])
-  const [cursor, setCursor] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  // Estado derivado (ver MediaLibraryClient): `loaded.scope` indica a qué scope
+  // pertenece el contenido; mientras no coincida con `scope`, se derivan
+  // loading/lista vacía sin setState síncrono en el efecto.
+  const [loaded, setLoaded] = useState<{
+    scope: UploadFolder | 'all' | null
+    images: MediaImage[]
+    cursor: string | null
+  }>({ scope: null, images: [], cursor: null })
+  const [loadingMore, setLoadingMore] = useState(false)
 
   useEffect(() => {
-    if (!open) return
-    setScope(folder)
-  }, [open, folder])
-
-  useEffect(() => {
-    if (!open) return
-    setImages([])
-    setCursor(null)
-    setLoading(true)
+    let cancelled = false
     listImages(scope).then((result) => {
-      setLoading(false)
+      if (cancelled) return
       if (result.success) {
-        setImages(result.data.images)
-        setCursor(result.data.nextCursor)
+        setLoaded({ scope, images: result.data.images, cursor: result.data.nextCursor })
       } else {
+        setLoaded({ scope, images: [], cursor: null })
         toast.error(result.error)
       }
     })
-  }, [open, scope])
+    return () => {
+      cancelled = true
+    }
+  }, [scope])
+
+  const isCurrent = loaded.scope === scope
+  const images = isCurrent ? loaded.images : []
+  const cursor = isCurrent ? loaded.cursor : null
+  const loading = !isCurrent
 
   const loadMore = async () => {
     if (!cursor) return
-    setLoading(true)
+    setLoadingMore(true)
     const result = await listImages(scope, cursor)
-    setLoading(false)
+    setLoadingMore(false)
     if (result.success) {
-      setImages((prev) => [...prev, ...result.data.images])
-      setCursor(result.data.nextCursor)
+      setLoaded((prev) => ({
+        scope,
+        images: [...prev.images, ...result.data.images],
+        cursor: result.data.nextCursor,
+      }))
     } else {
       toast.error(result.error)
     }
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Elegir imagen existente" size="xl">
+    <>
       <div className="flex gap-2 mb-4">
         <Button
           variant={scope === folder ? 'accent' : 'outline'}
@@ -86,14 +113,14 @@ export function ImagePickerModal({ open, onClose, folder, onSelect }: ImagePicke
           />
           {cursor && (
             <div className="flex justify-center mt-4">
-              <Button variant="outline" size="sm" onClick={loadMore} disabled={loading}>
-                {loading && <Loader2 size={13} className="animate-spin mr-1.5" />}
+              <Button variant="outline" size="sm" onClick={loadMore} disabled={loadingMore}>
+                {loadingMore && <Loader2 size={13} className="animate-spin mr-1.5" />}
                 Cargar más
               </Button>
             </div>
           )}
         </>
       )}
-    </Modal>
+    </>
   )
 }

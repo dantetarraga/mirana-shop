@@ -1,6 +1,7 @@
 'use server'
 
 import { db } from '@/shared/lib/db'
+import { requireUser } from '@/shared/lib/require-user'
 import { revalidatePath } from 'next/cache'
 
 // ---------------------------------------------------------------------------
@@ -30,11 +31,18 @@ export type AddressData = {
 
 // ---------------------------------------------------------------------------
 // Perfil
+//
+// SEGURIDAD: ninguna de estas actions recibe el email como parámetro — se
+// deriva SIEMPRE de la sesión (requireUser). Son endpoints HTTP públicos: si
+// el email llegara del cliente, cualquiera podría leer/editar datos ajenos.
 // ---------------------------------------------------------------------------
 
-export async function getMyProfile(email: string): Promise<ProfileData | null> {
+export async function getMyProfile(): Promise<ProfileData | null> {
+  const session = await requireUser()
+  if (session.denied) return null
+
   const user = await db.user.findUnique({
-    where: { email },
+    where: { email: session.email },
     select: {
       name: true,
       email: true,
@@ -52,12 +60,16 @@ export async function getMyProfile(email: string): Promise<ProfileData | null> {
   }
 }
 
-export async function updateMyProfile(
-  email: string,
-  data: { phone?: string; hasKids?: boolean; kidsCount?: number | null },
-): Promise<{ success: boolean; error?: string }> {
+export async function updateMyProfile(data: {
+  phone?: string
+  hasKids?: boolean
+  kidsCount?: number | null
+}): Promise<{ success: boolean; error?: string }> {
+  const session = await requireUser()
+  if (session.denied) return { success: false, error: session.denied.error }
+
   try {
-    const user = await db.user.findUnique({ where: { email }, select: { id: true } })
+    const user = await db.user.findUnique({ where: { email: session.email }, select: { id: true } })
     if (!user) return { success: false, error: 'Usuario no encontrado' }
 
     await db.profile.upsert({
@@ -86,9 +98,12 @@ export async function updateMyProfile(
 // Direcciones
 // ---------------------------------------------------------------------------
 
-export async function getMyAddresses(email: string): Promise<AddressData[]> {
+export async function getMyAddresses(): Promise<AddressData[]> {
+  const session = await requireUser()
+  if (session.denied) return []
+
   const user = await db.user.findUnique({
-    where: { email },
+    where: { email: session.email },
     select: {
       addresses: {
         orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
@@ -110,11 +125,13 @@ export async function getMyAddresses(email: string): Promise<AddressData[]> {
 }
 
 export async function createAddress(
-  email: string,
   data: Omit<AddressData, 'id' | 'isDefault'> & { isDefault?: boolean },
 ): Promise<{ success: boolean; id?: string; error?: string }> {
+  const session = await requireUser()
+  if (session.denied) return { success: false, error: session.denied.error }
+
   try {
-    const user = await db.user.findUnique({ where: { email }, select: { id: true } })
+    const user = await db.user.findUnique({ where: { email: session.email }, select: { id: true } })
     if (!user) return { success: false, error: 'Usuario no encontrado' }
 
     // Si es la primera o se marca como default, desmarcar las demás
@@ -148,11 +165,13 @@ export async function createAddress(
 
 export async function updateAddress(
   id: string,
-  email: string,
   data: Partial<Omit<AddressData, 'id'>>,
 ): Promise<{ success: boolean; error?: string }> {
+  const session = await requireUser()
+  if (session.denied) return { success: false, error: session.denied.error }
+
   try {
-    const user = await db.user.findUnique({ where: { email }, select: { id: true } })
+    const user = await db.user.findUnique({ where: { email: session.email }, select: { id: true } })
     if (!user) return { success: false, error: 'Usuario no encontrado' }
 
     // Verificar que la dirección pertenece al usuario
@@ -189,12 +208,12 @@ export async function updateAddress(
   }
 }
 
-export async function deleteAddress(
-  id: string,
-  email: string,
-): Promise<{ success: boolean; error?: string }> {
+export async function deleteAddress(id: string): Promise<{ success: boolean; error?: string }> {
+  const session = await requireUser()
+  if (session.denied) return { success: false, error: session.denied.error }
+
   try {
-    const user = await db.user.findUnique({ where: { email }, select: { id: true } })
+    const user = await db.user.findUnique({ where: { email: session.email }, select: { id: true } })
     if (!user) return { success: false, error: 'Usuario no encontrado' }
 
     const existing = await db.userAddress.findFirst({
@@ -211,13 +230,20 @@ export async function deleteAddress(
   }
 }
 
-export async function setDefaultAddress(
-  id: string,
-  email: string,
-): Promise<{ success: boolean; error?: string }> {
+export async function setDefaultAddress(id: string): Promise<{ success: boolean; error?: string }> {
+  const session = await requireUser()
+  if (session.denied) return { success: false, error: session.denied.error }
+
   try {
-    const user = await db.user.findUnique({ where: { email }, select: { id: true } })
+    const user = await db.user.findUnique({ where: { email: session.email }, select: { id: true } })
     if (!user) return { success: false, error: 'Usuario no encontrado' }
+
+    // Verificar que la dirección pertenece al usuario antes de marcarla default
+    const existing = await db.userAddress.findFirst({
+      where: { id, userId: user.id },
+      select: { id: true },
+    })
+    if (!existing) return { success: false, error: 'Dirección no encontrada' }
 
     await db.userAddress.updateMany({
       where: { userId: user.id },

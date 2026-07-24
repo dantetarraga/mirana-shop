@@ -8,8 +8,8 @@ import { Suspense } from 'react'
 export const metadata: Metadata = { robots: { index: false, follow: false } }
 
 export default async function MisPedidosPage() {
-  const user = await getAccountUser()
-  const ordersPromise = getMyOrders(user.email)
+  await getAccountUser()
+  const ordersPromise = getMyOrders()
 
   return (
     <Suspense fallback={<OrdersSkeleton />}>

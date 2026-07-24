@@ -68,7 +68,6 @@ export function PerfilContent({
             </p>
             <ProfileEditForm
               profile={profile}
-              email={user.email}
               onSaved={(updated) => setProfile((p) => ({ ...p, ...updated }))}
             />
           </div>

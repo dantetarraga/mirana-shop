@@ -81,8 +81,14 @@ async function doRemoveProduct(entityId: string, productId: string): Promise<boo
 // ---------------------------------------------------------------------------
 
 export function EntityProductsPanel({ entityId, entityType }: EntityProductsPanelProps) {
-  const [products, setProducts] = useState<DrawerProduct[]>([])
-  const [loading, setLoading] = useState(true)
+  // Carga inicial con estado derivado: `loaded.key` indica de qué entidad es la
+  // lista cargada. Mientras no coincida, `loading` se deriva en render — evita
+  // el setState síncrono en el efecto (cascada de render).
+  const entityKey = `${entityType}:${entityId}`
+  const [loaded, setLoaded] = useState<{ key: string; products: DrawerProduct[] }>({
+    key: '',
+    products: [],
+  })
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<DrawerProduct[]>([])
   const [searching, setSearching] = useState(false)
@@ -90,24 +96,28 @@ export function EntityProductsPanel({ entityId, entityType }: EntityProductsPane
   const [actionId, setActionId] = useState<string | null>(null)
   const searchBoxRef = useRef<HTMLDivElement>(null)
 
+  const loading = loaded.key !== entityKey
+  const products = loading ? [] : loaded.products
+  const setProducts = (updater: (prev: DrawerProduct[]) => DrawerProduct[]) =>
+    setLoaded((prev) => ({ key: entityKey, products: updater(prev.key === entityKey ? prev.products : []) }))
+
   // Carga inicial
   useEffect(() => {
-    setLoading(true)
+    let cancelled = false
     loadProducts(entityType, entityId).then((data) => {
-      setProducts(data)
-      setLoading(false)
+      if (!cancelled) setLoaded({ key: `${entityType}:${entityId}`, products: data })
     })
+    return () => {
+      cancelled = true
+    }
   }, [entityId, entityType])
 
-  // Búsqueda con debounce
+  // Búsqueda con debounce. Todos los setState viven dentro del callback async
+  // del setTimeout (no en el cuerpo del efecto): así no hay cascada de render.
   useEffect(() => {
-    if (!query || query.trim().length < 2) {
-      setResults([])
-      setShowResults(false)
-      return
-    }
-    setSearching(true)
+    if (query.trim().length < 2) return
     const timer = setTimeout(async () => {
+      setSearching(true)
       const excludeIds = products.map((p) => p.id)
       const r = await searchAvailableProducts(query, excludeIds)
       setResults(r.success ? r.data : [])
@@ -190,7 +200,7 @@ export function EntityProductsPanel({ entityId, entityType }: EntityProductsPane
         </div>
 
         {/* Dropdown de resultados */}
-        {showResults && (
+        {showResults && query.trim().length >= 2 && (
           <div className="absolute z-50 top-full w-full bg-(--surf) border border-(--bd) shadow-lg overflow-hidden max-h-60 overflow-y-auto">
             {results.length === 0 ? (
               <div className="px-4 py-3 text-[13px] text-muted">Sin resultados</div>

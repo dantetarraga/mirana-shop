@@ -1,6 +1,5 @@
 ﻿'use client'
 
-import { Button } from '@/shared/components/ui/Button'
 import { useAdminSidebarStore } from '@/shared/stores/admin-sidebar.store'
 import { cn } from '@/shared/lib/utils'
 import {
@@ -95,21 +94,25 @@ export function AdminSidebar() {
             )
           }
           const link = n as NavLink
+          const isActive = pathname === link.href
+          // Link con estilo de botón — antes era <Link><Button/></Link>, que
+          // produce <a><button> (interactivo anidado, HTML inválido).
           return (
-            <Link key={link.href} href={link.href} className="no-underline" onClick={close}>
-              <Button
-                variant="ghost"
-                size="sm"
-                full
-                active={pathname === link.href}
-                className="justify-start gap-3 px-3 relative"
-              >
-                {pathname === link.href && (
-                  <span className="absolute left-0 top-2 bottom-2 w-0.75 bg-(--gold)" />
-                )}
-                <link.icon size={17} className="shrink-0" />
-                {link.label}
-              </Button>
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={close}
+              aria-current={isActive ? 'page' : undefined}
+              className={cn(
+                'ui-btn ui-btn--ghost ui-btn--sm ui-btn--full justify-start gap-3 px-3 relative no-underline',
+                isActive && 'ui-btn--active',
+              )}
+            >
+              {isActive && (
+                <span className="absolute left-0 top-2 bottom-2 w-0.75 bg-(--gold)" />
+              )}
+              <link.icon size={17} className="shrink-0" />
+              {link.label}
             </Link>
           )
         })}
@@ -117,13 +120,13 @@ export function AdminSidebar() {
 
       {/* Footer */}
       <div className="p-3 border-t border-(--bd)">
-        <a
+        <Link
           href="/"
           className="flex items-center gap-3 px-3 py-2.75 no-underline font-sans text-sm text-muted"
         >
           <ArrowLeft size={17} />
           Volver a la tienda
-        </a>
+        </Link>
         <div className="flex items-center gap-2.5 px-3 py-2.5">
           <div className="w-8.5 h-8.5 flex items-center justify-center font-display font-black text-[14px] shrink-0 bg-(--gold) text-black">
             AD

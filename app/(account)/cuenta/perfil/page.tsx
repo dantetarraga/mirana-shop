@@ -10,8 +10,8 @@ export const metadata: Metadata = { robots: { index: false, follow: false } }
 
 export default async function PerfilPage() {
   const user = await getAccountUser()
-  const profilePromise = getMyProfile(user.email)
-  const ordersPromise = getMyOrders(user.email)
+  const profilePromise = getMyProfile()
+  const ordersPromise = getMyOrders()
 
   return (
     <Suspense fallback={<ProfileSkeleton />}>

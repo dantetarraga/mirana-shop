@@ -83,7 +83,7 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
   // Cargar direcciones guardadas si el usuario está logueado
   useEffect(() => {
     if (!user) return
-    getMyAddresses(user.email).then((addrs) => {
+    getMyAddresses().then((addrs) => {
       setSavedAddresses(addrs)
       // Pre-seleccionar la dirección predeterminada
       const def = addrs.find((a) => a.isDefault) ?? addrs[0]
@@ -121,10 +121,10 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
 
   const handleSaveNewAddress = async (data: AddressFormValues) => {
     if (!user) return
-    const result = await createAddress(user.email, data)
+    const result = await createAddress(data)
     if (result.success && result.id) {
       toast.success('Dirección guardada en tu cuenta')
-      const updatedAddrs = await getMyAddresses(user.email)
+      const updatedAddrs = await getMyAddresses()
       setSavedAddresses(updatedAddrs)
       const newAddr = updatedAddrs.find((a) => a.id === result.id)
       if (newAddr) applyAddress(newAddr)

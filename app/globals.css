@@ -53,7 +53,7 @@
   --color-card: #122040; /* cards de producto en reposo */
   --color-card-hover: #182e55; /* cards de producto en hover */
   --color-text: #e4f0ff; /* texto principal */
-  --color-muted: rgba(228, 240, 255, 0.42); /* texto secundario */
+  --color-muted: rgba(228, 240, 255, 0.6); /* texto secundario · 0.6 ≈ 5.5:1 sobre --bg (WCAG AA); antes 0.42 = 3.68:1 reprobaba */
   --color-subtle: rgba(0, 200, 255, 0.06); /* fondo sutil */
   --color-border: rgba(0, 200, 255, 0.12); /* borde default */
   --color-border-gold: rgba(0, 200, 255, 0.35); /* borde gold hover */
@@ -219,6 +219,39 @@
   ::-webkit-scrollbar-thumb {
     @apply bg-border rounded;
   }
+
+  /* Respeta la preferencia del sistema de movimiento reducido: anula el
+     marquee, los slide/fade y cualquier transición larga. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* =============================================================
+   Foco global por teclado — SIN capa a propósito.
+   Antes .ui-btn tenía outline-none y ningún control mostraba foco: el sitio
+   era inoperable/ilegible con teclado. Muchos controles llevan `outline-none`
+   como utility (capa utilities, la de mayor prioridad) o en @layer components,
+   así que una regla en @layer base no ganaría. Al estar SIN capa, esta regla
+   vence a cualquier estilo con capa. :focus-visible solo aparece en teclado.
+   ============================================================= */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible,
+[role='button']:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  border-radius: 1px;
 }
 
 /* =============================================================

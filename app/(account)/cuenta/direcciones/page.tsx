@@ -8,12 +8,12 @@ import { Suspense } from 'react'
 export const metadata: Metadata = { robots: { index: false, follow: false } }
 
 export default async function DireccionesPage() {
-  const user = await getAccountUser()
-  const addressesPromise = getMyAddresses(user.email)
+  await getAccountUser()
+  const addressesPromise = getMyAddresses()
 
   return (
     <Suspense fallback={<AddressesSkeleton />}>
-      <DireccionesContent user={user} addressesPromise={addressesPromise} />
+      <DireccionesContent addressesPromise={addressesPromise} />
     </Suspense>
   )
 }

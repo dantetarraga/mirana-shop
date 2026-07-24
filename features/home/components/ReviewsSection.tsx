@@ -79,7 +79,7 @@ export function ReviewsSection() {
             className="animate-fade-up bg-card border border-(--bd) p-6 sm:p-7 relative transition-[border-color] duration-[.25s]"
           >
             <div className="absolute top-3.5 right-4.5 font-display text-[72px] font-black text-(--gold) opacity-[.15] leading-[0.8] italic">
-              "
+              &ldquo;
             </div>
             <div className="text-(--gold) mb-3.5">
               <StarRating value={r.stars} size={13} />

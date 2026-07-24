@@ -14,35 +14,50 @@ const TABS = ['all', ...ALLOWED_FOLDERS] as const
 
 export function MediaLibraryClient() {
   const [folder, setFolder] = useState<(typeof TABS)[number]>('all')
-  const [images, setImages] = useState<MediaImage[]>([])
-  const [cursor, setCursor] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+  // `loaded.folder` marca a qué carpeta corresponde el contenido cargado.
+  // Mientras no coincida con `folder`, se deriva loading/lista vacía — así no
+  // hace falta un setState síncrono en el efecto (cascada de render).
+  const [loaded, setLoaded] = useState<{
+    folder: (typeof TABS)[number] | null
+    images: MediaImage[]
+    cursor: string | null
+  }>({ folder: null, images: [], cursor: null })
+  const [loadingMore, setLoadingMore] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<MediaImage | null>(null)
   const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
-    setLoading(true)
-    setImages([])
-    setCursor(null)
+    let cancelled = false
     listImages(folder).then((result) => {
-      setLoading(false)
+      if (cancelled) return
       if (result.success) {
-        setImages(result.data.images)
-        setCursor(result.data.nextCursor)
+        setLoaded({ folder, images: result.data.images, cursor: result.data.nextCursor })
       } else {
+        setLoaded({ folder, images: [], cursor: null })
         toast.error(result.error)
       }
     })
+    return () => {
+      cancelled = true
+    }
   }, [folder])
+
+  const isCurrent = loaded.folder === folder
+  const images = isCurrent ? loaded.images : []
+  const cursor = isCurrent ? loaded.cursor : null
+  const loading = !isCurrent
 
   const loadMore = async () => {
     if (!cursor) return
-    setLoading(true)
+    setLoadingMore(true)
     const result = await listImages(folder, cursor)
-    setLoading(false)
+    setLoadingMore(false)
     if (result.success) {
-      setImages((prev) => [...prev, ...result.data.images])
-      setCursor(result.data.nextCursor)
+      setLoaded((prev) => ({
+        folder,
+        images: [...prev.images, ...result.data.images],
+        cursor: result.data.nextCursor,
+      }))
     } else {
       toast.error(result.error)
     }
@@ -54,7 +69,10 @@ export function MediaLibraryClient() {
     const result = await deleteImage(pendingDelete.publicId)
     setDeleting(false)
     if (result.success) {
-      setImages((prev) => prev.filter((i) => i.publicId !== pendingDelete.publicId))
+      setLoaded((prev) => ({
+        ...prev,
+        images: prev.images.filter((i) => i.publicId !== pendingDelete.publicId),
+      }))
       toast.success('Imagen eliminada')
       setPendingDelete(null)
     } else {
@@ -92,8 +110,8 @@ export function MediaLibraryClient() {
           />
           {cursor && (
             <div className="flex justify-center mt-5">
-              <Button variant="outline" size="sm" onClick={loadMore} disabled={loading}>
-                {loading && <Loader2 size={13} className="animate-spin mr-1.5" />}
+              <Button variant="outline" size="sm" onClick={loadMore} disabled={loadingMore}>
+                {loadingMore && <Loader2 size={13} className="animate-spin mr-1.5" />}
                 Cargar más
               </Button>
             </div>

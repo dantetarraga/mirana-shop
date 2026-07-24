@@ -37,18 +37,24 @@ export function ProductCarousel({ items }: Props) {
 
   useEffect(() => {
     if (!emblaApi) return
+    const onScroll = () => setIsScrolling(true)
+    const onSettle = () => setIsScrolling(false)
+
     emblaApi.on('init', updateButtons)
     emblaApi.on('reInit', updateButtons)
     emblaApi.on('select', updateButtons)
-    emblaApi.on('scroll', () => setIsScrolling(true))
-    emblaApi.on('settle', () => setIsScrolling(false))
-    updateButtons()
+    emblaApi.on('scroll', onScroll)
+    emblaApi.on('settle', onSettle)
+    // Estado inicial en microtask: evita el setState síncrono dentro del efecto
+    // (cascada de render) y deja que embla termine de montarse.
+    const raf = requestAnimationFrame(updateButtons)
     return () => {
+      cancelAnimationFrame(raf)
       emblaApi.off('init', updateButtons)
       emblaApi.off('reInit', updateButtons)
       emblaApi.off('select', updateButtons)
-      emblaApi.off('scroll', () => setIsScrolling(true))
-      emblaApi.off('settle', () => setIsScrolling(false))
+      emblaApi.off('scroll', onScroll)
+      emblaApi.off('settle', onSettle)
     }
   }, [emblaApi, updateButtons])
 
@@ -57,7 +63,8 @@ export function ProductCarousel({ items }: Props) {
     if (!emblaApi) return
     emblaApi.reInit()
     emblaApi.scrollTo(0, true)
-    updateButtons()
+    const raf = requestAnimationFrame(updateButtons)
+    return () => cancelAnimationFrame(raf)
   }, [emblaApi, items, updateButtons])
 
   const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi])

@@ -19,6 +19,7 @@ export function Navbar() {
   const { user } = useUser()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
   const pathname = usePathname()
 
   useEffect(() => {
@@ -28,6 +29,19 @@ export function Navbar() {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
+
+  // Cierra el menú con Escape y devuelve el foco al botón que lo abrió.
+  useEffect(() => {
+    if (!menuOpen) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setMenuOpen(false)
+        menuButtonRef.current?.focus()
+      }
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [menuOpen])
 
   const initials = user
     ? user.name
@@ -65,10 +79,19 @@ export function Navbar() {
 
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         {/* Cart */}
-        <Button variant="icon" size="md" onClick={() => setCartOpen(true)} className="relative">
+        <Button
+          variant="icon"
+          size="md"
+          onClick={() => setCartOpen(true)}
+          aria-label={cartCount > 0 ? `Carrito, ${cartCount} artículos` : 'Carrito, vacío'}
+          className="relative"
+        >
           <ShoppingBag size={17} />
           {cartCount > 0 && (
-            <span className="absolute top-1.5 -right-1.5 w-4.5 h-4.5 rounded-full flex items-center justify-center text-[10px] font-bold font-display bg-(--gold) text-black">
+            <span
+              aria-hidden
+              className="absolute top-1.5 -right-1.5 w-4.5 h-4.5 rounded-full flex items-center justify-center text-[10px] font-bold font-display bg-(--gold) text-black"
+            >
               {cartCount}
             </span>
           )}
@@ -78,8 +101,12 @@ export function Navbar() {
         <div className="relative" ref={menuRef}>
           {user ? (
             <Button
+              ref={menuButtonRef}
               variant="accent"
               className="w-10 h-10 p-0"
+              aria-label={`Menú de ${user.name}`}
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
               onClick={() => setMenuOpen((o) => !o)}
             >
               {initials}

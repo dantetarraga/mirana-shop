@@ -5,6 +5,7 @@ import { computeTotals, effectivePrice, type PricingRules } from '@/features/che
 import { getCategoryStripe } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
+import { useFocusTrap } from '@/shared/hooks/useFocusTrap'
 import { formatCurrency } from '@/shared/lib/utils'
 import { ArrowRight, Minus, Plus, X } from 'lucide-react'
 import Image from 'next/image'
@@ -31,6 +32,7 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
   const subtotal = cart.reduce((s, i) => s + effectivePrice(i.product) * i.qty, 0)
   const { shippingFree, discount, discountName, total } = computeTotals(subtotal, pricingRules)
   const [pendingRemove, setPendingRemove] = useState<{ id: string; name: string } | null>(null)
+  const panelRef = useFocusTrap<HTMLDivElement>(true)
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
@@ -40,19 +42,34 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
     return () => window.removeEventListener('keydown', h)
   }, [setCartOpen])
 
+  // Bloquea el scroll del fondo mientras el drawer está abierto (Modal ya lo
+  // hace; el CartDrawer no lo tenía y el contenido de atrás seguía scrolleando).
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [])
+
   return (
     <>
       <div
         onClick={() => setCartOpen(false)}
         className="fixed inset-0 z-400 bg-black/65 backdrop-blur-[6px]"
       />
-      <div className="fixed top-0 right-0 bottom-0 z-401 w-full sm:w-105 bg-surf border-l border-(--bd) flex flex-col animate-slide-right">
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Carrito de compras"
+        className="fixed top-0 right-0 bottom-0 z-401 w-full sm:w-105 bg-surf border-l border-(--bd) flex flex-col animate-slide-right"
+      >
         {/* Header */}
         <div className="px-5 sm:px-7 py-6 border-b border-(--bd) flex items-center justify-between">
           <div className="font-display text-[26px] font-black uppercase tracking-[1px]">
             Carrito <span className="text-(--gold)">({cartCount})</span>
           </div>
-          <Button variant="icon" size="md" onClick={() => setCartOpen(false)}>
+          <Button variant="icon" size="md" aria-label="Cerrar carrito" onClick={() => setCartOpen(false)}>
             <X size={16} />
           </Button>
         </div>
@@ -96,13 +113,23 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
                     {formatCurrency(effectivePrice(item.product))}
                   </div>
                   <div className="flex items-center gap-2 mt-2">
-                    <Button variant="icon" size="sm" onClick={() => updateQty(item.product.id, -1)}>
+                    <Button
+                      variant="icon"
+                      size="sm"
+                      aria-label={`Quitar una unidad de "${item.product.name}"`}
+                      onClick={() => updateQty(item.product.id, -1)}
+                    >
                       <Minus size={14} />
                     </Button>
                     <span className="font-display font-extrabold min-w-6 text-center">
                       {item.qty}
                     </span>
-                    <Button variant="icon" size="sm" onClick={() => updateQty(item.product.id, 1)}>
+                    <Button
+                      variant="icon"
+                      size="sm"
+                      aria-label={`Agregar una unidad de "${item.product.name}"`}
+                      onClick={() => updateQty(item.product.id, 1)}
+                    >
                       <Plus size={14} />
                     </Button>
                   </div>
@@ -111,6 +138,7 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
                   variant="icon"
                   size="sm"
                   destructive
+                  aria-label={`Eliminar "${item.product.name}" del carrito`}
                   onClick={() => setPendingRemove({ id: item.product.id, name: item.product.name })}
                   className="self-start"
                 >
@@ -153,16 +181,16 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
                 {formatCurrency(total)}
               </span>
             </div>
-            <Button variant="accent" size="lg" full>
-              <Link
-                href="/carrito"
-                onClick={() => setCartOpen(false)}
-                className="w-full inline-flex items-center justify-center"
-              >
-                Ver carrito y pagar
-                <ArrowRight size={14} className="ml-1" strokeWidth={3} />
-              </Link>
-            </Button>
+            {/* Link con estilo de botón — antes era <Button><Link/></Button>,
+                que genera un <a> dentro de un <button> (HTML inválido, doble tab). */}
+            <Link
+              href="/carrito"
+              onClick={() => setCartOpen(false)}
+              className="ui-btn ui-btn--accent ui-btn--lg ui-btn--full"
+            >
+              Ver carrito y pagar
+              <ArrowRight size={14} className="ml-1" strokeWidth={3} />
+            </Link>
             {pricingRules.freeShippingThreshold != null && (
               <div className="text-center mt-3 text-[12px] text-muted">
                 {shippingFree

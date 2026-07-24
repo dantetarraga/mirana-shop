@@ -9,7 +9,8 @@ import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
 // import { StarRating } from '@/shared/components/ui/StarRating' — oculto hasta tener reviews reales
 import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react'
 import Image from 'next/image'
-import { useState } from 'react'
+import Link from 'next/link'
+import { useState, type MouseEvent } from 'react'
 import { toast } from 'sonner'
 
 interface ProductCardProps {
@@ -52,43 +53,55 @@ export function ProductCard({
             ? { label: 'TOP', className: 'bg-(--gold) text-black' }
             : null
 
+  // Click normal → abre el modal (preventDefault). Click con modificador, botón
+  // central o teclado → deja navegar al enlace real /catalogo/[slug]. Así la
+  // card es un <Link> de verdad: navegable por teclado, Ctrl+click y crawleable
+  // (antes era un <div onClick> sin enlace, invisible para SEO y teclado).
+  const handleNavClick = (e: MouseEvent) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return
+    e.preventDefault()
+    openProductModal(p)
+  }
+
   return (
-    <div
-      className={`pcard${noAnimation ? '' : ' animate-fade-up'}`}
-      onClick={() => openProductModal(p)}
-    >
-      <div className="relative">
-        <div
-          className={`${stripe} h-55 flex items-center justify-center relative overflow-hidden`}
-        >
-          {p.imageUrl ? (
-            <Image
-              src={p.imageUrl}
-              alt={p.name}
-              fill
-              className="object-cover"
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            />
-          ) : (
-            <span className="font-mono text-[10px] tracking-[2px] uppercase text-muted">
-              {catLabel}
-            </span>
+    <div className={`pcard${noAnimation ? '' : ' animate-fade-up'}`}>
+      <Link href={`/catalogo/${p.slug}`} onClick={handleNavClick} className="block">
+        <div className="relative">
+          <div
+            className={`${stripe} h-55 flex items-center justify-center relative overflow-hidden`}
+          >
+            {p.imageUrl ? (
+              <Image
+                src={p.imageUrl}
+                alt={p.name}
+                fill
+                className="object-cover"
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              />
+            ) : (
+              <span className="font-mono text-[10px] tracking-[2px] uppercase text-muted">
+                {catLabel}
+              </span>
+            )}
+          </div>
+          {showBadge && badge && (
+            <div
+              className={`absolute top-3 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-2.5 py-1.25 ${badge.className}`}
+            >
+              {badge.label}
+            </div>
           )}
         </div>
-        {showBadge && badge && (
-          <div
-            className={`absolute top-3 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-2.5 py-1.25 ${badge.className}`}
-          >
-            {badge.label}
-          </div>
-        )}
-      </div>
 
-      <div className="px-4 pt-4 pb-3.5">
-        <div className="text-[10px] tracking-[2px] uppercase mb-1.25 text-muted">{catLabel}</div>
-        <div className="font-display text-[21px] font-black uppercase leading-[1.05] mb-3 tracking-[-0.5px] line-clamp-2 min-h-11">
-          {p.name}
+        <div className="px-4 pt-4">
+          <div className="text-[10px] tracking-[2px] uppercase mb-1.25 text-muted">{catLabel}</div>
+          <h3 className="font-display text-[21px] font-black uppercase leading-[1.05] mb-3 tracking-[-0.5px] line-clamp-2 min-h-11">
+            {p.name}
+          </h3>
         </div>
+      </Link>
+
+      <div className="px-4 pb-3.5">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-baseline gap-1.5 min-w-0">
             <span className="font-display text-[19px] sm:text-[26px] font-black text-(--gold) whitespace-nowrap">
@@ -114,6 +127,7 @@ export function ProductCard({
                 size="md"
                 destructive
                 className="flex-1"
+                aria-label={`Quitar "${p.name}" del carrito`}
                 onClick={(e) => {
                   e.stopPropagation()
                   setConfirmRemove(true)
@@ -126,6 +140,7 @@ export function ProductCard({
                 variant="icon"
                 size="md"
                 className="flex-1"
+                aria-label={`Quitar una unidad de "${p.name}"`}
                 onClick={(e) => {
                   e.stopPropagation()
                   if (updateQty(p.id, -1)) {
@@ -143,6 +158,7 @@ export function ProductCard({
               variant="icon"
               size="md"
               className="flex-1"
+              aria-label={`Agregar una unidad de "${p.name}"`}
               onClick={(e) => {
                 e.stopPropagation()
                 // updateQty avisa por sí solo cuando se llegó al tope de stock.

@@ -36,7 +36,6 @@ function createPrismaClient() {
 }
 
 declare global {
-  // eslint-disable-next-line no-var
   var __prisma: ReturnType<typeof createPrismaClient> | undefined;
 }
 

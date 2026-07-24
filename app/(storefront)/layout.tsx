@@ -13,7 +13,9 @@ export default async function StorefrontLayout({ children }: { children: React.R
     <>
       <CartHydrator initialCart={initialCart} />
       <Navbar />
-      <main className="flex-1">{children}</main>
+      <main id="main" className="flex-1">
+        {children}
+      </main>
       <Footer />
       <StoreOverlays pricingRules={pricingRules} />
       <WhatsAppFloat />

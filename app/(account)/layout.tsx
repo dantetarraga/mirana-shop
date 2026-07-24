@@ -11,7 +11,9 @@ export default async function AccountLayout({ children }: { children: React.Reac
   return (
     <>
       <Navbar />
-      <main className="flex-1">{children}</main>
+      <main id="main" className="flex-1">
+        {children}
+      </main>
       <Footer />
       <StoreOverlays pricingRules={pricingRules} />
       <WhatsAppFloat />

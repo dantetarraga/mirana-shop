@@ -16,7 +16,6 @@ export function SearchBox() {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const [data, setData] = useState<SearchSuggestions>(EMPTY_SUGGESTIONS)
-  const [loading, setLoading] = useState(false)
   const debouncedQuery = useDebounce(query, 300)
   const wrapRef = useRef<HTMLDivElement>(null)
   const requestId = useRef(0)
@@ -25,14 +24,17 @@ export function SearchBox() {
 
   useEffect(() => {
     const id = ++requestId.current
-    setLoading(true)
     getSearchSuggestions(debouncedQuery).then((result) => {
-      if (id === requestId.current) {
-        setData(result)
-        setLoading(false)
-      }
+      if (id === requestId.current) setData(result)
     })
   }, [debouncedQuery])
+
+  // `loading` derivado en render: mientras el resultado no corresponda a la
+  // búsqueda debounced en curso, seguimos cargando. Evita un setState síncrono
+  // dentro del efecto (cascada de render).
+  const trimmedDebounced = debouncedQuery.trim()
+  const loading =
+    trimmedDebounced.length >= 2 && data.query !== trimmedDebounced
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -79,7 +81,7 @@ export function SearchBox() {
       <div
         className={`flex items-center gap-3 h-11 px-4 bg-surf border transition-colors duration-200 ${open ? 'border-(--gold)' : 'border-(--bd)'}`}
       >
-        <Search size={17} className="shrink-0 text-muted" />
+        <Search size={17} className="shrink-0 text-muted" aria-hidden />
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -89,6 +91,11 @@ export function SearchBox() {
           }}
           placeholder="Buscar figura, marca, categoría…"
           autoComplete="off"
+          aria-label="Buscar productos"
+          role="combobox"
+          aria-expanded={open}
+          aria-controls="search-suggestions"
+          aria-autocomplete="list"
           className="flex-1 min-w-0 w-full bg-transparent border-none outline-none font-sans text-[14px] text-text placeholder:text-muted placeholder:truncate"
         />
         {query && (
@@ -102,8 +109,18 @@ export function SearchBox() {
         )}
       </div>
 
+      {/* Anuncia el nº de resultados a lectores de pantalla sin recargar foco. */}
+      <div className="sr-only" role="status" aria-live="polite">
+        {open && hasResults ? `${data.total} resultados para ${query}` : ''}
+        {open && hasNoResults ? `Sin resultados para ${query}` : ''}
+      </div>
+
       {open && (
-        <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-250 bg-surf border border-(--bd) shadow-[0_16px_48px_rgba(0,0,0,.4)] max-h-[70vh] overflow-y-auto">
+        <div
+          id="search-suggestions"
+          role="listbox"
+          className="absolute top-[calc(100%+6px)] left-0 right-0 z-250 bg-surf border border-(--bd) shadow-[0_16px_48px_rgba(0,0,0,.4)] max-h-[70vh] overflow-y-auto"
+        >
           {showIdle && (
             <>
               {recentTerms.length > 0 && (
@@ -113,24 +130,27 @@ export function SearchBox() {
                   </div>
                   <div className="flex flex-wrap gap-2 px-4.5">
                     {recentTerms.map((term) => (
-                      <button
+                      // Dos botones hermanos: antes había un <span role="button">
+                      // dentro de un <button> (interactivo anidado, HTML inválido).
+                      <div
                         key={term}
-                        onClick={() => setQuery(term)}
-                        className="flex items-center gap-1.5 border border-(--bd) text-muted text-[12px] px-3 py-1.5 hover:text-text hover:border-muted transition-colors"
+                        className="flex items-center gap-1.5 border border-(--bd) text-muted text-[12px] pl-3 hover:text-text hover:border-muted transition-colors"
                       >
-                        <Clock size={11} className="opacity-50" />
-                        {term}
-                        <span
-                          role="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            removeTerm(term)
-                          }}
-                          className="ml-1 opacity-50 hover:opacity-100"
+                        <button
+                          onClick={() => setQuery(term)}
+                          className="flex items-center gap-1.5 py-1.5"
+                        >
+                          <Clock size={11} className="opacity-50" aria-hidden />
+                          {term}
+                        </button>
+                        <button
+                          onClick={() => removeTerm(term)}
+                          aria-label={`Quitar "${term}" de búsquedas recientes`}
+                          className="pr-2.5 py-1.5 opacity-50 hover:opacity-100"
                         >
                           <X size={11} />
-                        </span>
-                      </button>
+                        </button>
+                      </div>
                     ))}
                   </div>
                 </div>

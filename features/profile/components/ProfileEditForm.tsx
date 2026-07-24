@@ -11,11 +11,9 @@ const inputCls =
 
 export function ProfileEditForm({
   profile,
-  email,
   onSaved,
 }: {
   profile: ProfileData
-  email: string
   onSaved: (updated: Partial<ProfileData>) => void
 }) {
   const [phone, setPhone] = useState(profile.phone ?? '')
@@ -25,7 +23,7 @@ export function ProfileEditForm({
 
   const handleSave = async () => {
     setSaving(true)
-    const result = await updateMyProfile(email, {
+    const result = await updateMyProfile({
       phone: phone.trim() || undefined,
       hasKids,
       kidsCount: hasKids && kidsCount ? Number(kidsCount) : null,

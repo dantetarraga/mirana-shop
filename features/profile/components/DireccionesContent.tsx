@@ -13,7 +13,6 @@ import {
   type AddressFormValues,
 } from '@/features/profile/components/AddressFormPanel'
 import { Button } from '@/shared/components/ui/Button'
-import type { SessionUser } from '@/shared/hooks/useUser'
 import { cn } from '@/shared/lib/utils'
 import { Home, MapPin, Pencil, Plus, Star, Trash2 } from 'lucide-react'
 import { use, useState } from 'react'
@@ -106,10 +105,8 @@ function AddressCard({
 // Contenido
 // ---------------------------------------------------------------------------
 export function DireccionesContent({
-  user,
   addressesPromise,
 }: {
-  user: SessionUser
   addressesPromise: Promise<AddressData[]>
 }) {
   const [addresses, setAddresses] = useState<AddressData[]>(use(addressesPromise))
@@ -117,11 +114,11 @@ export function DireccionesContent({
   const [editingId, setEditingId] = useState<string | null>(null)
 
   const reload = async () => {
-    setAddresses(await getMyAddresses(user.email))
+    setAddresses(await getMyAddresses())
   }
 
   const handleCreate = async (data: AddressFormValues) => {
-    const result = await createAddress(user.email, data)
+    const result = await createAddress(data)
     if (result.success) {
       toast.success('Direccion guardada')
       setShowForm(false)
@@ -132,7 +129,7 @@ export function DireccionesContent({
   }
 
   const handleUpdate = async (id: string, data: AddressFormValues) => {
-    const result = await updateAddress(id, user.email, data)
+    const result = await updateAddress(id, data)
     if (result.success) {
       toast.success('Direccion actualizada')
       setEditingId(null)
@@ -143,7 +140,7 @@ export function DireccionesContent({
   }
 
   const handleDelete = async (id: string) => {
-    const result = await deleteAddress(id, user.email)
+    const result = await deleteAddress(id)
     if (result.success) {
       toast.success('Direccion eliminada')
       setAddresses((prev) => prev.filter((a) => a.id !== id))
@@ -153,7 +150,7 @@ export function DireccionesContent({
   }
 
   const handleSetDefault = async (id: string) => {
-    const result = await setDefaultAddress(id, user.email)
+    const result = await setDefaultAddress(id)
     if (result.success) {
       toast.success('Direccion predeterminada actualizada')
       await reload()

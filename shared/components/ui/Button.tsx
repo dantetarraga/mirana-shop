@@ -1,5 +1,5 @@
 ﻿import { cn } from '@/shared/lib/utils'
-import { type ButtonHTMLAttributes } from 'react'
+import { type ButtonHTMLAttributes, type Ref } from 'react'
 
 export type ButtonVariant = 'accent' | 'outline' | 'ghost' | 'dark' | 'tab' | 'icon'
 export type ButtonSize = 'sm' | 'md' | 'lg'
@@ -11,6 +11,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   full?: boolean
   clip?: boolean
   destructive?: boolean
+  ref?: Ref<HTMLButtonElement>
 }
 
 export function Button({
@@ -22,10 +23,12 @@ export function Button({
   destructive = false,
   className,
   children,
+  ref,
   ...props
 }: ButtonProps) {
   return (
     <button
+      ref={ref}
       className={cn(
         'ui-btn',
         `ui-btn--${variant}`,
