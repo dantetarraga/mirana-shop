@@ -4,6 +4,10 @@ import {
   COLLECTION_SELECT,
   getCollectionBySlug,
 } from '@/features/collections/queries/collection.queries'
+import {
+  findTrashedConflict,
+  trashedConflictError,
+} from '@/features/trash/lib/trashed-conflict'
 import { db } from '@/shared/lib/db'
 import { requireAdmin } from '@/shared/lib/require-admin'
 import type { ActionResult } from '@/shared/types/action-result.types'
@@ -80,6 +84,9 @@ export async function createCollection(rawInput: unknown): Promise<ActionResult<
       return { success: false, error: 'Ya existe una colección con ese slug', code: 409 }
     }
 
+    const trashed = await findTrashedConflict('collection', { name, slug })
+    if (trashed) return { success: false, error: trashedConflictError(trashed), code: 409 }
+
     const uniqueProductIds = [...new Set(productIds)]
 
     const collection = await db.collection.create({
@@ -135,6 +142,15 @@ export async function updateCollection(rawInput: unknown): Promise<ActionResult<
       }
     }
 
+    if (fields.slug || fields.name) {
+      const trashed = await findTrashedConflict(
+        'collection',
+        { name: fields.name, slug: fields.slug },
+        id,
+      )
+      if (trashed) return { success: false, error: trashedConflictError(trashed), code: 409 }
+    }
+
     const collection = await db.collection.update({
       where: { id },
       data: {
@@ -166,8 +182,17 @@ export async function deleteCollection(id: string): Promise<ActionResult> {
   if (!id) return { success: false, error: 'ID de colección requerido', code: 400 }
 
   try {
+    // Soft delete: la colección va a la papelera (/admin/trash) y sus
+    // asociaciones se conservan intactas para que restaurarla devuelva los
+    // mismos productos. Que no se muestren mientras está borrada lo garantiza
+    // el filtro `collection: { deletedAt: null }` de PRODUCT_LIST_SELECT.
     await db.collection.update({ where: { id }, data: { deletedAt: new Date() } })
     invalidateCollectionCaches()
+    // Las filas de producto cambian (pierden el chip de la colección): hay que
+    // refrescar también sus vistas.
+    revalidatePath('/admin/products')
+    revalidatePath('/catalogo/[slug]', 'page')
+    revalidateTag('products', 'max')
     return { success: true, data: undefined }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Error al eliminar colección'

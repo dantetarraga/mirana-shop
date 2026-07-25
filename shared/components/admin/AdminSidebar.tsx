@@ -18,6 +18,7 @@ import {
   ShoppingCart,
   Star,
   Tag,
+  Trash2,
   Users,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -53,6 +54,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/admin/complaints', label: 'Libro de Reclamaciones', icon: BookText },
   { section: 'Configuración' },
   { href: '/admin/settings', label: 'Tienda', icon: Settings },
+  { href: '/admin/trash', label: 'Papelera', icon: Trash2 },
 ]
 
 export function AdminSidebar() {

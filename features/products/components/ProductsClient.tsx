@@ -340,7 +340,7 @@ export function ProductsClient({
         onClose={crud.closeDelete}
         onConfirm={handleDelete}
         title="¿Eliminar producto?"
-        description={`"${crud.pendingDelete?.name}" se eliminará permanentemente. Esta acción no se puede deshacer.`}
+        description={`"${crud.pendingDelete?.name}" saldrá de la tienda. Si nunca se vendió, se borra de una vez; si tiene pedidos, preórdenes o movimientos de inventario, pasa a la papelera para no romper ese historial. Su stock y las líneas de carrito se pierden en ambos casos.`}
         isPending={isPending}
       />
 

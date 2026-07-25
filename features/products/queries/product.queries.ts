@@ -29,6 +29,10 @@ export const PRODUCT_LIST_SELECT = {
   },
   inventory: { select: { availableStock: true } },
   collections: {
+    // Las colecciones se borran en soft: sin este filtro el producto seguiría
+    // mostrando chips de colecciones que ya no existen (y esas filas gastarían
+    // los 3 cupos del take).
+    where: { collection: { deletedAt: null } },
     select: {
       collection: { select: { id: true, name: true, slug: true } },
     },
@@ -130,7 +134,7 @@ function buildWhere(filters: Omit<ProductFilters, 'take' | 'skip'>) {
     category: catSlugs?.length ? { slug: { in: catSlugs } } : undefined,
     brand: brdSlugs?.length ? { slug: { in: brdSlugs } } : undefined,
     collections: colSlugs?.length
-      ? { some: { collection: { slug: { in: colSlugs } } } }
+      ? { some: { collection: { slug: { in: colSlugs }, deletedAt: null } } }
       : undefined,
     // Va en AND para no chocar con el OR de purchasableWhere.
     AND: search

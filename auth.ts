@@ -20,6 +20,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const user = await db.user.findUnique({ where: { email } })
         if (!user?.passwordHash) return null
+        // Cuenta dada de baja (ver deleteUser): se rechaza sin distinguirla de
+        // una credencial incorrecta, para no filtrar qué emails existen.
+        if (user.deletedAt) return null
 
         const valid = await bcrypt.compare(password, user.passwordHash)
         if (!valid) return null
@@ -32,6 +35,25 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: 'jwt' },
 
   callbacks: {
+    /**
+     * Corta el acceso a las cuentas dadas de baja (`deletedAt`), en cualquier
+     * proveedor. Hace falta además del chequeo en authorize() porque el alta de
+     * Google ocurre en el callback jwt, que se ejecuta después: sin esto, un
+     * usuario dado de baja volvería a entrar con Google.
+     *
+     * Ojo: la sesión es JWT, así que esto solo bloquea logins nuevos. Un token
+     * ya emitido sigue siendo válido hasta que expira — cortar una sesión en
+     * curso exigiría consultar la BD en cada request.
+     */
+    async signIn({ user }) {
+      if (!user?.email) return true
+      const existing = await db.user.findUnique({
+        where: { email: user.email },
+        select: { deletedAt: true },
+      })
+      return !existing?.deletedAt
+    },
+
     /**
      * Añade el role al token JWT en cada login.
      * - Credentials: llega en `user.role` desde authorize().

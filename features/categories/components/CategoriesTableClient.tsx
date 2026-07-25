@@ -197,7 +197,7 @@ export function CategoriesTableClient({
         onClose={crud.closeDelete}
         onConfirm={crud.handleDelete}
         title="¿Eliminar categoría?"
-        description={`"${crud.pendingDelete?.name}" se eliminará permanentemente.`}
+        description={`"${crud.pendingDelete?.name}" pasará a la papelera, desde donde puedes restaurarla o borrarla definitivamente (Configuración → Papelera).`}
         isPending={crud.isPending}
       />
 

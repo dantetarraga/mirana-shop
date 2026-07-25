@@ -135,7 +135,7 @@ export function CollectionsTableClient({ collections, total }: CollectionsTableC
         onClose={crud.closeDelete}
         onConfirm={crud.handleDelete}
         title="¿Eliminar colección?"
-        description={`"${crud.pendingDelete?.name}" se eliminará permanentemente.`}
+        description={`"${crud.pendingDelete?.name}" dejará de mostrarse en la tienda y pasará a la papelera, con sus productos asociados intactos. Puedes restaurarla o borrarla definitivamente desde Configuración → Papelera.`}
         isPending={crud.isPending}
       />
 

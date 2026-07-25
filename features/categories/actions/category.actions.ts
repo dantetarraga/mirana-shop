@@ -5,6 +5,10 @@ import {
   getCategoryById,
   getCategoryBySlug,
 } from '@/features/categories/queries/category.queries'
+import {
+  findTrashedConflict,
+  trashedConflictError,
+} from '@/features/trash/lib/trashed-conflict'
 import { db } from '@/shared/lib/db'
 import { requireAdmin } from '@/shared/lib/require-admin'
 import { imageUrlSchema } from '@/shared/schemas/image-url.schema'
@@ -72,6 +76,9 @@ export async function createCategory(rawInput: unknown): Promise<ActionResult<{ 
       return { success: false, error: 'Ya existe una categoría con ese slug', code: 409 }
     }
 
+    const trashed = await findTrashedConflict('category', { name, slug })
+    if (trashed) return { success: false, error: trashedConflictError(trashed), code: 409 }
+
     // Valida que el parentId existe si se proporciona
     if (parentId) {
       const parent = await getCategoryById(parentId)
@@ -124,6 +131,15 @@ export async function updateCategory(rawInput: unknown): Promise<ActionResult<{ 
       if (existing && existing.id !== id) {
         return { success: false, error: 'Ya existe una categoría con ese slug', code: 409 }
       }
+    }
+
+    if (fields.slug || fields.name) {
+      const trashed = await findTrashedConflict(
+        'category',
+        { name: fields.name, slug: fields.slug },
+        id,
+      )
+      if (trashed) return { success: false, error: trashedConflictError(trashed), code: 409 }
     }
 
     if (fields.parentId === id) {
@@ -337,6 +353,11 @@ export async function importCategories(
         })
         updated++
       } else {
+        // idByKey solo tiene las categorías vivas, así que una en la papelera
+        // llega hasta acá y choca con el índice único.
+        const trashed = await findTrashedConflict('category', { name: row.name, slug })
+        if (trashed) throw new Error(trashedConflictError(trashed))
+
         const createdCat = await db.category.create({
           data: {
             name: row.name,

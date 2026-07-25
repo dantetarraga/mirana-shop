@@ -1,6 +1,10 @@
 'use server'
 
 import { BRAND_SELECT, getBrandById, getBrandBySlug } from '@/features/brands/queries/brand.queries'
+import {
+  findTrashedConflict,
+  trashedConflictError,
+} from '@/features/trash/lib/trashed-conflict'
 import { db } from '@/shared/lib/db'
 import { slugify } from '@/shared/lib/utils'
 import { requireAdmin } from '@/shared/lib/require-admin'
@@ -68,6 +72,9 @@ export async function createBrand(rawInput: unknown): Promise<ActionResult<{ id:
       return { success: false, error: 'Ya existe una marca con ese slug', code: 409 }
     }
 
+    const trashed = await findTrashedConflict('brand', { name, slug })
+    if (trashed) return { success: false, error: trashedConflictError(trashed), code: 409 }
+
     const created = await db.brand.create({
       data: {
         name,
@@ -112,6 +119,15 @@ export async function updateBrand(rawInput: unknown): Promise<ActionResult<{ id:
       if (existing && existing.id !== id) {
         return { success: false, error: 'Ya existe una marca con ese slug', code: 409 }
       }
+    }
+
+    if (fields.slug || fields.name) {
+      const trashed = await findTrashedConflict(
+        'brand',
+        { name: fields.name, slug: fields.slug },
+        id,
+      )
+      if (trashed) return { success: false, error: trashedConflictError(trashed), code: 409 }
     }
 
     const updated = await db.brand.update({
@@ -291,6 +307,8 @@ export async function importBrands(
         await db.brand.update({ where: { id: existing.id }, data })
         updated++
       } else {
+        const trashed = await findTrashedConflict('brand', { name: row.name, slug })
+        if (trashed) throw new Error(trashedConflictError(trashed))
         await db.brand.create({ data: { slug, ...data } })
         created++
       }

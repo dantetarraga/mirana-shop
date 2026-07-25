@@ -179,7 +179,7 @@ export function BrandsTableClient({ brands, total, allBrands }: BrandsTableClien
         onClose={crud.closeDelete}
         onConfirm={crud.handleDelete}
         title="¿Eliminar marca?"
-        description={`"${crud.pendingDelete?.name}" se eliminará permanentemente.`}
+        description={`"${crud.pendingDelete?.name}" pasará a la papelera, desde donde puedes restaurarla o borrarla definitivamente (Configuración → Papelera).`}
         isPending={crud.isPending}
       />
 

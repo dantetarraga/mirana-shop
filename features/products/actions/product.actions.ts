@@ -4,6 +4,10 @@ import { getBrands } from '@/features/brands/queries/brand.queries'
 import { getCategories } from '@/features/categories/queries/category.queries'
 import { findBestMatch } from '@/features/products/lib/catalog-match'
 import { PRODUCT_DETAIL_SELECT } from '@/features/products/queries/product.queries'
+import {
+  findTrashedConflict,
+  trashedConflictError,
+} from '@/features/trash/lib/trashed-conflict'
 import { db } from '@/shared/lib/db'
 import { importProductRowSchema, productDbBaseSchema, productDbSchema } from '@/features/products/schemas/product.schema'
 import { requireAdmin } from '@/shared/lib/require-admin'
@@ -95,11 +99,15 @@ export async function createProduct(
   try {
     const images = input.imageUrl ? [{ url: input.imageUrl, alt: input.name, position: 0 }] : []
     const stock = input.stock ?? 0
+    const slug = input.slug || slugify(input.name)
+
+    const trashed = await findTrashedConflict('product', { slug, sku: input.sku })
+    if (trashed) return { success: false, error: trashedConflictError(trashed), code: 409 }
 
     const product = await db.product.create({
       data: {
         sku: input.sku,
-        slug: input.slug || slugify(input.name),
+        slug,
         name: input.name,
         description: input.description ?? '',
         price: input.price,
@@ -149,6 +157,11 @@ export async function updateProduct(
   const input = parsed.data
 
   try {
+    if (input.slug !== undefined || input.sku !== undefined) {
+      const trashed = await findTrashedConflict('product', { slug: input.slug, sku: input.sku }, id)
+      if (trashed) return { success: false, error: trashedConflictError(trashed), code: 409 }
+    }
+
     const updated = await db.$transaction(async (tx) => {
       const product = await tx.product.update({
         where: { id },

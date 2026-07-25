@@ -1,14 +1,19 @@
 'use client'
 
+import { deleteUser } from '@/features/users/actions/user.actions'
 import type { UserRow } from '@/features/users/types'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
 import { DrawerSection } from '@/shared/components/admin/DrawerSection'
 import { StatusBadge } from '@/features/orders/components/StatusBadge'
+import { Button } from '@/shared/components/ui/Button'
+import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
+import { useEntityCrud } from '@/shared/hooks/admin'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { USER_STATUS } from '@/shared/lib/admin/admin-constants'
 import { cn, formatDate } from '@/shared/lib/utils'
-import { useMemo, useState } from 'react'
+import { UserMinus } from 'lucide-react'
+import { useState } from 'react'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -39,9 +44,12 @@ interface UsersClientProps {
 
 export function UsersClient({ users }: UsersClientProps) {
   const [detail, setDetail] = useState<UserRow | null>(null)
+  const crud = useEntityCrud<UserRow>(deleteUser, (u) => `"${u.name ?? u.email}" dado de baja`)
 
-  const columns = useMemo<Column<UserRow>[]>(
-    () => [
+  // Sin useMemo: las columnas leen `crud.isPending`, que cambia en cada
+  // transición. Memoizarlas con deps vacías congelaba ese valor y el botón de
+  // baja nunca se deshabilitaba.
+  const columns: Column<UserRow>[] = [
       {
         header: 'Usuario',
         render: (u) => (
@@ -78,13 +86,43 @@ export function UsersClient({ users }: UsersClientProps) {
           return <StatusBadge config={USER_STATUS[seg] ?? USER_STATUS.nuevo} variant="outlined" />
         },
       },
-    ],
-    [],
-  )
+      {
+        header: 'Acciones',
+        headerClassName: 'text-right',
+        className: 'text-right',
+        render: (u) => (
+          <div className="flex justify-end">
+            <Button
+              variant="icon"
+              size="sm"
+              destructive
+              disabled={crud.isPending}
+              onClick={(e) => {
+                e.stopPropagation()
+                crud.openDelete(u)
+              }}
+              title="Dar de baja"
+            >
+              <UserMinus size={14} />
+            </Button>
+          </div>
+        ),
+      },
+  ]
 
   return (
     <>
       <AdminTable columns={columns} data={users} keyExtractor={(u) => u.id} onRowClick={setDetail} />
+
+      <ConfirmModal
+        open={!!crud.pendingDelete}
+        onClose={crud.closeDelete}
+        onConfirm={crud.handleDelete}
+        title="¿Dar de baja esta cuenta?"
+        description={`${crud.pendingDelete?.name ?? crud.pendingDelete?.email} dejará de poder iniciar sesión y se vaciará su carrito. Sus pedidos se conservan, y la cuenta queda en la papelera por si hay que restaurarla.`}
+        confirmLabel="Dar de baja"
+        isPending={crud.isPending}
+      />
 
       {/* Drawer de detalle */}
       {detail && (
