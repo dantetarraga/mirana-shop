@@ -6,12 +6,20 @@ export const dynamic = 'force-dynamic'
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const products = await db.product.findMany({
-    where: { deletedAt: null, status: { not: 'ARCHIVED' } },
-    select: { slug: true, updatedAt: true },
-    orderBy: { updatedAt: 'desc' },
-    take: 5000,
-  })
+  const [products, collections] = await Promise.all([
+    db.product.findMany({
+      where: { deletedAt: null, status: { not: 'ARCHIVED' } },
+      select: { slug: true, updatedAt: true },
+      orderBy: { updatedAt: 'desc' },
+      take: 5000,
+    }),
+    db.collection.findMany({
+      where: { deletedAt: null, active: true },
+      select: { slug: true, updatedAt: true },
+      orderBy: { updatedAt: 'desc' },
+      take: 1000,
+    }),
+  ])
 
   const staticPages: MetadataRoute.Sitemap = [
     { url: BASE_URL, changeFrequency: 'daily', priority: 1 },
@@ -27,5 +35,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }))
 
-  return [...staticPages, ...productPages]
+  const collectionPages: MetadataRoute.Sitemap = collections.map((c) => ({
+    url: `${BASE_URL}/colecciones/${c.slug}`,
+    lastModified: c.updatedAt,
+    changeFrequency: 'weekly',
+    priority: 0.6,
+  }))
+
+  return [...staticPages, ...collectionPages, ...productPages]
 }

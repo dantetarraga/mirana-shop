@@ -1,6 +1,8 @@
 import { countUsers, getUsers } from "@/features/users/queries/user.queries";
 import type { UserSegment } from "@/features/users/types";
 import { UsersClient } from "@/features/users/components/UsersClient";
+import { AdminPagination } from "@/shared/components/admin/AdminPagination";
+import { ADMIN_PER_PAGE } from "@/shared/lib/admin/pagination";
 import { ServerSearchForm } from "@/shared/components/admin/ServerSearchForm";
 import { cn } from "@/shared/lib/utils";
 
@@ -30,7 +32,7 @@ interface PageProps {
   searchParams: Promise<{ q?: string; segment?: string; page?: string }>;
 }
 
-const PER_PAGE = 50;
+const PER_PAGE = ADMIN_PER_PAGE;
 
 export default async function UsersPage({ searchParams }: PageProps) {
   const { q, segment: rawSegment, page: rawPage } = await searchParams;
@@ -99,28 +101,20 @@ export default async function UsersPage({ searchParams }: PageProps) {
       <UsersClient users={users} />
 
       {/* Paginación */}
-      {totalPages > 1 && (
-        <div className="flex gap-2 justify-end mt-4">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <a
-              key={p}
-              href={buildUrl({
-                q: currentQ || undefined,
-                segment: currentSegment !== "todos" ? currentSegment : undefined,
-                page: String(p),
-              })}
-              className={cn(
-                "px-3 py-1.5 text-[13px] border transition-colors",
-                p === page
-                  ? "bg-(--gold) border-(--gold) text-black font-bold"
-                  : "border-(--bd) text-muted hover:text-text",
-              )}
-            >
-              {p}
-            </a>
-          ))}
-        </div>
-      )}
+      <AdminPagination
+        page={page}
+        totalPages={totalPages}
+        total={total}
+        perPage={PER_PAGE}
+        className="mt-4"
+        buildHref={(p) =>
+          buildUrl({
+            q: currentQ || undefined,
+            segment: currentSegment !== "todos" ? currentSegment : undefined,
+            page: String(p),
+          })
+        }
+      />
     </div>
   );
 }

@@ -3,15 +3,17 @@
 import type { BrandRow } from '@/features/brands/types'
 import type { CategoryRow } from '@/features/categories/types'
 import type { CollectionRow } from '@/features/collections/types'
-import type { ProductListItem } from '@/features/products/types'
+import type { ProductAdminListItem } from '@/features/products/types'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { FilterMultiSelect } from '@/shared/components/admin/FilterMultiSelect'
 import { ImageUploadField } from '@/shared/components/admin/ImageUploadField'
+import { RichTextEditor } from '@/shared/components/admin/RichTextEditor'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
 import { useAutoSlug, useFormEntity } from '@/shared/hooks/admin'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { productDbSchema } from '@/features/products/schemas/product.schema'
+import { toRichHtml } from '@/shared/lib/rich-text'
 import { cn } from '@/shared/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ImagePlus, Trash2 } from 'lucide-react'
@@ -21,7 +23,7 @@ import { z } from 'zod'
 
 type ProductFormValues = z.input<typeof productDbSchema>
 
-export type SerializedProduct = Omit<ProductListItem, 'price' | 'salePrice'> & {
+export type SerializedProduct = Omit<ProductAdminListItem, 'price' | 'salePrice'> & {
   price: number
   salePrice: number | null
   collections: { collection: { id: string; name: string; slug: string } }[]
@@ -97,7 +99,10 @@ export function ProductCrudDrawer({
       name: p.name,
       slug: p.slug,
       sku: p.sku,
-      description: (p as SerializedProduct & { description?: string }).description ?? '',
+      // Las descripciones antiguas están en texto plano con marcas Markdown:
+      // se convierten a HTML para que el editor las muestre con formato (y al
+      // guardar queden ya normalizadas).
+      description: toRichHtml(p.description ?? ''),
       price: p.price,
       salePrice: p.salePrice ?? undefined,
       stock: p.inventory?.availableStock ?? 0,
@@ -351,9 +356,14 @@ export function ProductCrudDrawer({
           </FormField>
         </div>
 
-        {/* ── Descripción ── */}
+        {/* ── Descripción — editor enriquecido (mismo HTML que ve la ficha) ── */}
         <FormField label="Descripción" error={errors.description?.message}>
-          <textarea {...register('description')} rows={3} className={cn(cls.input, 'resize-y')} />
+          <RichTextEditor
+            content={watch('description') ?? ''}
+            onChange={(html) => setValue('description', html, { shouldValidate: true })}
+            minHeightClass="min-h-45"
+            maxHeightClass="max-h-100"
+          />
         </FormField>
 
         <div className="flex gap-2.5">

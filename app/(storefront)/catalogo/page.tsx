@@ -1,5 +1,7 @@
 import { getBrands } from "@/features/brands/queries/brand.queries";
 import { getCategories } from "@/features/categories/queries/category.queries";
+import { CollectionCard } from "@/features/collections/components/CollectionCard";
+import { getPublicCollections } from "@/features/collections/queries/collection.queries";
 import { CatalogFilters } from "@/features/products/components/CatalogFilters";
 import { CatalogPagination } from "@/features/products/components/CatalogPagination";
 import { CatalogSortSelect } from "@/features/products/components/CatalogSortSelect";
@@ -82,11 +84,27 @@ export default async function CatalogPage({ searchParams }: PageProps) {
     sort,
   };
 
-  const [products, total, categories, brands] = await Promise.all([
+  // Las colecciones encabezan la primera página, pero solo sin filtros: los
+  // filtros (categoría, marca, precio, disponibilidad) son propiedades de
+  // producto y no se pueden aplicar a una colección sin mentir sobre lo que
+  // contiene. Al filtrar, el listado vuelve a ser solo de productos y el
+  // contador y la paginación siguen cuadrando.
+  const hasFilters =
+    cats.length > 0 ||
+    brandSlugs.length > 0 ||
+    avail.length > 0 ||
+    Boolean(q) ||
+    Boolean(onSale) ||
+    priceMin !== undefined ||
+    priceMax !== undefined;
+  const showCollections = !hasFilters && page === 1;
+
+  const [products, total, categories, brands, collections] = await Promise.all([
     getProducts({ ...productFilters, take: PAGE_SIZE, skip: (page - 1) * PAGE_SIZE }),
     countProducts(productFilters),
     getCategories({ perPage: 50 }),
     getBrands({ perPage: 50 }),
+    showCollections ? getPublicCollections(hideOutOfStock) : Promise.resolve([]),
   ]);
 
   const items = toProductCards(products);
@@ -135,13 +153,16 @@ export default async function CatalogPage({ searchParams }: PageProps) {
             />
           </div>
 
-          {items.length === 0 ? (
+          {items.length === 0 && collections.length === 0 ? (
             <div className="text-center py-20 px-5 text-muted">
               <div className="font-display text-[28px] font-black uppercase mb-2">Sin resultados</div>
               <div className="text-[14px]">Prueba ajustando los filtros</div>
             </div>
           ) : (
             <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
+              {collections.map((c) => (
+                <CollectionCard key={c.id} collection={c} />
+              ))}
               {items.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}

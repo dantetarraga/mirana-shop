@@ -2,10 +2,12 @@ import { countOrders, getOrders, getOrderStats } from "@/features/orders/queries
 import type { OrderStatusGroup } from "@/features/orders/types";
 import { OrdersClient } from "@/features/orders/components/OrdersClient";
 import { KpiCard } from "@/features/dashboard/components/KpiCard";
+import { AdminPagination } from "@/shared/components/admin/AdminPagination";
+import { ADMIN_PER_PAGE } from "@/shared/lib/admin/pagination";
 import { ServerSearchForm } from "@/shared/components/admin/ServerSearchForm";
 import { cn } from "@/shared/lib/utils";
 
-const PER_PAGE = 30;
+const PER_PAGE = ADMIN_PER_PAGE;
 
 const VALID_GROUPS = new Set<OrderStatusGroup>(["pendiente", "enviado", "entregado", "cancelado"]);
 
@@ -116,28 +118,20 @@ export default async function OrdersPage({ searchParams }: PageProps) {
       <OrdersClient orders={serializedOrders} />
 
       {/* Paginación */}
-      {totalPages > 1 && (
-        <div className="flex flex-wrap gap-2 justify-end mt-4">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <a
-              key={p}
-              href={buildUrl({
-                q: currentQ || undefined,
-                statusGroup: currentGroup || undefined,
-                page: String(p),
-              })}
-              className={cn(
-                "px-3 py-1.5 text-[13px] border transition-colors",
-                p === page
-                  ? "bg-(--gold) border-(--gold) text-black font-bold"
-                  : "border-(--bd) text-muted hover:text-text",
-              )}
-            >
-              {p}
-            </a>
-          ))}
-        </div>
-      )}
+      <AdminPagination
+        page={page}
+        totalPages={totalPages}
+        total={total}
+        perPage={PER_PAGE}
+        className="mt-4"
+        buildHref={(p) =>
+          buildUrl({
+            q: currentQ || undefined,
+            statusGroup: currentGroup || undefined,
+            page: String(p),
+          })
+        }
+      />
     </div>
   );
 }

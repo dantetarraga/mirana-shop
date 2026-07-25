@@ -1,5 +1,6 @@
 import {
   addCartItemAction,
+  addCartItemsAction,
   clearCartAction,
   getCartAction,
   removeCartItemAction,
@@ -28,6 +29,12 @@ interface CartState {
   hydrateCart: (items: CartItem[]) => void
   /** Agrega respetando el stock. Devuelve cuántas unidades entraron (0 = tope). */
   addToCart: (product: CatalogProduct, qty?: number) => number
+  /**
+   * Agrega una unidad de cada producto en una sola operación. Devuelve los
+   * nombres de los que no entraron (agotados o ya al tope) para que quien
+   * llama muestre un único aviso en vez de uno por producto.
+   */
+  addManyToCart: (products: CatalogProduct[]) => { added: number; skipped: string[] }
   /** Ajusta la cantidad respetando el stock. Devuelve si hubo cambio. */
   updateQty: (id: string, delta: number) => boolean
   removeItem: (id: string) => void
@@ -86,6 +93,39 @@ export const useCartStore = create<CartState>()((set, get) => ({
       .catch(() => resync(set))
 
     return toAdd
+  },
+
+  addManyToCart: (products) => {
+    const current = get().cart
+    const skipped: string[] = []
+    const toAdd: CatalogProduct[] = []
+
+    for (const product of products) {
+      const inCart = current.find((i) => i.product.id === product.id)?.qty ?? 0
+      const remaining = remainingStock(product, inCart)
+      // Se descarta antes de llamar a addToCart para no disparar un aviso de
+      // tope por cada producto: aquí se resume todo en uno solo.
+      if (remaining !== null && remaining <= 0) skipped.push(product.name)
+      else toAdd.push(product)
+    }
+
+    if (toAdd.length === 0) return { added: 0, skipped }
+
+    set((s) => {
+      const cart = [...s.cart]
+      for (const product of toAdd) {
+        const i = cart.findIndex((line) => line.product.id === product.id)
+        if (i >= 0) cart[i] = { ...cart[i], qty: cart[i].qty + 1 }
+        else cart.push({ product, qty: 1 })
+      }
+      return { cart, cartCount: countCart(cart) }
+    })
+
+    addCartItemsAction(toAdd.map((p) => ({ productId: p.id, qty: 1 })))
+      .then((cart) => set({ cart, cartCount: countCart(cart) }))
+      .catch(() => resync(set))
+
+    return { added: toAdd.length, skipped }
   },
 
   updateQty: (id, delta) => {

@@ -1,8 +1,11 @@
 import { StockAdjustControl } from '@/features/inventory/components/StockAdjustControl'
 import type { ProductListItem, StockFilter } from '@/features/products/types'
-import { getProducts } from '@/features/products/queries/product.queries'
+import { countProducts, getProducts } from '@/features/products/queries/product.queries'
 import { getInventoryStats } from '@/features/inventory/queries/inventory.queries'
+import { AdminPagination } from '@/shared/components/admin/AdminPagination'
+import { ADMIN_PER_PAGE } from '@/shared/lib/admin/pagination'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
+import { ServerSearchForm } from '@/shared/components/admin/ServerSearchForm'
 import { KpiCard } from '@/features/dashboard/components/KpiCard'
 import { StockBadge } from '@/features/inventory/components/StockBadge'
 import { cls } from '@/shared/lib/admin/admin-classes'
@@ -27,14 +30,25 @@ const CATEGORY_STRIPE: Record<string, string> = {
 
 const VALID_FILTERS = new Set<StockFilter>(['all', 'low', 'out'])
 
-const FILTER_TABS: { key: StockFilter; label: string; href: string }[] = [
-  { key: 'all', label: 'Todos', href: '/admin/inventory' },
-  { key: 'low', label: 'Stock bajo', href: '/admin/inventory?filter=low' },
-  { key: 'out', label: 'Agotados', href: '/admin/inventory?filter=out' },
+const FILTER_TABS: { key: StockFilter; label: string }[] = [
+  { key: 'all', label: 'Todos' },
+  { key: 'low', label: 'Stock bajo' },
+  { key: 'out', label: 'Agotados' },
 ]
 
+const PER_PAGE = ADMIN_PER_PAGE
+
+function buildUrl(params: Record<string, string | undefined>) {
+  const p = new URLSearchParams()
+  for (const [k, v] of Object.entries(params)) {
+    if (v) p.set(k, v)
+  }
+  const qs = p.toString()
+  return qs ? `/admin/inventory?${qs}` : '/admin/inventory'
+}
+
 interface PageProps {
-  searchParams: Promise<{ filter?: string }>
+  searchParams: Promise<{ filter?: string; q?: string; page?: string }>
 }
 
 // ---------------------------------------------------------------------------
@@ -92,13 +106,26 @@ const columns: Column<SerializedProduct>[] = [
 // ---------------------------------------------------------------------------
 
 export default async function InventoryPage({ searchParams }: PageProps) {
-  const { filter: rawFilter } = await searchParams
+  const { filter: rawFilter, q, page: rawPage } = await searchParams
   const stockFilter: StockFilter =
     rawFilter && VALID_FILTERS.has(rawFilter as StockFilter) ? (rawFilter as StockFilter) : 'all'
+  const page = Math.max(1, Number(rawPage ?? 1))
+  const currentQ = q ?? ''
 
-  const [rawProducts, stats] = await Promise.all([
-    getProducts({ stockFilter, status: 'ALL', take: 500 }),
+  // Un COUNT por pestaña (respetando la búsqueda) — antes cada pestaña mostraba
+  // el número de filas cargadas, que era el mismo para las tres.
+  const [rawProducts, stats, tabCounts] = await Promise.all([
+    getProducts({
+      search: q,
+      stockFilter,
+      status: 'ALL',
+      take: PER_PAGE,
+      skip: (page - 1) * PER_PAGE,
+    }),
     getInventoryStats(),
+    Promise.all(
+      FILTER_TABS.map((tab) => countProducts({ search: q, stockFilter: tab.key, status: 'ALL' })),
+    ),
   ])
 
   const products = rawProducts.map((p) => ({
@@ -106,6 +133,9 @@ export default async function InventoryPage({ searchParams }: PageProps) {
     price: Number(p.price),
     salePrice: p.salePrice != null ? Number(p.salePrice) : null,
   }))
+
+  const total = tabCounts[FILTER_TABS.findIndex((t) => t.key === stockFilter)] ?? 0
+  const totalPages = Math.ceil(total / PER_PAGE)
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 pt-5 lg:pt-7 pb-12">
@@ -121,29 +151,63 @@ export default async function InventoryPage({ searchParams }: PageProps) {
         <KpiCard label="Agotados" value={stats.outOfStockCount} valueClass="text-[#ff6644]" />
       </div>
 
-      {/* Tabs — GET navigation, sin estado cliente */}
-      <div className="flex gap-1.5 mb-5 flex-wrap">
-        {FILTER_TABS.map(({ key, label, href }) => (
+      {/* Búsqueda y tabs — GET navigation, sin estado cliente */}
+      <div className="flex items-center gap-3.5 mb-5 flex-wrap">
+        <ServerSearchForm
+          placeholder="Buscar producto o SKU..."
+          defaultValue={currentQ}
+          paramName="q"
+          extraParams={stockFilter !== 'all' ? { filter: stockFilter } : {}}
+        />
+        <div className="flex gap-1.5 flex-wrap">
+          {FILTER_TABS.map(({ key, label }, i) => (
+            <a
+              key={key}
+              href={buildUrl({
+                q: currentQ || undefined,
+                filter: key !== 'all' ? key : undefined,
+              })}
+              className={cn(
+                'px-3.5 py-2 text-[11px] tracking-[1px] uppercase font-display font-extrabold border transition-colors',
+                key === stockFilter
+                  ? 'bg-(--gold) border-(--gold) text-black'
+                  : 'border-(--bd) text-muted hover:text-text',
+              )}
+            >
+              {label}
+              <span className="opacity-70 ml-1.5 font-sans normal-case tracking-normal text-[12px]">
+                {tabCounts[i]}
+              </span>
+            </a>
+          ))}
+        </div>
+        {currentQ && (
           <a
-            key={key}
-            href={href}
-            className={cn(
-              'px-3.5 py-2 text-[11px] tracking-[1px] uppercase font-display font-extrabold border transition-colors',
-              key === stockFilter
-                ? 'bg-(--gold) border-(--gold) text-black'
-                : 'border-(--bd) text-muted hover:text-text',
-            )}
+            href={buildUrl({ filter: stockFilter !== 'all' ? stockFilter : undefined })}
+            className="text-[12px] text-muted hover:text-text transition-colors"
           >
-            {label}
-            <span className="opacity-70 ml-1.5 font-sans normal-case tracking-normal text-[12px]">
-              {products.length}
-            </span>
+            Limpiar
           </a>
-        ))}
+        )}
       </div>
 
       {/* AdminTable — mismo componente que el resto del admin */}
       <AdminTable columns={columns} data={products} keyExtractor={(p) => p.id} />
+
+      <AdminPagination
+        page={page}
+        totalPages={totalPages}
+        total={total}
+        perPage={PER_PAGE}
+        className="mt-4"
+        buildHref={(p) =>
+          buildUrl({
+            q: currentQ || undefined,
+            filter: stockFilter !== 'all' ? stockFilter : undefined,
+            page: String(p),
+          })
+        }
+      />
     </div>
   )
 }

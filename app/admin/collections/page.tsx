@@ -1,5 +1,7 @@
 import { countCollections, getCollections } from "@/features/collections/queries/collection.queries";
 import { CollectionsTableClient } from "@/features/collections/components/CollectionsTableClient";
+import { AdminPagination } from "@/shared/components/admin/AdminPagination";
+import { ADMIN_PER_PAGE } from "@/shared/lib/admin/pagination";
 import { ServerSearchForm } from "@/shared/components/admin/ServerSearchForm";
 
 interface PageProps {
@@ -11,7 +13,7 @@ export const metadata = { title: "Colecciones — Admin Mirana" };
 export default async function CollectionsPage({ searchParams }: PageProps) {
   const { q, page, active: activeParam } = await searchParams;
   const currentPage = Math.max(1, Number(page ?? 1));
-  const perPage = 30;
+  const perPage = ADMIN_PER_PAGE;
 
   // Filtro por estado activo: undefined = todos, "1" = activas, "0" = inactivas
   const activeFilter =
@@ -81,23 +83,14 @@ export default async function CollectionsPage({ searchParams }: PageProps) {
       <CollectionsTableClient collections={collections} total={total} />
 
       {/* Paginación server-side */}
-      {totalPages > 1 && (
-        <div className="px-8 pb-8 flex items-center gap-2 justify-end">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <a
-              key={p}
-              href={buildHref({ page: String(p) })}
-              className={`px-3 py-1.5 text-[13px] border transition-colors ${
-                p === currentPage
-                  ? "bg-(--gold) border-(--gold) text-black font-bold"
-                  : "border-(--bd) text-muted hover:text-text"
-              }`}
-            >
-              {p}
-            </a>
-          ))}
-        </div>
-      )}
+      <AdminPagination
+        page={currentPage}
+        totalPages={totalPages}
+        total={total}
+        perPage={perPage}
+        className="px-8 pb-8"
+        buildHref={(p) => buildHref({ page: String(p) })}
+      />
     </div>
   );
 }

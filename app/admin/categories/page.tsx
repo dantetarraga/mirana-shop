@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { CategoriesTableClient } from '@/features/categories/components/CategoriesTableClient'
 import { countCategories, getCategories } from '@/features/categories/queries/category.queries'
+import { AdminPagination } from '@/shared/components/admin/AdminPagination'
+import { ADMIN_PER_PAGE } from '@/shared/lib/admin/pagination'
 import { ServerSearchForm } from '@/shared/components/admin/ServerSearchForm'
 
 interface PageProps {
@@ -12,7 +14,7 @@ export const metadata = { title: 'Categorías — Admin Mirana' }
 export default async function CategoriesPage({ searchParams }: PageProps) {
   const { q, page } = await searchParams
   const currentPage = Math.max(1, Number(page ?? 1))
-  const perPage = 30
+  const perPage = ADMIN_PER_PAGE
 
   const [categories, allCategories, total] = await Promise.all([
     getCategories({ search: q, page: currentPage, perPage }),
@@ -39,23 +41,14 @@ export default async function CategoriesPage({ searchParams }: PageProps) {
       <CategoriesTableClient categories={categories} total={total} allCategories={allCategories} />
 
       {/* Paginación server-side */}
-      {totalPages > 1 && (
-        <div className="px-8 pb-8 flex items-center gap-2 justify-end">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <Link
-              key={p}
-              href={`/admin/categories?${q ? `q=${encodeURIComponent(q)}&` : ''}page=${p}`}
-              className={`px-3 py-1.5 text-[13px] border transition-colors ${
-                p === currentPage
-                  ? 'bg-(--gold) border-(--gold) text-black font-bold'
-                  : 'border-(--bd) text-muted hover:text-text'
-              }`}
-            >
-              {p}
-            </Link>
-          ))}
-        </div>
-      )}
+      <AdminPagination
+        page={currentPage}
+        totalPages={totalPages}
+        total={total}
+        perPage={perPage}
+        className="px-8 pb-8"
+        buildHref={(p) => `/admin/categories?${q ? `q=${encodeURIComponent(q)}&` : ''}page=${p}`}
+      />
     </div>
   )
 }

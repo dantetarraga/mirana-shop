@@ -50,6 +50,39 @@ export async function addCartItemAction(productId: string, qty: number): Promise
   return getCart()
 }
 
+/**
+ * Agrega varios productos de una sola vez (botón "Agregar todo" de una
+ * colección). Se hace en una sola action en lugar de N llamadas sueltas: cada
+ * una devuelve el carrito completo y, lanzadas en paralelo, la última en
+ * responder podía pisar la caché del cliente con una lectura anterior.
+ */
+export async function addCartItemsAction(
+  items: { productId: string; qty: number }[],
+): Promise<CartLine[]> {
+  if (items.length === 0) return getCart()
+
+  const cartId = await getOrCreateCartId()
+
+  for (const { productId, qty } of items) {
+    const [existing, max] = await Promise.all([
+      db.cartItem.findUnique({ where: { cartId_productId: { cartId, productId } } }),
+      maxQtyFor(productId),
+    ])
+
+    const target = (existing?.quantity ?? 0) + Math.max(0, qty)
+    const quantity = max === null ? target : Math.min(target, max)
+    if (quantity <= 0) continue
+
+    await db.cartItem.upsert({
+      where: { cartId_productId: { cartId, productId } },
+      update: { quantity },
+      create: { cartId, productId, quantity },
+    })
+  }
+
+  return getCart()
+}
+
 export async function updateCartItemQtyAction(
   productId: string,
   delta: number,

@@ -1,4 +1,9 @@
-import type { ProductDetail, ProductFilters, ProductListItem } from '@/features/products/types'
+import type {
+  ProductAdminListItem,
+  ProductDetail,
+  ProductFilters,
+  ProductListItem,
+} from '@/features/products/types'
 import { db } from '@/shared/lib/db'
 import 'server-only'
 
@@ -28,6 +33,13 @@ export const PRODUCT_LIST_SELECT = {
     },
     take: 3,
   },
+} as const
+
+// El listado público no necesita la descripción (puede ser HTML largo), pero
+// el listado del admin sí: es lo que alimenta el formulario de edición.
+export const PRODUCT_ADMIN_LIST_SELECT = {
+  ...PRODUCT_LIST_SELECT,
+  description: true,
 } as const
 
 export const PRODUCT_DETAIL_SELECT = {
@@ -114,7 +126,10 @@ function buildWhere(filters: Omit<ProductFilters, 'take' | 'skip'>) {
     collections: colSlugs?.length
       ? { some: { collection: { slug: { in: colSlugs } } } }
       : undefined,
-    name: search ? { contains: search } : undefined,
+    // Va en AND para no chocar con el OR de purchasableWhere.
+    AND: search
+      ? [{ OR: [{ name: { contains: search } }, { sku: { contains: search } }] }]
+      : undefined,
     salePrice: onSale ? { not: null } : undefined,
     ...inventoryWhere,
     ...priceWhere,
@@ -145,6 +160,21 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Product
     take,
     skip,
   }) as Promise<ProductListItem[]>
+}
+
+/** Igual que getProducts pero incluyendo la descripción — solo para el admin. */
+export async function getAdminProducts(
+  filters: ProductFilters = {},
+): Promise<ProductAdminListItem[]> {
+  const { take = 50, skip = 0, sort } = filters
+
+  return db.product.findMany({
+    where: buildWhere(filters),
+    select: PRODUCT_ADMIN_LIST_SELECT,
+    orderBy: buildOrderBy(sort),
+    take,
+    skip,
+  }) as Promise<ProductAdminListItem[]>
 }
 
 export async function getFeaturedProducts(take = 8): Promise<ProductListItem[]> {

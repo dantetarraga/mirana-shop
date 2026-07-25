@@ -25,8 +25,12 @@ export type ProductListItem = {
   collections: { collection: { id: string; name: string; slug: string } }[]
 }
 
-export type ProductDetail = ProductListItem & {
+/** Fila del listado del admin: incluye la descripción para el form de edición. */
+export type ProductAdminListItem = ProductListItem & {
   description: string
+}
+
+export type ProductDetail = ProductAdminListItem & {
   currency: string
   updatedAt: Date
 }

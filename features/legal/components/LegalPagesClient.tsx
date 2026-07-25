@@ -1,8 +1,8 @@
 'use client'
 
 import { saveLegalPage } from '@/features/legal/actions/legal.actions'
-import { RichTextEditor } from '@/features/legal/components/RichTextEditor'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
+import { RichTextEditor } from '@/shared/components/admin/RichTextEditor'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
 import { useServerAction } from '@/shared/hooks/admin'

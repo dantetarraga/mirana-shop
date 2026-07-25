@@ -6,6 +6,7 @@ import type { CatalogProduct } from '@/features/products/types/catalog.types'
 import { getCategoryLabel, getCategoryStripe } from '@/features/products/types/catalog.types'
 import { JsonLd } from '@/shared/components/JsonLd'
 import { Dates } from '@/shared/lib/dates'
+import { stripHtml, toRichHtml } from '@/shared/lib/rich-text'
 import { ChevronRight } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
@@ -16,6 +17,17 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 /** Bajo este stock se muestra el aviso de urgencia (sin decir la cifra exacta). */
 const LOW_STOCK_HINT_THRESHOLD = 8
 
+/** Máximo de caracteres del meta description (Google corta ~160). */
+const META_DESCRIPTION_MAX = 300
+
+/** Descripción en texto plano y recortada — para metadatos y JSON-LD. */
+function toPlainDescription(description: string): string {
+  const text = stripHtml(toRichHtml(description))
+  return text.length > META_DESCRIPTION_MAX
+    ? `${text.slice(0, META_DESCRIPTION_MAX).trimEnd()}…`
+    : text
+}
+
 interface PageProps {
   params: Promise<{ slug: string }>
 }
@@ -25,7 +37,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const product = await getProductBySlug(slug)
   if (!product) return { title: 'Producto no encontrado' }
 
-  const description = product.description || `${product.name} — ${product.brand.name}`
+  const description =
+    toPlainDescription(product.description) || `${product.name} — ${product.brand.name}`
   const imageUrl = product.images[0]?.url
   const url = `/catalogo/${product.slug}`
 
@@ -73,6 +86,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
     stock: raw.inventory?.availableStock ?? 0,
   }
 
+  const descriptionHtml = toRichHtml(raw.description)
   const stripe = getCategoryStripe(product.category.slug)
   const catLabel = getCategoryLabel(product.category.slug)
   const isOutOfStock = product.stock === 0 || product.status === 'SOLD_OUT'
@@ -84,7 +98,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.name,
-    description: raw.description || undefined,
+    description: toPlainDescription(raw.description) || undefined,
     sku: product.sku,
     image: product.imageUrl ? [product.imageUrl] : undefined,
     brand: { '@type': 'Brand', name: product.brand.name },
@@ -213,9 +227,14 @@ export default async function ProductDetailPage({ params }: PageProps) {
               </div>
             )}
 
-            {/* Description */}
-            {raw.description && (
-              <p className="text-[14px] text-muted leading-relaxed max-w-120">{raw.description}</p>
+            {/* Description — HTML del editor del admin (saneado al guardar).
+                Las descripciones antiguas en texto plano/Markdown se convierten
+                al vuelo, escapando el contenido antes de renderizarlo. */}
+            {descriptionHtml && (
+              <div
+                className="rich-prose rich-prose--compact max-w-120"
+                dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+              />
             )}
 
             {/* Add to cart */}

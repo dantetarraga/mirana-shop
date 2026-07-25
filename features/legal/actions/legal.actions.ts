@@ -3,6 +3,7 @@
 import { LEGAL_SLUGS } from '@/features/legal/queries/legal.queries'
 import { db } from '@/shared/lib/db'
 import { requireAdmin } from '@/shared/lib/require-admin'
+import { sanitizeRichText } from '@/shared/lib/rich-text'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
@@ -10,7 +11,8 @@ import { z } from 'zod'
 const legalPageSchema = z.object({
   slug: z.enum([LEGAL_SLUGS.terms, LEGAL_SLUGS.privacy]),
   title: z.string().min(1, 'Título requerido').max(150),
-  content: z.string().max(200_000, 'Contenido demasiado largo'),
+  // Se pinta con dangerouslySetInnerHTML en la página pública — se sanea aquí.
+  content: z.string().max(200_000, 'Contenido demasiado largo').transform(sanitizeRichText),
 })
 
 export async function saveLegalPage(rawInput: unknown): Promise<ActionResult<{ slug: string }>> {

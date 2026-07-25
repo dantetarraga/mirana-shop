@@ -14,16 +14,22 @@ import {
   Redo2,
   Undo2,
 } from 'lucide-react'
+import { useEffect } from 'react'
 
 // ---------------------------------------------------------------------------
-// RichTextEditor — editor de texto enriquecido (TipTap) para contenido legal.
-// Emite HTML; el mismo HTML se renderiza en la página pública con la clase
-// .legal-prose para que el preview del editor y la página se vean iguales.
+// RichTextEditor — editor de texto enriquecido (TipTap) para el admin:
+// páginas legales y descripción de productos. Emite HTML; ese mismo HTML se
+// renderiza en la web pública con la clase .rich-prose, así el preview del
+// editor y la página se ven iguales.
 // ---------------------------------------------------------------------------
 
 interface RichTextEditorProps {
   content: string
   onChange: (html: string) => void
+  /** Alto mínimo del área editable (clase Tailwind). */
+  minHeightClass?: string
+  /** Alto máximo antes de hacer scroll interno (clase Tailwind). */
+  maxHeightClass?: string
 }
 
 function ToolbarButton({
@@ -137,16 +143,29 @@ function Toolbar({ editor }: { editor: Editor }) {
   )
 }
 
-export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
+export function RichTextEditor({
+  content,
+  onChange,
+  minHeightClass = 'min-h-90',
+  maxHeightClass = 'max-h-140',
+}: RichTextEditorProps) {
   const editor = useEditor({
     extensions: [StarterKit.configure({ heading: { levels: [2, 3] } })],
     content,
     immediatelyRender: false,
     editorProps: {
-      attributes: { class: 'legal-prose min-h-90 px-4 sm:px-6 py-5 outline-none' },
+      attributes: { class: cn('rich-prose px-4 sm:px-6 py-5 outline-none', minHeightClass) },
     },
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
   })
+
+  // El contenido inicial puede llegar después del montaje (p. ej. el reset de
+  // react-hook-form en los drawers CRUD). Mientras se escribe, `content` ya
+  // coincide con el HTML del editor, así que esto no interfiere.
+  useEffect(() => {
+    if (!editor || content === editor.getHTML()) return
+    editor.commands.setContent(content || '', { emitUpdate: false })
+  }, [content, editor])
 
   if (!editor) {
     return <div className="bg-card border border-(--bd) min-h-100 animate-pulse" />
@@ -155,7 +174,9 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
   return (
     <div className="bg-card border border-(--bd)">
       <Toolbar editor={editor} />
-      <div className="max-h-140 overflow-y-auto cursor-text" onClick={() => editor.chain().focus().run()}>
+      {/* El área editable ya ocupa el alto mínimo completo, así que un clic en
+          cualquier punto cae sobre el contenteditable y lo enfoca solo. */}
+      <div className={cn('overflow-y-auto cursor-text', maxHeightClass)}>
         <EditorContent editor={editor} />
       </div>
     </div>

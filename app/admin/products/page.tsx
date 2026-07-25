@@ -3,12 +3,13 @@ import { ProductFilters } from '@/features/products/components/ProductFilters'
 import { getBrands } from '@/features/brands/queries/brand.queries'
 import { getCategories } from '@/features/categories/queries/category.queries'
 import { getCollections } from '@/features/collections/queries/collection.queries'
-import { countProducts, getProducts } from '@/features/products/queries/product.queries'
+import { countProducts, getAdminProducts } from '@/features/products/queries/product.queries'
+import { AdminPagination } from '@/shared/components/admin/AdminPagination'
+import { ADMIN_PER_PAGE } from '@/shared/lib/admin/pagination'
 import { ServerSearchForm } from '@/shared/components/admin/ServerSearchForm'
-import { cn } from '@/shared/lib/utils'
 import { X } from 'lucide-react'
 
-const PER_PAGE = 30
+const PER_PAGE = ADMIN_PER_PAGE
 
 interface PageProps {
   searchParams: Promise<{
@@ -41,7 +42,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
   const collectionSlugs = collection ? collection.split(',').filter(Boolean) : []
 
   const [products, categories, brands, collections, total] = await Promise.all([
-    getProducts({
+    getAdminProducts({
       search: q,
       categorySlug: categorySlugs.length > 0 ? categorySlugs : undefined,
       brandSlug: brandSlugs.length > 0 ? brandSlugs : undefined,
@@ -203,31 +204,22 @@ export default async function ProductsPage({ searchParams }: PageProps) {
         total={total}
       />
 
-      {/* Paginación */}
-      {totalPages > 1 && (
-        <div className="flex flex-wrap gap-2 justify-end mt-4">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <a
-              key={p}
-              href={buildUrl({
-                q: currentQ || undefined,
-                cat: categorySlugs.length > 0 ? categorySlugs : undefined,
-                brand: brandSlugs.length > 0 ? brandSlugs : undefined,
-                collection: collectionSlugs.length > 0 ? collectionSlugs : undefined,
-                page: String(p),
-              })}
-              className={cn(
-                'px-3 py-1.5 text-[13px] border transition-colors',
-                p === page
-                  ? 'bg-(--gold) border-(--gold) text-black font-bold'
-                  : 'border-(--bd) text-muted hover:text-text',
-              )}
-            >
-              {p}
-            </a>
-          ))}
-        </div>
-      )}
+      <AdminPagination
+        page={page}
+        totalPages={totalPages}
+        total={total}
+        perPage={PER_PAGE}
+        className="mt-4"
+        buildHref={(p) =>
+          buildUrl({
+            q: currentQ || undefined,
+            cat: categorySlugs.length > 0 ? categorySlugs : undefined,
+            brand: brandSlugs.length > 0 ? brandSlugs : undefined,
+            collection: collectionSlugs.length > 0 ? collectionSlugs : undefined,
+            page: String(p),
+          })
+        }
+      />
     </div>
   )
 }

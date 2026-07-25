@@ -1,5 +1,18 @@
 import { imageUrlSchema } from '@/shared/schemas/image-url.schema'
+import { isRichTextEmpty, sanitizeRichText, toRichHtml } from '@/shared/lib/rich-text'
 import { z } from 'zod'
+
+// La descripción viaja como HTML del editor enriquecido (TipTap). Se sanea
+// siempre — se pinta con dangerouslySetInnerHTML en la ficha de producto — y
+// un documento "vacío" del editor (`<p></p>`) se normaliza a cadena vacía.
+const richTextSchema = z
+  .string()
+  .max(50_000, 'Descripción demasiado larga')
+  .transform((v) => (isRichTextEmpty(v) ? '' : sanitizeRichText(v)))
+
+// La columna del Excel llega en texto plano (a veces con marcas Markdown):
+// se guarda ya convertida a HTML para no depender de la conversión al vuelo.
+const importDescriptionSchema = richTextSchema.transform(toRichHtml)
 
 // ---------------------------------------------------------------------------
 // Productos — schema para BD real (Server Actions)
@@ -12,7 +25,7 @@ export const productDbBaseSchema = z.object({
     .min(1, 'Slug requerido')
     .regex(/^[a-z0-9-]+$/, 'Solo minúsculas, números y guiones'),
   sku: z.string().min(1, 'SKU requerido'),
-  description: z.string().optional().default(''),
+  description: richTextSchema.optional().default(''),
   price: z.number({ error: 'Precio requerido' }).positive('Debe ser mayor a 0'),
   salePrice: z.preprocess(
     (v) => (v === '' || v === null || (typeof v === 'number' && isNaN(v)) ? undefined : v),
@@ -56,7 +69,7 @@ export const importProductRowSchema = z.object({
   ),
   stock: z.number().int().min(0),
   brand: z.string().optional().default(''),
-  desc: z.string().optional().default(''),
+  desc: importDescriptionSchema.optional().default(''),
   status: z.enum(['AVAILABLE', 'PREORDER', 'SOLD_OUT', 'COMING_SOON', 'ARCHIVED']).optional().default('AVAILABLE'),
   featured: z.preprocess(
     (v) => {

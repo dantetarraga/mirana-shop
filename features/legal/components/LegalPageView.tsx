@@ -30,7 +30,7 @@ export async function LegalPageView({ slug, fallbackTitle }: LegalPageViewProps)
         )}
 
         {page?.content ? (
-          <div className="legal-prose" dangerouslySetInnerHTML={{ __html: page.content }} />
+          <div className="rich-prose" dangerouslySetInnerHTML={{ __html: page.content }} />
         ) : (
           <p className="text-muted text-[14px] mt-6">
             Contenido en preparación. Vuelve a revisar pronto.

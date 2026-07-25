@@ -40,6 +40,10 @@ function invalidateCollectionCaches() {
   revalidatePath('/admin/collections')
   revalidatePath('/admin/dashboard')
   revalidatePath('/')
+  // Superficie pública: las colecciones encabezan el catálogo y tienen página
+  // propia — ambas deben refrescarse al crear, editar o desactivar una.
+  revalidatePath('/catalogo')
+  revalidatePath('/colecciones/[slug]', 'page')
   revalidateTag('collections', 'max')
   revalidateTag('catalog', 'max')
 }
@@ -194,7 +198,7 @@ export async function syncProductCollections(
 
     revalidatePath('/admin/products')
     revalidateTag('products', 'max')
-    revalidateTag('collections', 'max')
+    invalidateCollectionCaches()
     return { success: true, data: undefined }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Error al sincronizar colecciones'
