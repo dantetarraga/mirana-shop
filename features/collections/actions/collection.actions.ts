@@ -26,6 +26,13 @@ const createCollectionSchema = z.object({
   description: z.string().max(1000).optional(),
   imageUrl: z.string().url('URL de imagen inválida').optional().or(z.literal('')),
   active: z.boolean().default(true),
+  /**
+   * Productos elegidos en el drawer antes de que la colección exista. Se
+   * asocian en el mismo create para que no quede una colección a medias si
+   * algo falla después. `updateCollection` los ignora: en edición el panel de
+   * productos ya trabaja directamente contra la BD.
+   */
+  productIds: z.array(z.string().min(1)).optional().default([]),
 })
 
 const updateCollectionSchema = createCollectionSchema.partial().extend({
@@ -65,13 +72,15 @@ export async function createCollection(rawInput: unknown): Promise<ActionResult<
     }
   }
 
-  const { name, slug, description, imageUrl, active } = parsed.data
+  const { name, slug, description, imageUrl, active, productIds } = parsed.data
 
   try {
     const existing = await getCollectionBySlug(slug)
     if (existing) {
       return { success: false, error: 'Ya existe una colección con ese slug', code: 409 }
     }
+
+    const uniqueProductIds = [...new Set(productIds)]
 
     const collection = await db.collection.create({
       data: {
@@ -80,11 +89,18 @@ export async function createCollection(rawInput: unknown): Promise<ActionResult<
         description: description || null,
         imageUrl: imageUrl || null,
         active: active ?? true,
+        ...(uniqueProductIds.length > 0 && {
+          products: { create: uniqueProductIds.map((productId) => ({ productId })) },
+        }),
       },
       select: COLLECTION_SELECT,
     })
 
     invalidateCollectionCaches()
+    if (uniqueProductIds.length > 0) {
+      revalidatePath('/admin/products')
+      revalidateTag('products', 'max')
+    }
     return { success: true, data: { id: collection.id } }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Error al crear colección'

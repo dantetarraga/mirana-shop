@@ -34,6 +34,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  experimental: {
+    serverActions: {
+      // El límite por defecto de las Server Actions es 1MB, pero uploadImage
+      // acepta imágenes de hasta 5MB: cualquier foto de móvil pasaba de 1MB y
+      // la subida fallaba antes de llegar a la action. Las imágenes se suben de
+      // una en una (ver MultiImageField), así que basta con cubrir un archivo.
+      bodySizeLimit: '6mb',
+    },
+  },
   headers: async () => [
     {
       source: '/(.*)',

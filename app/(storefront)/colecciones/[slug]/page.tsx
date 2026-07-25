@@ -107,8 +107,9 @@ export default async function CollectionDetailPage({ params }: PageProps) {
           <span className="text-text truncate max-w-[160px] sm:max-w-none">{collection.name}</span>
         </nav>
 
-        {/* Cabecera */}
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,420px)_1fr] gap-8 lg:gap-12 items-start mb-12">
+        {/* Cabecera — misma estructura que la ficha de producto: imagen
+            cuadrada a la izquierda, datos y CTA a todo el ancho a la derecha */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-start mb-12 lg:mb-16">
           <div className="stripe-lego glow-section glow-section--card aspect-square relative flex items-center justify-center overflow-hidden">
             {collection.imageUrl ? (
               <Image
@@ -117,7 +118,7 @@ export default async function CollectionDetailPage({ params }: PageProps) {
                 fill
                 priority
                 className="object-cover"
-                sizes="(max-width: 1024px) 100vw, 420px"
+                sizes="(max-width: 1024px) 100vw, 50vw"
               />
             ) : (
               <Layers size={48} className="text-muted" aria-hidden />
@@ -129,8 +130,8 @@ export default async function CollectionDetailPage({ params }: PageProps) {
 
           <div className="flex flex-col gap-6 pt-2">
             <div className="text-[11px] tracking-[3px] uppercase text-muted">
-              {collection.productCount} producto{collection.productCount !== 1 ? 's' : ''} en esta
-              colección
+              Colección · {collection.productCount} producto
+              {collection.productCount !== 1 ? 's' : ''}
             </div>
 
             <h1 className="font-display font-black uppercase leading-[0.95] tracking-[-1px] text-[clamp(36px,5vw,64px)]">
@@ -138,7 +139,7 @@ export default async function CollectionDetailPage({ params }: PageProps) {
             </h1>
 
             {collection.fromPrice !== null && (
-              <div className="flex items-baseline gap-2.5">
+              <div className="flex items-baseline gap-2.5 flex-wrap">
                 <span className="text-[12px] text-muted uppercase tracking-[1.5px]">Desde</span>
                 <span className="font-display text-[40px] sm:text-[56px] font-black text-(--gold) leading-none">
                   S/ {collection.fromPrice.toFixed(2)}
@@ -148,14 +149,12 @@ export default async function CollectionDetailPage({ params }: PageProps) {
 
             {descriptionHtml && (
               <div
-                className="rich-prose rich-prose--compact max-w-140"
+                className="rich-prose rich-prose--compact max-w-120"
                 dangerouslySetInnerHTML={{ __html: descriptionHtml }}
               />
             )}
 
-            <div className="flex flex-wrap gap-2.5">
-              <CollectionAddAllButton products={items} collectionName={collection.name} />
-            </div>
+            <CollectionAddAllButton products={items} collectionName={collection.name} />
           </div>
         </div>
 

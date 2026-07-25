@@ -45,7 +45,11 @@ export type ProductFilters = {
   collectionSlug?: string | string[]
   search?: string
   featured?: boolean
-  /** Por defecto (clave omitida) solo `AVAILABLE`. Pasar 'ALL' para no filtrar por status. */
+  /**
+   * Omitido = los estados visibles en la tienda (`DEFAULT_CATALOG_STATUSES`:
+   * disponible, preventa y agotado). Pasar 'ALL' para no filtrar por status
+   * —lo que necesitan las vistas de admin, que sí muestran archivados.
+   */
   status?: ProductStatus | ProductStatus[] | 'ALL'
   stockFilter?: StockFilter
   /**

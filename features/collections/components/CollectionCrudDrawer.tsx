@@ -13,7 +13,9 @@ import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
 import { useAutoSlug, useFormEntity, useServerAction } from '@/shared/hooks/admin'
 import { cls } from '@/shared/lib/admin/admin-classes'
+import type { DrawerProduct } from '@/shared/types/entity-products.types'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
@@ -47,6 +49,10 @@ interface CollectionCrudDrawerProps {
 
 export function CollectionCrudDrawer({ collection, isNew, onClose }: CollectionCrudDrawerProps) {
   const { isPending, run } = useServerAction()
+
+  // Productos elegidos antes de que la colección exista: se envían junto con el
+  // create. En edición esta lista no se usa — el panel escribe directo en BD.
+  const [stagedProducts, setStagedProducts] = useState<DrawerProduct[]>([])
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -88,7 +94,9 @@ export function CollectionCrudDrawer({ collection, isNew, onClose }: CollectionC
     const payload = {
       ...data,
       active: data.active ?? true,
-      ...(collection && { id: collection.id }),
+      ...(collection
+        ? { id: collection.id }
+        : { productIds: stagedProducts.map((p) => p.id) }),
     }
     run(collection ? () => updateCollection(payload) : () => createCollection(payload), {
       successMsg: isNew ? 'Colección creada' : 'Colección actualizada',
@@ -153,9 +161,15 @@ export function CollectionCrudDrawer({ collection, isNew, onClose }: CollectionC
         </div>
       </form>
 
-      {!isNew && collection?.id && (
-        <EntityProductsPanel entityId={collection.id} entityType="collection" />
-      )}
+      {/* Vive fuera del <form> a propósito: su buscador tiene su propio input y
+          dentro del formulario un Enter dispararía el submit. Al crear no hay
+          ID todavía, así que el panel trabaja en modo pendiente. */}
+      <EntityProductsPanel
+        entityId={collection?.id ?? null}
+        entityType="collection"
+        staged={stagedProducts}
+        onStagedChange={setStagedProducts}
+      />
     </AdminDrawer>
   )
 }

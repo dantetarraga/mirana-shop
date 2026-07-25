@@ -4,6 +4,7 @@ import type {
   ProductFilters,
   ProductListItem,
 } from '@/features/products/types'
+import { DEFAULT_CATALOG_STATUSES } from '@/features/products/lib/availability'
 import { db } from '@/shared/lib/db'
 import 'server-only'
 
@@ -81,9 +82,14 @@ function buildWhere(filters: Omit<ProductFilters, 'take' | 'skip'>) {
       : [collectionSlug]
     : undefined
 
+  // Omitir `status` significa "lo que ve el público": disponible, preventa y
+  // agotado. Antes el implícito era solo AVAILABLE, así que cualquier consumidor
+  // que no lo pasara (buscador, relacionados) escondía las preventas sin querer
+  // y contradecía a /catalogo, que sí las lista. Para incluirlo todo —vistas de
+  // admin— hay que pedir 'ALL' explícitamente.
   const statusWhere =
     status === undefined
-      ? ('AVAILABLE' as const)
+      ? { in: DEFAULT_CATALOG_STATUSES }
       : status === 'ALL'
         ? undefined
         : Array.isArray(status)

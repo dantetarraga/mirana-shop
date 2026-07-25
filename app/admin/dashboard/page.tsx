@@ -22,7 +22,9 @@ export default async function DashboardPage() {
     ordersByCategory,
   ] = await Promise.all([
     getOrderStats(),
-    getProducts({ take: 10 }),
+    // 'ALL': es una vista de admin — debe listar también archivados y
+    // próximamente, no solo lo que ve el público.
+    getProducts({ take: 10, status: 'ALL' }),
     getInventoryStats(),
     countUsers(),
     getOrders({ take: 6 }),

@@ -15,7 +15,7 @@ export default function CollectionDetailLoading() {
       </div>
 
       {/* Cabecera */}
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,420px)_1fr] gap-8 lg:gap-12 items-start mb-12">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-start mb-12 lg:mb-16">
         <Bone className="aspect-square w-full" />
         <div className="flex flex-col gap-6 pt-2">
           <Bone className="h-2.5 w-44" />
@@ -28,7 +28,10 @@ export default function CollectionDetailLoading() {
             <Bone className="h-3 w-full" />
             <Bone className="h-3 w-5/6" />
           </div>
-          <Bone className="h-11 w-56" />
+          <div className="flex flex-col gap-4">
+            <Bone className="h-2.5 w-24" />
+            <Bone className="h-12 w-full" />
+          </div>
         </div>
       </div>
 

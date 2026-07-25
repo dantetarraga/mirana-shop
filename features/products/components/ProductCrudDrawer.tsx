@@ -6,7 +6,7 @@ import type { CollectionRow } from '@/features/collections/types'
 import type { ProductAdminListItem } from '@/features/products/types'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { FilterMultiSelect } from '@/shared/components/admin/FilterMultiSelect'
-import { ImageUploadField } from '@/shared/components/admin/ImageUploadField'
+import { MultiImageField, type ImageItem } from '@/shared/components/admin/MultiImageField'
 import { RichTextEditor } from '@/shared/components/admin/RichTextEditor'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
@@ -16,8 +16,7 @@ import { productDbSchema } from '@/features/products/schemas/product.schema'
 import { toRichHtml } from '@/shared/lib/rich-text'
 import { cn } from '@/shared/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ImagePlus, Trash2 } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
@@ -84,8 +83,9 @@ export function ProductCrudDrawer({
   // IDs de colecciones seleccionadas — estado separado del form (M2M)
   const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>([])
 
-  // Imágenes — estado separado del form (múltiples, ordenadas)
-  const [imageInputs, setImageInputs] = useState<{ url: string; alt: string }[]>([])
+  // Imágenes — estado separado del form. El orden importa: la primera es la
+  // principal y se guarda como `position` en BD.
+  const [imageInputs, setImageInputs] = useState<ImageItem[]>([])
 
   useFormEntity({
     entity: product,
@@ -118,18 +118,6 @@ export function ProductCrudDrawer({
     setSelectedCollectionIds(product ? product.collections.map((c) => c.collection.id) : [])
     setImageInputs(product?.images.map((img) => ({ url: img.url, alt: img.alt ?? '' })) ?? [])
   }, [product?.id])
-
-  const addImage = useCallback(() => {
-    setImageInputs((prev) => [...prev, { url: '', alt: '' }])
-  }, [])
-
-  const removeImage = useCallback((i: number) => {
-    setImageInputs((prev) => prev.filter((_, idx) => idx !== i))
-  }, [])
-
-  const updateImage = useCallback((i: number, field: 'url' | 'alt', value: string) => {
-    setImageInputs((prev) => prev.map((img, idx) => (idx === i ? { ...img, [field]: value } : img)))
-  }, [])
 
   const toggleCollection = (id: string) => {
     setSelectedCollectionIds((prev) =>
@@ -238,46 +226,7 @@ export function ProductCrudDrawer({
         {/* ── Imágenes ── */}
         <div>
           <div className={cn(cls.label, 'mb-2')}>Imágenes</div>
-          <div className="flex flex-col gap-2">
-            {imageInputs.map((img, i) => (
-              <div key={i} className="flex gap-2 items-start">
-                <div className="flex-1 flex flex-col gap-1.5">
-                  <ImageUploadField
-                    value={img.url}
-                    onChange={(url) => updateImage(i, 'url', url)}
-                    folder="products"
-                    placeholder={`URL imagen ${i + 1}`}
-                  />
-                  <input
-                    value={img.alt}
-                    onChange={(e) => updateImage(i, 'alt', e.target.value)}
-                    className={cn(cls.input, 'text-[12px] py-1.75')}
-                    placeholder="Texto alternativo (opcional)"
-                  />
-                </div>
-                <Button
-                  type="button"
-                  variant="icon"
-                  size="sm"
-                  destructive
-                  onClick={() => removeImage(i)}
-                  className="mt-0.75"
-                >
-                  <Trash2 size={13} />
-                </Button>
-              </div>
-            ))}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={addImage}
-              className="self-start"
-            >
-              <ImagePlus size={14} />
-              Agregar imagen
-            </Button>
-          </div>
+          <MultiImageField images={imageInputs} onChange={setImageInputs} folder="products" />
         </div>
 
         {/* ── Colecciones (M2M) ── */}

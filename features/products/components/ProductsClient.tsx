@@ -123,8 +123,10 @@ export function ProductsClient({
           if (collectionIds.length > 0) {
             await syncProductCollections(created.id, collectionIds)
           }
-          // Sync imágenes adicionales (la primera ya fue creada por createProduct)
-          if (images.length > 1) {
+          // Re-sincroniza siempre que haya imágenes: createProduct solo guarda
+          // la primera y le pone como alt el nombre del producto, así que este
+          // paso es el que fija el orden elegido y los textos alternativos.
+          if (images.length > 0) {
             await updateProduct(created.id, {}, images)
           }
           const category = categories.find((c) => c.id === data.categoryId)

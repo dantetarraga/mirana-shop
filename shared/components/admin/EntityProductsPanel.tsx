@@ -24,9 +24,17 @@ import { toast } from 'sonner'
 export type EntityType = 'collection' | 'brand' | 'category'
 
 interface EntityProductsPanelProps {
-  /** ID de la entidad. Sólo se muestra cuando existe (modo edición). */
-  entityId: string
+  /**
+   * ID de la entidad. Si falta, el panel entra en modo "pendiente": la entidad
+   * todavía no existe (drawer de creación), así que la selección se mantiene en
+   * memoria y la envía el formulario al crear, en vez de tocar la BD aquí.
+   */
+  entityId?: string | null
   entityType: EntityType
+  /** Modo pendiente: productos elegidos hasta ahora. */
+  staged?: DrawerProduct[]
+  /** Modo pendiente: informa al formulario de cada cambio de la selección. */
+  onStagedChange?: (products: DrawerProduct[]) => void
 }
 
 // ---------------------------------------------------------------------------
@@ -80,7 +88,15 @@ async function doRemoveProduct(entityId: string, productId: string): Promise<boo
 // Componente
 // ---------------------------------------------------------------------------
 
-export function EntityProductsPanel({ entityId, entityType }: EntityProductsPanelProps) {
+export function EntityProductsPanel({
+  entityId,
+  entityType,
+  staged = [],
+  onStagedChange,
+}: EntityProductsPanelProps) {
+  /** Sin ID todavía: la selección vive en memoria hasta que se guarde. */
+  const isStaged = !entityId
+
   // Carga inicial con estado derivado: `loaded.key` indica de qué entidad es la
   // lista cargada. Mientras no coincida, `loading` se deriva en render — evita
   // el setState síncrono en el efecto (cascada de render).
@@ -96,13 +112,19 @@ export function EntityProductsPanel({ entityId, entityType }: EntityProductsPane
   const [actionId, setActionId] = useState<string | null>(null)
   const searchBoxRef = useRef<HTMLDivElement>(null)
 
-  const loading = loaded.key !== entityKey
-  const products = loading ? [] : loaded.products
-  const setProducts = (updater: (prev: DrawerProduct[]) => DrawerProduct[]) =>
+  const loading = !isStaged && loaded.key !== entityKey
+  const products = isStaged ? staged : loading ? [] : loaded.products
+  const setProducts = (updater: (prev: DrawerProduct[]) => DrawerProduct[]) => {
+    if (isStaged) {
+      onStagedChange?.(updater(staged))
+      return
+    }
     setLoaded((prev) => ({ key: entityKey, products: updater(prev.key === entityKey ? prev.products : []) }))
+  }
 
-  // Carga inicial
+  // Carga inicial — en modo pendiente no hay nada que cargar
   useEffect(() => {
+    if (!entityId) return
     let cancelled = false
     loadProducts(entityType, entityId).then((data) => {
       if (!cancelled) setLoaded({ key: `${entityType}:${entityId}`, products: data })
@@ -138,15 +160,25 @@ export function EntityProductsPanel({ entityId, entityType }: EntityProductsPane
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
+  const clearSearch = () => {
+    setQuery('')
+    setResults([])
+    setShowResults(false)
+  }
+
   const handleAdd = async (product: DrawerProduct) => {
+    if (!entityId) {
+      setProducts((prev) => [...prev, product])
+      clearSearch()
+      return
+    }
+
     setActionId(product.id)
     const ok = await doAddProduct(entityType, entityId, product.id)
     setActionId(null)
     if (ok) {
       setProducts((prev) => [...prev, product])
-      setQuery('')
-      setResults([])
-      setShowResults(false)
+      clearSearch()
       toast.success(`"${product.name}" agregado`)
     } else {
       toast.error('No se pudo agregar el producto')
@@ -154,6 +186,11 @@ export function EntityProductsPanel({ entityId, entityType }: EntityProductsPane
   }
 
   const handleRemove = async (product: DrawerProduct) => {
+    if (!entityId) {
+      setProducts((prev) => prev.filter((p) => p.id !== product.id))
+      return
+    }
+
     setActionId(product.id)
     const ok = await doRemoveProduct(entityId, product.id)
     setActionId(null)
@@ -165,7 +202,8 @@ export function EntityProductsPanel({ entityId, entityType }: EntityProductsPane
     }
   }
 
-  const canRemove = entityType === 'collection'
+  // En modo pendiente siempre se puede quitar: nada se ha guardado aún.
+  const canRemove = isStaged || entityType === 'collection'
 
   const addPlaceholder =
     entityType === 'collection'
@@ -299,6 +337,13 @@ export function EntityProductsPanel({ entityId, entityType }: EntityProductsPane
           ))
         )}
       </div>
+
+      {isStaged && products.length > 0 && (
+        <p className="text-[11px] text-muted leading-relaxed">
+          {products.length} producto{products.length !== 1 ? 's' : ''} se asociará
+          {products.length !== 1 ? 'n' : ''} al guardar la colección.
+        </p>
+      )}
 
       {/* Nota informativa para brand/category */}
       {!canRemove && (

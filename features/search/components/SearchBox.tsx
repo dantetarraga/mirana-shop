@@ -2,7 +2,7 @@
 
 import { getSearchSuggestions, type SearchSuggestions } from '@/features/search/actions/search.actions'
 import { useRecentSearchesStore } from '@/features/search/stores/recent-searches.store'
-import { getCategoryStripe } from '@/features/products/types/catalog.types'
+import { getCategoryStripe, type CatalogProduct } from '@/features/products/types/catalog.types'
 import { useDebounce } from '@/shared/hooks'
 import { ArrowRight, Clock, History, Search, SearchX, X } from 'lucide-react'
 import Image from 'next/image'
@@ -11,6 +11,13 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
 const EMPTY_SUGGESTIONS: SearchSuggestions = { query: '', products: [], categories: [], total: 0 }
+
+/** Etiqueta de estado de una sugerencia. `null` = disponible, no hace falta. */
+function suggestionTag(p: CatalogProduct): string | null {
+  if (p.status === 'PREORDER') return 'Preventa'
+  if (p.status === 'SOLD_OUT' || p.stock === 0) return 'Agotado'
+  return null
+}
 
 export function SearchBox() {
   const [query, setQuery] = useState('')
@@ -207,8 +214,18 @@ export function SearchBox() {
                       <div className="font-display text-[15px] font-extrabold uppercase tracking-[-0.3px] text-text truncate group-hover:text-(--gold)">
                         {p.name}
                       </div>
-                      <div className="text-[11px] text-muted mt-0.5 truncate">
-                        {p.category.name} · {p.brand.name}
+                      <div className="text-[11px] text-muted mt-0.5 truncate flex items-center gap-1.5">
+                        <span className="truncate">
+                          {p.category.name} · {p.brand.name}
+                        </span>
+                        {/* El buscador ya no se limita a lo disponible: sin esta
+                            marca, una preventa o un agotado se leerían como
+                            stock normal. */}
+                        {suggestionTag(p) && (
+                          <span className="shrink-0 text-[9px] font-extrabold tracking-[1px] uppercase px-1.5 py-0.5 border border-(--bd) text-muted">
+                            {suggestionTag(p)}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="font-display text-[16px] font-black text-(--gold) shrink-0">

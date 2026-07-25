@@ -1,15 +1,19 @@
 'use server'
 
 import { ALLOWED_FOLDERS, withAutoFormat, type UploadFolder } from '@/features/uploads/lib/media-folder'
+import {
+  ALLOWED_UPLOAD_TYPES,
+  MAX_UPLOAD_BYTES,
+} from '@/features/uploads/lib/upload-constraints'
 import { requireAdmin } from '@/shared/lib/require-admin'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import { v2 as cloudinary } from 'cloudinary'
 
 // Config se toma automáticamente de la env var CLOUDINARY_URL (formato del dashboard de Cloudinary)
 
-const MAX_SIZE = 5 * 1024 * 1024 // 5MB
+const MAX_SIZE = MAX_UPLOAD_BYTES
 
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif']
+const ALLOWED_TYPES: readonly string[] = ALLOWED_UPLOAD_TYPES
 
 export async function uploadImage(formData: FormData): Promise<ActionResult<{ url: string }>> {
   const denied = await requireAdmin()
