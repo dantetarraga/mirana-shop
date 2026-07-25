@@ -1,6 +1,6 @@
+import { BannerImage } from '@/features/banners/components/BannerImage'
 import type { BannerRow } from '@/features/banners/types'
 import { ArrowRight } from 'lucide-react'
-import Image from 'next/image'
 import Link from 'next/link'
 
 interface HeroSectionProps {
@@ -15,6 +15,7 @@ export function HeroSection({ banner }: HeroSectionProps) {
   const ctaLabel = banner?.ctaLabel ?? 'Ver Catálogo'
   const ctaHref = banner?.ctaHref ?? '/catalogo'
   const imageUrl = banner?.imageUrl ?? null
+  const imageUrlMobile = banner?.imageUrlMobile ?? null
 
   return (
     <section className="glow-section relative overflow-hidden shell grid grid-cols-1 md:grid-cols-[1fr_0.85fr] items-center gap-10 md:gap-15 pt-[calc(var(--nh)+48px)] md:pt-[calc(var(--nh)+80px)] pb-14 md:pb-20">
@@ -70,11 +71,12 @@ export function HeroSection({ banner }: HeroSectionProps) {
       <div className="relative z-1 flex items-center justify-center">
         <div className="stripe-fig w-full max-w-125 h-[clamp(260px,42vh,520px)] flex items-center justify-center flex-col gap-2.5 border border-(--bd) relative overflow-hidden">
           {imageUrl ? (
-            <Image
-              src={imageUrl}
+            <BannerImage
+              desktopUrl={imageUrl}
+              mobileUrl={imageUrlMobile}
               alt={title}
+              sizes="(max-width: 767px) 100vw, 500px"
               className="absolute inset-0 w-full h-full object-cover opacity-70"
-              fill
             />
           ) : (
             <span className="font-mono text-[11px] tracking-[2px] uppercase text-muted">

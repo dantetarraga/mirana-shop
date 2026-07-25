@@ -42,6 +42,12 @@ export function BannerCard({ banner }: BannerCardProps) {
           <span className="text-[11px] tracking-[1px] uppercase text-muted">Posición</span>
           <span className="font-semibold">{banner.position}</span>
         </div>
+        <div className="flex justify-between py-1.5 text-[13px]">
+          <span className="text-[11px] tracking-[1px] uppercase text-muted">Imágenes</span>
+          <span className="font-semibold">
+            {banner.imageUrlMobile ? 'Desktop + mobile' : 'Solo desktop'}
+          </span>
+        </div>
         {banner.ctaHref && (
           <div className="flex justify-between py-1.5 text-[13px]">
             <span className="text-[11px] tracking-[1px] uppercase text-muted">Enlace</span>

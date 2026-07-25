@@ -3,6 +3,7 @@ export type BannerRow = {
   title: string
   subtitle: string | null
   imageUrl: string
+  imageUrlMobile: string | null
   ctaLabel: string | null
   ctaHref: string | null
   position: number
@@ -17,6 +18,7 @@ export type CreateBannerInput = {
   title: string
   subtitle?: string
   imageUrl: string
+  imageUrlMobile?: string
   ctaLabel?: string
   ctaHref?: string
   position?: number

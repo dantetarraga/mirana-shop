@@ -39,6 +39,10 @@ const img = (id: string, w = 800, h = 800) =>
 const banner = (id: string) =>
   `https://images.unsplash.com/photo-${id}?w=1920&h=600&fit=crop&q=80&auto=format`
 
+// Recorte vertical para la versión mobile/tablet del banner
+const bannerMobile = (id: string) =>
+  `https://images.unsplash.com/photo-${id}?w=900&h=1100&fit=crop&q=80&auto=format`
+
 // ---------------------------------------------------------------------------
 // Imágenes por tema (IDs de Unsplash)
 // ---------------------------------------------------------------------------
@@ -923,6 +927,7 @@ async function main() {
       title: 'Nueva Temporada 2026',
       subtitle: 'Figuras exclusivas de anime, Marvel y LEGO — importaciones directas',
       imageUrl: banner(IMGS.bannerHero),
+      imageUrlMobile: bannerMobile(IMGS.bannerHero),
       ctaLabel: 'Ver colección',
       ctaHref: '/catalogo',
       position: 0,
@@ -933,6 +938,7 @@ async function main() {
       title: 'Nueva Temporada 2026',
       subtitle: 'Figuras exclusivas de anime, Marvel y LEGO — importaciones directas',
       imageUrl: banner(IMGS.bannerHero),
+      imageUrlMobile: bannerMobile(IMGS.bannerHero),
       ctaLabel: 'Ver colección',
       ctaHref: '/catalogo',
       position: 0,
@@ -944,6 +950,7 @@ async function main() {
     where: { id: 'seed-banner-promo-01' },
     update: {
       imageUrl: banner(IMGS.bannerLego),
+      imageUrlMobile: bannerMobile(IMGS.bannerLego),
       title: 'LEGO — Nuevos Sets',
       subtitle: 'Envío gratis en compras mayores a S/ 500',
     },
@@ -952,6 +959,7 @@ async function main() {
       title: 'LEGO — Nuevos Sets',
       subtitle: 'Envío gratis en compras mayores a S/ 500',
       imageUrl: banner(IMGS.bannerLego),
+      imageUrlMobile: bannerMobile(IMGS.bannerLego),
       ctaLabel: 'Ver LEGO',
       ctaHref: '/catalogo?cat=lego',
       position: 1,
@@ -963,6 +971,7 @@ async function main() {
     where: { id: 'seed-banner-anime-01' },
     update: {
       imageUrl: banner(IMGS.bannerAnime),
+      imageUrlMobile: bannerMobile(IMGS.bannerAnime),
       title: 'Anime & Manga',
       subtitle: 'Dragon Ball, Demon Slayer, One Piece y más',
     },
@@ -971,6 +980,7 @@ async function main() {
       title: 'Anime & Manga',
       subtitle: 'Dragon Ball, Demon Slayer, One Piece y más',
       imageUrl: banner(IMGS.bannerAnime),
+      imageUrlMobile: bannerMobile(IMGS.bannerAnime),
       ctaLabel: 'Explorar',
       ctaHref: '/catalogo?cat=anime',
       position: 2,
@@ -982,12 +992,14 @@ async function main() {
     where: { id: 'seed-banner-bf-01' },
     update: {
       imageUrl: banner(IMGS.bannerBlack),
+      imageUrlMobile: bannerMobile(IMGS.bannerBlack),
     },
     create: {
       id: 'seed-banner-bf-01',
       title: 'Black Friday Anticipado',
       subtitle: 'Hasta 40% de descuento en figuras seleccionadas',
       imageUrl: banner(IMGS.bannerBlack),
+      imageUrlMobile: bannerMobile(IMGS.bannerBlack),
       ctaLabel: 'Ver ofertas',
       ctaHref: '/catalogo',
       position: 3,

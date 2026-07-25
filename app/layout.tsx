@@ -78,6 +78,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               info: <Info size={16} color="#8b7cff" />,
             }}
             toastOptions={{
+              duration: 1000,
               style: {
                 background: 'var(--color-surf)',
                 border: '1px solid var(--bd)',

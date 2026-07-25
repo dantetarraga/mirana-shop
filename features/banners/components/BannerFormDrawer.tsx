@@ -22,6 +22,7 @@ const EMPTY_FORM = {
   ctaLabel: '',
   ctaHref: '',
   imageUrl: '',
+  imageUrlMobile: '',
   position: 0,
   active: false,
 } satisfies BannerFormValues
@@ -64,6 +65,7 @@ export function BannerFormDrawer({
       ctaLabel: b.ctaLabel ?? '',
       ctaHref: b.ctaHref ?? '',
       imageUrl: b.imageUrl,
+      imageUrlMobile: b.imageUrlMobile ?? '',
       position: b.position,
       active: b.active,
     }),
@@ -88,12 +90,27 @@ export function BannerFormDrawer({
           />
         </FormField>
 
-        <FormField label="Imagen" error={errors.imageUrl?.message}>
+        <FormField label="Imagen desktop" error={errors.imageUrl?.message}>
           <ImageUploadField
             value={watch('imageUrl') ?? ''}
             onChange={(url) => setValue('imageUrl', url, { shouldValidate: true })}
             folder="banners"
           />
+          <p className="text-[11px] text-muted mt-1.5">
+            Formato horizontal — se usa desde 1024px de ancho. Recomendado 1920×600.
+          </p>
+        </FormField>
+
+        <FormField label="Imagen mobile / tablet" error={errors.imageUrlMobile?.message}>
+          <ImageUploadField
+            value={watch('imageUrlMobile') ?? ''}
+            onChange={(url) => setValue('imageUrlMobile', url, { shouldValidate: true })}
+            folder="banners"
+          />
+          <p className="text-[11px] text-muted mt-1.5">
+            Opcional — formato vertical/cuadrado para pantallas &lt; 1024px. Si se deja vacío se
+            usa la de desktop. Recomendado 900×1100.
+          </p>
         </FormField>
 
         <FormField label="Texto botón" error={errors.ctaLabel?.message}>

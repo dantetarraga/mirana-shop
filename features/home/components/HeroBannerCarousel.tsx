@@ -1,9 +1,9 @@
 'use client'
 
+import { BannerImage } from '@/features/banners/components/BannerImage'
 import type { BannerRow } from '@/features/banners/types'
 import useEmblaCarousel from 'embla-carousel-react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
 
@@ -21,6 +21,7 @@ type SlideCard = {
   title: string
   subtitle: string | null
   imageUrl: string
+  imageUrlMobile: string | null
   ctaLabel: string
   ctaHref: string
 }
@@ -31,6 +32,7 @@ function toCards(banners: BannerRow[]): SlideCard[] {
     title: b.title,
     subtitle: b.subtitle,
     imageUrl: b.imageUrl,
+    imageUrlMobile: b.imageUrlMobile,
     ctaLabel: b.ctaLabel ?? 'Comprar ahora',
     ctaHref: b.ctaHref ?? '/catalogo',
   }))
@@ -42,13 +44,13 @@ function BannerCard({ card, priority, className }: { card: SlideCard; priority: 
       href={card.ctaHref}
       className={`relative overflow-hidden flex flex-col justify-end no-underline h-[220px] sm:h-[280px] md:h-[clamp(300px,38vw,500px)] border border-(--bd) bg-card ${className ?? ''}`}
     >
-      <Image
-        src={card.imageUrl}
+      <BannerImage
+        desktopUrl={card.imageUrl}
+        mobileUrl={card.imageUrlMobile}
         alt={card.title}
-        fill
-        sizes="(max-width: 768px) 100vw, 33vw"
-        className="object-cover transition-transform duration-500 hover:scale-[1.03]"
+        sizes="(max-width: 767px) 100vw, 33vw"
         priority={priority}
+        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 hover:scale-[1.03]"
       />
       <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-[rgba(3,4,9,.85)] to-transparent pointer-events-none" />
 

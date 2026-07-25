@@ -545,16 +545,19 @@ model Promotion {
 // ---------------------------------------------------------------------------
 
 model Banner {
-  id       String    @id @default(cuid())
-  title    String
-  subtitle String?
-  imageUrl String
-  ctaLabel String?
-  ctaHref  String?
-  position Int       @default(0)
-  active   Boolean   @default(true)
-  startsAt DateTime?
-  endsAt   DateTime?
+  id             String    @id @default(cuid())
+  title          String
+  subtitle       String?
+  // imageUrl = versión desktop (obligatoria). imageUrlMobile = versión
+  // mobile/tablet (opcional); si está vacía se reutiliza la de desktop.
+  imageUrl       String
+  imageUrlMobile String?
+  ctaLabel       String?
+  ctaHref        String?
+  position       Int       @default(0)
+  active         Boolean   @default(true)
+  startsAt       DateTime?
+  endsAt         DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -599,10 +602,10 @@ model HomeCta {
 // ---------------------------------------------------------------------------
 
 model StoreSettings {
-  id                String  @id
-  showOutOfStock    Boolean @default(true)
-  whatsappNumber    String  @default("")
-  baseShippingCost  Decimal @default(15) @db.Decimal(10, 2)
+  id               String  @id
+  showOutOfStock   Boolean @default(true)
+  whatsappNumber   String  @default("")
+  baseShippingCost Decimal @default(15) @db.Decimal(10, 2)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
