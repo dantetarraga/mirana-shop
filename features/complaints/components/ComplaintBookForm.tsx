@@ -48,14 +48,14 @@ export function ComplaintBookForm() {
     return (
       <div className="bg-card border border-(--bd) px-6 py-10 flex flex-col items-center text-center gap-4">
         <div className="w-16 h-16 bg-(--gold)/10 border border-(--gold)/30 flex items-center justify-center">
-          <BadgeCheck size={32} className="text-(--gold)" />
+          <BadgeCheck size={32} className="text-accent-ink" />
         </div>
         <h2 className="font-display font-black uppercase text-[22px] tracking-tight">
           Reclamo registrado
         </h2>
         <p className="text-muted text-[13px] max-w-md">
           Tu reclamo quedó registrado con el código{' '}
-          <span className="font-mono text-(--gold)">{successCode}</span>. Te responderemos al
+          <span className="font-mono text-accent-ink">{successCode}</span>. Te responderemos al
           correo indicado dentro del plazo legal (máximo 30 días calendario).
         </p>
         <Button variant="outline" size="md" onClick={() => setSuccessCode(null)}>
@@ -68,7 +68,7 @@ export function ComplaintBookForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-6">
       <section className="bg-card border border-(--bd) p-6">
-        <h2 className="font-display font-black uppercase text-[14px] tracking-[2px] text-(--gold) mb-5">
+        <h2 className="font-display font-black uppercase text-[14px] tracking-[2px] text-accent-ink mb-5">
           1. Identificación del consumidor
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -107,7 +107,7 @@ export function ComplaintBookForm() {
       </section>
 
       <section className="bg-card border border-(--bd) p-6">
-        <h2 className="font-display font-black uppercase text-[14px] tracking-[2px] text-(--gold) mb-5">
+        <h2 className="font-display font-black uppercase text-[14px] tracking-[2px] text-accent-ink mb-5">
           2. Identificación del bien o servicio
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -133,7 +133,7 @@ export function ComplaintBookForm() {
       </section>
 
       <section className="bg-card border border-(--bd) p-6">
-        <h2 className="font-display font-black uppercase text-[14px] tracking-[2px] text-(--gold) mb-5">
+        <h2 className="font-display font-black uppercase text-[14px] tracking-[2px] text-accent-ink mb-5">
           3. Detalle de la reclamación
         </h2>
         <div className="grid grid-cols-1 gap-4">

@@ -42,7 +42,7 @@ export function PerfilContent({
   return (
     <div className="max-w-275 mx-auto px-4 sm:px-6 pt-[calc(var(--nh)+48px)] pb-16">
       <div className="mb-8">
-        <p className="text-[10px] tracking-[3px] uppercase text-(--gold) mb-1">Cuenta</p>
+        <p className="text-[10px] tracking-[3px] uppercase text-accent-ink mb-1">Cuenta</p>
         <h1 className="font-display font-black uppercase text-[28px] sm:text-[34px] tracking-tight leading-none">
           Mi Perfil
         </h1>
@@ -63,7 +63,7 @@ export function PerfilContent({
 
           {/* Editar */}
           <div className="bg-card border border-(--bd) p-6">
-            <p className="text-[10px] tracking-[3px] uppercase text-(--gold) mb-4">
+            <p className="text-[10px] tracking-[3px] uppercase text-accent-ink mb-4">
               Editar informacion
             </p>
             <ProfileEditForm
@@ -76,13 +76,13 @@ export function PerfilContent({
           <div className="bg-card border border-(--bd) p-5 flex flex-col gap-2">
             <Link
               href="/cuenta/direcciones"
-              className="text-[13px] font-semibold text-text no-underline hover:text-(--gold) transition-colors duration-150 py-1"
+              className="text-[13px] font-semibold text-text no-underline hover:text-accent-ink transition-colors duration-150 py-1"
             >
               Mis direcciones
             </Link>
             <Link
               href="/cuenta/pedidos"
-              className="text-[13px] font-semibold text-text no-underline hover:text-(--gold) transition-colors duration-150 py-1"
+              className="text-[13px] font-semibold text-text no-underline hover:text-accent-ink transition-colors duration-150 py-1"
             >
               Ver todos mis pedidos
             </Link>
@@ -97,10 +97,10 @@ export function PerfilContent({
         {/* Columna derecha: ultimas ordenes */}
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <p className="text-[10px] tracking-[3px] uppercase text-(--gold)">Ultimos pedidos</p>
+            <p className="text-[10px] tracking-[3px] uppercase text-accent-ink">Ultimos pedidos</p>
             <Link
               href="/cuenta/pedidos"
-              className="text-[12px] text-muted hover:text-(--gold) transition-colors no-underline"
+              className="text-[12px] text-muted hover:text-accent-ink transition-colors no-underline"
             >
               Ver todos
             </Link>

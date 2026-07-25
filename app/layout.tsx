@@ -1,8 +1,7 @@
 import { Providers } from '@/shared/components/Providers'
-import { AlertTriangle, CheckCircle2, Info, XCircle } from 'lucide-react'
+import { ThemedToaster } from '@/shared/components/ThemedToaster'
 import type { Metadata, Viewport } from 'next'
 import { Barlow_Condensed, Plus_Jakarta_Sans } from 'next/font/google'
-import { Toaster } from 'sonner'
 import './globals.css'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
@@ -51,52 +50,31 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#0b1830',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0b1830' },
+  ],
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={`${barlowCondensed.variable} ${plusJakarta.variable} h-full`}>
-      <body className="min-h-full flex flex-col" suppressHydrationWarning>
+    // suppressHydrationWarning va en <html>: next-themes escribe la clase del
+    // tema ahí antes de la hidratación y el servidor no puede conocerla.
+    <html
+      lang="es"
+      className={`${barlowCondensed.variable} ${plusJakarta.variable} h-full`}
+      suppressHydrationWarning
+    >
+      <body className="min-h-full flex flex-col">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[1000] focus:bg-(--gold) focus:text-black focus:px-4 focus:py-2 focus:font-display focus:font-bold focus:uppercase focus:tracking-[1px]"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[1000] focus:bg-(--gold) focus:text-on-accent focus:px-4 focus:py-2 focus:font-display focus:font-bold focus:uppercase focus:tracking-[1px]"
         >
           Saltar al contenido
         </a>
         <Providers>
           {children}
-
-          <Toaster
-            theme="dark"
-            position="top-center"
-            gap={10}
-            icons={{
-              success: <CheckCircle2 size={16} color="#3fcf7f" />,
-              error: <XCircle size={16} color="#ff6644" />,
-              warning: <AlertTriangle size={16} color="#ffb84a" />,
-              info: <Info size={16} color="#8b7cff" />,
-            }}
-            toastOptions={{
-              duration: 1000,
-              style: {
-                background: 'var(--color-surf)',
-                border: '1px solid var(--bd)',
-                borderRadius: '0',
-                boxShadow: '0 16px 40px oklch(0% 0 0 / 0.4), 0 0 0 1px var(--bd)',
-                padding: '14px 16px',
-              },
-              classNames: {
-                title:
-                  'font-display font-extrabold uppercase tracking-[0.5px] text-[13px] text-text',
-                description: '!text-muted text-[12px] normal-case tracking-normal font-sans mt-1',
-                success: '!border-l-[3px] ![border-left-color:#3fcf7f]',
-                error: '!border-l-[3px] ![border-left-color:#ff6644]',
-                warning: '!border-l-[3px] ![border-left-color:#ffb84a]',
-                info: '!border-l-[3px] ![border-left-color:#8b7cff]',
-              },
-            }}
-          />
+          <ThemedToaster />
         </Providers>
       </body>
     </html>

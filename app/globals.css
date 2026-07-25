@@ -17,7 +17,8 @@
 @theme {
   /* ── Gold (marca) ──────────────────────────────────────────
      Arc Reactor: el nombre "gold" es legacy (sistema base era dorado),
-     el valor real es cyan eléctrico. Genera: bg-gold-500, text-gold-500, etc. */
+     el valor real es cyan eléctrico. Es el único color que NO cambia entre
+     tema claro y oscuro. Genera: bg-gold-500, text-gold-500, etc. */
   --color-gold-50: #eafbff;
   --color-gold-100: #d0f4ff;
   --color-gold-200: #a3eaff;
@@ -30,7 +31,7 @@
   --color-gold-900: #0a4a61;
   --color-gold-950: #062c3a;
 
-  /* ── Superficies (dark-first) ──────────────────────────────
+  /* ── Superficies (escala neutra, independiente del tema) ───
      Genera: bg-surface-950, text-surface-50, etc. */
   --color-surface-0: oklch(100% 0 0);
   --color-surface-50: oklch(97% 0.005 270);
@@ -44,28 +45,60 @@
   --color-surface-800: oklch(22% 0.01 270);
   --color-surface-900: oklch(14% 0.01 270);
   --color-surface-950: oklch(8% 0.015 270);
+}
 
-  /* ── Tokens de diseño exactos — Paleta Arc Reactor ─────────
-     Genera: bg-bg, bg-card, text-muted, border-border, etc.
-     Ver docs/DESING.md */
-  --color-bg: #0b1830; /* fondo principal · navy profundo */
-  --color-surf: #0f1e3a; /* superficies: nav, modales, drawers */
-  --color-card: #122040; /* cards de producto en reposo */
-  --color-card-hover: #182e55; /* cards de producto en hover */
-  --color-text: #e4f0ff; /* texto principal */
-  --color-muted: rgba(228, 240, 255, 0.6); /* texto secundario · 0.6 ≈ 5.5:1 sobre --bg (WCAG AA); antes 0.42 = 3.68:1 reprobaba */
-  --color-subtle: rgba(0, 200, 255, 0.06); /* fondo sutil */
-  --color-border: rgba(0, 200, 255, 0.12); /* borde default */
-  --color-border-gold: rgba(0, 200, 255, 0.35); /* borde gold hover */
-  --color-gold-glow: rgba(0, 200, 255, 0.1); /* fondo pill gold */
+/* =============================================================
+   TOKENS QUE CAMBIAN CON EL TEMA
+   `inline` es OBLIGATORIO aquí: sin él Tailwind hornea el literal dentro de
+   cada utility y redefinir la variable en :root/.dark no tendría ningún
+   efecto. Con `inline` la utility emite `var(--bg)` y el tema se resuelve en
+   runtime. Los valores viven más abajo, en :root (claro) y .dark (oscuro).
+   Genera: bg-bg, bg-card, text-muted, border-border, etc.
+   ============================================================= */
+@theme inline {
+  /* ── Superficies y texto ── */
+  --color-bg: var(--bg);
+  --color-surf: var(--surf);
+  --color-card: var(--card);
+  --color-card-hover: var(--card-h);
+  --color-text: var(--text);
+  --color-muted: var(--mt);
+  --color-subtle: var(--sub);
+  --color-border: var(--bd);
+  --color-border-gold: var(--bdh);
+  --color-gold-glow: var(--gd);
 
-  /* ── Semánticos ────────────────────────────────────────────
-     Genera: bg-success, text-danger, etc. */
-  --color-success: oklch(72% 0.17 150);
-  --color-warning: oklch(80% 0.17 80);
-  --color-danger: oklch(65% 0.22 25);
-  --color-info: #8b7cff; /* violeta · distinto del acento cyan */
+  /* ── Roles semánticos ──────────────────────────────────────
+     accent-ink: texto de acento (precios, links). El cyan #00c8ff da 1.9:1
+       sobre blanco, así que en claro se usa un azul profundo.
+     on-accent : texto sobre el acento (botones cyan).
+     on-media  : texto sobre fotografía — BLANCO EN AMBOS TEMAS.
+     media-scrim: degradado sobre fotografía — oscuro en ambos temas.
+     scrim     : fondo de modales y drawers.
+     hover-tint: tinte de hover en filas y celdas.
+     skeleton  : placeholder de carga. */
+  --color-accent-ink: var(--accent-ink);
+  --color-on-accent: var(--on-accent);
+  --color-on-media: var(--on-media);
+  --color-media-scrim: var(--media-scrim);
+  --color-scrim: var(--scrim);
+  --color-hover-tint: var(--hover-tint);
+  --color-skeleton: var(--skeleton);
 
+  /* ── Estados ── Genera: bg-success, text-danger, etc. */
+  --color-success: var(--c-green);
+  --color-warning: var(--c-amber);
+  --color-danger: var(--c-red);
+  --color-info: var(--c-blue);
+
+  /* ── Sombras ── Genera: shadow-premium, shadow-card, shadow-gold, shadow-pop */
+  --shadow-premium: var(--sh-premium);
+  --shadow-card: var(--sh-card);
+  --shadow-gold: var(--sh-gold);
+  --shadow-pop: var(--sh-pop);
+}
+
+@theme {
   /* ── Radios ────────────────────────────────────────────────
      Genera: rounded-xs, rounded-sm, rounded-md, etc. */
   --radius-xs: 0.25rem;
@@ -75,12 +108,6 @@
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
   --radius-full: 9999px;
-
-  /* ── Sombras ────────────────────────────────────────────────
-     Genera: shadow-premium, shadow-card, shadow-gold */
-  --shadow-premium: 0 25px 50px -12px oklch(0% 0 0 / 0.5);
-  --shadow-card: 0 4px 24px -4px oklch(0% 0 0 / 0.4);
-  --shadow-gold: 0 8px 24px rgba(0, 200, 255, 0.25);
 
   /* ── Animaciones ────────────────────────────────────────────
      Genera: animate-marquee, animate-fade-in, etc. */
@@ -148,29 +175,121 @@
 }
 
 /* =============================================================
-   Arc Reactor — tema por defecto
-   Navy real + acento cyan eléctrico #00c8ff. Ver docs/DESING.md.
-   Cambiar aquí para volver al tema gold.
+   PALETAS — el sitio tiene dos temas y arranca en CLARO.
+   next-themes pone la clase `dark` en <html>; todo lo demás se resuelve solo
+   porque los tokens de arriba son `@theme inline`.
+   El acento cyan #00c8ff es común a ambos. Ver docs/DESING.md.
    ============================================================= */
+
+/* ── TEMA CLARO (por defecto) ────────────────────────────────
+   Base blanca con acentos celestes. El cyan se reserva para fondos y fills;
+   para texto se usa --accent-ink (azul profundo), porque #00c8ff sobre blanco
+   da 1.9:1 y reprueba WCAG. */
 :root {
   /* Altura navbar (usada en calc() — no tiene equivalente en @theme) */
   --nh: 68px;
-  /* Glow neon (gradiente radial dinámico — no tiene equivalente en @theme) */
-  --gd: rgba(0, 200, 255, 0.1);
 
-  /* ── Aliases legacy — apuntan a los tokens @theme ──────────
-     Mantener para retrocompatibilidad con componentes no migrados */
-  --bg: var(--color-bg);
-  --surf: var(--color-surf);
-  --card: var(--color-card);
-  --card-h: var(--color-card-hover);
-  --gold: #00c8ff; /* Arc Reactor · cyan eléctrico */
+  /* Superficies y texto */
+  --bg: #ffffff;
+  --surf: #f6fafd;
+  --card: #ffffff;
+  --card-h: #eef7fc;
+  --text: #0d1b2a;
+  --mt: #4a5b6b; /* 7.1:1 sobre --bg (WCAG AAA) */
+
+  /* Acento */
+  --gold: #00c8ff; /* fills, botones, barras — NO usar como texto en claro */
+  --gl: #33d4ff; /* hover del acento */
+  --gd: rgba(0, 200, 255, 0.14); /* glow / fondo de pills */
+  --accent-ink: #0077b6; /* 4.7:1 sobre blanco — precios, links, texto acento */
+  --on-accent: #00131c; /* texto sobre el acento cyan */
+
+  /* Bordes */
+  --bd: rgba(0, 119, 182, 0.15);
+  --bdh: rgba(0, 119, 182, 0.45);
+  --sub: rgba(0, 200, 255, 0.08);
+
+  /* Sobre fotografía — idénticos en ambos temas: la imagen no cambia */
+  --on-media: #ffffff;
+  --media-scrim: rgba(6, 14, 26, 0.78);
+
+  /* Capas de interacción */
+  --scrim: rgba(9, 20, 33, 0.45);
+  --hover-tint: rgba(13, 27, 42, 0.04);
+  --skeleton: rgba(13, 27, 42, 0.08);
+
+  /* Estados — re-derivados: el ámbar y el verde del tema oscuro
+     reprueban contraste sobre blanco */
+  --c-green: #15803d;
+  --c-amber: #b45309;
+  --c-red: #c2321b;
+  --c-blue: #5b4bd6;
+
+  /* Sombras — sobre blanco el negro al 40-50% resulta brutal */
+  --sh-premium: 0 24px 48px -12px rgba(13, 27, 42, 0.18);
+  --sh-card: 0 4px 20px -4px rgba(13, 27, 42, 0.1);
+  --sh-gold: 0 8px 24px rgba(0, 119, 182, 0.22);
+  --sh-pop: 0 16px 40px rgba(13, 27, 42, 0.14);
+
+  /* Placeholders a rayas (.stripe-*) */
+  --stripe-fig-1: #eef3f8;
+  --stripe-fig-2: #e4edf5;
+  --stripe-lego-1: #edf5f7;
+  --stripe-lego-2: #e2eff2;
+  --stripe-veh-1: #f0f2f8;
+  --stripe-veh-2: #e6eaf4;
+
+  /* Glow ambiental */
+  --glow-1: rgba(0, 200, 255, 0.16);
+  --glow-2: rgba(0, 119, 182, 0.08);
+}
+
+/* ── TEMA OSCURO · Arc Reactor (el original) ─────────────────
+   Navy real + cyan eléctrico. Valores idénticos a los previos al toggle. */
+.dark {
+  --bg: #0b1830;
+  --surf: #0f1e3a;
+  --card: #122040;
+  --card-h: #182e55;
+  --text: #e4f0ff;
+  --mt: rgba(228, 240, 255, 0.6); /* 0.6 ≈ 5.5:1 sobre --bg (WCAG AA) */
+
+  --gold: #00c8ff;
   --gl: #50e0ff;
+  --gd: rgba(0, 200, 255, 0.1);
+  --accent-ink: #50e0ff; /* sobre navy el cyan claro sí es legible */
+  --on-accent: #00131c;
+
   --bd: rgba(0, 200, 255, 0.12);
   --bdh: rgba(0, 200, 255, 0.48);
-  --text: var(--color-text);
-  --mt: var(--color-muted);
   --sub: rgba(0, 200, 255, 0.06);
+
+  --on-media: #ffffff;
+  --media-scrim: rgba(3, 4, 9, 0.85);
+
+  --scrim: rgba(3, 4, 9, 0.78);
+  --hover-tint: rgba(255, 255, 255, 0.03);
+  --skeleton: rgba(255, 255, 255, 0.05);
+
+  --c-green: #3fcf7f;
+  --c-amber: #ffb84a;
+  --c-red: #ff6644;
+  --c-blue: #8b7cff;
+
+  --sh-premium: 0 25px 50px -12px oklch(0% 0 0 / 0.5);
+  --sh-card: 0 4px 24px -4px oklch(0% 0 0 / 0.4);
+  --sh-gold: 0 8px 24px rgba(0, 200, 255, 0.25);
+  --sh-pop: 0 16px 48px oklch(0% 0 0 / 0.4);
+
+  --stripe-fig-1: #162840;
+  --stripe-fig-2: #1b3050;
+  --stripe-lego-1: #102028;
+  --stripe-lego-2: #142830;
+  --stripe-veh-1: #182035;
+  --stripe-veh-2: #1e2840;
+
+  --glow-1: rgba(0, 200, 255, 0.12);
+  --glow-2: rgba(0, 130, 200, 0.08);
 }
 
 /* =============================================================
@@ -187,7 +306,11 @@
    Base
    ============================================================= */
 @layer base {
+  /* Controla scrollbars nativos, autofill de Chrome e inputs date/time */
   html {
+    color-scheme: light;
+  }
+  html.dark {
     color-scheme: dark;
   }
 
@@ -216,8 +339,10 @@
   ::-webkit-scrollbar-track {
     @apply bg-bg;
   }
+  /* --bd (12-15% de alfa) es casi invisible sobre blanco: se usa --bdh */
   ::-webkit-scrollbar-thumb {
-    @apply bg-border rounded;
+    @apply rounded;
+    background: var(--bdh);
   }
 
   /* Respeta la preferencia del sistema de movimiento reducido: anula el
@@ -249,7 +374,8 @@ select:focus-visible,
 textarea:focus-visible,
 [tabindex]:focus-visible,
 [role='button']:focus-visible {
-  outline: 2px solid var(--gold);
+  /* --accent-ink, no --gold: el cyan puro sobre blanco no se distingue */
+  outline: 2px solid var(--accent-ink);
   outline-offset: 2px;
   border-radius: 1px;
 }
@@ -275,10 +401,10 @@ textarea:focus-visible,
 
   /* ── Variantes ── */
 
-  /* accent: acento principal (gold/neon), texto negro */
+  /* accent: acento principal (gold/neon), texto oscuro */
   .ui-btn--accent {
     background: var(--gold);
-    color: #000;
+    color: var(--on-accent);
   }
   .ui-btn--accent:hover:not(:disabled) {
     background: var(--gl);
@@ -329,24 +455,26 @@ textarea:focus-visible,
   }
   .ui-btn--tab.ui-btn--active {
     background: var(--gold);
-    color: #000;
+    color: var(--on-accent);
     border-color: var(--gold);
   }
 
   /* icon: especificidad 0,2,0 — gana a .ui-btn {border:none} que tiene 0,1,0 */
   .ui-btn.ui-btn--icon {
     background: transparent;
-    border: 1px solid rgba(0, 200, 255, 0.25);
+    border: 1px solid var(--bd);
+    color: var(--mt);
     padding: 0;
   }
   .ui-btn.ui-btn--icon:hover:not(:disabled) {
-    border-color: rgba(0, 200, 255, 0.55);
-    background: rgba(0, 200, 255, 0.07);
+    border-color: var(--bdh);
+    background: var(--sub);
+    color: var(--text);
   }
   .ui-btn.ui-btn--icon.ui-btn--destructive:hover:not(:disabled) {
-    color: #ff6644;
-    border-color: rgba(255, 102, 68, 0.55);
-    background: rgba(255, 102, 68, 0.07);
+    color: var(--c-red);
+    border-color: color-mix(in srgb, var(--c-red) 55%, transparent);
+    background: color-mix(in srgb, var(--c-red) 8%, transparent);
   }
 
   /* ── Tamaños (no aplica a icon — tiene su propia lógica) ── */
@@ -453,7 +581,7 @@ textarea:focus-visible,
     @apply bg-card-hover -translate-y-1.5;
     border-color: var(--bdh);
     box-shadow:
-      0 20px 48px oklch(0% 0 0 / 0.35),
+      var(--sh-pop),
       0 0 0 1px var(--bdh);
   }
   .pcard .add-btn {
@@ -467,15 +595,35 @@ textarea:focus-visible,
     @apply bg-gold-400;
   }
 
-  /* ── Stripe placeholders — Arc Reactor (ver docs/DESING.md) ── */
+  /* ── Stripe placeholders (ver docs/DESING.md) ───────────────
+     Fondo por defecto de todo producto/categoría/colección sin imagen —
+     ~38 usos. Los colores salen de --stripe-* para seguir el tema. */
   .stripe-fig {
-    background: repeating-linear-gradient(45deg, #162840 0, #162840 9px, #1b3050 9px, #1b3050 18px);
+    background: repeating-linear-gradient(
+      45deg,
+      var(--stripe-fig-1) 0,
+      var(--stripe-fig-1) 9px,
+      var(--stripe-fig-2) 9px,
+      var(--stripe-fig-2) 18px
+    );
   }
   .stripe-lego {
-    background: repeating-linear-gradient(45deg, #102028 0, #102028 9px, #142830 9px, #142830 18px);
+    background: repeating-linear-gradient(
+      45deg,
+      var(--stripe-lego-1) 0,
+      var(--stripe-lego-1) 9px,
+      var(--stripe-lego-2) 9px,
+      var(--stripe-lego-2) 18px
+    );
   }
   .stripe-veh {
-    background: repeating-linear-gradient(45deg, #182035 0, #182035 9px, #1e2840 9px, #1e2840 18px);
+    background: repeating-linear-gradient(
+      45deg,
+      var(--stripe-veh-1) 0,
+      var(--stripe-veh-1) 9px,
+      var(--stripe-veh-2) 9px,
+      var(--stripe-veh-2) 18px
+    );
   }
 
   /* ── Filter pills ── */
@@ -504,12 +652,17 @@ textarea:focus-visible,
 
   /* ── Brand carousel item ── */
   .brand-item {
-    filter: grayscale(0.7);
-    opacity: 0.55;
+    /* En claro el grayscale + opacity del tema oscuro lava los logos */
+    filter: grayscale(0.55);
+    opacity: 0.72;
     transition:
       filter 0.3s,
       opacity 0.3s,
       background 0.3s;
+  }
+  .dark .brand-item {
+    filter: grayscale(0.7);
+    opacity: 0.55;
   }
   .brand-item:hover {
     filter: none;
@@ -532,7 +685,7 @@ textarea:focus-visible,
     content: '';
     position: absolute;
     pointer-events: none;
-    background: radial-gradient(ellipse, rgba(0, 200, 255, 0.12), transparent 70%);
+    background: radial-gradient(ellipse, var(--glow-1), transparent 70%);
   }
   .glow-section::before {
     top: 20%;
@@ -545,111 +698,121 @@ textarea:focus-visible,
     left: 20%;
     width: 220px;
     height: 220px;
-    background: radial-gradient(ellipse, rgba(0, 130, 200, 0.08), transparent 70%);
+    background: radial-gradient(ellipse, var(--glow-2), transparent 70%);
   }
   /* Variante card — glow más sutil y compacto (ej. cards, paneles) */
   .glow-section--card::before {
     width: 200px;
     height: 200px;
-    background: radial-gradient(ellipse, rgba(0, 200, 255, 0.08), transparent 70%);
+    background: radial-gradient(ellipse, var(--glow-2), transparent 70%);
   }
   .glow-section--card::after {
     width: 160px;
     height: 160px;
-    background: radial-gradient(ellipse, rgba(0, 130, 200, 0.06), transparent 70%);
+    background: radial-gradient(
+      ellipse,
+      color-mix(in srgb, var(--glow-2) 70%, transparent),
+      transparent 70%
+    );
   }
 
-  /* ── Stock badges ── */
+  /* ── Estados ────────────────────────────────────────────────
+     Los colores salen de --c-green/amber/red/blue, que cada tema define por
+     separado: el ámbar #ffb84a y el verde #3fcf7f del tema oscuro reprueban
+     contraste sobre blanco. Los fondos y bordes se derivan con color-mix
+     para no repetir cada tinte a mano. */
+
+  /* Stock badges */
   .stock-ok {
-    color: #3fcf7f;
-    border-color: rgba(63, 207, 127, 0.3);
+    color: var(--c-green);
+    border-color: color-mix(in srgb, var(--c-green) 30%, transparent);
   }
   .stock-low {
-    color: #ffb84a;
-    border-color: rgba(255, 184, 74, 0.3);
+    color: var(--c-amber);
+    border-color: color-mix(in srgb, var(--c-amber) 30%, transparent);
   }
   .stock-out {
-    color: #ff6644;
-    border-color: rgba(255, 102, 68, 0.3);
+    color: var(--c-red);
+    border-color: color-mix(in srgb, var(--c-red) 30%, transparent);
   }
 
-  /* ── Status badge — filled (color + bg) ── */
+  /* Status badge — filled (color + bg) */
   .badge-amber {
-    color: #ffb84a;
-    background: rgba(255, 184, 74, 0.12);
+    color: var(--c-amber);
+    background: color-mix(in srgb, var(--c-amber) 12%, transparent);
   }
   .badge-blue {
-    color: #8b7cff;
-    background: rgba(139, 124, 255, 0.12);
+    color: var(--c-blue);
+    background: color-mix(in srgb, var(--c-blue) 12%, transparent);
   }
   .badge-green {
-    color: #3fcf7f;
-    background: rgba(63, 207, 127, 0.12);
+    color: var(--c-green);
+    background: color-mix(in srgb, var(--c-green) 12%, transparent);
   }
   .badge-red {
-    color: #ff6644;
-    background: rgba(255, 102, 68, 0.12);
+    color: var(--c-red);
+    background: color-mix(in srgb, var(--c-red) 12%, transparent);
   }
   .badge-gold {
-    color: var(--gold);
+    color: var(--accent-ink);
     background: var(--sub);
   }
 
-  /* ── Status badge — outlined (color + borde) ── */
+  /* Status badge — outlined (color + borde) */
   .badge-amber-outline {
-    color: #ffb84a;
+    color: var(--c-amber);
     background: var(--sub);
-    border: 1px solid rgba(255, 184, 74, 0.3);
+    border: 1px solid color-mix(in srgb, var(--c-amber) 30%, transparent);
   }
   .badge-blue-outline {
-    color: #8b7cff;
+    color: var(--c-blue);
     background: var(--sub);
-    border: 1px solid rgba(139, 124, 255, 0.3);
+    border: 1px solid color-mix(in srgb, var(--c-blue) 30%, transparent);
   }
   .badge-green-outline {
-    color: #3fcf7f;
+    color: var(--c-green);
     background: var(--sub);
-    border: 1px solid rgba(63, 207, 127, 0.3);
+    border: 1px solid color-mix(in srgb, var(--c-green) 30%, transparent);
   }
   .badge-red-outline {
-    color: #ff6644;
+    color: var(--c-red);
     background: var(--sub);
-    border: 1px solid rgba(255, 102, 68, 0.3);
+    border: 1px solid color-mix(in srgb, var(--c-red) 30%, transparent);
   }
   .badge-gold-outline {
-    color: var(--gold);
+    color: var(--accent-ink);
     background: var(--sub);
-    border: 1px solid rgba(0, 200, 255, 0.3);
+    border: 1px solid var(--bdh);
   }
 
-  /* ── Button activo por estado (border + bg + text) ── */
+  /* Button activo por estado (border + bg + text) */
   .btn-status-amber {
-    border-color: #ffb84a;
-    background: rgba(255, 184, 74, 0.12);
-    color: #ffb84a;
+    border-color: var(--c-amber);
+    background: color-mix(in srgb, var(--c-amber) 12%, transparent);
+    color: var(--c-amber);
   }
   .btn-status-blue {
-    border-color: #8b7cff;
-    background: rgba(139, 124, 255, 0.12);
-    color: #8b7cff;
+    border-color: var(--c-blue);
+    background: color-mix(in srgb, var(--c-blue) 12%, transparent);
+    color: var(--c-blue);
   }
   .btn-status-green {
-    border-color: #3fcf7f;
-    background: rgba(63, 207, 127, 0.12);
-    color: #3fcf7f;
+    border-color: var(--c-green);
+    background: color-mix(in srgb, var(--c-green) 12%, transparent);
+    color: var(--c-green);
   }
   .btn-status-red {
-    border-color: #ff6644;
-    background: rgba(255, 102, 68, 0.12);
-    color: #ff6644;
+    border-color: var(--c-red);
+    background: color-mix(in srgb, var(--c-red) 12%, transparent);
+    color: var(--c-red);
   }
 
   /* ── Pie chart dot colors ── */
   .pie-dot-0 {
-    background: #00c8ff;
+    background: var(--accent-ink);
   }
   .pie-dot-1 {
-    background: #8b7cff;
+    background: var(--c-blue);
   }
   .pie-dot-2 {
     background: #c77cff;
@@ -715,12 +878,12 @@ textarea:focus-visible,
   font-weight: 600;
 }
 .rich-prose a {
-  color: var(--gold);
+  color: var(--accent-ink);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 .rich-prose blockquote {
-  border-left: 2px solid var(--gold);
+  border-left: 2px solid var(--accent-ink);
   padding-left: 16px;
   font-style: italic;
   margin: 0 0 14px;

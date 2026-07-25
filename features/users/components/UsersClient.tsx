@@ -54,7 +54,7 @@ export function UsersClient({ users }: UsersClientProps) {
         header: 'Usuario',
         render: (u) => (
           <div className="flex items-center gap-3">
-            <div className="w-9.5 h-9.5 flex items-center justify-center font-display font-black text-[14px] shrink-0 bg-card-hover border border-(--bd) text-(--gold)">
+            <div className="w-9.5 h-9.5 flex items-center justify-center font-display font-black text-[14px] shrink-0 bg-card-hover border border-(--bd) text-accent-ink">
               {(u.name ?? u.email)
                 .split(' ')
                 .map((w) => w[0])

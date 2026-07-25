@@ -170,7 +170,7 @@ export function CatalogFilters({
         {hasActiveFilters && (
           <button
             onClick={clearAll}
-            className="shrink-0 flex items-center gap-1.5 text-[11px] tracking-[1px] uppercase text-muted hover:text-(--gold) transition-colors"
+            className="shrink-0 flex items-center gap-1.5 text-[11px] tracking-[1px] uppercase text-muted hover:text-accent-ink transition-colors"
           >
             <X size={12} /> Limpiar todo
           </button>
@@ -183,7 +183,7 @@ export function CatalogFilters({
             {chips.map((chip) => (
               <div
                 key={chip.key}
-                className="flex items-center gap-1.5 bg-(--gd) border border-[rgba(0,200,255,.25)] text-(--gold) text-[11px] px-2.5 py-1"
+                className="flex items-center gap-1.5 bg-(--gd) border border-[rgba(0,200,255,.25)] text-accent-ink text-[11px] px-2.5 py-1"
               >
                 {chip.label}
                 <button
@@ -287,7 +287,7 @@ export function CatalogFilters({
           </div>
           <button
             onClick={applyPrice}
-            className="w-full border border-(--bd) text-text font-display text-[12px] font-bold tracking-[1px] uppercase py-2 mb-3 hover:border-(--gold) hover:text-(--gold) transition-colors"
+            className="w-full border border-(--bd) text-text font-display text-[12px] font-bold tracking-[1px] uppercase py-2 mb-3 hover:border-(--gold) hover:text-accent-ink transition-colors"
           >
             Aplicar
           </button>
@@ -350,7 +350,7 @@ function FilterGroup({
         onClick={() => onToggle(id)}
         aria-expanded={open}
         aria-controls={`filter-group-${id}`}
-        className="w-full flex items-center justify-between px-5 py-3.5 font-display text-[15px] font-extrabold uppercase tracking-[0.5px] text-text hover:text-(--gold) transition-colors"
+        className="w-full flex items-center justify-between px-5 py-3.5 font-display text-[15px] font-extrabold uppercase tracking-[0.5px] text-text hover:text-accent-ink transition-colors"
       >
         {label}
         <ChevronDown

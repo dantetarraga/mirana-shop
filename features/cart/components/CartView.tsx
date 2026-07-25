@@ -65,13 +65,13 @@ export function CartView({ pricingRules }: CartViewProps) {
         <div className="flex items-center gap-4 mb-6 sm:mb-10">
           <button
             onClick={() => router.back()}
-            className="text-muted hover:text-(--gold) transition-colors duration-200"
+            className="text-muted hover:text-accent-ink transition-colors duration-200"
             aria-label="Volver"
           >
             <ArrowLeft size={20} />
           </button>
           <h1 className="font-display text-[24px] sm:text-[32px] font-black uppercase tracking-tight">
-            Mi Carrito <span className="text-(--gold)">({itemCount})</span>
+            Mi Carrito <span className="text-accent-ink">({itemCount})</span>
           </h1>
         </div>
 
@@ -114,11 +114,11 @@ export function CartView({ pricingRules }: CartViewProps) {
                         {catLabel} · {item.product.brand.name}
                       </div>
                       <Link href={`/catalogo/${item.product.slug}`}>
-                        <div className="font-display text-[16px] sm:text-[18px] font-black uppercase leading-tight hover:text-(--gold) transition-colors duration-150 truncate">
+                        <div className="font-display text-[16px] sm:text-[18px] font-black uppercase leading-tight hover:text-accent-ink transition-colors duration-150 truncate">
                           {item.product.name}
                         </div>
                       </Link>
-                      <div className="text-(--gold) font-display text-[15px] font-bold mt-0.5">
+                      <div className="text-accent-ink font-display text-[15px] font-bold mt-0.5">
                         {formatCurrency(unitPrice)} c/u
                       </div>
 
@@ -128,7 +128,7 @@ export function CartView({ pricingRules }: CartViewProps) {
                           <button
                             onClick={() => updateQty(item.product.id, -1)}
                             disabled={item.qty <= 1}
-                            className="px-3 py-2 text-muted hover:text-white disabled:opacity-30 transition-colors duration-150"
+                            className="px-3 py-2 text-muted hover:text-text disabled:opacity-30 transition-colors duration-150"
                             aria-label="Disminuir cantidad"
                           >
                             <Minus size={13} />
@@ -138,7 +138,7 @@ export function CartView({ pricingRules }: CartViewProps) {
                           </span>
                           <button
                             onClick={() => updateQty(item.product.id, 1)}
-                            className="px-3 py-2 text-muted hover:text-white transition-colors duration-150"
+                            className="px-3 py-2 text-muted hover:text-text transition-colors duration-150"
                             aria-label="Aumentar cantidad"
                           >
                             <Plus size={13} />
@@ -159,7 +159,7 @@ export function CartView({ pricingRules }: CartViewProps) {
 
                   {/* Line total */}
                   <div className="flex items-center justify-between sm:flex-col sm:items-end sm:justify-center shrink-0 pt-3 sm:pt-0 border-t border-(--bd) sm:border-t-0">
-                    <div className="font-display text-[20px] sm:text-[22px] font-black text-(--gold)">
+                    <div className="font-display text-[20px] sm:text-[22px] font-black text-accent-ink">
                       {formatCurrency(lineTotal)}
                     </div>
                     {item.qty > 1 && (
@@ -183,7 +183,7 @@ export function CartView({ pricingRules }: CartViewProps) {
               <div className="flex justify-between items-baseline">
                 <span className="text-muted">
                   Subtotal{' '}
-                  <span className="text-white/50">
+                  <span className="text-muted">
                     ({itemCount} {itemCount === 1 ? 'producto' : 'productos'})
                   </span>
                 </span>
@@ -211,7 +211,7 @@ export function CartView({ pricingRules }: CartViewProps) {
               {!shippingFree && pricingRules.freeShippingThreshold != null && (
                 <div className="text-[12px] text-muted border border-(--bd) px-3.5 py-2.5 leading-relaxed">
                   Agrega{' '}
-                  <span className="text-(--gold) font-semibold">
+                  <span className="text-accent-ink font-semibold">
                     {formatCurrency(pricingRules.freeShippingThreshold - subtotal)}
                   </span>{' '}
                   más para obtener envío gratis.
@@ -220,7 +220,7 @@ export function CartView({ pricingRules }: CartViewProps) {
 
               <div className="border-t border-(--bd) pt-3.5 flex justify-between items-baseline">
                 <span className="text-[12px] uppercase tracking-[1.5px] text-muted">Total</span>
-                <span className="font-display text-[34px] font-black text-(--gold) leading-none">
+                <span className="font-display text-[34px] font-black text-accent-ink leading-none">
                   {formatCurrency(total)}
                 </span>
               </div>

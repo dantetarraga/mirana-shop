@@ -2,6 +2,7 @@
 
 import { AlertsBell } from '@/features/alerts/components/AlertsBell'
 import type { AdminAlertItem } from '@/features/alerts/queries/alert.queries'
+import { ThemeToggle } from '@/shared/components/ui/ThemeToggle'
 import { useAdminSidebarStore } from '@/shared/stores/admin-sidebar.store'
 import { Calendar, Menu } from 'lucide-react'
 import { usePathname } from 'next/navigation'
@@ -48,6 +49,7 @@ export function AdminTopbar({ alerts, unreadCount }: AdminTopbarProps) {
           <Calendar size={13} />
           May 2026
         </div>
+        <ThemeToggle />
         <AlertsBell alerts={alerts} unreadCount={unreadCount} />
       </div>
     </div>

@@ -26,7 +26,7 @@ export function ProfileCard({
     <div className="flex flex-col gap-5">
       {/* Avatar */}
       <div className="bg-card border border-(--bd) p-6 flex items-center gap-5">
-        <div className="w-16 h-16 shrink-0 bg-(--gold)/10 border border-(--gold)/30 flex items-center justify-center font-display font-black text-[22px] text-(--gold)">
+        <div className="w-16 h-16 shrink-0 bg-(--gold)/10 border border-(--gold)/30 flex items-center justify-center font-display font-black text-[22px] text-accent-ink">
           {initials}
         </div>
         <div>
@@ -39,7 +39,7 @@ export function ProfileCard({
 
       {/* Datos fijos */}
       <div className="bg-card border border-(--bd) p-6 flex flex-col gap-4">
-        <p className="text-[10px] tracking-[3px] uppercase text-(--gold)">Datos personales</p>
+        <p className="text-[10px] tracking-[3px] uppercase text-accent-ink">Datos personales</p>
 
         <div className="flex items-center gap-3">
           <UserIcon size={15} className="text-muted shrink-0" />

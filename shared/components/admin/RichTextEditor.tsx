@@ -56,8 +56,8 @@ function ToolbarButton({
         'w-8 h-8 flex items-center justify-center border transition-colors cursor-pointer',
         'disabled:opacity-30 disabled:cursor-default',
         active
-          ? 'border-(--gold) text-(--gold) bg-(--gold)/10'
-          : 'border-transparent text-muted hover:text-text hover:bg-white/5',
+          ? 'border-(--gold) text-accent-ink bg-(--gold)/10'
+          : 'border-transparent text-muted hover:text-text hover:bg-hover-tint',
       )}
     >
       {children}

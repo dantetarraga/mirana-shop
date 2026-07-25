@@ -114,7 +114,7 @@ export default async function CatalogPage({ searchParams }: PageProps) {
 
   return (
     <section className="shell pb-20 pt-[calc(var(--nh)+36px)]">
-      <div className="text-[10px] font-bold tracking-[3px] uppercase mb-1.5 text-(--gold)">
+      <div className="text-[10px] font-bold tracking-[3px] uppercase mb-1.5 text-accent-ink">
         Tienda completa
       </div>
       <h1 className="font-display font-black uppercase tracking-[-1px] m-0 mb-6 leading-[0.95] text-[clamp(36px,5vw,64px)]">

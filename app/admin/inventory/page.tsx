@@ -145,7 +145,7 @@ export default async function InventoryPage({ searchParams }: PageProps) {
         <KpiCard
           label="Valor inventario"
           value={`S/ ${(stats.totalValue / 1000).toFixed(1)}K`}
-          valueClass="text-(--gold)"
+          valueClass="text-accent-ink"
         />
         <KpiCard label="Stock bajo" value={stats.lowStockCount} valueClass="text-[#ffb84a]" />
         <KpiCard label="Agotados" value={stats.outOfStockCount} valueClass="text-[#ff6644]" />

@@ -70,7 +70,7 @@ export default async function OrdersPage({ searchParams }: PageProps) {
         <KpiCard
           label="Ingresos"
           value={`S/ ${(Number(stats.revenue) / 1000).toFixed(1)}K`}
-          valueClass="text-(--gold)"
+          valueClass="text-accent-ink"
         />
       </div>
 

@@ -104,7 +104,7 @@ export function ProductCard({
       <div className="px-4 pb-3.5">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-baseline gap-1.5 min-w-0">
-            <span className="font-display text-[19px] sm:text-[26px] font-black text-(--gold) whitespace-nowrap">
+            <span className="font-display text-[19px] sm:text-[26px] font-black text-accent-ink whitespace-nowrap">
               S/ {(p.salePrice && p.salePrice < p.price ? p.salePrice : p.price).toFixed(2)}
             </span>
             {p.salePrice && p.salePrice < p.price && (
@@ -115,7 +115,7 @@ export function ProductCard({
           </div>
           {/* Estrellas ocultas hasta tener sistema de reviews real
           <div className="text-[11px] text-muted">
-            <StarRating value={isNew ? 4.5 : 4.0} size={11} className="text-(--gold)" />
+            <StarRating value={isNew ? 4.5 : 4.0} size={11} className="text-accent-ink" />
           </div>
           */}
         </div>

@@ -112,7 +112,7 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
         <div className="bg-card border border-(--bd) p-5 flex flex-col gap-4">
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-2">
-              <Landmark size={15} className="text-(--gold)" />
+              <Landmark size={15} className="text-accent-ink" />
               <span className="text-[10px] font-bold tracking-[2px] uppercase text-muted">
                 Métodos de pago del checkout
               </span>
@@ -139,7 +139,7 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
                     )}
                   >
                     <div className="w-9 h-9 shrink-0 bg-surf border border-(--bd) flex items-center justify-center">
-                      <Icon size={16} className="text-(--gold)" />
+                      <Icon size={16} className="text-accent-ink" />
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -154,7 +154,7 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
                       <div className="flex items-center gap-3 text-[12px] text-muted mt-0.5 min-w-0">
                         <span className="font-mono truncate">{acc.number}</span>
                         {acc.cci && (
-                          <span className="shrink-0 inline-flex items-center gap-0.5 text-[10px] tracking-[1px] uppercase text-(--gold)/80">
+                          <span className="shrink-0 inline-flex items-center gap-0.5 text-[10px] tracking-[1px] uppercase text-accent-ink/80">
                             CCI <Check size={10} />
                           </span>
                         )}

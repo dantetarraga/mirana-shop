@@ -17,7 +17,7 @@ export async function LegalPageView({ slug, fallbackTitle }: LegalPageViewProps)
   return (
     <section className="shell pb-20 pt-[calc(var(--nh)+36px)]">
       <div className="max-w-175 mx-auto">
-        <div className="text-[10px] font-bold tracking-[3px] uppercase mb-1.5 text-(--gold)">
+        <div className="text-[10px] font-bold tracking-[3px] uppercase mb-1.5 text-accent-ink">
           Legal
         </div>
         <h1 className="font-display font-black uppercase tracking-[-1px] m-0 mb-2 leading-[0.95] text-[clamp(30px,4vw,48px)]">

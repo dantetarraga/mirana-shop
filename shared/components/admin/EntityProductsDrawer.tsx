@@ -261,7 +261,7 @@ export function EntityProductsDrawer({
                   </div>
 
                   {/* Precio */}
-                  <span className="font-display font-extrabold text-[13px] text-(--gold) whitespace-nowrap">
+                  <span className="font-display font-extrabold text-[13px] text-accent-ink whitespace-nowrap">
                     S/ {p.price.toFixed(2)}
                   </span>
 
@@ -370,7 +370,7 @@ export function EntityProductsDrawer({
                           </div>
                           <div className="text-[11px] text-muted font-mono">{r.sku}</div>
                         </div>
-                        <span className="text-[12px] text-(--gold) font-display font-bold whitespace-nowrap shrink-0">
+                        <span className="text-[12px] text-accent-ink font-display font-bold whitespace-nowrap shrink-0">
                           + Agregar
                         </span>
                       </button>

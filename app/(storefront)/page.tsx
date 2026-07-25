@@ -6,6 +6,7 @@ import { CTABand } from '@/features/home/components/CTABand'
 import { CategoryStrips } from '@/features/home/components/CategoryStrips'
 import { FeaturedProducts } from '@/features/home/components/FeaturedProducts'
 import { HeroBannerCarousel } from '@/features/home/components/HeroBannerCarousel'
+import { HeroBannerFade } from '@/features/home/components/HeroBannerFade'
 import { NewArrivals } from '@/features/home/components/NewArrivals'
 import { PreorderSection } from '@/features/home/components/PreorderSection'
 import { PromoBanner } from '@/features/home/components/PromoBanner'
@@ -42,16 +43,24 @@ export default async function HomePage() {
     getBrands({ perPage: 50 }),
   ])
 
+  const fullscreenBanners = activeBanners.filter((b) => b.variant === 'FULLSCREEN')
+  const cardBanners = activeBanners.filter((b) => b.variant === 'CARD')
+
   return (
     <>
       <JsonLd data={organizationJsonLd} />
       <JsonLd data={websiteJsonLd} />
 
-      {/* Header extendido: filtros rápidos + marcas + banners (estructura tipo Entertainment Earth) */}
+      {/* Header extendido: hero + filtros rápidos + marcas + banners
+          (estructura tipo Entertainment Earth). Los banners FULLSCREEN abren
+          la página pegados a la navbar; los CARD siguen en el grid/carrusel.
+          Ambos componentes devuelven null con lista vacía, así que las dos
+          variantes conviven o se usa solo una. */}
       <div className="pt-(--nh)">
+        <HeroBannerFade banners={fullscreenBanners} />
         <QuickFiltersBar categories={categories} />
         <BrandsCarousel brands={brands} />
-        <HeroBannerCarousel banners={activeBanners} />
+        <HeroBannerCarousel banners={cardBanners} />
       </div>
 
       <PromoBanner />

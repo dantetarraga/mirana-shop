@@ -69,7 +69,7 @@ function ProductModalContent({ p, onClose }: { p: CatalogProduct; onClose: () =>
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-300 bg-black/82 backdrop-blur-[10px] flex items-center justify-center p-3 sm:p-6"
+      className="fixed inset-0 z-300 bg-scrim backdrop-blur-[10px] flex items-center justify-center p-3 sm:p-6"
     >
       <div
         ref={panelRef}
@@ -112,7 +112,7 @@ function ProductModalContent({ p, onClose }: { p: CatalogProduct; onClose: () =>
           </div>
 
           <div className="flex items-baseline gap-3 flex-wrap">
-            <div className="font-display text-[38px] sm:text-[52px] font-black text-(--gold) leading-none">
+            <div className="font-display text-[38px] sm:text-[52px] font-black text-accent-ink leading-none">
               S/ {unitPrice.toFixed(2)}
             </div>
             {hasDiscount && (
@@ -167,7 +167,7 @@ function ProductModalContent({ p, onClose }: { p: CatalogProduct; onClose: () =>
           <Link
             href={`/catalogo/${p.slug}`}
             onClick={onClose}
-            className="inline-flex justify-center items-center w-full text-center border border-(--bd) px-6 py-3 text-[12px] tracking-[2px] uppercase font-display font-extrabold hover:border-(--gold) hover:text-(--gold) transition-colors duration-300"
+            className="inline-flex justify-center items-center w-full text-center border border-(--bd) px-6 py-3 text-[12px] tracking-[2px] uppercase font-display font-extrabold hover:border-(--gold) hover:text-accent-ink transition-colors duration-300"
           >
             Ver detalles del producto
             <ArrowRight className="ml-1" size={14} strokeWidth={3} />

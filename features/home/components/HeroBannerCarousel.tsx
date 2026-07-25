@@ -52,7 +52,7 @@ function BannerCard({ card, priority, className }: { card: SlideCard; priority: 
         priority={priority}
         className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 hover:scale-[1.03]"
       />
-      <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-[rgba(3,4,9,.85)] to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-media-scrim to-transparent pointer-events-none" />
 
       <div className="relative z-1 p-5 pb-6 sm:p-7 sm:pb-8 text-center">
         <h3 className="font-display font-black uppercase tracking-[-0.5px] leading-[0.95] text-[clamp(20px,2.2vw,34px)] mb-1.5">
@@ -61,7 +61,7 @@ function BannerCard({ card, priority, className }: { card: SlideCard; priority: 
         {card.subtitle && (
           <p className="text-[13px] text-muted font-light mb-4 sm:mb-5 max-w-70 mx-auto">{card.subtitle}</p>
         )}
-        <span className="inline-block border border-(--bdh) bg-[rgba(3,4,9,.55)] px-6 sm:px-8 py-2.5 sm:py-3 font-display font-extrabold uppercase text-[12px] sm:text-[13px] tracking-[2px] text-text transition-colors duration-200 hover:bg-(--gold) hover:text-black hover:border-(--gold)">
+        <span className="inline-block border border-(--bdh) bg-media-scrim/70 px-6 sm:px-8 py-2.5 sm:py-3 font-display font-extrabold uppercase text-[12px] sm:text-[13px] tracking-[2px] text-text transition-colors duration-200 hover:bg-(--gold) hover:text-on-accent hover:border-(--gold)">
           {card.ctaLabel}
         </span>
       </div>
@@ -159,7 +159,7 @@ function HeroBannerSlider({ cards }: { cards: SlideCard[] }) {
             type="button"
             aria-label="Banner anterior"
             onClick={scrollPrev}
-            className="absolute left-3 top-1/2 -translate-y-1/2 z-2 w-11 h-11 flex items-center justify-center bg-[rgba(3,4,9,.6)] border border-(--bd) text-text backdrop-blur-sm transition-all duration-200 hover:border-(--gold) hover:text-(--gold)"
+            className="absolute left-3 top-1/2 -translate-y-1/2 z-2 w-11 h-11 flex items-center justify-center bg-media-scrim/70 border border-(--bdh) text-on-media backdrop-blur-sm transition-all duration-200 hover:border-(--gold) hover:text-(--gold)"
           >
             <ChevronLeft size={22} />
           </button>
@@ -167,7 +167,7 @@ function HeroBannerSlider({ cards }: { cards: SlideCard[] }) {
             type="button"
             aria-label="Banner siguiente"
             onClick={scrollNext}
-            className="absolute right-3 top-1/2 -translate-y-1/2 z-2 w-11 h-11 flex items-center justify-center bg-[rgba(3,4,9,.6)] border border-(--bd) text-text backdrop-blur-sm transition-all duration-200 hover:border-(--gold) hover:text-(--gold)"
+            className="absolute right-3 top-1/2 -translate-y-1/2 z-2 w-11 h-11 flex items-center justify-center bg-media-scrim/70 border border-(--bdh) text-on-media backdrop-blur-sm transition-all duration-200 hover:border-(--gold) hover:text-(--gold)"
           >
             <ChevronRight size={22} />
           </button>
@@ -180,7 +180,7 @@ function HeroBannerSlider({ cards }: { cards: SlideCard[] }) {
                 aria-label={`Ir a la vista ${i + 1}`}
                 onClick={() => scrollTo(i)}
                 className={`h-1.5 border-none transition-all duration-300 ${
-                  i === selectedIndex ? 'w-7 bg-(--gold)' : 'w-3 bg-[rgba(228,240,255,.25)] hover:bg-[rgba(228,240,255,.5)]'
+                  i === selectedIndex ? 'w-7 bg-(--gold)' : 'w-3 bg-on-media/30 hover:bg-on-media/60'
                 }`}
               />
             ))}

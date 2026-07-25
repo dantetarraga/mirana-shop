@@ -129,7 +129,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
               >
                 <span className="text-[11px] text-muted">Búsqueda:</span>
                 <span className="text-[11px] text-text font-semibold">{currentQ}</span>
-                <X size={10} className="text-muted group-hover:text-(--gold) transition-colors" />
+                <X size={10} className="text-muted group-hover:text-accent-ink transition-colors" />
               </a>
             )}
             {categorySlugs.map((slug) => {
@@ -148,7 +148,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
                 >
                   <span className="text-[11px] text-muted">Cat:</span>
                   <span className="text-[11px] text-text font-semibold">{name}</span>
-                  <X size={10} className="text-muted group-hover:text-(--gold) transition-colors" />
+                  <X size={10} className="text-muted group-hover:text-accent-ink transition-colors" />
                 </a>
               )
             })}
@@ -168,7 +168,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
                 >
                   <span className="text-[11px] text-muted">Marca:</span>
                   <span className="text-[11px] text-text font-semibold">{name}</span>
-                  <X size={10} className="text-muted group-hover:text-(--gold) transition-colors" />
+                  <X size={10} className="text-muted group-hover:text-accent-ink transition-colors" />
                 </a>
               )
             })}
@@ -188,7 +188,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
                 >
                   <span className="text-[11px] text-muted">Col:</span>
                   <span className="text-[11px] text-text font-semibold">{name}</span>
-                  <X size={10} className="text-muted group-hover:text-(--gold) transition-colors" />
+                  <X size={10} className="text-muted group-hover:text-accent-ink transition-colors" />
                 </a>
               )
             })}

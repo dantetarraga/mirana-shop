@@ -95,7 +95,7 @@ export function ProductImageCarousel({
               className={cn(
                 'relative shrink-0 overflow-hidden border transition-colors duration-200',
                 thumbClassName ?? 'w-14 h-14 sm:w-16 sm:h-16',
-                i === index ? 'border-(--gold)' : 'border-(--bd) hover:border-white/40',
+                i === index ? 'border-(--gold)' : 'border-(--bd) hover:border-(--bdh)',
               )}
             >
               <Image src={img.url} alt={img.alt || name} fill sizes="64px" className="object-cover" />

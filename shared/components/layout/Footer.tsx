@@ -34,7 +34,7 @@ export function Footer() {
     <footer className="border-t border-(--bd) pt-12 md:pt-16 pb-8 shell grid gap-10 grid-cols-2 sm:grid-cols-3 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
       <div className="col-span-2 sm:col-span-3 md:col-span-1">
         <div className="font-display text-[30px] md:text-[36px] font-black tracking-[5px] mb-3.5">
-          MIRA<span className="text-(--gold)">NA</span>
+          MIRA<span className="text-accent-ink">NA</span>
         </div>
         <p className="text-[13px] text-muted leading-[1.75] max-w-sm md:max-w-55">
           Mirana Shop es tu tienda en Arequipa de juguetes, figuras de colección y modelos a escala

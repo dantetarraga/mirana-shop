@@ -15,7 +15,7 @@ export function OrdersBarChart({ data }: OrdersBarChartProps) {
         <XAxis
           dataKey="d"
           tick={{
-            fill: 'rgba(228,240,255,.42)',
+            fill: 'var(--mt)',
             fontSize: 9,
             fontFamily: 'monospace',
           }}

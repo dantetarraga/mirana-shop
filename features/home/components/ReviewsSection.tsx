@@ -50,7 +50,7 @@ export function ReviewsSection() {
     <section className="glow-section shell py-14 md:py-20">
       <div className="relative z-1 flex justify-between items-start mb-8 md:mb-10">
         <div>
-          <div className="text-[10px] font-bold tracking-[3px] uppercase text-(--gold) mb-2.5">
+          <div className="text-[10px] font-bold tracking-[3px] uppercase text-accent-ink mb-2.5">
             Testimonios
           </div>
           <h2 className="font-display font-black uppercase tracking-[-1px] leading-[0.95] text-[clamp(32px,5vw,64px)]">
@@ -59,11 +59,11 @@ export function ReviewsSection() {
             nuestros coleccionistas
           </h2>
           <div className="flex items-center gap-3.5 mt-4.5">
-            <span className="font-display text-[48px] font-black text-(--gold) leading-none">
+            <span className="font-display text-[48px] font-black text-accent-ink leading-none">
               4.9
             </span>
             <div>
-              <StarRating value={5} size={14} className="text-(--gold)" />
+              <StarRating value={5} size={14} className="text-accent-ink" />
               <div className="text-[11px] text-muted tracking-[1px] uppercase mt-1">
                 Basado en 2,847 reseñas
               </div>
@@ -78,10 +78,10 @@ export function ReviewsSection() {
             key={i}
             className="animate-fade-up bg-card border border-(--bd) p-6 sm:p-7 relative transition-[border-color] duration-[.25s]"
           >
-            <div className="absolute top-3.5 right-4.5 font-display text-[72px] font-black text-(--gold) opacity-[.15] leading-[0.8] italic">
+            <div className="absolute top-3.5 right-4.5 font-display text-[72px] font-black text-accent-ink opacity-[.15] leading-[0.8] italic">
               &ldquo;
             </div>
-            <div className="text-(--gold) mb-3.5">
+            <div className="text-accent-ink mb-3.5">
               <StarRating value={r.stars} size={13} />
             </div>
             <p className="text-[14px] leading-[1.7] text-text mb-5 font-light min-h-21">{r.text}</p>

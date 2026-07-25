@@ -39,16 +39,34 @@ export function CategoryStrips({ categories }: CategoryStripsProps) {
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               />
             )}
-            {cat.imageUrl && <div className="absolute inset-0 bg-black/45 -z-10" />}
+            {cat.imageUrl && <div className="absolute inset-0 bg-media-scrim/60 -z-10" />}
+            {/* Con imagen el texto va sobre un velo oscuro en ambos temas, así
+                que usa --on-media (blanco fijo); sin imagen va sobre el
+                placeholder a rayas y sigue los tokens del tema. */}
             <div>
-              <div className="font-display text-[22px] sm:text-[25px] lg:text-[28px] font-black uppercase tracking-[-0.5px] text-text leading-none">
+              <div
+                className={`font-display text-[22px] sm:text-[25px] lg:text-[28px] font-black uppercase tracking-[-0.5px] leading-none ${
+                  cat.imageUrl ? 'text-on-media' : 'text-text'
+                }`}
+              >
                 {cat.name}
               </div>
               {cat.description && (
-                <div className="text-[12px] text-muted mt-1 line-clamp-1">{cat.description}</div>
+                <div
+                  className={`text-[12px] mt-1 line-clamp-1 ${
+                    cat.imageUrl ? 'text-on-media/75' : 'text-muted'
+                  }`}
+                >
+                  {cat.description}
+                </div>
               )}
             </div>
-            <div className="absolute top-5 right-5 font-display text-[13px] font-bold text-(--gold) tracking-[1px] uppercase inline-flex items-center hover:text-(--gold-hover) transition-colors">
+            {/* `--gold-hover` no existe como token: el hover nunca se aplicaba */}
+            <div
+              className={`absolute top-5 right-5 font-display text-[13px] font-bold tracking-[1px] uppercase inline-flex items-center transition-colors ${
+                cat.imageUrl ? 'text-on-media' : 'text-accent-ink'
+              }`}
+            >
               Ver
               <ArrowRight size={14} className="inline-block ml-1" strokeWidth={3} />
             </div>

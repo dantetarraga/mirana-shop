@@ -7,7 +7,7 @@ export default function NotFound() {
     <div className="min-h-screen flex flex-col items-center justify-center gap-6 px-6 bg-bg text-text">
       <PackageX size={80} strokeWidth={1} className="opacity-20" />
       <div className="text-center">
-        <div className="font-display text-[64px] font-black leading-none text-(--gold)">404</div>
+        <div className="font-display text-[64px] font-black leading-none text-accent-ink">404</div>
         <h1 className="font-display text-[26px] font-black uppercase tracking-tight mt-2">
           Página no encontrada
         </h1>

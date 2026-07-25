@@ -21,19 +21,19 @@ export async function CTABand() {
       style={hasImage ? { backgroundImage: `url(${cta.imageUrl})` } : undefined}
     >
       {/* Oscurece la imagen para que el texto siga siendo legible */}
-      {hasImage && <div className="absolute inset-0 bg-black/55" aria-hidden />}
+      {hasImage && <div className="absolute inset-0 bg-media-scrim/70" aria-hidden />}
 
       <div className="relative z-1">
         <h2
           className={cn(
             'font-display font-black uppercase leading-[0.95] tracking-[-1px] text-[clamp(26px,4vw,54px)] whitespace-pre-line',
-            hasImage ? 'text-white' : 'text-black',
+            hasImage ? 'text-on-media' : 'text-on-accent',
           )}
         >
           {cta.title}
         </h2>
         {cta.subtitle && (
-          <p className={cn('text-[14px] mt-2', hasImage ? 'text-white/70' : 'text-black/55')}>
+          <p className={cn('text-[14px] mt-2', hasImage ? 'text-on-media/70' : 'text-on-accent/60')}>
             {cta.subtitle}
           </p>
         )}

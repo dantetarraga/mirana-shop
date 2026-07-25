@@ -924,6 +924,7 @@ async function main() {
   await prisma.banner.upsert({
     where: { id: 'seed-banner-hero-01' },
     update: {
+      variant: 'FULLSCREEN' as const,
       title: 'Nueva Temporada 2026',
       subtitle: 'Figuras exclusivas de anime, Marvel y LEGO — importaciones directas',
       imageUrl: banner(IMGS.bannerHero),
@@ -935,6 +936,7 @@ async function main() {
     },
     create: {
       id: 'seed-banner-hero-01',
+      variant: 'FULLSCREEN' as const,
       title: 'Nueva Temporada 2026',
       subtitle: 'Figuras exclusivas de anime, Marvel y LEGO — importaciones directas',
       imageUrl: banner(IMGS.bannerHero),
@@ -951,11 +953,13 @@ async function main() {
     update: {
       imageUrl: banner(IMGS.bannerLego),
       imageUrlMobile: bannerMobile(IMGS.bannerLego),
+      variant: 'CARD' as const,
       title: 'LEGO — Nuevos Sets',
       subtitle: 'Envío gratis en compras mayores a S/ 500',
     },
     create: {
       id: 'seed-banner-promo-01',
+      variant: 'CARD' as const,
       title: 'LEGO — Nuevos Sets',
       subtitle: 'Envío gratis en compras mayores a S/ 500',
       imageUrl: banner(IMGS.bannerLego),
@@ -972,11 +976,13 @@ async function main() {
     update: {
       imageUrl: banner(IMGS.bannerAnime),
       imageUrlMobile: bannerMobile(IMGS.bannerAnime),
+      variant: 'FULLSCREEN' as const,
       title: 'Anime & Manga',
       subtitle: 'Dragon Ball, Demon Slayer, One Piece y más',
     },
     create: {
       id: 'seed-banner-anime-01',
+      variant: 'FULLSCREEN' as const,
       title: 'Anime & Manga',
       subtitle: 'Dragon Ball, Demon Slayer, One Piece y más',
       imageUrl: banner(IMGS.bannerAnime),
@@ -991,11 +997,13 @@ async function main() {
   await prisma.banner.upsert({
     where: { id: 'seed-banner-bf-01' },
     update: {
+      variant: 'CARD' as const,
       imageUrl: banner(IMGS.bannerBlack),
       imageUrlMobile: bannerMobile(IMGS.bannerBlack),
     },
     create: {
       id: 'seed-banner-bf-01',
+      variant: 'CARD' as const,
       title: 'Black Friday Anticipado',
       subtitle: 'Hasta 40% de descuento en figuras seleccionadas',
       imageUrl: banner(IMGS.bannerBlack),

@@ -42,7 +42,7 @@ export function ComplaintDetailDrawer({
       <DrawerSection title="Bien contratado">
         <p className="text-[13px]">{complaint.productDescription}</p>
         {complaint.claimedAmount != null && (
-          <p className="text-[13px] text-(--gold) font-semibold mt-1">
+          <p className="text-[13px] text-accent-ink font-semibold mt-1">
             Monto reclamado: S/ {complaint.claimedAmount.toFixed(2)}
           </p>
         )}

@@ -217,7 +217,7 @@ export function EntityProductsPanel({
       {/* Título sección */}
       <div className="flex items-center gap-2 pt-1">
         <div className="h-px flex-1 bg-(--bd)" />
-        <span className="text-[10px] tracking-[2px] uppercase font-extrabold text-(--gold)">
+        <span className="text-[10px] tracking-[2px] uppercase font-extrabold text-accent-ink">
           Productos ({loading ? '…' : products.length})
         </span>
         <div className="h-px flex-1 bg-(--bd)" />
@@ -273,7 +273,7 @@ export function EntityProductsPanel({
                   {actionId === p.id ? (
                     <Loader2 size={13} className="ml-auto animate-spin text-muted" />
                   ) : (
-                    <Plus size={14} className="ml-auto text-(--gold) shrink-0" />
+                    <Plus size={14} className="ml-auto text-accent-ink shrink-0" />
                   )}
                 </button>
               ))

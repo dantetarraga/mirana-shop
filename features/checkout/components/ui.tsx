@@ -16,7 +16,7 @@ export function Field({
 }) {
   return (
     <div className={span === 2 ? 'sm:col-span-2' : undefined}>
-      <label className="block text-[10px] tracking-[2px] uppercase text-(--gold) mb-1.5">
+      <label className="block text-[10px] tracking-[2px] uppercase text-accent-ink mb-1.5">
         {label}
       </label>
       {children}

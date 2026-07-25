@@ -121,7 +121,7 @@ export function EntityImportDrawer({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-200 bg-black/70 backdrop-blur-sm flex justify-end"
+      className="fixed inset-0 z-200 bg-scrim backdrop-blur-sm flex justify-end"
     >
       <div
         onClick={(e) => e.stopPropagation()}
@@ -146,7 +146,7 @@ export function EntityImportDrawer({
               {requiredFields.map((f) => (
                 <span
                   key={f.key}
-                  className="font-mono text-[11px] bg-black/30 border border-(--bd) px-2 py-0.5 text-muted"
+                  className="font-mono text-[11px] bg-hover-tint border border-(--bd) px-2 py-0.5 text-muted"
                 >
                   {f.label}
                 </span>
@@ -159,7 +159,7 @@ export function EntityImportDrawer({
                   {optionalFields.map((f) => (
                     <span
                       key={f.key}
-                      className="font-mono text-[11px] bg-black/10 border border-(--bd) px-2 py-0.5 text-muted/70"
+                      className="font-mono text-[11px] bg-hover-tint border border-(--bd) px-2 py-0.5 text-muted/70"
                     >
                       {f.label}
                     </span>
@@ -174,7 +174,7 @@ export function EntityImportDrawer({
               <a
                 href={templateHref}
                 download
-                className="inline-flex items-center gap-1.5 text-[12px] text-(--gold) no-underline mt-2 hover:underline"
+                className="inline-flex items-center gap-1.5 text-[12px] text-accent-ink no-underline mt-2 hover:underline"
               >
                 <FileSpreadsheet size={13} /> Descargar plantilla de ejemplo
               </a>
@@ -268,7 +268,7 @@ export function EntityImportDrawer({
                       {rows.map((r) => (
                         <tr
                           key={r.row}
-                          className={cn(r.errors.length ? 'bg-red-950/20' : 'hover:bg-white/2')}
+                          className={cn(r.errors.length ? 'bg-danger/10' : 'hover:bg-hover-tint')}
                         >
                           <td className={cn(cls.td, cls.mono)}>{r.row}</td>
                           {fields.map((f) => (

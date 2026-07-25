@@ -4,6 +4,7 @@ import { useAuthModalStore } from '@/features/auth/stores/auth-modal.store'
 import { useCartStore } from '@/features/cart/stores/cart.store'
 import { SearchBox } from '@/features/search/components/SearchBox'
 import { Button } from '@/shared/components/ui/Button'
+import { ThemeToggle } from '@/shared/components/ui/ThemeToggle'
 import { useUser } from '@/shared/hooks'
 import { cn } from '@/shared/lib/utils'
 import { LayoutGrid, LogOut, MapPin, Package, ShoppingBag, User } from 'lucide-react'
@@ -53,16 +54,19 @@ export function Navbar() {
     : ''
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-200 flex items-center gap-3 sm:gap-5 md:gap-8 shell transition-[background] duration-300 h-(--nh) bg-[rgba(3,4,9,.92)] backdrop-blur-[28px] border-b border-(--bd)">
+    <nav className="fixed top-0 left-0 right-0 z-200 flex items-center gap-3 sm:gap-5 md:gap-8 shell transition-[background] duration-300 h-(--nh) bg-surf/92 backdrop-blur-[28px] border-b border-(--bd)">
       <div className="flex items-center gap-4 md:gap-7 shrink-0">
         <Link href="/" className="flex items-center shrink-0">
+          {/* El logo es un PNG blanco rasterizado dentro del SVG (el color está
+              horneado en un feColorMatrix, no hay `fill` editable), así que en
+              tema claro se invierte a sólido oscuro con un filtro. */}
           <Image
             src="/logo.svg"
             alt="Mirana"
             width={150}
             height={90}
             priority
-            className="h-8 sm:h-9 md:h-10 w-auto"
+            className="h-8 sm:h-9 md:h-10 w-auto [filter:brightness(0)] dark:[filter:none]"
           />
         </Link>
         {/* Sin padding inferior: el `items-center` del nav centra la caja del
@@ -81,6 +85,8 @@ export function Navbar() {
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <ThemeToggle />
+
         {/* Cart */}
         <Button
           variant="icon"
@@ -122,7 +128,7 @@ export function Navbar() {
 
           {/* Dropdown */}
           {menuOpen && user && (
-            <div className="absolute top-[calc(100%+8px)] right-0 min-w-55 z-250 bg-surf border border-(--bd) shadow-[0_16px_48px_rgba(0,0,0,.4)]">
+            <div className="absolute top-[calc(100%+8px)] right-0 min-w-55 z-250 bg-surf border border-(--bd) shadow-pop">
               <div className="px-4.5 py-4 border-b border-(--bd)">
                 <div className="font-display text-[16px] font-extrabold uppercase tracking-[0.5px]">
                   {user.name}
@@ -143,12 +149,12 @@ export function Navbar() {
                     onClick={() => setMenuOpen(false)}
                     className={cn(
                       'flex items-center gap-2.5 px-4.5 py-2.75 text-[13px] no-underline font-sans font-semibold transition-colors duration-150',
-                      isActive ? 'text-(--gold) bg-card' : 'text-text hover:bg-card',
+                      isActive ? 'text-accent-ink bg-card' : 'text-text hover:bg-card',
                     )}
                   >
                     <Icon
                       size={14}
-                      className={cn('shrink-0', isActive ? 'text-(--gold)' : 'text-muted')}
+                      className={cn('shrink-0', isActive ? 'text-accent-ink' : 'text-muted')}
                     />
                     {label}
                     {isActive && <span className="ml-auto w-1 h-1 rounded-full bg-(--gold)" />}
@@ -160,7 +166,7 @@ export function Navbar() {
                 <Link
                   href="/admin/dashboard"
                   onClick={() => setMenuOpen(false)}
-                  className="px-4.5 py-2.75 flex items-center gap-2.5 text-[13px] no-underline font-sans font-semibold text-(--gold) border-t border-(--bd)"
+                  className="px-4.5 py-2.75 flex items-center gap-2.5 text-[13px] no-underline font-sans font-semibold text-accent-ink border-t border-(--bd)"
                 >
                   <LayoutGrid size={14} />
                   Panel Admin

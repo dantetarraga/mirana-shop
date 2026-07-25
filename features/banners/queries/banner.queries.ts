@@ -6,6 +6,7 @@ export const BANNER_SELECT = {
   id: true,
   title: true,
   subtitle: true,
+  variant: true,
   imageUrl: true,
   imageUrlMobile: true,
   ctaLabel: true,

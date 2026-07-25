@@ -81,7 +81,7 @@ export function OrderDetailDrawer({
           <span className="text-[12px] tracking-[1px] uppercase text-muted">
             Total ({order._count.items} artículo{order._count.items !== 1 ? 's' : ''})
           </span>
-          <span className="font-display font-black text-[26px] text-(--gold)">
+          <span className="font-display font-black text-[26px] text-accent-ink">
             S/ {fmt(order.total)}
           </span>
         </div>

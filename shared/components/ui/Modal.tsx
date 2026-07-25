@@ -72,7 +72,7 @@ export function Modal({
     <div
       onClick={onClose}
       className="fixed inset-0 z-500 flex items-center justify-center p-4 sm:p-6
-                 bg-black/82 backdrop-blur-[10px] animate-fade-in"
+                 bg-scrim backdrop-blur-[10px] animate-fade-in"
     >
       {/* Panel */}
       <div

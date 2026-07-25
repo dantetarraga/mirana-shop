@@ -74,7 +74,7 @@ export function AddressFormPanel({
   return (
     <div className="bg-card border border-(--bd) p-6 flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <p className="text-[10px] tracking-[3px] uppercase text-(--gold)">
+        <p className="text-[10px] tracking-[3px] uppercase text-accent-ink">
           {title ?? (initial ? 'Editar dirección' : 'Nueva dirección')}
         </p>
         <button

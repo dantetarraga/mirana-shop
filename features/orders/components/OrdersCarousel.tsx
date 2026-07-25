@@ -54,7 +54,7 @@ export function OrdersCarousel({ orders }: { orders: OrderListItem[] }) {
             className="bg-surf border border-(--bd) p-4 flex flex-col gap-2.5 no-underline hover:border-(--gold)/40 transition-colors duration-150"
           >
             <div className="flex items-center justify-between gap-2">
-              <span className="font-display font-black text-[13px] uppercase tracking-[1.5px] text-(--gold)">
+              <span className="font-display font-black text-[13px] uppercase tracking-[1.5px] text-accent-ink">
                 {order.code}
               </span>
               <span className={`badge ${STATUS_CLS[order.status] ?? 'badge-amber'} text-[10px]`}>

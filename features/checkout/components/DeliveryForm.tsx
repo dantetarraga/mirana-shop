@@ -12,7 +12,7 @@ type Props = {
 export function DeliveryForm({ register, errors }: Props) {
   return (
     <section className="bg-card border border-(--bd) p-6">
-      <h2 className="font-display font-black uppercase text-[14px] tracking-[2px] text-(--gold) mb-5">
+      <h2 className="font-display font-black uppercase text-[14px] tracking-[2px] text-accent-ink mb-5">
         Datos de entrega
       </h2>
 

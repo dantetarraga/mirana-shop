@@ -302,7 +302,7 @@ export function ExcelImportDrawer({ categories, brands, existingSkus, onClose, o
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-200 bg-black/70 backdrop-blur-sm flex justify-end"
+      className="fixed inset-0 z-200 bg-scrim backdrop-blur-sm flex justify-end"
     >
       <div
         onClick={(e) => e.stopPropagation()}
@@ -328,7 +328,7 @@ export function ExcelImportDrawer({ categories, brands, existingSkus, onClose, o
                 (c) => (
                   <span
                     key={c}
-                    className="font-mono text-[11px] bg-black/30 border border-(--bd) px-2 py-0.5 text-muted"
+                    className="font-mono text-[11px] bg-hover-tint border border-(--bd) px-2 py-0.5 text-muted"
                   >
                     {c}
                   </span>
@@ -341,7 +341,7 @@ export function ExcelImportDrawer({ categories, brands, existingSkus, onClose, o
                 (c) => (
                   <span
                     key={c}
-                    className="font-mono text-[11px] bg-black/10 border border-(--bd) px-2 py-0.5 text-muted/70"
+                    className="font-mono text-[11px] bg-hover-tint border border-(--bd) px-2 py-0.5 text-muted/70"
                   >
                     {c}
                   </span>
@@ -357,7 +357,7 @@ export function ExcelImportDrawer({ categories, brands, existingSkus, onClose, o
             <a
               href="/plantillas/plantilla-importar-productos.xlsx"
               download
-              className="inline-flex items-center gap-1.5 text-[12px] text-(--gold) no-underline mt-2 hover:underline"
+              className="inline-flex items-center gap-1.5 text-[12px] text-accent-ink no-underline mt-2 hover:underline"
             >
               <FileSpreadsheet size={13} /> Descargar plantilla de ejemplo
             </a>
@@ -431,9 +431,9 @@ export function ExcelImportDrawer({ categories, brands, existingSkus, onClose, o
                 </div>
                 {warningRows.length > 0 && (
                   <div className="flex-1 bg-card border border-(--bd) p-4 flex items-center gap-3">
-                    <AlertTriangle size={20} className="text-(--gold) shrink-0" />
+                    <AlertTriangle size={20} className="text-accent-ink shrink-0" />
                     <div>
-                      <div className="font-display font-black text-[22px] text-(--gold)">
+                      <div className="font-display font-black text-[22px] text-accent-ink">
                         {warningRows.length}
                       </div>
                       <div className="text-[11px] text-muted uppercase tracking-widest">
@@ -467,7 +467,7 @@ export function ExcelImportDrawer({ categories, brands, existingSkus, onClose, o
                               ? 'bg-red-950/20'
                               : r.warnings.length
                                 ? 'bg-(--gold)/5'
-                                : 'hover:bg-white/2',
+                                : 'hover:bg-hover-tint',
                           )}
                         >
                           <td className={cn(cls.td, cls.mono)}>{r.row}</td>
@@ -487,7 +487,7 @@ export function ExcelImportDrawer({ categories, brands, existingSkus, onClose, o
                           <td className={cn(cls.td, 'text-[11px]')}>{r.data.status ?? '—'}</td>
                           <td className={cn(cls.td, 'text-center')}>
                             {r.data.featured ? (
-                              <Star size={12} className="inline text-(--gold)" fill="currentColor" />
+                              <Star size={12} className="inline text-accent-ink" fill="currentColor" />
                             ) : (
                               '—'
                             )}
@@ -501,7 +501,7 @@ export function ExcelImportDrawer({ categories, brands, existingSkus, onClose, o
                               </span>
                             ) : r.warnings.length > 0 ? (
                               <span
-                                className="inline-flex items-center gap-1 text-[11px] text-(--gold)"
+                                className="inline-flex items-center gap-1 text-[11px] text-accent-ink"
                                 title={r.warnings.join(' · ')}
                               >
                                 <AlertTriangle size={12} />
@@ -539,21 +539,21 @@ export function ExcelImportDrawer({ categories, brands, existingSkus, onClose, o
                   )}
                   {newCategoryNames.length > 0 && (
                     <li className="flex items-start gap-2">
-                      <AlertTriangle size={14} className="text-(--gold) shrink-0 mt-0.5" />
+                      <AlertTriangle size={14} className="text-accent-ink shrink-0 mt-0.5" />
                       <span>
                         Categoría{newCategoryNames.length !== 1 ? 's' : ''} nueva
                         {newCategoryNames.length !== 1 ? 's' : ''} a crear:{' '}
-                        <span className="text-(--gold)">{newCategoryNames.join(', ')}</span>
+                        <span className="text-accent-ink">{newCategoryNames.join(', ')}</span>
                       </span>
                     </li>
                   )}
                   {newBrandNames.length > 0 && (
                     <li className="flex items-start gap-2">
-                      <AlertTriangle size={14} className="text-(--gold) shrink-0 mt-0.5" />
+                      <AlertTriangle size={14} className="text-accent-ink shrink-0 mt-0.5" />
                       <span>
                         Marca{newBrandNames.length !== 1 ? 's' : ''} nueva
                         {newBrandNames.length !== 1 ? 's' : ''} a crear:{' '}
-                        <span className="text-(--gold)">{newBrandNames.join(', ')}</span>
+                        <span className="text-accent-ink">{newBrandNames.join(', ')}</span>
                       </span>
                     </li>
                   )}

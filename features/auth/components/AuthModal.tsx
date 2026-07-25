@@ -162,7 +162,7 @@ function AuthForm({ mode, onClose }: { mode: AuthMode; onClose: () => void }) {
             <label className="flex items-center gap-1.5 cursor-pointer">
               <input type="checkbox" /> Recordarme
             </label>
-            <a className="text-(--gold) cursor-pointer">¿Olvidaste tu contraseña?</a>
+            <a className="text-accent-ink cursor-pointer">¿Olvidaste tu contraseña?</a>
           </div>
         )}
         */}
@@ -184,7 +184,7 @@ function AuthForm({ mode, onClose }: { mode: AuthMode; onClose: () => void }) {
                 <a
                   href="/terminos-y-condiciones"
                   target="_blank"
-                  className="text-(--gold) underline underline-offset-2"
+                  className="text-accent-ink underline underline-offset-2"
                 >
                   Términos y Condiciones
                 </a>{' '}
@@ -192,7 +192,7 @@ function AuthForm({ mode, onClose }: { mode: AuthMode; onClose: () => void }) {
                 <a
                   href="/politica-de-privacidad"
                   target="_blank"
-                  className="text-(--gold) underline underline-offset-2"
+                  className="text-accent-ink underline underline-offset-2"
                 >
                   Política de Privacidad
                 </a>{' '}

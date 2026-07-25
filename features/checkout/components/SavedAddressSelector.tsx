@@ -22,14 +22,14 @@ export function SavedAddressSelector({
   return (
     <section className="bg-card border border-(--bd) p-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="font-display font-black uppercase text-[14px] tracking-[2px] text-(--gold)">
+        <h2 className="font-display font-black uppercase text-[14px] tracking-[2px] text-accent-ink">
           Mis direcciones guardadas
         </h2>
         {onAddNew && (
           <button
             type="button"
             onClick={onAddNew}
-            className="flex items-center gap-1.5 text-[11px] font-semibold text-muted hover:text-(--gold) transition-colors duration-150"
+            className="flex items-center gap-1.5 text-[11px] font-semibold text-muted hover:text-accent-ink transition-colors duration-150"
           >
             <Plus size={13} />
             Nueva
@@ -59,12 +59,12 @@ export function SavedAddressSelector({
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
-                <MapPin size={12} className="text-(--gold) shrink-0" />
-                <span className="text-[11px] font-semibold uppercase tracking-[1.5px] text-(--gold)">
+                <MapPin size={12} className="text-accent-ink shrink-0" />
+                <span className="text-[11px] font-semibold uppercase tracking-[1.5px] text-accent-ink">
                   {addr.label}
                 </span>
                 {addr.isDefault && (
-                  <span className="text-[9px] tracking-[1px] uppercase border border-(--gold)/30 text-(--gold)/70 px-1.5 py-0.5">
+                  <span className="text-[9px] tracking-[1px] uppercase border border-(--gold)/30 text-accent-ink/70 px-1.5 py-0.5">
                     Predeterminada
                   </span>
                 )}

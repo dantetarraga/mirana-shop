@@ -184,7 +184,7 @@ export function DashboardView({
             side={
               <Link
                 href="/admin/products"
-                className="font-display inline-flex items-center hover:text-(--gold) transition-colors duration-200 text-[14px] font-bold no-underline tracking-[1px] text-muted"
+                className="font-display inline-flex items-center hover:text-accent-ink transition-colors duration-200 text-[14px] font-bold no-underline tracking-[1px] text-muted"
               >
                 Ver todos
                 <ArrowRight size={14} className="inline-block ml-1" strokeWidth={3} />
@@ -250,7 +250,7 @@ export function DashboardView({
           </div>
           <Link
             href="/admin/orders"
-            className="font-display inline-flex items-center transition-colors duration-200 text-[13px] font-bold no-underline tracking-[1px] uppercase text-muted hover:text-(--gold)"
+            className="font-display inline-flex items-center transition-colors duration-200 text-[13px] font-bold no-underline tracking-[1px] uppercase text-muted hover:text-accent-ink"
           >
             Ver todos
             <ArrowRight size={14} className="inline-block ml-1" strokeWidth={3} />
@@ -279,7 +279,7 @@ export function DashboardView({
                 recentOrders.map((o) => {
                   const cfg = ORDER_STATUS_CFG[o.status] ?? { label: o.status, color: 'text-muted' }
                   return (
-                    <tr key={o.id} className="hover:bg-white/2 transition-colors">
+                    <tr key={o.id} className="hover:bg-hover-tint transition-colors">
                       <td className={cn(cls.td, cls.monoGold)}>{o.code}</td>
                       <td className={cls.td}>
                         <div className="text-[14px]">{orderCustomer(o)}</div>

@@ -10,7 +10,7 @@ export default function ComplaintBookPage() {
   return (
     <div className="px-4 sm:px-6 pt-[calc(var(--nh)+36px)] pb-16 max-w-180 mx-auto">
       <div className="mb-8">
-        <p className="text-[10px] tracking-[3px] uppercase text-(--gold) mb-1">Atención al cliente</p>
+        <p className="text-[10px] tracking-[3px] uppercase text-accent-ink mb-1">Atención al cliente</p>
         <h1 className="font-display font-black uppercase text-[28px] sm:text-[34px] tracking-tight leading-none mb-3">
           Libro de Reclamaciones
         </h1>

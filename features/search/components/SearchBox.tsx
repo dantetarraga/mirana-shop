@@ -134,7 +134,7 @@ export function SearchBox() {
         <div
           id="search-suggestions"
           role="listbox"
-          className="absolute top-[calc(100%+6px)] left-0 right-0 z-250 bg-surf border border-(--bd) shadow-[0_16px_48px_rgba(0,0,0,.4)] max-h-[70vh] overflow-y-auto"
+          className="absolute top-[calc(100%+6px)] left-0 right-0 z-250 bg-surf border border-(--bd) shadow-pop max-h-[70vh] overflow-y-auto"
         >
           {showIdle && (
             <>
@@ -219,7 +219,7 @@ export function SearchBox() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-display text-[15px] font-extrabold uppercase tracking-[-0.3px] text-text truncate group-hover:text-(--gold)">
+                      <div className="font-display text-[15px] font-extrabold uppercase tracking-[-0.3px] text-text truncate group-hover:text-accent-ink">
                         {p.name}
                       </div>
                       <div className="text-[11px] text-muted mt-0.5 truncate flex items-center gap-1.5">
@@ -236,7 +236,7 @@ export function SearchBox() {
                         )}
                       </div>
                     </div>
-                    <div className="font-display text-[16px] font-black text-(--gold) shrink-0">
+                    <div className="font-display text-[16px] font-black text-accent-ink shrink-0">
                       S/ {p.price.toFixed(2)}
                     </div>
                   </button>
@@ -270,7 +270,7 @@ export function SearchBox() {
                 <Link
                   href={`/catalogo?q=${encodeURIComponent(query)}`}
                   onClick={() => addTerm(query)}
-                  className="inline-flex items-center gap-1.5 border border-(--bd) text-text font-display text-[13px] font-bold tracking-[1px] uppercase px-4 py-1.5 hover:border-(--gold) hover:text-(--gold) transition-colors"
+                  className="inline-flex items-center gap-1.5 border border-(--bd) text-text font-display text-[13px] font-bold tracking-[1px] uppercase px-4 py-1.5 hover:border-(--gold) hover:text-accent-ink transition-colors"
                 >
                   Ver todo <ArrowRight size={12} />
                 </Link>
@@ -292,7 +292,7 @@ export function SearchBox() {
                       <button
                         key={cat.id}
                         onClick={() => setQuery(cat.name)}
-                        className="bg-(--gd) border border-[rgba(0,200,255,.2)] text-(--gold) text-[12px] px-3 py-1.5 hover:bg-(--sub) transition-colors"
+                        className="bg-(--gd) border border-[rgba(0,200,255,.2)] text-accent-ink text-[12px] px-3 py-1.5 hover:bg-(--sub) transition-colors"
                       >
                         {cat.name}
                       </button>

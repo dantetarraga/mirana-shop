@@ -64,7 +64,7 @@ export function AdminSidebar() {
   return (
     <>
       {isOpen && (
-        <div className="fixed inset-0 z-40 bg-black/60 lg:hidden" onClick={close} />
+        <div className="fixed inset-0 z-40 bg-scrim lg:hidden" onClick={close} />
       )}
       <aside
         className={cn(
@@ -75,7 +75,7 @@ export function AdminSidebar() {
       {/* Logo */}
       <div className="px-6 pt-6 pb-5 flex items-center gap-2.5 border-b border-(--bd)">
         <span className="font-display font-black text-[26px] tracking-[4px] uppercase">
-          MIRA<span className="text-(--gold)">NA</span>
+          MIRA<span className="text-accent-ink">NA</span>
         </span>
         <span className="text-[9px] tracking-[2px] uppercase ml-auto px-1.75 py-0.75 text-muted border border-(--bd)">
           Admin

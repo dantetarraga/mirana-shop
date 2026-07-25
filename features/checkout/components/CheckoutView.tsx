@@ -208,7 +208,7 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
     <div className="max-w-275 mx-auto px-4 sm:px-6 pt-[calc(var(--nh)+36px)] pb-16">
       {/* Header */}
       <div className="mb-8">
-        <p className="text-[10px] tracking-[3px] uppercase text-(--gold) mb-1">Tienda</p>
+        <p className="text-[10px] tracking-[3px] uppercase text-accent-ink mb-1">Tienda</p>
         <h1 className="font-display font-black uppercase text-[28px] sm:text-[34px] tracking-tight leading-none">
           Finalizar compra
         </h1>

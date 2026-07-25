@@ -70,7 +70,7 @@ export function AlertsBell({ alerts, unreadCount }: AlertsBellProps) {
                 onClick={generateNow}
                 disabled={isPending}
                 title="Ejecuta el analizador de alertas ahora mismo"
-                className="inline-flex items-center gap-1.5 text-[11px] text-muted hover:text-(--gold) transition-colors cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 text-[11px] text-muted hover:text-accent-ink transition-colors cursor-pointer disabled:opacity-50"
               >
                 <RefreshCw size={13} className={isPending ? 'animate-spin' : undefined} />
                 Generar ahora
@@ -79,7 +79,7 @@ export function AlertsBell({ alerts, unreadCount }: AlertsBellProps) {
                 <button
                   onClick={markRead}
                   disabled={isPending}
-                  className="inline-flex items-center gap-1.5 text-[11px] text-muted hover:text-(--gold) transition-colors cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 text-[11px] text-muted hover:text-accent-ink transition-colors cursor-pointer disabled:opacity-50"
                 >
                   <CheckCheck size={13} /> Marcar leído
                 </button>

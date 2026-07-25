@@ -43,7 +43,7 @@ export function BrandsCarousel({ brands }: BrandsCarouselProps) {
             type="button"
             aria-label="Marcas anteriores"
             onClick={() => scrollByPage(-1)}
-            className="shrink-0 h-14 sm:h-18 px-2 sm:px-2.5 bg-transparent border-none text-muted transition-colors duration-200 hover:text-(--gold)"
+            className="shrink-0 h-14 sm:h-18 px-2 sm:px-2.5 bg-transparent border-none text-muted transition-colors duration-200 hover:text-accent-ink"
           >
             <ChevronLeft size={26} />
           </button>
@@ -86,7 +86,7 @@ export function BrandsCarousel({ brands }: BrandsCarouselProps) {
             type="button"
             aria-label="Más marcas"
             onClick={() => scrollByPage(1)}
-            className="shrink-0 h-14 sm:h-18 px-2 sm:px-2.5 bg-transparent border-none text-muted transition-colors duration-200 hover:text-(--gold)"
+            className="shrink-0 h-14 sm:h-18 px-2 sm:px-2.5 bg-transparent border-none text-muted transition-colors duration-200 hover:text-accent-ink"
           >
             <ChevronRight size={26} />
           </button>

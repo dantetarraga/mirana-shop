@@ -21,7 +21,7 @@ export function RevenueAreaChart({ data }: RevenueAreaChartProps) {
         <XAxis
           dataKey="m"
           tick={{
-            fill: 'rgba(228,240,255,.42)',
+            fill: 'var(--mt)',
             fontSize: 10,
             fontFamily: 'monospace',
           }}
@@ -30,7 +30,7 @@ export function RevenueAreaChart({ data }: RevenueAreaChartProps) {
         />
         <YAxis
           tick={{
-            fill: 'rgba(228,240,255,.42)',
+            fill: 'var(--mt)',
             fontSize: 10,
             fontFamily: 'monospace',
           }}

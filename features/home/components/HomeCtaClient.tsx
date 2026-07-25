@@ -44,18 +44,18 @@ export function HomeCtaClient({ initial }: HomeCtaClientProps) {
             }`}
             style={form.imageUrl ? { backgroundImage: `url(${form.imageUrl})` } : undefined}
           >
-            {form.imageUrl && <div className="absolute inset-0 bg-black/55" aria-hidden />}
+            {form.imageUrl && <div className="absolute inset-0 bg-media-scrim/70" aria-hidden />}
             <div className="relative z-1">
               <div
                 className={`font-display font-black uppercase leading-[0.95] tracking-[-1px] text-[clamp(22px,3vw,38px)] whitespace-pre-line ${
-                  form.imageUrl ? 'text-white' : 'text-black'
+                  form.imageUrl ? 'text-on-media' : 'text-on-accent'
                 }`}
               >
                 {form.title || 'Título'}
               </div>
               {form.subtitle && (
                 <p
-                  className={`text-[13px] mt-2 ${form.imageUrl ? 'text-white/70' : 'text-black/55'}`}
+                  className={`text-[13px] mt-2 ${form.imageUrl ? 'text-on-media/70' : 'text-on-accent/60'}`}
                 >
                   {form.subtitle}
                 </p>

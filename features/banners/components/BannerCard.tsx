@@ -21,12 +21,14 @@ export function BannerCard({ banner }: BannerCardProps) {
           style={{ '--banner-img': `url(${banner.imageUrl})` } as React.CSSProperties}
           className="absolute inset-0 flex flex-col justify-center pl-6 bg-[linear-gradient(to_right,rgba(0,0,0,.55),rgba(0,0,0,.15)),var(--banner-img)] bg-cover bg-center"
         >
-          <div className="font-display text-[26px] font-black uppercase leading-[0.95]">
+          {/* El preview siempre lleva velo oscuro sobre la imagen: el texto usa
+              --on-media (blanco fijo), no --text, que se invierte con el tema. */}
+          <div className="font-display text-[26px] font-black uppercase leading-[0.95] text-on-media">
             {banner.title}
           </div>
-          <div className="text-[12px] mt-1 text-white/80">{banner.subtitle}</div>
+          <div className="text-[12px] mt-1 text-on-media/80">{banner.subtitle}</div>
           {banner.ctaLabel && (
-            <div className="font-display font-extrabold text-[12px] tracking-[1px] uppercase px-3 py-1.25 mt-2.5 w-fit bg-(--gold) text-black">
+            <div className="font-display font-extrabold text-[12px] tracking-[1px] uppercase px-3 py-1.25 mt-2.5 w-fit bg-(--gold) text-on-accent">
               {banner.ctaLabel} <ArrowRight className="inline-block ml-1" />
             </div>
           )}
@@ -38,6 +40,12 @@ export function BannerCard({ banner }: BannerCardProps) {
 
       {/* Metadatos y acciones */}
       <div className="px-4.5 py-4">
+        <div className="flex justify-between py-1.5 text-[13px]">
+          <span className="text-[11px] tracking-[1px] uppercase text-muted">Variante</span>
+          <span className="font-semibold">
+            {banner.variant === 'FULLSCREEN' ? 'Pantalla completa' : 'Tarjeta (grid)'}
+          </span>
+        </div>
         <div className="flex justify-between py-1.5 text-[13px]">
           <span className="text-[11px] tracking-[1px] uppercase text-muted">Posición</span>
           <span className="font-semibold">{banner.position}</span>

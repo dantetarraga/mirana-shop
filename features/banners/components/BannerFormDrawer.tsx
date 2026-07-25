@@ -16,9 +16,15 @@ import { z } from 'zod'
 
 type BannerFormValues = z.input<typeof bannerDbSchema>
 
+const VARIANT_OPTIONS = [
+  { label: 'Tarjeta (grid)', value: 'CARD' },
+  { label: 'Pantalla completa', value: 'FULLSCREEN' },
+]
+
 const EMPTY_FORM = {
   title: '',
   subtitle: '',
+  variant: 'CARD',
   ctaLabel: '',
   ctaHref: '',
   imageUrl: '',
@@ -62,6 +68,7 @@ export function BannerFormDrawer({
     mapToForm: (b) => ({
       title: b.title,
       subtitle: b.subtitle ?? '',
+      variant: b.variant,
       ctaLabel: b.ctaLabel ?? '',
       ctaHref: b.ctaHref ?? '',
       imageUrl: b.imageUrl,
@@ -70,6 +77,10 @@ export function BannerFormDrawer({
       active: b.active,
     }),
   })
+
+  // Las medidas recomendadas cambian según la variante: el hero es mucho más
+  // alto que la tarjeta del grid.
+  const isFullscreen = watch('variant') === 'FULLSCREEN'
 
   return (
     <AdminDrawer
@@ -90,6 +101,24 @@ export function BannerFormDrawer({
           />
         </FormField>
 
+        <FormField label="Variante" error={errors.variant?.message}>
+          <FilterMultiSelect
+            singleSelect
+            label="Variante"
+            className="w-full"
+            options={VARIANT_OPTIONS}
+            selected={[watch('variant') ?? 'CARD']}
+            onToggle={(val) =>
+              setValue('variant', val as 'CARD' | 'FULLSCREEN', { shouldValidate: true })
+            }
+          />
+          <p className="text-[11px] text-muted mt-1.5">
+            {isFullscreen
+              ? 'Hero a ancho completo bajo la barra de navegación. Si hay varios, se cruzan con un fundido de opacidad.'
+              : 'Tarjeta dentro del grid del inicio; a partir de 4 tarjetas se convierte en carrusel.'}
+          </p>
+        </FormField>
+
         <FormField label="Imagen desktop" error={errors.imageUrl?.message}>
           <ImageUploadField
             value={watch('imageUrl') ?? ''}
@@ -97,7 +126,8 @@ export function BannerFormDrawer({
             folder="banners"
           />
           <p className="text-[11px] text-muted mt-1.5">
-            Formato horizontal — se usa desde 1024px de ancho. Recomendado 1920×600.
+            Formato horizontal — se usa desde 1024px de ancho. Recomendado{' '}
+            {isFullscreen ? '1920×900' : '1920×600'}.
           </p>
         </FormField>
 
@@ -109,7 +139,7 @@ export function BannerFormDrawer({
           />
           <p className="text-[11px] text-muted mt-1.5">
             Opcional — formato vertical/cuadrado para pantallas &lt; 1024px. Si se deja vacío se
-            usa la de desktop. Recomendado 900×1100.
+            usa la de desktop. Recomendado {isFullscreen ? '1080×1350' : '900×1100'}.
           </p>
         </FormField>
 

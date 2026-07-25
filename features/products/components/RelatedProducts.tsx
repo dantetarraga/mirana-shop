@@ -48,7 +48,7 @@ export async function RelatedProducts({
     <section className="px-4 sm:px-6 py-10 sm:py-16 border-t border-(--bd)">
       <div className="max-w-360 mx-auto">
         <div className="mb-6 sm:mb-8">
-          <div className="text-[10px] font-bold tracking-[3px] uppercase mb-2.5 text-(--gold)">
+          <div className="text-[10px] font-bold tracking-[3px] uppercase mb-2.5 text-accent-ink">
             También te puede gustar
           </div>
           <h2 className="font-display font-black uppercase tracking-[-1px] leading-[0.95] text-[clamp(28px,4vw,48px)]">

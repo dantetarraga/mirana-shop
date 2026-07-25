@@ -20,7 +20,7 @@ export async function NewArrivals() {
     <section className="shell py-14 md:py-20">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-6 md:mb-8">
         <div>
-          <div className="text-[10px] font-bold tracking-[3px] uppercase mb-2.5 text-(--gold)">
+          <div className="text-[10px] font-bold tracking-[3px] uppercase mb-2.5 text-accent-ink">
             Recién llegados
           </div>
           <h2 className="font-display font-black uppercase tracking-[-1px] leading-[0.95] text-[clamp(32px,5vw,64px)]">
@@ -29,7 +29,7 @@ export async function NewArrivals() {
         </div>
         <Link
           href="/catalogo?sort=newest"
-          className="font-display text-[15px] font-bold tracking-[1px] uppercase pb-0.5 text-muted hover:text-(--gold) transition-colors duration-300 inline-flex items-center"
+          className="font-display text-[15px] font-bold tracking-[1px] uppercase pb-0.5 text-muted hover:text-accent-ink transition-colors duration-300 inline-flex items-center"
         >
           Ver todos
           <ArrowRight className="ml-1" size={14} />

@@ -36,7 +36,7 @@ export function CopyValue({ label, value }: { label: string; value: string }) {
           .then(() => toast.success(`${label} copiado`))
           .catch(() => {})
       }}
-      className="inline-flex items-center gap-1.5 font-mono text-[13px] text-text hover:text-(--gold) transition-colors cursor-pointer"
+      className="inline-flex items-center gap-1.5 font-mono text-[13px] text-text hover:text-accent-ink transition-colors cursor-pointer"
     >
       {value}
       <Copy size={12} className="opacity-50" />
@@ -49,7 +49,7 @@ export function PaymentSection({ register, errors, accounts, whatsappPhone }: Pr
 
   return (
     <section className="bg-card border border-(--bd) p-6">
-      <h2 className="font-display font-black uppercase text-[14px] tracking-[2px] text-(--gold) mb-5">
+      <h2 className="font-display font-black uppercase text-[14px] tracking-[2px] text-accent-ink mb-5">
         Método de pago
       </h2>
 
@@ -70,7 +70,7 @@ export function PaymentSection({ register, errors, accounts, whatsappPhone }: Pr
               disabled={!available}
               className="mt-0.5 accent-(--gold) w-4 h-4 shrink-0"
             />
-            <Icon size={18} className="mt-0.5 shrink-0 text-(--gold)" />
+            <Icon size={18} className="mt-0.5 shrink-0 text-accent-ink" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <span className="font-display font-bold text-[14px] uppercase tracking-tight">
@@ -101,7 +101,7 @@ export function PaymentSection({ register, errors, accounts, whatsappPhone }: Pr
       {accounts.length > 0 && (
         <div className="mt-4 border border-(--bd) bg-surf">
           <div className="px-4 py-3 border-b border-(--bd) flex items-center gap-2">
-            <Landmark size={14} className="text-(--gold)" />
+            <Landmark size={14} className="text-accent-ink" />
             <span className="text-[10px] tracking-[2px] uppercase text-muted">
               Cuentas para realizar tu pago
             </span>

@@ -44,7 +44,7 @@ export function OrderSummary({
   return (
     <div className="lg:sticky lg:top-6 flex flex-col gap-4">
       <div className="bg-card border border-(--bd) p-6">
-        <h2 className="font-display font-black uppercase text-[13px] tracking-[2px] text-(--gold) mb-4">
+        <h2 className="font-display font-black uppercase text-[13px] tracking-[2px] text-accent-ink mb-4">
           Resumen del pedido
         </h2>
 
@@ -110,7 +110,7 @@ export function OrderSummary({
           {!shippingFree && shippingThreshold != null && (
             <p className="text-[11px] text-muted leading-snug">
               Agrega{' '}
-              <span className="text-white font-semibold">
+              <span className="text-text font-semibold">
                 {formatCurrency(shippingThreshold - subtotal)}
               </span>{' '}
               más para envío gratis.
@@ -119,7 +119,7 @@ export function OrderSummary({
 
           <div className="flex justify-between font-display font-black text-[18px] uppercase tracking-tight border-t border-(--bd) pt-3 mt-1">
             <span>Total</span>
-            <span className="text-(--gold)">{formatCurrency(total)}</span>
+            <span className="text-accent-ink">{formatCurrency(total)}</span>
           </div>
         </div>
       </div>

@@ -27,12 +27,12 @@ export function SuccessScreen({
       <div className="max-w-130 w-full flex flex-col items-center gap-6">
         {/* Icon */}
         <div className="w-20 h-20 bg-(--gold)/10 border border-(--gold)/30 flex items-center justify-center">
-          <BadgeCheck size={44} className="text-(--gold)" />
+          <BadgeCheck size={44} className="text-accent-ink" />
         </div>
 
         {/* Title */}
         <div className="text-center">
-          <p className="text-[10px] tracking-[3px] uppercase text-(--gold) mb-1">
+          <p className="text-[10px] tracking-[3px] uppercase text-accent-ink mb-1">
             ¡Pedido recibido!
           </p>
           <h1 className="font-display font-black uppercase text-[30px] tracking-tight leading-none">
@@ -43,7 +43,7 @@ export function SuccessScreen({
         {/* Order code */}
         <div className="bg-card border border-(--bd) w-full px-6 py-5 text-center">
           <p className="text-[10px] tracking-[3px] uppercase text-muted mb-2">Número de pedido</p>
-          <p className="font-display font-black text-[28px] tracking-[3px] text-(--gold)">
+          <p className="font-display font-black text-[28px] tracking-[3px] text-accent-ink">
             {data.code}
           </p>
           <p className="text-[12px] text-muted mt-1">
@@ -54,7 +54,7 @@ export function SuccessScreen({
         {/* Resumen de productos */}
         <div className="bg-card border border-(--bd) w-full">
           <div className="px-6 py-4 border-b border-(--bd)">
-            <p className="text-[10px] tracking-[3px] uppercase text-(--gold)">Resumen del pedido</p>
+            <p className="text-[10px] tracking-[3px] uppercase text-accent-ink">Resumen del pedido</p>
           </div>
           <ul className="flex flex-col divide-y divide-(--bd)">
             {data.items.map((item, i) => (
@@ -98,14 +98,14 @@ export function SuccessScreen({
             </div>
             <div className="flex justify-between font-display font-black text-[17px] uppercase tracking-tight border-t border-(--bd) pt-2 mt-1">
               <span>Total pagado</span>
-              <span className="text-(--gold)">{formatCurrency(data.total)}</span>
+              <span className="text-accent-ink">{formatCurrency(data.total)}</span>
             </div>
           </div>
         </div>
 
         {/* Próximos pasos — pago manual por WhatsApp */}
         <div className="bg-surf border border-(--bd) w-full px-6 py-5">
-          <p className="text-[10px] tracking-[3px] uppercase text-(--gold) mb-3">
+          <p className="text-[10px] tracking-[3px] uppercase text-accent-ink mb-3">
             Próximos pasos
           </p>
           <div className="flex flex-col gap-2.5 text-[13px] leading-snug mb-5">
@@ -115,10 +115,10 @@ export function SuccessScreen({
               {phoneDisplay ? (
                 <>
                   {' '}
-                  al <span className="font-semibold text-white">{phoneDisplay}</span>
+                  al <span className="font-semibold text-text">{phoneDisplay}</span>
                 </>
               ) : null}{' '}
-              junto con tu código <span className="font-mono text-(--gold)">{data.code}</span>.
+              junto con tu código <span className="font-mono text-accent-ink">{data.code}</span>.
             </Step>
             <Step n={3}>Una vez confirmado el pago, prepararemos y enviaremos tu pedido.</Step>
           </div>
@@ -126,7 +126,7 @@ export function SuccessScreen({
           {accounts.length > 0 && (
             <div className="mb-5 border border-(--bd) bg-card">
               <div className="px-4 py-3 border-b border-(--bd) flex items-center gap-2">
-                <Landmark size={14} className="text-(--gold)" />
+                <Landmark size={14} className="text-accent-ink" />
                 <span className="text-[10px] tracking-[2px] uppercase text-muted">
                   Cuentas para realizar tu pago
                 </span>

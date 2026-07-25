@@ -55,7 +55,7 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
     <>
       <div
         onClick={() => setCartOpen(false)}
-        className="fixed inset-0 z-400 bg-black/65 backdrop-blur-[6px]"
+        className="fixed inset-0 z-400 bg-scrim backdrop-blur-[6px]"
       />
       <div
         ref={panelRef}
@@ -67,7 +67,7 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
         {/* Header */}
         <div className="px-5 sm:px-7 py-6 border-b border-(--bd) flex items-center justify-between">
           <div className="font-display text-[26px] font-black uppercase tracking-[1px]">
-            Carrito <span className="text-(--gold)">({cartCount})</span>
+            Carrito <span className="text-accent-ink">({cartCount})</span>
           </div>
           <Button variant="icon" size="md" aria-label="Cerrar carrito" onClick={() => setCartOpen(false)}>
             <X size={16} />
@@ -109,7 +109,7 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
                   <div className="font-display text-[17px] font-extrabold uppercase whitespace-nowrap overflow-hidden text-ellipsis">
                     {item.product.name}
                   </div>
-                  <div className="text-(--gold) font-display text-[20px] font-extrabold mt-px">
+                  <div className="text-accent-ink font-display text-[20px] font-extrabold mt-px">
                     {formatCurrency(effectivePrice(item.product))}
                   </div>
                   <div className="flex items-center gap-2 mt-2">
@@ -177,7 +177,7 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
             )}
             <div className="flex justify-between items-baseline mb-5">
               <span className="text-[12px] uppercase tracking-[1px] text-muted">Total</span>
-              <span className="font-display text-[38px] font-black text-(--gold)">
+              <span className="font-display text-[38px] font-black text-accent-ink">
                 {formatCurrency(total)}
               </span>
             </div>

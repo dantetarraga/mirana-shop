@@ -239,7 +239,7 @@ export function ProductCrudDrawer({
                 return (
                   <label
                     key={col.id}
-                    className="flex items-center gap-3 px-3.5 py-2.5 cursor-pointer hover:bg-white/2 transition-colors"
+                    className="flex items-center gap-3 px-3.5 py-2.5 cursor-pointer hover:bg-hover-tint transition-colors"
                   >
                     <input
                       type="checkbox"

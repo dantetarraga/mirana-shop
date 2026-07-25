@@ -155,7 +155,7 @@ export function InventoryClient({
         <KpiCard
           label="Valor inventario"
           value={`S/ ${(initialStats.totalValue / 1000).toFixed(1)}K`}
-          valueClass="text-(--gold)"
+          valueClass="text-accent-ink"
         />
         <KpiCard
           label="Stock bajo"

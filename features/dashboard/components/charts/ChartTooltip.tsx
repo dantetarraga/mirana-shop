@@ -19,7 +19,7 @@ export function ChartTooltip({
   const value = (payload[0] as { value?: number | string })?.value
   return (
     <div className="px-3.5 py-2 bg-card-hover border border-(--gold)">
-      <div className="font-display font-extrabold text-[16px] text-(--gold)">
+      <div className="font-display font-extrabold text-[16px] text-accent-ink">
         {prefix}
         {value}
         {suffix}

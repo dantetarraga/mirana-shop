@@ -180,12 +180,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
               </div>
             )}
             {isOutOfStock && (
-              <div className="z-1 absolute top-4 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-3 py-1.5 bg-[#ff6644]/80 text-white">
+              <div className="z-1 absolute top-4 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-3 py-1.5 bg-danger text-white">
                 AGOTADO
               </div>
             )}
             {product.status === 'PREORDER' && (
-              <div className="z-1 absolute top-4 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-3 py-1.5 bg-[#8b7cff] text-white">
+              <div className="z-1 absolute top-4 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-3 py-1.5 bg-info text-white">
                 PREVENTA
               </div>
             )}
@@ -210,7 +210,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
             {/* Price */}
             <div className="flex items-baseline gap-4 flex-wrap">
-              <div className="font-display text-[40px] sm:text-[56px] font-black text-(--gold) leading-none">
+              <div className="font-display text-[40px] sm:text-[56px] font-black text-accent-ink leading-none">
                 S/ {displayPrice.toFixed(2)}
               </div>
               {product.salePrice && product.salePrice < product.price && (

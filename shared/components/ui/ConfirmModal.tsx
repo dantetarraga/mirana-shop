@@ -39,7 +39,7 @@ export function ConfirmModal({
           full
           disabled={isPending}
           onClick={onConfirm}
-          className="bg-[#ff6644] hover:bg-[#ff4422] text-white border-transparent"
+          className="bg-danger hover:bg-danger/85 text-white border-transparent"
         >
           {isPending ? 'Eliminando...' : confirmLabel}
         </Button>

@@ -47,12 +47,12 @@ function AddressCard({
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[1.5px] text-(--gold)">
+          <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[1.5px] text-accent-ink">
             {LABEL_ICON[address.label]}
             {address.label}
           </span>
           {address.isDefault && (
-            <span className="flex items-center gap-1 text-[10px] font-semibold bg-(--gold)/10 text-(--gold) border border-(--gold)/30 px-2 py-0.5">
+            <span className="flex items-center gap-1 text-[10px] font-semibold bg-(--gold)/10 text-accent-ink border border-(--gold)/30 px-2 py-0.5">
               <Star size={9} className="fill-(--gold)" />
               Predeterminada
             </span>
@@ -92,7 +92,7 @@ function AddressCard({
         <button
           type="button"
           onClick={onSetDefault}
-          className="self-start text-[11px] font-semibold text-muted hover:text-(--gold) transition-colors duration-150 underline underline-offset-2"
+          className="self-start text-[11px] font-semibold text-muted hover:text-accent-ink transition-colors duration-150 underline underline-offset-2"
         >
           Establecer como predeterminada
         </button>
@@ -164,7 +164,7 @@ export function DireccionesContent({
       {/* Header */}
       <div className="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-          <p className="text-[10px] tracking-[3px] uppercase text-(--gold) mb-1">Cuenta</p>
+          <p className="text-[10px] tracking-[3px] uppercase text-accent-ink mb-1">Cuenta</p>
           <h1 className="font-display font-black uppercase text-[28px] sm:text-[34px] tracking-tight leading-none">
             Mis Direcciones
           </h1>

@@ -51,7 +51,7 @@ function OrderRow({ order }: { order: OrderListItem }) {
       >
         <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-[1fr_auto_auto_auto] gap-x-6 gap-y-1 items-center">
           {/* Código */}
-          <p className="font-display font-black text-[14px] uppercase tracking-[1.5px] text-(--gold)">
+          <p className="font-display font-black text-[14px] uppercase tracking-[1.5px] text-accent-ink">
             {order.code}
           </p>
 
@@ -107,7 +107,7 @@ function OrderRow({ order }: { order: OrderListItem }) {
 
           {/* Items */}
           <div>
-            <p className="text-[10px] tracking-[2px] uppercase text-(--gold) mb-2">
+            <p className="text-[10px] tracking-[2px] uppercase text-accent-ink mb-2">
               Productos ({order._count.items})
             </p>
             <p className="text-[13px] text-muted">
@@ -135,7 +135,7 @@ function OrderRow({ order }: { order: OrderListItem }) {
             </div>
             <div className="flex justify-between font-display font-black uppercase text-[15px] pt-1 border-t border-(--bd)">
               <span>Total</span>
-              <span className="text-(--gold)">{formatCurrency(Number(order.total))}</span>
+              <span className="text-accent-ink">{formatCurrency(Number(order.total))}</span>
             </div>
           </div>
         </div>
@@ -154,7 +154,7 @@ export function OrdersContent({ ordersPromise }: { ordersPromise: Promise<OrderL
     <div className="max-w-275 mx-auto px-4 sm:px-6 pt-[calc(var(--nh)+48px)] pb-16">
       {/* Header */}
       <div className="mb-8">
-        <p className="text-[10px] tracking-[3px] uppercase text-(--gold) mb-1">Cuenta</p>
+        <p className="text-[10px] tracking-[3px] uppercase text-accent-ink mb-1">Cuenta</p>
         <h1 className="font-display font-black uppercase text-[28px] sm:text-[34px] tracking-tight leading-none">
           Mis Pedidos
         </h1>

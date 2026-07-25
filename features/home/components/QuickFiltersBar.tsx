@@ -25,7 +25,7 @@ export function QuickFiltersBar({ categories }: QuickFiltersBarProps) {
             key={label}
             href={href}
             className={`shrink-0 px-4 sm:px-5 py-3.5 text-[12px] font-display font-bold tracking-[1.5px] uppercase no-underline transition-colors duration-200 hover:bg-(--sub) ${
-              accent ? 'text-(--gold) hover:text-(--gl)' : 'text-text hover:text-(--gold)'
+              accent ? 'text-accent-ink hover:text-(--gl)' : 'text-text hover:text-accent-ink'
             }`}
           >
             {label}

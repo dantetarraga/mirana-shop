@@ -14,7 +14,14 @@ interface BannerImageProps {
   className?: string
   sizes?: string
   priority?: boolean
+  /** Ratio pedido a next/image. El hero a pantalla completa es más alto que
+   *  la tarjeta del grid, así que necesita sus propias medidas. */
+  desktopSize?: { width: number; height: number }
+  mobileSize?: { width: number; height: number }
 }
+
+const DEFAULT_DESKTOP = { width: 1920, height: 600 }
+const DEFAULT_MOBILE = { width: 900, height: 1100 }
 
 /**
  * Art direction real para banners: dos archivos distintos según viewport vía
@@ -28,14 +35,15 @@ export function BannerImage({
   className,
   sizes = '100vw',
   priority = false,
+  desktopSize = DEFAULT_DESKTOP,
+  mobileSize = DEFAULT_MOBILE,
 }: BannerImageProps) {
   const common = { alt, sizes, priority, quality: 80 }
 
   const { props: desktop } = getImageProps({
     ...common,
     src: desktopUrl,
-    width: 1920,
-    height: 600,
+    ...desktopSize,
   })
 
   if (!mobileUrl) {
@@ -46,8 +54,7 @@ export function BannerImage({
   const { props: mobile } = getImageProps({
     ...common,
     src: mobileUrl,
-    width: 900,
-    height: 1100,
+    ...mobileSize,
   })
 
   return (

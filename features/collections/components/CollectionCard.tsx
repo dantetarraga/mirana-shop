@@ -55,7 +55,7 @@ export function CollectionCard({ collection: c, noAnimation = false }: Collectio
             que los botones queden alineados entre cards del mismo grid. */}
         <div className="flex items-baseline gap-1.5 min-w-0 mb-3">
           <span className="text-[11px] text-muted uppercase tracking-[1px]">Desde</span>
-          <span className="font-display text-[19px] sm:text-[26px] font-black text-(--gold) whitespace-nowrap">
+          <span className="font-display text-[19px] sm:text-[26px] font-black text-accent-ink whitespace-nowrap">
             S/ {(c.fromPrice ?? 0).toFixed(2)}
           </span>
         </div>

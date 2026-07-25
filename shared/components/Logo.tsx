@@ -16,7 +16,7 @@ export function Logo({ size = 'md' }: LogoProps) {
       href="/"
       className={`font-display font-black ${SIZE_CLASS[size]} tracking-[5px] text-text no-underline uppercase transition-opacity duration-200 hover:opacity-80`}
     >
-      MIRA<span className="text-(--gold)">NA</span>
+      MIRA<span className="text-accent-ink">NA</span>
     </Link>
   )
 }

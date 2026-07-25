@@ -32,7 +32,7 @@ export function AdminDrawer({ title, sub, onClose, children }: AdminDrawerProps)
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-200 bg-black/70 backdrop-blur-sm flex justify-end"
+      className="fixed inset-0 z-200 bg-scrim backdrop-blur-sm flex justify-end"
     >
       <div
         ref={panelRef}

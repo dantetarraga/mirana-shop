@@ -544,10 +544,20 @@ model Promotion {
 // Marketing
 // ---------------------------------------------------------------------------
 
+/// Cómo se muestra el banner en el inicio.
+/// CARD       = tarjeta dentro del grid/carrusel (comportamiento histórico).
+/// FULLSCREEN = hero a ancho completo; varios se cruzan con fundido de opacidad.
+enum BannerVariant {
+  CARD
+  FULLSCREEN
+}
+
 model Banner {
-  id             String    @id @default(cuid())
+  id             String        @id @default(cuid())
   title          String
   subtitle       String?
+  // Default CARD: los banners existentes conservan su comportamiento.
+  variant        BannerVariant @default(CARD)
   // imageUrl = versión desktop (obligatoria). imageUrlMobile = versión
   // mobile/tablet (opcional); si está vacía se reutiliza la de desktop.
   imageUrl       String

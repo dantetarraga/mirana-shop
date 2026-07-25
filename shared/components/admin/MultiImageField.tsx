@@ -187,7 +187,7 @@ export function MultiImageField({
       >
         {uploading ? (
           <>
-            <Loader2 size={18} className="animate-spin text-(--gold)" />
+            <Loader2 size={18} className="animate-spin text-accent-ink" />
             <div className="text-[13px] text-text">
               Subiendo {progress.done + 1} de {progress.total}…
             </div>
@@ -298,7 +298,7 @@ export function MultiImageField({
                   )}
 
                   <span
-                    className="absolute top-1 right-1 p-1 text-white/70 cursor-grab"
+                    className="absolute top-1 right-1 p-1 text-on-media/70 cursor-grab"
                     title="Arrastra para reordenar"
                     aria-hidden
                   >

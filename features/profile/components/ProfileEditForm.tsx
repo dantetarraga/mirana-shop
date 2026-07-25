@@ -44,7 +44,7 @@ export function ProfileEditForm({
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <label className="block text-[10px] tracking-[2px] uppercase text-(--gold) mb-1.5">
+        <label className="block text-[10px] tracking-[2px] uppercase text-accent-ink mb-1.5">
           Teléfono / Celular
         </label>
         <input
@@ -57,7 +57,7 @@ export function ProfileEditForm({
       </div>
 
       <div>
-        <label className="block text-[10px] tracking-[2px] uppercase text-(--gold) mb-2">
+        <label className="block text-[10px] tracking-[2px] uppercase text-accent-ink mb-2">
           ¿Tienes hijos?
         </label>
         <div className="flex gap-3">
@@ -83,7 +83,7 @@ export function ProfileEditForm({
 
       {hasKids && (
         <div>
-          <label className="block text-[10px] tracking-[2px] uppercase text-(--gold) mb-1.5">
+          <label className="block text-[10px] tracking-[2px] uppercase text-accent-ink mb-1.5">
             ¿Cuántos hijos tienes?
           </label>
           <input

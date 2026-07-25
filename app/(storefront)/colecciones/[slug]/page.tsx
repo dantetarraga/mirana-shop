@@ -141,7 +141,7 @@ export default async function CollectionDetailPage({ params }: PageProps) {
             {collection.fromPrice !== null && (
               <div className="flex items-baseline gap-2.5 flex-wrap">
                 <span className="text-[12px] text-muted uppercase tracking-[1.5px]">Desde</span>
-                <span className="font-display text-[40px] sm:text-[56px] font-black text-(--gold) leading-none">
+                <span className="font-display text-[40px] sm:text-[56px] font-black text-accent-ink leading-none">
                   S/ {collection.fromPrice.toFixed(2)}
                 </span>
               </div>
