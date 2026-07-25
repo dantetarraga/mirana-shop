@@ -8,7 +8,7 @@ import './globals.css'
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 const SITE_TITLE = 'MIRANA — Juguetes & Figuras'
 const SITE_DESCRIPTION =
-  'Figuras de colección, preventas exclusivas e importaciones directas. Tu tienda premium de coleccionables.'
+  'Mirana Shop: juguetes, figuras de colección y modelos a escala 100% originales, con importación directa y calidad garantizada en Arequipa.'
 
 const barlowCondensed = Barlow_Condensed({
   variable: '--font-barlow-condensed',

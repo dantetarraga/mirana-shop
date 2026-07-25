@@ -37,8 +37,9 @@ export function Footer() {
           MIRA<span className="text-(--gold)">NA</span>
         </div>
         <p className="text-[13px] text-muted leading-[1.75] max-w-sm md:max-w-55">
-          Tu tienda premium de figuras de colección, sets LEGO y modelos a escala. Importación
-          directa, calidad garantizada.
+          Mirana Shop es tu tienda en Arequipa de juguetes, figuras de colección y modelos a escala
+          100% originales. Importación directa, calidad garantizada y novedades para todos los
+          fanáticos del coleccionismo.
         </p>
       </div>
 

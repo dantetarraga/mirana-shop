@@ -4,7 +4,8 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'MIRANA — Juguetes & Figuras',
     short_name: 'MIRANA',
-    description: 'Figuras de colección, preventas exclusivas e importaciones directas.',
+    description:
+      'Mirana Shop: juguetes, figuras de colección y modelos a escala 100% originales, con importación directa y calidad garantizada en Arequipa.',
     start_url: '/',
     display: 'standalone',
     background_color: '#0b1830',
