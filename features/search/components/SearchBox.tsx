@@ -91,8 +91,16 @@ export function SearchBox() {
         <Search size={17} className="shrink-0 text-muted" aria-hidden />
         <input
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value)
+            // Escribir siempre reabre. Enter y Escape cierran el desplegable
+            // pero dejan el foco dentro del input, así que onFocus ya no
+            // vuelve a dispararse: sin esto, el segundo término que buscabas
+            // nunca mostraba sugerencias hasta salir y volver a entrar.
+            setOpen(true)
+          }}
           onFocus={() => setOpen(true)}
+          onClick={() => setOpen(true)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') goToResults(query)
           }}

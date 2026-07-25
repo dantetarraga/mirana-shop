@@ -65,9 +65,12 @@ export function Navbar() {
             className="h-8 sm:h-9 md:h-10 w-auto"
           />
         </Link>
+        {/* Sin padding inferior: el `items-center` del nav centra la caja del
+            enlace, así que cualquier relleno abajo empuja el texto hacia arriba
+            y lo desalinea del logo y de los botones de la derecha. */}
         <Link
           href="/catalogo"
-          className="hidden sm:inline-block text-[12px] font-semibold tracking-[1px] no-underline uppercase transition-[color] duration-200 pb-1 border-b border-transparent text-muted hover:text-text"
+          className="hidden sm:block text-[12px] font-semibold tracking-[1px] no-underline uppercase transition-[color] duration-200 text-muted hover:text-text"
         >
           Catálogo
         </Link>
