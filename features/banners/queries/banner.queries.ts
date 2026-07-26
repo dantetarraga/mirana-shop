@@ -8,6 +8,7 @@ export const BANNER_SELECT = {
   subtitle: true,
   imageUrl: true,
   imageUrlMobile: true,
+  imageUrlFull: true,
   ctaLabel: true,
   ctaHref: true,
   position: true,

@@ -28,6 +28,9 @@ export const bannerDbSchema = z.object({
   imageUrl: imageUrlSchema('URL de imagen requerida'),
   // Imagen alternativa para mobile/tablet. Vacía = se reutiliza la de desktop.
   imageUrlMobile: z.union([imageUrlSchema(), z.literal('')]).optional().default(''),
+  // Imagen para el hero a pantalla completa (bannerLayout = FULLSCREEN).
+  // Vacía = se reutiliza la de desktop.
+  imageUrlFull: z.union([imageUrlSchema(), z.literal('')]).optional().default(''),
   position: z.number().int().min(0).default(0),
   active: z.boolean().default(false),
 })

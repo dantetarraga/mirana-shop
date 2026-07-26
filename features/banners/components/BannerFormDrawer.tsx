@@ -23,6 +23,7 @@ const EMPTY_FORM = {
   ctaHref: '',
   imageUrl: '',
   imageUrlMobile: '',
+  imageUrlFull: '',
   position: 0,
   active: false,
 } satisfies BannerFormValues
@@ -66,6 +67,7 @@ export function BannerFormDrawer({
       ctaHref: b.ctaHref ?? '',
       imageUrl: b.imageUrl,
       imageUrlMobile: b.imageUrlMobile ?? '',
+      imageUrlFull: b.imageUrlFull ?? '',
       position: b.position,
       active: b.active,
     }),
@@ -90,15 +92,15 @@ export function BannerFormDrawer({
           />
         </FormField>
 
-        <FormField label="Imagen desktop" error={errors.imageUrl?.message}>
+        <FormField label="Imagen desktop (tarjeta)" error={errors.imageUrl?.message}>
           <ImageUploadField
             value={watch('imageUrl') ?? ''}
             onChange={(url) => setValue('imageUrl', url, { shouldValidate: true })}
             folder="banners"
           />
           <p className="text-[11px] text-muted mt-1.5">
-            Formato horizontal — se usa desde 1024px de ancho. Recomendado 1920×600 para
-            tarjetas y 1920×900 si la tienda muestra los banners a pantalla completa.
+            Obligatoria — formato horizontal, se usa desde 1024px de ancho cuando la tienda
+            muestra los banners como tarjetas. Recomendado 1920×600.
           </p>
         </FormField>
 
@@ -111,6 +113,19 @@ export function BannerFormDrawer({
           <p className="text-[11px] text-muted mt-1.5">
             Opcional — formato vertical/cuadrado para pantallas &lt; 1024px. Si se deja vacío se
             usa la de desktop. Recomendado 900×1100 (1080×1350 a pantalla completa).
+          </p>
+        </FormField>
+
+        <FormField label="Imagen pantalla completa" error={errors.imageUrlFull?.message}>
+          <ImageUploadField
+            value={watch('imageUrlFull') ?? ''}
+            onChange={(url) => setValue('imageUrlFull', url, { shouldValidate: true })}
+            folder="banners"
+          />
+          <p className="text-[11px] text-muted mt-1.5">
+            Opcional — solo se usa si en Configuración los banners están a pantalla completa.
+            Más alta que la de tarjeta: recomendado 1920×900. Si se deja vacía se usa la de
+            desktop.
           </p>
         </FormField>
 

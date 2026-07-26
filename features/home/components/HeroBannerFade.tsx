@@ -86,7 +86,9 @@ export function HeroBannerFade({ banners }: HeroBannerFadeProps) {
             style={{ transitionDuration: `${FADE_MS}ms` }}
           >
             <BannerImage
-              desktopUrl={banner.imageUrl}
+              // La imagen dedicada al hero es opcional: sin ella se cae a la
+              // de tarjeta, que es más baja pero encuadra igual con object-cover.
+              desktopUrl={banner.imageUrlFull || banner.imageUrl}
               mobileUrl={banner.imageUrlMobile}
               alt={banner.title}
               sizes="100vw"

@@ -548,10 +548,14 @@ model Banner {
   id             String        @id @default(cuid())
   title          String
   subtitle       String?
-  // imageUrl = versión desktop (obligatoria). imageUrlMobile = versión
-  // mobile/tablet (opcional); si está vacía se reutiliza la de desktop.
+  // Tres variantes de imagen. imageUrl = desktop (obligatoria, formato
+  // tarjeta). imageUrlMobile = mobile/tablet (opcional). imageUrlFull =
+  // desktop cuando la tienda muestra los banners a pantalla completa
+  // (StoreSettings.bannerLayout = FULLSCREEN). Las opcionales, si están
+  // vacías, se degradan a imageUrl.
   imageUrl       String
   imageUrlMobile String?
+  imageUrlFull   String?
   ctaLabel       String?
   ctaHref        String?
   position       Int       @default(0)
