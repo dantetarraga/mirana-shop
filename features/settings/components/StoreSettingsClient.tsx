@@ -84,6 +84,50 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
             Se usa en el botón flotante de WhatsApp y en el envío de comprobantes del checkout.
           </p>
 
+          <FormField label="Cómo se muestran los banners del inicio">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {(
+                [
+                  {
+                    value: 'CARD',
+                    title: 'Tarjetas',
+                    desc: 'Grid de tarjetas; a partir de 4 se convierte en carrusel.',
+                  },
+                  {
+                    value: 'FULLSCREEN',
+                    title: 'Pantalla completa',
+                    desc: 'Hero a ancho completo. Con varios banners se cruzan con un fundido.',
+                  },
+                ] as const
+              ).map((opt) => {
+                const isActive = form.bannerLayout === opt.value
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    aria-pressed={isActive}
+                    onClick={() => setForm({ ...form, bannerLayout: opt.value })}
+                    className={cn(
+                      'text-left p-3.5 border transition-colors duration-200',
+                      isActive
+                        ? 'border-(--gold) bg-(--sub)'
+                        : 'border-(--bd) hover:border-(--bdh)',
+                    )}
+                  >
+                    <span className="flex items-center gap-2 text-[14px] font-semibold">
+                      {isActive && <Check size={14} className="text-accent-ink shrink-0" />}
+                      {opt.title}
+                    </span>
+                    <span className="block text-[12px] text-muted mt-1">{opt.desc}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </FormField>
+          <p className="text-[12px] text-muted -mt-3">
+            Aplica a todos los banners activos por igual. Se gestionan en Banners.
+          </p>
+
           <FormField label="Costo de envío base (S/)">
             <input
               type="number"

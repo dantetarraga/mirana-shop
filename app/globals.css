@@ -412,6 +412,16 @@ textarea:focus-visible,
     box-shadow: var(--shadow-gold);
   }
 
+  /* success: confirmación momentánea tras una acción (ej. añadir al carrito).
+     Verde en vez del acento cyan para que el cambio se lea de un vistazo. */
+  .ui-btn--success {
+    background: var(--c-green);
+    color: #fff;
+  }
+  .ui-btn--success:hover:not(:disabled) {
+    background: var(--c-green);
+  }
+
   /* outline: borde sutil, fondo transparente */
   .ui-btn--outline {
     background: transparent;
@@ -585,13 +595,19 @@ textarea:focus-visible,
       0 0 0 1px var(--bdh);
   }
   .pcard .add-btn {
-    @apply w-full bg-gold-500 text-black border-none font-display font-extrabold
+    @apply w-full border-none font-display font-extrabold
            uppercase cursor-pointer transition-all duration-200;
     font-size: 14px;
     letter-spacing: 1.5px;
     padding: 10px;
   }
-  .pcard .add-btn:hover {
+  /* El color se excluye cuando el botón está en confirmación: esta regla tiene
+     especificidad 0,2,0 y le ganaría a .ui-btn--success (0,1,0). */
+  .pcard .add-btn:not(.ui-btn--success) {
+    @apply bg-gold-500;
+    color: var(--on-accent);
+  }
+  .pcard .add-btn:not(.ui-btn--success):hover {
     @apply bg-gold-400;
   }
 

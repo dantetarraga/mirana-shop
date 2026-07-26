@@ -1,7 +1,15 @@
 ﻿import { cn } from '@/shared/lib/utils'
 import { type ButtonHTMLAttributes, type Ref } from 'react'
 
-export type ButtonVariant = 'accent' | 'outline' | 'ghost' | 'dark' | 'tab' | 'icon'
+export type ButtonVariant =
+  | 'accent'
+  | 'outline'
+  | 'ghost'
+  | 'dark'
+  | 'tab'
+  | 'icon'
+  /** Confirmación momentánea tras una acción (ej. "Agregado al carrito") */
+  | 'success'
 export type ButtonSize = 'sm' | 'md' | 'lg'
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

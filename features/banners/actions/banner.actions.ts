@@ -36,9 +36,6 @@ export async function saveBanner(
         data: {
           title: input.title,
           subtitle: input.subtitle || undefined,
-          // Enum no nulable con default en BD: se asigna directo, sin el
-          // `|| undefined` que usan los strings opcionales.
-          variant: input.variant,
           ctaLabel: input.ctaLabel || undefined,
           ctaHref: input.ctaHref || undefined,
           imageUrl: input.imageUrl,
@@ -55,7 +52,6 @@ export async function saveBanner(
         data: {
           title: input.title,
           subtitle: input.subtitle || null,
-          variant: input.variant,
           ctaLabel: input.ctaLabel || null,
           ctaHref: input.ctaHref || null,
           imageUrl: input.imageUrl,

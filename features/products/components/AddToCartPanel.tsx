@@ -5,7 +5,8 @@ import { effectivePrice } from '@/features/checkout/lib/pricing'
 import { remainingStock, stockLimitMessage } from '@/features/products/lib/stock'
 import type { CatalogProduct } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
-import { Minus, Plus } from 'lucide-react'
+import { useJustAdded } from '@/shared/hooks'
+import { Check, Minus, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
@@ -16,6 +17,7 @@ interface Props {
 export function AddToCartPanel({ product: p }: Props) {
   const { cart, addToCart } = useCartStore()
   const [qty, setQty] = useState(1)
+  const { justAdded, trigger } = useJustAdded()
   const isOutOfStock = p.stock === 0 || p.status === 'SOLD_OUT'
   const unitPrice = effectivePrice(p)
 
@@ -58,16 +60,28 @@ export function AddToCartPanel({ product: p }: Props) {
       )}
 
       <Button
-        variant="accent"
+        variant={justAdded ? 'success' : 'accent'}
         size="lg"
         full
         disabled={isOutOfStock}
         onClick={() => {
           // El store vuelve a aplicar el tope y avisa si ya no cabe nada.
-          if (addToCart(p, qty) > 0) toast.success(`"${p.name}" agregado al carrito`)
+          if (addToCart(p, qty) > 0) {
+            toast.success(`"${p.name}" agregado al carrito`)
+            trigger()
+          }
         }}
       >
-        {isOutOfStock ? 'Sin stock' : `Agregar al carrito · S/ ${(unitPrice * qty).toFixed(2)}`}
+        {isOutOfStock ? (
+          'Sin stock'
+        ) : justAdded ? (
+          <>
+            <Check size={16} strokeWidth={3} />
+            Agregado al carrito
+          </>
+        ) : (
+          `Agregar al carrito · S/ ${(unitPrice * qty).toFixed(2)}`
+        )}
       </Button>
     </div>
   )

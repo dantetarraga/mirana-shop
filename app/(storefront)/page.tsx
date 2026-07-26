@@ -12,6 +12,7 @@ import { PreorderSection } from '@/features/home/components/PreorderSection'
 import { PromoBanner } from '@/features/home/components/PromoBanner'
 import { QuickFiltersBar } from '@/features/home/components/QuickFiltersBar'
 import { ReviewsSection } from '@/features/home/components/ReviewsSection'
+import { getBannerLayout } from '@/features/settings/queries/store-settings.queries'
 import { JsonLd } from '@/shared/components/JsonLd'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
@@ -37,30 +38,29 @@ const websiteJsonLd = {
 }
 
 export default async function HomePage() {
-  const [activeBanners, categories, brands] = await Promise.all([
+  const [activeBanners, categories, brands, bannerLayout] = await Promise.all([
     getActiveBanners(),
     getCategories({ perPage: 50 }),
     getBrands({ perPage: 50 }),
+    getBannerLayout(),
   ])
 
-  const fullscreenBanners = activeBanners.filter((b) => b.variant === 'FULLSCREEN')
-  const cardBanners = activeBanners.filter((b) => b.variant === 'CARD')
+  const isFullscreen = bannerLayout === 'FULLSCREEN'
 
   return (
     <>
       <JsonLd data={organizationJsonLd} />
       <JsonLd data={websiteJsonLd} />
 
-      {/* Header extendido: hero + filtros rápidos + marcas + banners
-          (estructura tipo Entertainment Earth). Los banners FULLSCREEN abren
-          la página pegados a la navbar; los CARD siguen en el grid/carrusel.
-          Ambos componentes devuelven null con lista vacía, así que las dos
-          variantes conviven o se usa solo una. */}
+      {/* Header extendido: filtros rápidos + marcas + banners (estructura tipo
+          Entertainment Earth). El ajuste global `bannerLayout` de /admin/settings
+          decide la forma: a pantalla completa el hero abre la página pegado a la
+          navbar; como tarjetas van en su grid/carrusel debajo de las marcas. */}
       <div className="pt-(--nh)">
-        <HeroBannerFade banners={fullscreenBanners} />
+        {isFullscreen && <HeroBannerFade banners={activeBanners} />}
         <QuickFiltersBar categories={categories} />
         <BrandsCarousel brands={brands} />
-        <HeroBannerCarousel banners={cardBanners} />
+        {!isFullscreen && <HeroBannerCarousel banners={activeBanners} />}
       </div>
 
       <PromoBanner />

@@ -17,8 +17,6 @@ export type BannerInput = z.infer<typeof bannerSchema>
 export const bannerDbSchema = z.object({
   title: z.string().min(1, 'Título requerido'),
   subtitle: z.string().optional().default(''),
-  // CARD = tarjeta en el grid/carrusel · FULLSCREEN = hero con fundido
-  variant: z.enum(['CARD', 'FULLSCREEN']).optional().default('CARD'),
   ctaLabel: z.string().optional().default(''),
   ctaHref: z
     .union([

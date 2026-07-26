@@ -7,11 +7,15 @@ import { remainingStock, stockLimitMessage } from '@/features/products/lib/stock
 import { useProductModalStore } from '@/features/products/stores/product-modal.store'
 import { getCategoryStripe, type CatalogProduct } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
+import { useJustAdded } from '@/shared/hooks'
 import { useFocusTrap } from '@/shared/hooks/useFocusTrap'
-import { ArrowRight, Minus, Plus, X } from 'lucide-react'
+import { ArrowRight, Check, Minus, Plus, X } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { toast } from 'sonner'
+
+/** El modal se cierra tras confirmar; lo justo para que la palomita se vea. */
+const CLOSE_AFTER_ADD_MS = 900
 
 export function ProductModal() {
   const { activeProduct: p, closeProductModal } = useProductModalStore()
@@ -26,7 +30,20 @@ export function ProductModal() {
 function ProductModalContent({ p, onClose }: { p: CatalogProduct; onClose: () => void }) {
   const { cart, addToCart } = useCartStore()
   const [qty, setQty] = useState(1)
+  const { justAdded, trigger } = useJustAdded(CLOSE_AFTER_ADD_MS)
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const panelRef = useFocusTrap<HTMLDivElement>(true)
+
+  // Si el modal se cierra a mano (o se cambia de producto) antes de que expire
+  // el cierre diferido, el temporizador se cancela: si no, cerraría el modal
+  // siguiente. El contenido se remonta por `key`, así que el efecto limpia el
+  // temporizador de la instancia anterior.
+  useEffect(
+    () => () => {
+      if (closeTimer.current) clearTimeout(closeTimer.current)
+    },
+    [],
+  )
   const titleId = useId()
 
   useEffect(() => {
@@ -145,7 +162,7 @@ function ProductModalContent({ p, onClose }: { p: CatalogProduct; onClose: () =>
           )}
 
           <Button
-            variant="accent"
+            variant={justAdded ? 'success' : 'accent'}
             size="lg"
             full
             disabled={isOutOfStock}
@@ -155,13 +172,23 @@ function ProductModalContent({ p, onClose }: { p: CatalogProduct; onClose: () =>
                 toast.success(
                   isPreorder ? `"${p.name}" reservado` : `"${p.name}" agregado al carrito`,
                 )
-                onClose()
+                trigger()
+                // Se retrasa el cierre para que la confirmación llegue a verse;
+                // si se cerrara al instante el botón desaparecería antes.
+                closeTimer.current = setTimeout(onClose, CLOSE_AFTER_ADD_MS)
               }
             }}
           >
-            {isOutOfStock
-              ? 'Sin stock'
-              : `${isPreorder ? 'Reservar ahora' : 'Agregar al carrito'} · S/ ${(unitPrice * qty).toFixed(2)}`}
+            {isOutOfStock ? (
+              'Sin stock'
+            ) : justAdded ? (
+              <>
+                <Check size={16} strokeWidth={3} />
+                {isPreorder ? 'Reservado' : 'Agregado al carrito'}
+              </>
+            ) : (
+              `${isPreorder ? 'Reservar ahora' : 'Agregar al carrito'} · S/ ${(unitPrice * qty).toFixed(2)}`
+            )}
           </Button>
 
           <Link

@@ -41,12 +41,6 @@ export function BannerCard({ banner }: BannerCardProps) {
       {/* Metadatos y acciones */}
       <div className="px-4.5 py-4">
         <div className="flex justify-between py-1.5 text-[13px]">
-          <span className="text-[11px] tracking-[1px] uppercase text-muted">Variante</span>
-          <span className="font-semibold">
-            {banner.variant === 'FULLSCREEN' ? 'Pantalla completa' : 'Tarjeta (grid)'}
-          </span>
-        </div>
-        <div className="flex justify-between py-1.5 text-[13px]">
           <span className="text-[11px] tracking-[1px] uppercase text-muted">Posición</span>
           <span className="font-semibold">{banner.position}</span>
         </div>

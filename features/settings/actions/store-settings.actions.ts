@@ -14,6 +14,8 @@ const storeSettingsSchema = z.object({
     .regex(/^\d*$/, 'Solo dígitos, con código de país (ej: 51987654321)')
     .max(15, 'Número demasiado largo'),
   baseShippingCost: z.number().min(0, 'Debe ser mayor o igual a 0'),
+  // Cómo se muestran todos los banners del inicio (ajuste global)
+  bannerLayout: z.enum(['CARD', 'FULLSCREEN']).optional().default('CARD'),
 })
 
 export async function saveStoreSettings(rawInput: unknown): Promise<ActionResult> {

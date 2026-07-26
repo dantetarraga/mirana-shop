@@ -6,8 +6,9 @@ import type { CatalogProduct } from '@/features/products/types/catalog.types'
 import { getCategoryLabel, getCategoryStripe } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
+import { useJustAdded } from '@/shared/hooks'
 // import { StarRating } from '@/shared/components/ui/StarRating' — oculto hasta tener reviews reales
-import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react'
+import { Check, Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState, type MouseEvent } from 'react'
@@ -27,6 +28,7 @@ export function ProductCard({
   const { openProductModal } = useProductModalStore()
   const { cart, addToCart, updateQty, removeItem } = useCartStore()
   const [confirmRemove, setConfirmRemove] = useState(false)
+  const { justAdded, trigger } = useJustAdded()
   const stripe = getCategoryStripe(p.category.slug)
   const catLabel = getCategoryLabel(p.category.slug)
   const isPreorder = p.status === 'PREORDER'
@@ -119,7 +121,7 @@ export function ProductCard({
           </div>
           */}
         </div>
-        {qtyInCart > 0 && !isOutOfStock ? (
+        {qtyInCart > 0 && !isOutOfStock && !justAdded ? (
           <div className="flex items-center border border-(--bd) w-full">
             {qtyInCart === 1 ? (
               <Button
@@ -172,7 +174,7 @@ export function ProductCard({
           </div>
         ) : (
           <Button
-            variant="accent"
+            variant={justAdded ? 'success' : 'accent'}
             size="md"
             className="add-btn w-full"
             disabled={isOutOfStock}
@@ -182,11 +184,17 @@ export function ProductCard({
                 toast.success(
                   isPreorder ? `"${p.name}" reservado` : `"${p.name}" agregado al carrito`,
                 )
+                trigger()
               }
             }}
           >
             {isOutOfStock ? (
               'Sin stock'
+            ) : justAdded ? (
+              <>
+                <Check size={15} strokeWidth={3} />
+                {isPreorder ? 'Reservado' : 'Agregado'}
+              </>
             ) : (
               <>
                 <ShoppingCart size={15} />

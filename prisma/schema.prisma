@@ -544,20 +544,10 @@ model Promotion {
 // Marketing
 // ---------------------------------------------------------------------------
 
-/// Cómo se muestra el banner en el inicio.
-/// CARD       = tarjeta dentro del grid/carrusel (comportamiento histórico).
-/// FULLSCREEN = hero a ancho completo; varios se cruzan con fundido de opacidad.
-enum BannerVariant {
-  CARD
-  FULLSCREEN
-}
-
 model Banner {
   id             String        @id @default(cuid())
   title          String
   subtitle       String?
-  // Default CARD: los banners existentes conservan su comportamiento.
-  variant        BannerVariant @default(CARD)
   // imageUrl = versión desktop (obligatoria). imageUrlMobile = versión
   // mobile/tablet (opcional); si está vacía se reutiliza la de desktop.
   imageUrl       String
@@ -611,11 +601,21 @@ model HomeCta {
 // Configuración general de la tienda — registro único con id 'store'
 // ---------------------------------------------------------------------------
 
+/// Cómo se muestran TODOS los banners del inicio. Es un ajuste global de la
+/// tienda (/admin/settings), no una propiedad de cada banner.
+/// CARD       = grid de tarjetas; a partir de 4 se vuelve carrusel.
+/// FULLSCREEN = hero a ancho completo; varios se cruzan con fundido de opacidad.
+enum BannerLayout {
+  CARD
+  FULLSCREEN
+}
+
 model StoreSettings {
-  id               String  @id
-  showOutOfStock   Boolean @default(true)
-  whatsappNumber   String  @default("")
-  baseShippingCost Decimal @default(15) @db.Decimal(10, 2)
+  id               String       @id
+  showOutOfStock   Boolean      @default(true)
+  whatsappNumber   String       @default("")
+  baseShippingCost Decimal      @default(15) @db.Decimal(10, 2)
+  bannerLayout     BannerLayout @default(CARD)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

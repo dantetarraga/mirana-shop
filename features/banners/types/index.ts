@@ -1,10 +1,7 @@
-import type { BannerVariant } from '@/generated/prisma/client'
-
 export type BannerRow = {
   id: string
   title: string
   subtitle: string | null
-  variant: BannerVariant
   imageUrl: string
   imageUrlMobile: string | null
   ctaLabel: string | null
@@ -20,7 +17,6 @@ export type BannerRow = {
 export type CreateBannerInput = {
   title: string
   subtitle?: string
-  variant?: BannerVariant
   imageUrl: string
   imageUrlMobile?: string
   ctaLabel?: string
