@@ -23,6 +23,12 @@ export interface PricingRules {
   /** Umbral de envío gratis según promoción FREE_SHIPPING activa; null = sin promo */
   freeShippingThreshold: number | null
   discountPromos: DiscountPromoRule[]
+  /**
+   * Adelanto por defecto de la preventa parcial (%). Viaja acá porque las
+   * reglas ya llegan a carrito, drawer y checkout: es donde hace falta cuando
+   * el producto no define su propio porcentaje.
+   */
+  preorderDepositPercent: number
 }
 
 export interface ComputedTotals {

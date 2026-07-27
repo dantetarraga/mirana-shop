@@ -1,6 +1,7 @@
 'use client'
 
 import { useCartStore } from '@/features/cart/stores/cart.store'
+import { depositUnitPrice, splitPreorderTotals } from '@/features/checkout/lib/preorder'
 import { computeTotals, effectivePrice, type PricingRules } from '@/features/checkout/lib/pricing'
 import { maxPurchasable } from '@/features/products/lib/stock'
 import { getCategoryStripe } from '@/features/products/types/catalog.types'
@@ -35,9 +36,15 @@ const BACKGROUND_SELECTOR = 'nav, #main, footer'
 function CartDrawerContent({ pricingRules }: CartDrawerProps) {
   const { cart, cartCount, setCartOpen, updateQty, removeItem, refreshCart } = useCartStore()
   const busy = useCartStore((s) => s.pendingWrites > 0)
-  const subtotal = cart.reduce((s, i) => s + effectivePrice(i.product) * i.qty, 0)
+  // `payableNow` es lo que se cobra hoy: en las líneas de preventa parcial solo
+  // el adelanto. Sin líneas parciales coincide con el subtotal y todo el cálculo
+  // se comporta igual que antes.
+  const { subtotal, payableNow, dueTotal } = splitPreorderTotals(
+    cart,
+    pricingRules.preorderDepositPercent,
+  )
   const { shippingFree, shippingCost, discount, discountName, total } = computeTotals(
-    subtotal,
+    payableNow,
     pricingRules,
   )
   const [pendingRemove, setPendingRemove] = useState<{ id: string; name: string } | null>(null)
@@ -140,6 +147,10 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
               const max = maxPurchasable(item.product)
               const atLimit = max !== null && item.qty >= max
               const unavailable = max === 0
+              const isPartial = item.preorderMode === 'PARTIAL'
+              const deposit = isPartial
+                ? depositUnitPrice(item.product, pricingRules.preorderDepositPercent)
+                : null
 
               return (
                 <div
@@ -166,8 +177,14 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
                       {item.product.name}
                     </div>
                     <div className="text-accent-ink font-display text-[20px] font-extrabold mt-px">
-                      {formatCurrency(effectivePrice(item.product))}
+                      {formatCurrency(deposit ?? effectivePrice(item.product))}
                     </div>
+                    {deposit !== null && (
+                      <div className="text-[11px] text-muted">
+                        <span className="text-info font-semibold">Preventa parcial</span> · de{' '}
+                        {formatCurrency(effectivePrice(item.product))}
+                      </div>
+                    )}
                     {/* Un producto puede agotarse mientras está en el carrito. */}
                     {unavailable && (
                       <div className="text-[11px] text-danger font-semibold mt-0.5">
@@ -239,9 +256,17 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
                 la vista ni con el desglose de /carrito. */}
             <div className="flex flex-col gap-2 mb-4 text-[13px]">
               <div className="flex justify-between items-baseline">
-                <span className="text-muted">Subtotal</span>
-                <span className="font-semibold">{formatCurrency(subtotal)}</span>
+                <span className="text-muted">
+                  {dueTotal > 0 ? 'Subtotal a pagar hoy' : 'Subtotal'}
+                </span>
+                <span className="font-semibold">{formatCurrency(payableNow)}</span>
               </div>
+              {dueTotal > 0 && (
+                <div className="flex justify-between items-baseline text-[12px] text-muted">
+                  <span>Valor total del pedido</span>
+                  <span>{formatCurrency(subtotal)}</span>
+                </div>
+              )}
               {discount > 0 && (
                 <div className="flex justify-between items-baseline">
                   <span className="text-muted">
@@ -259,8 +284,10 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
                 )}
               </div>
             </div>
-            <div className="flex justify-between items-baseline mb-5 border-t border-(--bd) pt-3.5">
-              <span className="text-[12px] uppercase tracking-[1px] text-muted">Total</span>
+            <div className="flex justify-between items-baseline mb-1 border-t border-(--bd) pt-3.5">
+              <span className="text-[12px] uppercase tracking-[1px] text-muted">
+                {dueTotal > 0 ? 'Pagas hoy' : 'Total'}
+              </span>
               <span
                 className="font-display text-[38px] font-black text-accent-ink"
                 aria-live="polite"
@@ -268,6 +295,13 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
                 {formatCurrency(total)}
               </span>
             </div>
+            {dueTotal > 0 && (
+              <div className="flex justify-between items-baseline mb-4 text-[12px]">
+                <span className="text-muted">Saldo pendiente</span>
+                <span className="text-info font-semibold">{formatCurrency(dueTotal)}</span>
+              </div>
+            )}
+            <div className="mb-5" />
             {/* Link con estilo de botón — antes era <Button><Link/></Button>,
                 que genera un <a> dentro de un <button> (HTML inválido, doble tab). */}
             <Link

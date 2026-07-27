@@ -12,6 +12,7 @@ import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
 import { useAutoSlug, useFormEntity } from '@/shared/hooks/admin'
 import { cls } from '@/shared/lib/admin/admin-classes'
+import { depositUnitPrice } from '@/features/checkout/lib/preorder'
 import { productDbSchema } from '@/features/products/schemas/product.schema'
 import { toRichHtml } from '@/shared/lib/rich-text'
 import { cn } from '@/shared/lib/utils'
@@ -40,6 +41,16 @@ const EMPTY_FORM: ProductFormValues = {
   brandId: '',
   status: 'AVAILABLE',
   featured: false,
+  allowPartialPreorder: false,
+  preorderDepositPercent: null,
+  estimatedArrival: null,
+}
+
+/** `<input type="date">` espera yyyy-MM-dd; un ISO completo lo deja vacío. */
+function toDateInput(d: Date | string | null | undefined): string {
+  if (!d) return ''
+  const date = d instanceof Date ? d : new Date(d)
+  return isNaN(date.getTime()) ? '' : date.toISOString().slice(0, 10)
 }
 
 interface ProductCrudDrawerProps {
@@ -48,6 +59,8 @@ interface ProductCrudDrawerProps {
   categories: CategoryRow[]
   brands: BrandRow[]
   collections: CollectionRow[]
+  /** % de adelanto por defecto de la tienda — se usa como placeholder y para la vista previa */
+  defaultDepositPercent: number
   onClose: () => void
   /** collectionIds = IDs seleccionados en el multi-select */
   onSubmit: (
@@ -64,6 +77,7 @@ export function ProductCrudDrawer({
   categories,
   brands,
   collections,
+  defaultDepositPercent,
   onClose,
   onSubmit,
   isPending,
@@ -110,6 +124,9 @@ export function ProductCrudDrawer({
       brandId: p.brand.id,
       status: p.status,
       featured: p.featured,
+      allowPartialPreorder: p.allowPartialPreorder,
+      preorderDepositPercent: p.preorderDepositPercent,
+      estimatedArrival: toDateInput(p.estimatedArrival),
     }),
   })
 
@@ -133,6 +150,30 @@ export function ProductCrudDrawer({
     typeof watchedSalePrice === 'number' && watchedPrice > 0 && watchedSalePrice < watchedPrice
       ? Math.round(((watchedPrice - watchedSalePrice) / watchedPrice) * 100)
       : null
+
+  // Vista previa del adelanto con la misma fórmula que verá el cliente.
+  const watchedDepositPct = watch('preorderDepositPercent')
+  const depositPreview = (() => {
+    if (!watch('allowPartialPreorder') || !(watchedPrice > 0)) return null
+    const unit = depositUnitPrice(
+      {
+        price: watchedPrice,
+        salePrice: typeof watchedSalePrice === 'number' ? watchedSalePrice : null,
+        status: 'PREORDER',
+        allowPartialPreorder: true,
+        preorderDepositPercent:
+          typeof watchedDepositPct === 'number' && !isNaN(watchedDepositPct)
+            ? watchedDepositPct
+            : null,
+      },
+      defaultDepositPercent,
+    )
+    const effective =
+      typeof watchedSalePrice === 'number' && watchedSalePrice < watchedPrice
+        ? watchedSalePrice
+        : watchedPrice
+    return { deposit: unit, balance: Math.round((effective - unit) * 100) / 100 }
+  })()
 
   const handleFormSubmit = (data: ProductFormValues) => {
     // Filtra imágenes con URL vacía antes de enviar
@@ -304,6 +345,59 @@ export function ProductCrudDrawer({
             />
           </FormField>
         </div>
+
+        {/* ── Preventa — solo tiene sentido con estado Preventa, así que el
+             bloque aparece únicamente en ese caso (el schema además lo valida). ── */}
+        {watch('status') === 'PREORDER' && (
+          <div className="border border-(--bd) p-3.5 flex flex-col gap-3.5">
+            <div className={cls.label}>Preventa</div>
+
+            <FormField label="Entrega estimada" error={errors.estimatedArrival?.message}>
+              <input type="date" className={cls.input} {...register('estimatedArrival')} />
+            </FormField>
+
+            <FormField label="Preventa parcial" error={errors.allowPartialPreorder?.message}>
+              <FilterMultiSelect
+                singleSelect
+                label="Preventa parcial"
+                className="w-full"
+                options={[
+                  { label: 'No', value: 'false' },
+                  { label: 'Sí — con adelanto', value: 'true' },
+                ]}
+                selected={[String(watch('allowPartialPreorder') ?? false)]}
+                onToggle={(val) =>
+                  setValue('allowPartialPreorder', val === 'true', { shouldValidate: true })
+                }
+              />
+            </FormField>
+
+            {watch('allowPartialPreorder') && (
+              <FormField
+                label={`Adelanto % (vacío = ${defaultDepositPercent}% global)`}
+                error={errors.preorderDepositPercent?.message}
+              >
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  step={1}
+                  placeholder={String(defaultDepositPercent)}
+                  className={cls.input}
+                  {...register('preorderDepositPercent', { valueAsNumber: true })}
+                />
+                {depositPreview !== null && (
+                  <p className="text-[11px] text-muted mt-1.5">
+                    El cliente paga <span className="text-accent-ink font-semibold">
+                      S/ {depositPreview.deposit.toFixed(2)}
+                    </span>{' '}
+                    ahora y S/ {depositPreview.balance.toFixed(2)} después.
+                  </p>
+                )}
+              </FormField>
+            )}
+          </div>
+        )}
 
         {/* ── Descripción — editor enriquecido (mismo HTML que ve la ficha) ── */}
         <FormField label="Descripción" error={errors.description?.message}>

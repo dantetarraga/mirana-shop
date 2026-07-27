@@ -1,6 +1,6 @@
 'use client'
 
-import { updateOrderStatus } from '@/features/orders/actions/order.actions'
+import { setOrderBalancePaid, updateOrderStatus } from '@/features/orders/actions/order.actions'
 import {
   OrderDetailDrawer,
   type SerializedOrder,
@@ -57,6 +57,15 @@ export function OrdersClient({ orders }: OrdersClientProps) {
     })
   }
 
+  const handleBalanceChange = (orderId: string, paid: boolean) => {
+    run(() => setOrderBalancePaid(orderId, paid), {
+      successMsg: paid ? 'Saldo marcado como cobrado' : 'Saldo marcado como pendiente',
+      onSuccess: (data) =>
+        setDetail((d) => (d?.id === orderId ? { ...d, duePaidAt: data.duePaidAt } : d)),
+      refresh: true,
+    })
+  }
+
   const columns = useMemo<Column<SerializedOrder>[]>(
     () => [
       { header: 'Pedido', className: cls.monoGold, render: (o) => o.code },
@@ -74,7 +83,22 @@ export function OrdersClient({ orders }: OrdersClientProps) {
       },
       { header: 'Artículos', className: cls.val, render: (o) => o._count.items },
       { header: 'Fecha', className: 'text-[13px] text-muted', render: (o) => fmtDate(o.createdAt) },
-      { header: 'Total', className: cls.valGold, render: (o) => `S/ ${fmt(o.total)}` },
+      {
+        header: 'Total',
+        className: cls.valGold,
+        // Con preventa parcial, `total` es solo el adelanto: se marca el saldo
+        // abierto para que no parezca un pedido cobrado por menos de lo que vale.
+        render: (o) => (
+          <span className="whitespace-nowrap">
+            S/ {fmt(o.total)}
+            {o.dueTotal > 0 && !o.duePaidAt && (
+              <span className="ml-1.5 text-[10px] text-info font-semibold">
+                +S/ {fmt(o.dueTotal)} pend.
+              </span>
+            )}
+          </span>
+        ),
+      },
       {
         header: 'Estado',
         render: (o) => {
@@ -103,6 +127,7 @@ export function OrdersClient({ orders }: OrdersClientProps) {
           order={detail}
           onClose={() => setDetail(null)}
           onStatusChange={handleStatusChange}
+          onBalanceChange={handleBalanceChange}
           isPending={isPending}
         />
       )}

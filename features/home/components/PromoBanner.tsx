@@ -2,7 +2,7 @@
   const items = [
     'Envío gratis en pedidos +$75',
     'Figuras exclusivas de importación',
-    'Preventas con adelanto del 50%',
+    'Preventas con adelanto',
     'Más de 500 productos',
     'Coordina tu pago por WhatsApp',
     'Devoluciones en 30 días',

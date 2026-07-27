@@ -34,11 +34,13 @@ export async function saveBanner(
       const updated = await db.banner.update({
         where: { id },
         data: {
-          title: input.title,
-          subtitle: input.subtitle || undefined,
-          ctaLabel: input.ctaLabel || undefined,
-          ctaHref: input.ctaHref || undefined,
-          imageUrl: input.imageUrl,
+          title: input.title || null,
+          // `|| null` y no `|| undefined`: con undefined Prisma deja el valor
+          // anterior, así que vaciar el campo en el formulario no lo borraba.
+          subtitle: input.subtitle || null,
+          ctaLabel: input.ctaLabel || null,
+          ctaHref: input.ctaHref || null,
+          imageUrl: input.imageUrl || null,
           imageUrlMobile: input.imageUrlMobile || null,
           imageUrlFull: input.imageUrlFull || null,
           position: input.position,
@@ -51,11 +53,11 @@ export async function saveBanner(
     } else {
       const created = await db.banner.create({
         data: {
-          title: input.title,
+          title: input.title || null,
           subtitle: input.subtitle || null,
           ctaLabel: input.ctaLabel || null,
           ctaHref: input.ctaHref || null,
-          imageUrl: input.imageUrl,
+          imageUrl: input.imageUrl || null,
           imageUrlMobile: input.imageUrlMobile || null,
           imageUrlFull: input.imageUrlFull || null,
           position: input.position ?? 0,

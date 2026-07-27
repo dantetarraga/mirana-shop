@@ -42,7 +42,9 @@ export async function updateOrderStatus(
         where: { id: orderId },
         select: {
           status: true,
-          items: { select: { productId: true, quantity: true } },
+          // `isPreorder` decide si el stock a liberar/confirmar está en
+          // `preorderedStock` o en `reservedStock` (ver inventory/lib/stock.ts).
+          items: { select: { productId: true, quantity: true, isPreorder: true } },
         },
       })
       if (!current) {
@@ -59,6 +61,7 @@ export async function updateOrderStatus(
             productId: item.productId,
             quantity: item.quantity,
             orderId,
+            isPreorder: item.isPreorder,
           })
         }
       }
@@ -69,6 +72,7 @@ export async function updateOrderStatus(
             productId: item.productId,
             quantity: item.quantity,
             orderId,
+            isPreorder: item.isPreorder,
           })
         }
       }
@@ -91,6 +95,50 @@ export async function updateOrderStatus(
     return { success: true, data: { id: updated.id, status: updated.status } }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Error al actualizar estado del pedido'
+    return { success: false, error: message, code: 500 }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// setOrderBalancePaid — saldo de una preventa parcial
+//
+// El cobro del saldo es manual: el cliente transfiere y el admin lo marca acá.
+// No se crea un segundo `Payment` porque `Payment.orderId` es @unique — ese
+// registro representa el adelanto. El saldo vive en las columnas de Order.
+// ---------------------------------------------------------------------------
+
+export async function setOrderBalancePaid(
+  orderId: string,
+  paid: boolean,
+): Promise<ActionResult<{ id: string; duePaidAt: Date | null }>> {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
+  if (!orderId) return { success: false, error: 'ID de pedido requerido', code: 400 }
+
+  try {
+    const order = await db.order.findUnique({
+      where: { id: orderId },
+      select: { dueTotal: true },
+    })
+    if (!order) return { success: false, error: 'Pedido no encontrado', code: 404 }
+    if (Number(order.dueTotal) <= 0) {
+      return { success: false, error: 'Este pedido no tiene saldo pendiente', code: 400 }
+    }
+
+    const updated = await db.order.update({
+      where: { id: orderId },
+      data: { duePaidAt: paid ? new Date() : null },
+      select: { id: true, duePaidAt: true },
+    })
+
+    revalidatePath('/admin/orders')
+    revalidatePath('/admin/dashboard')
+    revalidatePath('/cuenta/pedidos')
+
+    return { success: true, data: updated }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Error al actualizar el saldo'
     return { success: false, error: message, code: 500 }
   }
 }

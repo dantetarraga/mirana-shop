@@ -15,7 +15,10 @@ export type BannerInput = z.infer<typeof bannerSchema>
 // ---------------------------------------------------------------------------
 
 export const bannerDbSchema = z.object({
-  title: z.string().min(1, 'Título requerido'),
+  // Título e imágenes son opcionales: se admite un banner solo-imagen y uno
+  // cargado a medias. La tienda omite los que no tengan ninguna imagen (ver
+  // getActiveBanners), así que un borrador nunca llega a mostrarse roto.
+  title: z.string().optional().default(''),
   subtitle: z.string().optional().default(''),
   ctaLabel: z.string().optional().default(''),
   ctaHref: z
@@ -25,7 +28,7 @@ export const bannerDbSchema = z.object({
       z.literal(''),
     ])
     .optional(),
-  imageUrl: imageUrlSchema('URL de imagen requerida'),
+  imageUrl: z.union([imageUrlSchema(), z.literal('')]).optional().default(''),
   // Imagen alternativa para mobile/tablet. Vacía = se reutiliza la de desktop.
   imageUrlMobile: z.union([imageUrlSchema(), z.literal('')]).optional().default(''),
   // Imagen para el hero a pantalla completa (bannerLayout = FULLSCREEN).

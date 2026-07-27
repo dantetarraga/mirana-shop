@@ -4,6 +4,7 @@ import { auth } from '@/auth'
 import { getCart } from '@/features/cart/queries/cart.queries'
 import { getOrCreateCartId, mergeAnonymousCartIntoUser } from '@/features/cart/lib/cart-resolve'
 import type { CartLine } from '@/features/cart/types'
+import { canPartialPreorder, type PreorderMode } from '@/features/checkout/lib/preorder'
 import { maxPurchasable } from '@/features/products/lib/stock'
 import { db } from '@/shared/lib/db'
 
@@ -25,15 +26,36 @@ async function maxQtyFor(productId: string): Promise<number | null> {
   })
 }
 
+/**
+ * Modo con el que realmente se guarda la línea. El cliente puede pedir
+ * 'PARTIAL' para un producto que no lo admite (payload manipulado, o el admin
+ * apagó la preventa parcial mientras el producto estaba en el carrito): en ese
+ * caso se guarda 'FULL' y se cobra el 100%.
+ */
+async function resolveMode(productId: string, requested: PreorderMode): Promise<PreorderMode> {
+  if (requested !== 'PARTIAL') return 'FULL'
+
+  const product = await db.product.findUnique({
+    where: { id: productId },
+    select: { status: true, allowPartialPreorder: true },
+  })
+  return product && canPartialPreorder(product) ? 'PARTIAL' : 'FULL'
+}
+
 export async function getCartAction(): Promise<CartLine[]> {
   return getCart()
 }
 
-export async function addCartItemAction(productId: string, qty: number): Promise<CartLine[]> {
+export async function addCartItemAction(
+  productId: string,
+  qty: number,
+  preorderMode: PreorderMode = 'FULL',
+): Promise<CartLine[]> {
   const cartId = await getOrCreateCartId()
-  const [existing, max] = await Promise.all([
+  const [existing, max, mode] = await Promise.all([
     db.cartItem.findUnique({ where: { cartId_productId: { cartId, productId } } }),
     maxQtyFor(productId),
+    resolveMode(productId, preorderMode),
   ])
 
   const target = (existing?.quantity ?? 0) + Math.max(0, qty)
@@ -42,11 +64,26 @@ export async function addCartItemAction(productId: string, qty: number): Promise
   const quantity = max === null ? target : Math.min(target, max)
   if (quantity <= 0) return getCart()
 
+  // La clave única es (cartId, productId): un producto tiene un solo modo por
+  // carrito, así que agregarlo con otro modo reemplaza el anterior en vez de
+  // abrir una segunda línea.
   await db.cartItem.upsert({
     where: { cartId_productId: { cartId, productId } },
-    update: { quantity },
-    create: { cartId, productId, quantity },
+    update: { quantity, preorderMode: mode },
+    create: { cartId, productId, quantity, preorderMode: mode },
   })
+  return getCart()
+}
+
+/** Cambia solo la forma de pago de una línea ya existente. */
+export async function setCartItemModeAction(
+  productId: string,
+  preorderMode: PreorderMode,
+): Promise<CartLine[]> {
+  const cartId = await getOrCreateCartId()
+  const mode = await resolveMode(productId, preorderMode)
+
+  await db.cartItem.updateMany({ where: { cartId, productId }, data: { preorderMode: mode } })
   return getCart()
 }
 

@@ -1,5 +1,6 @@
 'use server'
 
+import { DEFAULT_DEPOSIT_PERCENT } from '@/features/checkout/lib/preorder'
 import { STORE_SETTINGS_ID } from '@/features/settings/queries/store-settings.queries'
 import { db } from '@/shared/lib/db'
 import { requireAdmin } from '@/shared/lib/require-admin'
@@ -16,6 +17,14 @@ const storeSettingsSchema = z.object({
   baseShippingCost: z.number().min(0, 'Debe ser mayor o igual a 0'),
   // Cómo se muestran todos los banners del inicio (ajuste global)
   bannerLayout: z.enum(['CARD', 'FULLSCREEN']).optional().default('CARD'),
+  // Adelanto por defecto de la preventa parcial; cada producto puede pisarlo
+  preorderDepositPercent: z
+    .number()
+    .int()
+    .min(1, 'Mínimo 1%')
+    .max(100, 'Máximo 100%')
+    .optional()
+    .default(DEFAULT_DEPOSIT_PERCENT),
 })
 
 export async function saveStoreSettings(rawInput: unknown): Promise<ActionResult> {

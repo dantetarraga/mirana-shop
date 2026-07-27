@@ -1,9 +1,27 @@
 'use client'
 
 import { useCartStore } from '@/features/cart/stores/cart.store'
+import {
+  balanceUnitPrice,
+  canPartialPreorder,
+  depositUnitPrice,
+  resolveDepositPercent,
+  type PreorderMode,
+} from '@/features/checkout/lib/preorder'
 import { effectivePrice } from '@/features/checkout/lib/pricing'
 import { remainingStock } from '@/features/products/lib/stock'
 import type { CatalogProduct } from '@/features/products/types/catalog.types'
+
+export interface PreorderInfo {
+  /** El producto admite pagar solo un adelanto. */
+  canPartial: boolean
+  /** % de adelanto vigente (del producto o el global). */
+  depositPercent: number
+  /** Adelanto por unidad. */
+  depositUnit: number
+  /** Saldo por unidad que queda para después. */
+  balanceUnit: number
+}
 
 export interface CartLineState {
   /** El producto más fresco disponible (línea del carrito si existe, si no el prop). */
@@ -19,6 +37,10 @@ export interface CartLineState {
   hasDiscount: boolean
   /** El store aún no recibió el carrito real del servidor. */
   hydrated: boolean
+  /** Modo de pago de la línea en el carrito ('FULL' si no está agregado). */
+  preorderMode: PreorderMode
+  /** Datos del adelanto — `null` si el producto no admite preventa parcial. */
+  preorder: PreorderInfo | null
 }
 
 /**
@@ -31,7 +53,11 @@ export interface CartLineState {
  * reservar) y el precio con oferta se recalculaba a mano en vez de usar
  * `effectivePrice`.
  */
-export function useCartLine(product: CatalogProduct): CartLineState {
+export function useCartLine(
+  product: CatalogProduct,
+  /** % de adelanto global de la tienda; solo hace falta si el producto no tiene el suyo. */
+  defaultDepositPercent?: number,
+): CartLineState {
   const line = useCartStore((s) => s.cart.find((i) => i.product.id === product.id))
   const hydrated = useCartStore((s) => s.hydrated)
 
@@ -42,6 +68,15 @@ export function useCartLine(product: CatalogProduct): CartLineState {
   const qtyInCart = line?.qty ?? 0
   const isPreorder = p.status === 'PREORDER'
 
+  const preorder: PreorderInfo | null = canPartialPreorder(p)
+    ? {
+        canPartial: true,
+        depositPercent: resolveDepositPercent(p, defaultDepositPercent),
+        depositUnit: depositUnitPrice(p, defaultDepositPercent),
+        balanceUnit: balanceUnitPrice(p, defaultDepositPercent),
+      }
+    : null
+
   return {
     product: p,
     qtyInCart,
@@ -51,5 +86,7 @@ export function useCartLine(product: CatalogProduct): CartLineState {
     unitPrice: effectivePrice(p),
     hasDiscount: p.salePrice != null && p.salePrice < p.price,
     hydrated,
+    preorderMode: line?.preorderMode ?? 'FULL',
+    preorder,
   }
 }

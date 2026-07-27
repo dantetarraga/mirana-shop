@@ -14,6 +14,16 @@ const richTextSchema = z
 // se guarda ya convertida a HTML para no depender de la conversión al vuelo.
 const importDescriptionSchema = richTextSchema.transform(toRichHtml)
 
+/**
+ * Un input numérico/fecha vacío llega como '' o NaN y se normaliza a `null`
+ * (= "borrar el valor"), no a `undefined`. `updateProduct` usa
+ * `productDbBaseSchema.partial()`, donde `undefined` significa "no enviado":
+ * si el vacío se mapeara a `undefined`, vaciar el campo en el formulario no
+ * tendría forma de limpiarlo en la BD.
+ */
+const emptyToNull = (v: unknown) =>
+  v === '' || v === null || (typeof v === 'number' && isNaN(v)) ? null : v
+
 // ---------------------------------------------------------------------------
 // Productos — schema para BD real (Server Actions)
 // ---------------------------------------------------------------------------
@@ -39,6 +49,17 @@ export const productDbBaseSchema = z.object({
     .default('AVAILABLE'),
   featured: z.boolean().default(false),
   imageUrl: imageUrlSchema().optional(),
+
+  // Preventa parcial — solo tienen efecto con status PREORDER.
+  allowPartialPreorder: z.boolean().default(false),
+  preorderDepositPercent: z.preprocess(
+    emptyToNull,
+    z.number().int().min(1, 'Mínimo 1%').max(100, 'Máximo 100%').nullable().optional(),
+  ),
+  estimatedArrival: z.preprocess(
+    emptyToNull,
+    z.coerce.date({ error: 'Fecha inválida' }).nullable().optional(),
+  ),
 })
 
 export const productDbSchema = productDbBaseSchema.superRefine((data, ctx) => {
@@ -47,6 +68,15 @@ export const productDbSchema = productDbBaseSchema.superRefine((data, ctx) => {
       code: z.ZodIssueCode.custom,
       message: 'El precio de oferta no puede ser mayor al precio base',
       path: ['salePrice'],
+    })
+  }
+  // Sin esto se podría dejar un producto AVAILABLE con el adelanto encendido:
+  // no rompe nada (canPartialPreorder exige PREORDER), pero confunde al editarlo.
+  if (data.allowPartialPreorder && data.status !== 'PREORDER') {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'La preventa parcial solo aplica a productos en estado Preventa',
+      path: ['allowPartialPreorder'],
     })
   }
 })
@@ -80,6 +110,20 @@ export const importProductRowSchema = z.object({
     z.boolean().default(false),
   ),
   imageUrls: z.array(z.string().url('URL de imagen inválida')).optional().default([]),
+  // Columnas opcionales de preventa parcial (ver COL_ALIASES en ExcelImportDrawer).
+  allowPartialPreorder: z.preprocess(
+    (v) => {
+      if (typeof v === 'boolean') return v
+      if (typeof v === 'string') {
+        const s = v.toLowerCase()
+        return s === 'true' || s === '1' || s === 'si' || s === 'sí'
+      }
+      return false
+    },
+    z.boolean().default(false),
+  ),
+  depositPercent: z.preprocess(emptyToNull, z.number().int().min(1).max(100).nullable().optional()),
+  estimatedArrival: z.preprocess(emptyToNull, z.coerce.date().nullable().optional()),
 }).superRefine((data, ctx) => {
   if (data.salePrice !== undefined && data.salePrice > data.price) {
     ctx.addIssue({

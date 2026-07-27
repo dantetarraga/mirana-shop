@@ -116,6 +116,9 @@ export async function createProduct(
         featured: input.featured,
         categoryId: input.categoryId,
         brandId: input.brandId,
+        allowPartialPreorder: input.allowPartialPreorder,
+        preorderDepositPercent: input.preorderDepositPercent ?? null,
+        estimatedArrival: input.estimatedArrival ?? null,
         images: { create: images.map((img, i) => ({ ...img, position: img.position ?? i })) },
         inventory: { create: { availableStock: stock } },
       },
@@ -176,6 +179,14 @@ export async function updateProduct(
           ...(input.featured !== undefined && { featured: input.featured }),
           ...(input.categoryId !== undefined && { categoryId: input.categoryId }),
           ...(input.brandId !== undefined && { brandId: input.brandId }),
+          // `null` = limpiar el campo; `undefined` = no vino en el payload.
+          ...(input.allowPartialPreorder !== undefined && {
+            allowPartialPreorder: input.allowPartialPreorder,
+          }),
+          ...(input.preorderDepositPercent !== undefined && {
+            preorderDepositPercent: input.preorderDepositPercent,
+          }),
+          ...(input.estimatedArrival !== undefined && { estimatedArrival: input.estimatedArrival }),
         },
         select: PRODUCT_DETAIL_SELECT,
       })
@@ -365,6 +376,9 @@ export async function importProducts(
               salePrice: row.salePrice ?? null,
               status: row.status ?? 'AVAILABLE',
               featured: row.featured ?? false,
+              allowPartialPreorder: row.allowPartialPreorder ?? false,
+              preorderDepositPercent: row.depositPercent ?? null,
+              estimatedArrival: row.estimatedArrival ?? null,
               // Reimportar un SKU que estaba soft-deleted lo reactiva — si el
               // admin lo está subiendo de nuevo es porque quiere que vuelva.
               ...(match.deletedAt !== null && { deletedAt: null }),
@@ -405,6 +419,9 @@ export async function importProducts(
             brandId,
             status: row.status ?? 'AVAILABLE',
             featured: row.featured ?? false,
+            allowPartialPreorder: row.allowPartialPreorder ?? false,
+            preorderDepositPercent: row.depositPercent ?? null,
+            estimatedArrival: row.estimatedArrival ?? null,
             images: images.length > 0 ? { create: images } : undefined,
             inventory: { create: { availableStock: row.stock } },
           },

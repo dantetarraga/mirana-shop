@@ -1,14 +1,17 @@
 import { ProductCard } from '@/features/products/components/ProductCard'
 import { toProductCards } from '@/features/products/lib/product-card'
 import { getProducts } from '@/features/products/queries/product.queries'
+import { getPreorderDepositPercent } from '@/features/settings/queries/store-settings.queries'
 
 export async function PreorderSection() {
-  const preorders = await getProducts({
-    status: 'PREORDER',
-    take: 6,
-  })
+  const [preorders, depositPercent] = await Promise.all([
+    getProducts({ status: 'PREORDER', take: 6 }),
+    getPreorderDepositPercent(),
+  ])
 
   const items = toProductCards(preorders)
+  // Antes decía "50%" fijo aunque el adelanto real fuera otro.
+  const anyPartial = items.some((p) => p.allowPartialPreorder)
 
   if (items.length === 0) return null
 
@@ -22,7 +25,9 @@ export async function PreorderSection() {
           Preventas
         </h2>
         <div className="text-[14px] text-muted mt-2">
-          Reserva con adelanto del 50% y asegura tu pieza
+          {anyPartial
+            ? `Reserva con adelanto desde el ${depositPercent}% y asegura tu pieza`
+            : 'Reserva ahora y asegura tu pieza'}
         </div>
       </div>
 

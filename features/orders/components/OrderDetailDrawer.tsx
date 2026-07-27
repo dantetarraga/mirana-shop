@@ -6,15 +6,20 @@ import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { DrawerSection } from '@/shared/components/admin/DrawerSection'
 import { Button } from '@/shared/components/ui/Button'
 import { ORDER_STATUS, fmt } from '@/shared/lib/admin/admin-constants'
+import { formatDate } from '@/shared/lib/utils'
 
 // ---------------------------------------------------------------------------
 // Tipo serializado exportado
 // ---------------------------------------------------------------------------
 
-export type SerializedOrder = Omit<OrderListItem, 'total' | 'subtotal' | 'shippingCost'> & {
+export type SerializedOrder = Omit<
+  OrderListItem,
+  'total' | 'subtotal' | 'shippingCost' | 'dueTotal'
+> & {
   total: number
   subtotal: number
   shippingCost: number
+  dueTotal: number
 }
 
 // ---------------------------------------------------------------------------
@@ -51,6 +56,8 @@ interface OrderDetailDrawerProps {
   order: SerializedOrder
   onClose: () => void
   onStatusChange: (orderId: string, status: OrderStatus) => void
+  /** Marca (o desmarca) el saldo de una preventa parcial como cobrado */
+  onBalanceChange: (orderId: string, paid: boolean) => void
   isPending: boolean
 }
 
@@ -62,8 +69,12 @@ export function OrderDetailDrawer({
   order,
   onClose,
   onStatusChange,
+  onBalanceChange,
   isPending,
 }: OrderDetailDrawerProps) {
+  const hasBalance = order.dueTotal > 0
+  const balancePaid = order.duePaidAt != null
+
   return (
     <AdminDrawer title={order.code} sub="Detalle de pedido" onClose={onClose}>
       <DrawerSection title="Cliente" divider={false}>
@@ -79,12 +90,61 @@ export function OrderDetailDrawer({
       <DrawerSection title="Resumen">
         <div className="flex justify-between items-baseline pt-2">
           <span className="text-[12px] tracking-[1px] uppercase text-muted">
-            Total ({order._count.items} artículo{order._count.items !== 1 ? 's' : ''})
+            {hasBalance ? 'Pagado a cuenta' : 'Total'} ({order._count.items} artículo
+            {order._count.items !== 1 ? 's' : ''})
           </span>
           <span className="font-display font-black text-[26px] text-accent-ink">
             S/ {fmt(order.total)}
           </span>
         </div>
+
+        {/* Preventa parcial: el cliente pagó solo el adelanto. El saldo no tiene
+            un Payment propio (Payment.orderId es @unique) — se cobra a mano y
+            se marca acá. */}
+        {hasBalance && (
+          <div className="mt-4 border border-(--bd) p-3.5 flex flex-col gap-3">
+            <div className="flex justify-between items-baseline">
+              <span className="text-[12px] text-muted">Valor total del pedido</span>
+              <span className="text-[13px]">S/ {fmt(order.subtotal)}</span>
+            </div>
+            <div className="flex justify-between items-baseline">
+              <span className="text-[12px] text-muted">Saldo pendiente</span>
+              <span
+                className={`font-display font-extrabold text-[18px] ${
+                  balancePaid ? 'text-success' : 'text-info'
+                }`}
+              >
+                S/ {fmt(order.dueTotal)}
+              </span>
+            </div>
+
+            {balancePaid ? (
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <span className="text-[12px] text-success">
+                  Cobrado el {order.duePaidAt ? formatDate(order.duePaidAt) : '—'}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={isPending}
+                  onClick={() => onBalanceChange(order.id, false)}
+                >
+                  Deshacer
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="accent"
+                size="sm"
+                full
+                disabled={isPending}
+                onClick={() => onBalanceChange(order.id, true)}
+              >
+                Marcar saldo como cobrado
+              </Button>
+            )}
+          </div>
+        )}
       </DrawerSection>
 
       <DrawerSection title="Cambiar estado">

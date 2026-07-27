@@ -18,6 +18,9 @@ export type ProductListItem = {
   status: ProductStatus
   featured: boolean
   createdAt: Date
+  allowPartialPreorder: boolean
+  preorderDepositPercent: number | null
+  estimatedArrival: Date | null
   category: { id: string; name: string; slug: string }
   brand: { id: string; name: string; slug: string }
   images: ProductImage[]

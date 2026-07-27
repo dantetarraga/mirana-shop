@@ -22,6 +22,7 @@ import {
   effectivePrice,
   type PricingRules,
 } from '@/features/checkout/lib/pricing'
+import { depositUnitPrice, splitPreorderTotals } from '@/features/checkout/lib/preorder'
 import type { PaymentAccountData } from '@/features/settings/queries/payment-accounts.queries'
 import { Button } from '@/shared/components/ui/Button'
 import { useUser } from '@/shared/hooks'
@@ -55,9 +56,12 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
 
   // Totales con precio efectivo (oferta si existe) + promociones de la BD.
   // El servidor recalcula y valida todo esto de nuevo en placeOrder.
-  const subtotal = cart.reduce((s, i) => s + effectivePrice(i.product) * i.qty, 0)
+  const { subtotal, payableNow, dueTotal } = splitPreorderTotals(
+    cart,
+    pricingRules.preorderDepositPercent,
+  )
   const { shippingFree, shippingCost, discount, discountName, total } = computeTotals(
-    subtotal,
+    payableNow,
     pricingRules,
   )
 
@@ -166,10 +170,12 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
     if (loading) return
     setLoading(true)
 
-    // Solo id + cantidad: los precios y promociones los valida el servidor
+    // Solo id, cantidad y forma de pago: los precios, promociones y la validez
+    // del modo de preventa los recalcula el servidor.
     const items = cart.map((i) => ({
       productId: i.product.id,
       quantity: i.qty,
+      preorderMode: i.preorderMode,
     }))
 
     const result = await placeOrder({
@@ -184,11 +190,15 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
       return
     }
 
-    // Capturamos resumen antes de limpiar el carrito (montos: los del server)
+    // Capturamos resumen antes de limpiar el carrito (montos: los del server).
+    // En las líneas parciales se muestra el adelanto, que es lo que se cobra.
     const successItems = cart.map((i) => ({
       name: i.product.name,
       qty: i.qty,
-      unitPrice: effectivePrice(i.product),
+      unitPrice:
+        i.preorderMode === 'PARTIAL'
+          ? depositUnitPrice(i.product, pricingRules.preorderDepositPercent)
+          : effectivePrice(i.product),
     }))
 
     clearCart()
@@ -201,6 +211,7 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
       discountName: result.data.discountName,
       shippingCost: result.data.shippingCost,
       total: result.data.total,
+      dueTotal: result.data.dueTotal,
     })
   }
 
@@ -251,6 +262,9 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
           <OrderSummary
             cart={cart}
             subtotal={subtotal}
+            payableNow={payableNow}
+            dueTotal={dueTotal}
+            depositPercent={pricingRules.preorderDepositPercent}
             shippingCost={shippingCost}
             shippingFree={shippingFree}
             discount={discount}

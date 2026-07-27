@@ -1,8 +1,10 @@
 export type BannerRow = {
   id: string
-  title: string
+  /** Opcional: hay banners que son solo imagen */
+  title: string | null
   subtitle: string | null
-  imageUrl: string
+  /** Las tres imágenes son opcionales; ver features/banners/lib/banner-image.ts */
+  imageUrl: string | null
   imageUrlMobile: string | null
   imageUrlFull: string | null
   ctaLabel: string | null
@@ -16,9 +18,9 @@ export type BannerRow = {
 }
 
 export type CreateBannerInput = {
-  title: string
+  title?: string
   subtitle?: string
-  imageUrl: string
+  imageUrl?: string
   imageUrlMobile?: string
   imageUrlFull?: string
   ctaLabel?: string

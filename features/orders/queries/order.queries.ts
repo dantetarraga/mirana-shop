@@ -21,6 +21,9 @@ export const ORDER_LIST_SELECT = {
   total: true,
   subtotal: true,
   shippingCost: true,
+  // Saldo pendiente por preventa parcial (0 en pedidos normales)
+  dueTotal: true,
+  duePaidAt: true,
   currency: true,
   createdAt: true,
   updatedAt: true,
@@ -43,6 +46,9 @@ export const ORDER_DETAIL_SELECT = {
       productSku: true,
       quantity: true,
       unitPrice: true,
+      isPreorder: true,
+      preorderMode: true,
+      depositUnitPrice: true,
     },
   },
   payment: {

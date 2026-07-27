@@ -4,9 +4,11 @@ import {
   clearCartAction,
   getCartAction,
   removeCartItemAction,
+  setCartItemModeAction,
   setCartItemQtyAction,
 } from '@/features/cart/actions/cart.actions'
 import type { CartLine } from '@/features/cart/types'
+import { canPartialPreorder, type PreorderMode } from '@/features/checkout/lib/preorder'
 import {
   maxPurchasable,
   remainingStock,
@@ -40,7 +42,9 @@ interface CartState {
   /** Relee el carrito del servidor (al abrir el drawer, al volver a la pestaña). */
   refreshCart: () => void
   /** Agrega respetando el stock. Devuelve cuántas unidades entraron (0 = tope). */
-  addToCart: (product: CatalogProduct, qty?: number) => number
+  addToCart: (product: CatalogProduct, qty?: number, preorderMode?: PreorderMode) => number
+  /** Cambia total ↔ parcial en una línea de preventa ya agregada. */
+  setLineMode: (id: string, preorderMode: PreorderMode) => void
   /**
    * Agrega una unidad de cada producto en una sola operación. Devuelve los
    * nombres de los que no entraron (agotados o ya al tope) para que quien
@@ -133,7 +137,7 @@ export const useCartStore = create<CartState>()((set, get) => ({
       .catch(() => {})
   },
 
-  addToCart: (product, qty = 1) => {
+  addToCart: (product, qty = 1, preorderMode = 'FULL') => {
     const inCart = get().cart.find((i) => i.product.id === product.id)?.qty ?? 0
     const remaining = remainingStock(product, inCart)
     const toAdd = remaining === null ? qty : Math.min(qty, remaining)
@@ -143,16 +147,36 @@ export const useCartStore = create<CartState>()((set, get) => ({
       return 0
     }
 
+    // El servidor vuelve a comprobarlo (resolveMode); esto solo evita mostrar
+    // un adelanto optimista que la respuesta va a corregir un instante después.
+    const mode: PreorderMode =
+      preorderMode === 'PARTIAL' && canPartialPreorder(product) ? 'PARTIAL' : 'FULL'
+
     set((s) => {
       const ex = s.cart.find((i) => i.product.id === product.id)
       const cart = ex
-        ? s.cart.map((i) => (i.product.id === product.id ? { ...i, qty: i.qty + toAdd } : i))
-        : [...s.cart, { product, qty: toAdd }]
+        ? s.cart.map((i) =>
+            i.product.id === product.id ? { ...i, qty: i.qty + toAdd, preorderMode: mode } : i,
+          )
+        : [...s.cart, { product, qty: toAdd, preorderMode: mode }]
       return { cart, cartCount: countCart(cart) }
     })
-    runWrite(set, () => addCartItemAction(product.id, toAdd))
+    runWrite(set, () => addCartItemAction(product.id, toAdd, mode))
 
     return toAdd
+  },
+
+  setLineMode: (id, preorderMode) => {
+    const item = get().cart.find((i) => i.product.id === id)
+    if (!item || item.preorderMode === preorderMode) return
+
+    const mode: PreorderMode =
+      preorderMode === 'PARTIAL' && canPartialPreorder(item.product) ? 'PARTIAL' : 'FULL'
+
+    set((s) => ({
+      cart: s.cart.map((i) => (i.product.id === id ? { ...i, preorderMode: mode } : i)),
+    }))
+    runWrite(set, () => setCartItemModeAction(id, mode))
   },
 
   addManyToCart: (products) => {
@@ -176,7 +200,9 @@ export const useCartStore = create<CartState>()((set, get) => ({
       for (const product of toAdd) {
         const i = cart.findIndex((line) => line.product.id === product.id)
         if (i >= 0) cart[i] = { ...cart[i], qty: cart[i].qty + 1 }
-        else cart.push({ product, qty: 1 })
+        // "Agregar toda la colección" siempre va a precio completo: elegir
+        // adelanto es una decisión por producto, en su ficha.
+        else cart.push({ product, qty: 1, preorderMode: 'FULL' })
       }
       return { cart, cartCount: countCart(cart) }
     })

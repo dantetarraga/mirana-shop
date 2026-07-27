@@ -1,12 +1,12 @@
 'use client'
 
 import { OrdersCarousel } from '@/features/orders/components/OrdersCarousel'
+import type { OrderListItem } from '@/features/orders/types'
 import type { ProfileData } from '@/features/profile/actions/account-profile.actions'
 import { ProfileCard } from '@/features/profile/components/ProfileCard'
 import { ProfileEditForm } from '@/features/profile/components/ProfileEditForm'
-import type { OrderListItem } from '@/features/orders/types'
-import type { SessionUser } from '@/shared/hooks/useUser'
 import { Button } from '@/shared/components/ui/Button'
+import type { SessionUser } from '@/shared/hooks/useUser'
 import { LogOut } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import Link from 'next/link'
@@ -36,7 +36,8 @@ export function PerfilContent({
   )
 
   const handleLogout = () => {
-    signOut({ callbackUrl: '/' })
+    // `redirectTo` es la opción de NextAuth v5; `callbackUrl` era de la v4.
+    signOut({ redirectTo: '/' })
   }
 
   return (

@@ -1,4 +1,5 @@
 import 'server-only'
+import { hasBannerImage } from '@/features/banners/lib/banner-image'
 import { db } from '@/shared/lib/db'
 import type { BannerRow } from '@/features/banners/types'
 
@@ -21,7 +22,7 @@ export const BANNER_SELECT = {
 
 export async function getActiveBanners(): Promise<BannerRow[]> {
   const now = new Date()
-  return db.banner.findMany({
+  const banners = await db.banner.findMany({
     where: {
       active: true,
       OR: [{ startsAt: null }, { startsAt: { lte: now } }],
@@ -30,6 +31,11 @@ export async function getActiveBanners(): Promise<BannerRow[]> {
     select: BANNER_SELECT,
     orderBy: { position: 'asc' },
   })
+
+  // Un banner sin ninguna imagen no se puede pintar: se omite aunque esté
+  // activo. El filtro va en JS y no en el `where` porque hay que tratar la
+  // cadena vacía igual que el NULL en las tres columnas, y son pocas filas.
+  return banners.filter(hasBannerImage)
 }
 
 export async function getBanners(): Promise<BannerRow[]> {

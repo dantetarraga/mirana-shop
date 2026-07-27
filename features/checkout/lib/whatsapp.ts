@@ -30,9 +30,12 @@ function buildOrderMessage(data: SuccessData): string {
       (item) => `• ${item.qty}x ${item.name} — ${formatCurrency(item.unitPrice * item.qty)}`,
     ),
     '',
-    `Subtotal: ${formatCurrency(data.subtotal)}`,
+    `Subtotal: ${formatCurrency(data.subtotal - data.dueTotal)}`,
     `Envío: ${data.shippingCost === 0 ? 'Gratis' : formatCurrency(data.shippingCost)}`,
-    `Total: ${formatCurrency(data.total)}`,
+    `${data.dueTotal > 0 ? 'Pago hoy' : 'Total'}: ${formatCurrency(data.total)}`,
+    // Que el saldo quede escrito en el mensaje evita malentendidos: el cliente
+    // pagó solo el adelanto y el comprobante es por ese monto.
+    ...(data.dueTotal > 0 ? [`Saldo pendiente: ${formatCurrency(data.dueTotal)}`] : []),
     '',
     'Adjunto mi comprobante de pago.',
   ]

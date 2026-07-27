@@ -13,7 +13,7 @@ export function StoreOverlays({ pricingRules }: StoreOverlaysProps) {
   return (
     <>
       <CartDrawer pricingRules={pricingRules} />
-      <ProductModal />
+      <ProductModal defaultDepositPercent={pricingRules.preorderDepositPercent} />
       <AuthModal />
     </>
   )

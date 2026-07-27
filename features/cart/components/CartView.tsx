@@ -6,6 +6,11 @@ import {
   effectivePrice,
   type PricingRules,
 } from '@/features/checkout/lib/pricing'
+import {
+  canPartialPreorder,
+  depositUnitPrice,
+  splitPreorderTotals,
+} from '@/features/checkout/lib/preorder'
 import { maxPurchasable } from '@/features/products/lib/stock'
 import { getCategoryLabel, getCategoryStripe } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
@@ -24,14 +29,19 @@ interface CartViewProps {
 }
 
 export function CartView({ pricingRules }: CartViewProps) {
-  const { cart, updateQty, removeItem } = useCartStore()
+  const { cart, updateQty, removeItem, setLineMode } = useCartStore()
   const router = useRouter()
   const [pendingRemove, setPendingRemove] = useState<{ id: string; name: string } | null>(null)
 
-  const subtotal = cart.reduce((s, i) => s + effectivePrice(i.product) * i.qty, 0)
+  const { subtotal, payableNow, dueTotal } = splitPreorderTotals(
+    cart,
+    pricingRules.preorderDepositPercent,
+  )
   const itemCount = cart.reduce((s, i) => s + i.qty, 0)
+  // Las promociones se calculan sobre lo que se cobra hoy, no sobre el valor
+  // completo del pedido (ver features/checkout/lib/preorder.ts).
   const { shippingFree, shippingCost, discount, discountName, total } = computeTotals(
-    subtotal,
+    payableNow,
     pricingRules,
   )
 
@@ -82,7 +92,14 @@ export function CartView({ pricingRules }: CartViewProps) {
             {cart.map((item) => {
               const stripe = getCategoryStripe(item.product.category.slug)
               const catLabel = getCategoryLabel(item.product.category.slug)
-              const unitPrice = effectivePrice(item.product)
+              const fullUnit = effectivePrice(item.product)
+              const canPartial = canPartialPreorder(item.product)
+              const isPartial = item.preorderMode === 'PARTIAL'
+              const depositUnit = canPartial
+                ? depositUnitPrice(item.product, pricingRules.preorderDepositPercent)
+                : fullUnit
+              // La línea muestra lo que se cobra hoy: el adelanto si es parcial.
+              const unitPrice = isPartial ? depositUnit : fullUnit
               const lineTotal = unitPrice * item.qty
               const max = maxPurchasable(item.product)
               const atLimit = max !== null && item.qty >= max
@@ -124,6 +141,37 @@ export function CartView({ pricingRules }: CartViewProps) {
                       <div className="text-accent-ink font-display text-[15px] font-bold mt-0.5">
                         {formatCurrency(unitPrice)} c/u
                       </div>
+
+                      {/* Preventa: se puede alternar entre pagar todo y pagar
+                          solo el adelanto sin volver a la ficha del producto. */}
+                      {canPartial && (
+                        <div className="flex items-center border border-(--bd) w-fit mt-2">
+                          {(
+                            [
+                              { mode: 'FULL' as const, label: 'Pago total', amount: fullUnit },
+                              {
+                                mode: 'PARTIAL' as const,
+                                label: 'Adelanto',
+                                amount: depositUnit,
+                              },
+                            ]
+                          ).map((opt) => (
+                            <button
+                              key={opt.mode}
+                              type="button"
+                              onClick={() => setLineMode(item.product.id, opt.mode)}
+                              aria-pressed={item.preorderMode === opt.mode}
+                              className={`px-3 py-1.5 text-[11px] tracking-[1px] uppercase font-display font-extrabold transition-colors duration-150 ${
+                                item.preorderMode === opt.mode
+                                  ? 'bg-(--gold) text-on-accent'
+                                  : 'text-muted hover:text-text'
+                              }`}
+                            >
+                              {opt.label} · {formatCurrency(opt.amount)}
+                            </button>
+                          ))}
+                        </div>
+                      )}
 
                       {/* Qty controls */}
                       <div className="flex items-center gap-3 mt-3">
@@ -186,13 +234,20 @@ export function CartView({ pricingRules }: CartViewProps) {
             <div className="flex flex-col gap-3.5 text-[14px]">
               <div className="flex justify-between items-baseline">
                 <span className="text-muted">
-                  Subtotal{' '}
+                  {dueTotal > 0 ? 'Subtotal a pagar hoy' : 'Subtotal'}{' '}
                   <span className="text-muted">
                     ({itemCount} {itemCount === 1 ? 'producto' : 'productos'})
                   </span>
                 </span>
-                <span className="font-semibold">{formatCurrency(subtotal)}</span>
+                <span className="font-semibold">{formatCurrency(payableNow)}</span>
               </div>
+
+              {dueTotal > 0 && (
+                <div className="flex justify-between items-baseline text-[13px]">
+                  <span className="text-muted">Valor total del pedido</span>
+                  <span className="text-muted">{formatCurrency(subtotal)}</span>
+                </div>
+              )}
 
               {discount > 0 && (
                 <div className="flex justify-between items-baseline">
@@ -223,11 +278,20 @@ export function CartView({ pricingRules }: CartViewProps) {
               )}
 
               <div className="border-t border-(--bd) pt-3.5 flex justify-between items-baseline">
-                <span className="text-[12px] uppercase tracking-[1.5px] text-muted">Total</span>
+                <span className="text-[12px] uppercase tracking-[1.5px] text-muted">
+                  {dueTotal > 0 ? 'Pagas hoy' : 'Total'}
+                </span>
                 <span className="font-display text-[34px] font-black text-accent-ink leading-none">
                   {formatCurrency(total)}
                 </span>
               </div>
+
+              {dueTotal > 0 && (
+                <div className="flex justify-between items-baseline border border-(--bd) px-3.5 py-2.5">
+                  <span className="text-[12px] text-muted">Saldo pendiente</span>
+                  <span className="text-info font-semibold">{formatCurrency(dueTotal)}</span>
+                </div>
+              )}
             </div>
 
             <Button variant="accent" size="lg" full onClick={() => router.push('/checkout')}>

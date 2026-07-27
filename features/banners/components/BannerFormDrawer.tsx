@@ -61,17 +61,21 @@ export function BannerFormDrawer({
     reset,
     defaultValues: EMPTY_FORM,
     mapToForm: (b) => ({
-      title: b.title,
+      title: b.title ?? '',
       subtitle: b.subtitle ?? '',
       ctaLabel: b.ctaLabel ?? '',
       ctaHref: b.ctaHref ?? '',
-      imageUrl: b.imageUrl,
+      imageUrl: b.imageUrl ?? '',
       imageUrlMobile: b.imageUrlMobile ?? '',
       imageUrlFull: b.imageUrlFull ?? '',
       position: b.position,
       active: b.active,
     }),
   })
+
+  const hasAnyImage = Boolean(
+    watch('imageUrl')?.trim() || watch('imageUrlMobile')?.trim() || watch('imageUrlFull')?.trim(),
+  )
 
   return (
     <AdminDrawer
@@ -80,8 +84,20 @@ export function BannerFormDrawer({
       onClose={onClose}
     >
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4.5">
-        <FormField label="Título" error={errors.title?.message}>
+        {/* Las tres imágenes son opcionales, pero sin ninguna el banner no se
+            puede pintar y la tienda lo omite aunque esté activo. Se avisa acá
+            para que no quede un banner "activo" que nunca aparece. */}
+        {!hasAnyImage && (
+          <p className="text-[12px] text-danger border border-danger/40 px-3 py-2 leading-snug">
+            Sin ninguna imagen este banner no se mostrará en el inicio, aunque lo actives.
+          </p>
+        )}
+
+        <FormField label="Título (opcional)" error={errors.title?.message}>
           <input {...register('title')} className={cls.input} placeholder="Título del banner" />
+          <p className="text-[11px] text-muted mt-1.5">
+            Déjalo vacío para un banner que sea solo imagen.
+          </p>
         </FormField>
 
         <FormField label="Subtítulo" error={errors.subtitle?.message}>
@@ -99,8 +115,8 @@ export function BannerFormDrawer({
             folder="banners"
           />
           <p className="text-[11px] text-muted mt-1.5">
-            Obligatoria — formato horizontal, se usa desde 1024px de ancho cuando la tienda
-            muestra los banners como tarjetas. Recomendado 1920×600.
+            Formato horizontal, se usa desde 1024px de ancho cuando la tienda muestra los banners
+            como tarjetas. Recomendado 1920×600.
           </p>
         </FormField>
 

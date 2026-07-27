@@ -54,6 +54,7 @@ export default async function OrdersPage({ searchParams }: PageProps) {
     total:        Number(o.total),
     subtotal:     Number(o.subtotal),
     shippingCost: Number(o.shippingCost),
+    dueTotal:     Number(o.dueTotal),
   }));
 
   const totalPages = Math.ceil(total / PER_PAGE);

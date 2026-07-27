@@ -1,4 +1,5 @@
 import { BannerCardActions } from '@/features/banners/components/BannerCardActions'
+import { bannerCardImage } from '@/features/banners/lib/banner-image'
 import { getBannerStatus } from '@/features/banners/lib/banner-status'
 import type { BannerRow } from '@/features/banners/types'
 import { StatusBadge } from '@/features/orders/components/StatusBadge'
@@ -11,6 +12,7 @@ interface BannerCardProps {
 
 export function BannerCard({ banner }: BannerCardProps) {
   const uiStatus = getBannerStatus(banner)
+  const previewImage = bannerCardImage(banner)
 
   return (
     <div className="overflow-hidden bg-card border border-(--bd)">
@@ -18,15 +20,27 @@ export function BannerCard({ banner }: BannerCardProps) {
       <div className="h-37.5 relative">
         <div className="stripe-fig absolute inset-0" />
         <div
-          style={{ '--banner-img': `url(${banner.imageUrl})` } as React.CSSProperties}
-          className="absolute inset-0 flex flex-col justify-center pl-6 bg-[linear-gradient(to_right,rgba(0,0,0,.55),rgba(0,0,0,.15)),var(--banner-img)] bg-cover bg-center"
+          style={
+            previewImage
+              ? ({ '--banner-img': `url(${previewImage})` } as React.CSSProperties)
+              : undefined
+          }
+          className={`absolute inset-0 flex flex-col justify-center pl-6 bg-cover bg-center ${
+            previewImage
+              ? 'bg-[linear-gradient(to_right,rgba(0,0,0,.55),rgba(0,0,0,.15)),var(--banner-img)]'
+              : 'bg-[linear-gradient(to_right,rgba(0,0,0,.55),rgba(0,0,0,.15))]'
+          }`}
         >
           {/* El preview siempre lleva velo oscuro sobre la imagen: el texto usa
               --on-media (blanco fijo), no --text, que se invierte con el tema. */}
-          <div className="font-display text-[26px] font-black uppercase leading-[0.95] text-on-media">
-            {banner.title}
-          </div>
-          <div className="text-[12px] mt-1 text-on-media/80">{banner.subtitle}</div>
+          {banner.title && (
+            <div className="font-display text-[26px] font-black uppercase leading-[0.95] text-on-media">
+              {banner.title}
+            </div>
+          )}
+          {banner.subtitle && (
+            <div className="text-[12px] mt-1 text-on-media/80">{banner.subtitle}</div>
+          )}
           {banner.ctaLabel && (
             <div className="font-display font-extrabold text-[12px] tracking-[1px] uppercase px-3 py-1.25 mt-2.5 w-fit bg-(--gold) text-on-accent">
               {banner.ctaLabel} <ArrowRight className="inline-block ml-1" />
@@ -46,16 +60,26 @@ export function BannerCard({ banner }: BannerCardProps) {
         </div>
         <div className="flex justify-between py-1.5 text-[13px]">
           <span className="text-[11px] tracking-[1px] uppercase text-muted">Imágenes</span>
-          <span className="font-semibold">
-            {[
-              'Desktop',
-              banner.imageUrlMobile && 'mobile',
-              banner.imageUrlFull && 'pantalla completa',
-            ]
-              .filter(Boolean)
-              .join(' + ')}
+          <span className={`font-semibold ${previewImage ? '' : 'text-danger'}`}>
+            {previewImage
+              ? [
+                  banner.imageUrl && 'Desktop',
+                  banner.imageUrlMobile && 'mobile',
+                  banner.imageUrlFull && 'pantalla completa',
+                ]
+                  .filter(Boolean)
+                  .join(' + ')
+              : 'Sin imagen'}
           </span>
         </div>
+
+        {/* Aviso explícito: un banner activo sin imagen no aparece en la tienda,
+            y sin este mensaje el admin no tendría cómo enterarse. */}
+        {!previewImage && banner.active && (
+          <p className="text-[11px] text-danger py-1.5 leading-snug">
+            Este banner está activo pero no se muestra en el inicio: agregá al menos una imagen.
+          </p>
+        )}
         {banner.ctaHref && (
           <div className="flex justify-between py-1.5 text-[13px]">
             <span className="text-[11px] tracking-[1px] uppercase text-muted">Enlace</span>

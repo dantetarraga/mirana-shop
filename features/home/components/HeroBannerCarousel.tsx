@@ -1,6 +1,7 @@
 'use client'
 
 import { BannerImage } from '@/features/banners/components/BannerImage'
+import { bannerCardImage, bannerMobileImage } from '@/features/banners/lib/banner-image'
 import type { BannerRow } from '@/features/banners/types'
 import useEmblaCarousel from 'embla-carousel-react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -18,7 +19,7 @@ interface HeroBannerCarouselProps {
 
 type SlideCard = {
   key: string
-  title: string
+  title: string | null
   subtitle: string | null
   imageUrl: string
   imageUrlMobile: string | null
@@ -27,15 +28,24 @@ type SlideCard = {
 }
 
 function toCards(banners: BannerRow[]): SlideCard[] {
-  return banners.map((b) => ({
-    key: b.id,
-    title: b.title,
-    subtitle: b.subtitle,
-    imageUrl: b.imageUrl,
-    imageUrlMobile: b.imageUrlMobile,
-    ctaLabel: b.ctaLabel ?? 'Comprar ahora',
-    ctaHref: b.ctaHref ?? '/catalogo',
-  }))
+  return banners.flatMap((b) => {
+    // getActiveBanners ya descarta los banners sin imagen; este guardia además
+    // satisface el tipo y protege a quien llame con una lista sin filtrar.
+    const imageUrl = bannerCardImage(b)
+    if (!imageUrl) return []
+
+    return [
+      {
+        key: b.id,
+        title: b.title,
+        subtitle: b.subtitle,
+        imageUrl,
+        imageUrlMobile: bannerMobileImage(b),
+        ctaLabel: b.ctaLabel ?? 'Comprar ahora',
+        ctaHref: b.ctaHref ?? '/catalogo',
+      },
+    ]
+  })
 }
 
 function BannerCard({ card, priority, className }: { card: SlideCard; priority: boolean; className?: string }) {
@@ -47,7 +57,9 @@ function BannerCard({ card, priority, className }: { card: SlideCard; priority: 
       <BannerImage
         desktopUrl={card.imageUrl}
         mobileUrl={card.imageUrlMobile}
-        alt={card.title}
+        // Un banner sin título es puramente decorativo: alt vacío para que el
+        // lector de pantalla lo salte en vez de leer el nombre del archivo.
+        alt={card.title ?? ''}
         sizes="(max-width: 767px) 100vw, 33vw"
         priority={priority}
         className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 hover:scale-[1.03]"
@@ -60,9 +72,11 @@ function BannerCard({ card, priority, className }: { card: SlideCard; priority: 
           claro y solo se leía al pasar el mouse, cuando el hover lo pinta de
           dorado. Mismo criterio que CategoryStrips y HeroBannerFade. */}
       <div className="relative z-1 p-5 pb-6 sm:p-7 sm:pb-8 text-center">
-        <h3 className="font-display font-black uppercase tracking-[-0.5px] leading-[0.95] text-[clamp(20px,2.2vw,34px)] mb-1.5 text-on-media">
-          {card.title}
-        </h3>
+        {card.title && (
+          <h3 className="font-display font-black uppercase tracking-[-0.5px] leading-[0.95] text-[clamp(20px,2.2vw,34px)] mb-1.5 text-on-media">
+            {card.title}
+          </h3>
+        )}
         {card.subtitle && (
           <p className="text-[13px] text-on-media/75 font-light mb-4 sm:mb-5 max-w-70 mx-auto">
             {card.subtitle}

@@ -75,9 +75,17 @@ export function SuccessScreen({
           </ul>
           <div className="px-6 py-4 border-t border-(--bd) flex flex-col gap-2">
             <div className="flex justify-between text-[13px]">
-              <span className="text-muted">Subtotal</span>
-              <span>{formatCurrency(data.subtotal)}</span>
+              <span className="text-muted">
+                {data.dueTotal > 0 ? 'Subtotal a pagar hoy' : 'Subtotal'}
+              </span>
+              <span>{formatCurrency(data.subtotal - data.dueTotal)}</span>
             </div>
+            {data.dueTotal > 0 && (
+              <div className="flex justify-between text-[12px]">
+                <span className="text-muted">Valor total del pedido</span>
+                <span className="text-muted">{formatCurrency(data.subtotal)}</span>
+              </div>
+            )}
             {data.discount > 0 && (
               <div className="flex justify-between text-[13px]">
                 <span className="text-muted">
@@ -97,9 +105,15 @@ export function SuccessScreen({
               )}
             </div>
             <div className="flex justify-between font-display font-black text-[17px] uppercase tracking-tight border-t border-(--bd) pt-2 mt-1">
-              <span>Total pagado</span>
+              <span>{data.dueTotal > 0 ? 'Pagas hoy' : 'Total pagado'}</span>
               <span className="text-accent-ink">{formatCurrency(data.total)}</span>
             </div>
+            {data.dueTotal > 0 && (
+              <div className="flex justify-between text-[12px] border border-(--bd) px-3 py-2 mt-1">
+                <span className="text-muted">Saldo pendiente de tu preventa</span>
+                <span className="text-info font-semibold">{formatCurrency(data.dueTotal)}</span>
+              </div>
+            )}
           </div>
         </div>
 

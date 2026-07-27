@@ -2,6 +2,7 @@
 
 import { useCartLine } from '@/features/cart/hooks/useCartLine'
 import { useCartStore } from '@/features/cart/stores/cart.store'
+import type { PreorderMode } from '@/features/checkout/lib/preorder'
 import { ProductImageCarousel } from '@/features/products/components/ProductImageCarousel'
 import { stockLimitMessage } from '@/features/products/lib/stock'
 import { useProductModalStore } from '@/features/products/stores/product-modal.store'
@@ -17,21 +18,49 @@ import { toast } from 'sonner'
 /** El modal se cierra tras confirmar; lo justo para que la palomita se vea. */
 const CLOSE_AFTER_ADD_MS = 900
 
-export function ProductModal() {
+export function ProductModal({ defaultDepositPercent }: { defaultDepositPercent: number }) {
   const { activeProduct: p, closeProductModal } = useProductModalStore()
 
   if (!p) return null
 
   // `key` remonta el contenido al cambiar de producto: la cantidad vuelve a 1
   // sin necesidad de resetearla desde un efecto.
-  return <ProductModalContent key={p.id} p={p} onClose={closeProductModal} />
+  return (
+    <ProductModalContent
+      key={p.id}
+      p={p}
+      onClose={closeProductModal}
+      defaultDepositPercent={defaultDepositPercent}
+    />
+  )
 }
 
-function ProductModalContent({ p: initial, onClose }: { p: CatalogProduct; onClose: () => void }) {
-  const { addToCart, updateQty } = useCartStore()
-  const { product: p, qtyInCart, isPreorder, isOutOfStock, remaining, unitPrice, hasDiscount, hydrated } =
-    useCartLine(initial)
+function ProductModalContent({
+  p: initial,
+  onClose,
+  defaultDepositPercent,
+}: {
+  p: CatalogProduct
+  onClose: () => void
+  defaultDepositPercent: number
+}) {
+  const { addToCart, updateQty, setLineMode } = useCartStore()
+  const {
+    product: p,
+    qtyInCart,
+    isPreorder,
+    isOutOfStock,
+    remaining,
+    unitPrice,
+    hasDiscount,
+    hydrated,
+    preorder,
+    preorderMode,
+  } = useCartLine(initial, defaultDepositPercent)
   const [chosenQty, setQty] = useState(1)
+  const [chosenMode, setChosenMode] = useState<PreorderMode>('FULL')
+  const mode: PreorderMode = qtyInCart > 0 ? preorderMode : chosenMode
+  const payNowUnit = preorder && mode === 'PARTIAL' ? preorder.depositUnit : unitPrice
   const { justAdded, trigger } = useJustAdded(CLOSE_AFTER_ADD_MS)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const panelRef = useFocusTrap<HTMLDivElement>(true)
@@ -165,6 +194,45 @@ function ProductModalContent({ p: initial, onClose }: { p: CatalogProduct; onClo
             </div>
           )}
 
+          {/* Preventa total vs parcial — mismo contrato que el PDP. */}
+          {preorder && !isOutOfStock && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {(
+                [
+                  { value: 'FULL' as const, title: 'Preventa total', amount: unitPrice, hint: 'Pagás todo ahora' },
+                  {
+                    value: 'PARTIAL' as const,
+                    title: 'Preventa parcial',
+                    amount: preorder.depositUnit,
+                    hint: `Adelanto ${preorder.depositPercent}%`,
+                  },
+                ]
+              ).map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  aria-pressed={mode === opt.value}
+                  onClick={() =>
+                    qtyInCart > 0 ? setLineMode(p.id, opt.value) : setChosenMode(opt.value)
+                  }
+                  className={`text-left border px-3 py-2.5 transition-colors duration-200 ${
+                    mode === opt.value
+                      ? 'border-(--gold) bg-(--gold)/10'
+                      : 'border-(--bd) hover:border-(--bdh)'
+                  }`}
+                >
+                  <span className="block text-[10px] tracking-[2px] uppercase text-muted">
+                    {opt.title}
+                  </span>
+                  <span className="block font-display text-[20px] font-black text-accent-ink leading-tight">
+                    S/ {opt.amount.toFixed(2)}
+                  </span>
+                  <span className="block text-[11px] text-muted">{opt.hint}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
           {!isOutOfStock && canAdd && (
             <div>
               <div className="text-[10px] tracking-[2px] uppercase text-muted mb-2.5">
@@ -203,7 +271,7 @@ function ProductModalContent({ p: initial, onClose }: { p: CatalogProduct; onClo
             disabled={isOutOfStock || !canAdd || !hydrated}
             onClick={() => {
               // El store vuelve a aplicar el tope y avisa si ya no cabe nada.
-              if (addToCart(p, qty) > 0) {
+              if (addToCart(p, qty, mode) > 0) {
                 toast.success(
                   isPreorder ? `"${p.name}" reservado` : `"${p.name}" agregado al carrito`,
                 )
@@ -224,7 +292,7 @@ function ProductModalContent({ p: initial, onClose }: { p: CatalogProduct; onClo
                 {isPreorder ? 'Reservado' : 'Agregado al carrito'}
               </>
             ) : (
-              `${isPreorder ? 'Reservar ahora' : 'Agregar al carrito'} · S/ ${(unitPrice * qty).toFixed(2)}`
+              `${isPreorder ? 'Reservar ahora' : 'Agregar al carrito'} · S/ ${(payNowUnit * qty).toFixed(2)}`
             )}
           </Button>
 

@@ -41,6 +41,7 @@ const METHOD_LABEL: Record<string, string> = {
 // ---------------------------------------------------------------------------
 function OrderRow({ order }: { order: OrderListItem }) {
   const [open, setOpen] = useState(false)
+  const dueTotal = Number(order.dueTotal)
 
   return (
     <div className="bg-card border border-(--bd) overflow-hidden">
@@ -118,9 +119,15 @@ function OrderRow({ order }: { order: OrderListItem }) {
           {/* Totales */}
           <div className="border-t border-(--bd) pt-3 flex flex-col gap-1.5 text-[13px] max-w-64">
             <div className="flex justify-between">
-              <span className="text-muted">Subtotal</span>
-              <span>{formatCurrency(Number(order.subtotal))}</span>
+              <span className="text-muted">{dueTotal > 0 ? 'Pagado a cuenta' : 'Subtotal'}</span>
+              <span>{formatCurrency(Number(order.subtotal) - dueTotal)}</span>
             </div>
+            {dueTotal > 0 && (
+              <div className="flex justify-between text-[12px]">
+                <span className="text-muted">Valor total del pedido</span>
+                <span className="text-muted">{formatCurrency(Number(order.subtotal))}</span>
+              </div>
+            )}
             <div className="flex justify-between">
               <span className="text-muted">Envío</span>
               <span>
@@ -134,9 +141,24 @@ function OrderRow({ order }: { order: OrderListItem }) {
               </span>
             </div>
             <div className="flex justify-between font-display font-black uppercase text-[15px] pt-1 border-t border-(--bd)">
-              <span>Total</span>
+              <span>{dueTotal > 0 ? 'Pagaste' : 'Total'}</span>
               <span className="text-accent-ink">{formatCurrency(Number(order.total))}</span>
             </div>
+
+            {/* Preventa parcial: el saldo se coordina por WhatsApp cuando el
+                producto está listo — el cobro lo registra el admin. */}
+            {dueTotal > 0 && (
+              <div className="flex justify-between border border-(--bd) px-3 py-2 mt-1">
+                <span className="text-muted text-[12px]">
+                  {order.duePaidAt ? 'Saldo cobrado' : 'Saldo pendiente'}
+                </span>
+                <span
+                  className={`font-semibold ${order.duePaidAt ? 'text-emerald-400' : 'text-info'}`}
+                >
+                  {formatCurrency(dueTotal)}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       )}

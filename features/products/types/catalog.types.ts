@@ -25,6 +25,12 @@ export type CatalogProduct = {
   imageUrl: string | null;
   images: { url: string; alt: string | null }[];
   stock: number;
+  /** Preventa parcial habilitada (solo tiene efecto con status PREORDER) */
+  allowPartialPreorder: boolean;
+  /** % de adelanto propio; null = usa el default global de la tienda */
+  preorderDepositPercent: number | null;
+  /** Fecha estimada de entrega, para preventas */
+  estimatedArrival: Date | null;
 };
 
 // ---------------------------------------------------------------------------

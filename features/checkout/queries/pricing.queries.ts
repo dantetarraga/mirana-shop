@@ -9,7 +9,7 @@ import { getStoreSettings } from '@/features/settings/queries/store-settings.que
  * - FIXED/PERCENT_DISCOUNT: se pasan todas; computeTotals aplica la mejor.
  */
 export async function getPricingRules(): Promise<PricingRules> {
-  const [promos, { baseShippingCost }] = await Promise.all([
+  const [promos, { baseShippingCost, preorderDepositPercent }] = await Promise.all([
     getActivePromotions(),
     getStoreSettings(),
   ])
@@ -32,5 +32,6 @@ export async function getPricingRules(): Promise<PricingRules> {
     shippingCost: baseShippingCost,
     freeShippingThreshold: freeShipping?.minAmount ?? null,
     discountPromos,
+    preorderDepositPercent,
   }
 }

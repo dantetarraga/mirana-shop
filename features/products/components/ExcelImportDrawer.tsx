@@ -48,6 +48,15 @@ const COL_ALIASES: Record<string, keyof ExcelRow> = {
   'images': 'imageUrl',
   'image urls': 'imageUrl',
   'imagenes separadas por |': 'imageUrl',
+  // Preventa parcial — columnas opcionales
+  'preventa parcial': 'allowPartialPreorder',
+  'partial preorder': 'allowPartialPreorder',
+  adelanto: 'depositPercent',
+  'adelanto %': 'depositPercent',
+  'deposit percent': 'depositPercent',
+  'entrega estimada': 'estimatedArrival',
+  'fecha estimada': 'estimatedArrival',
+  'estimated arrival': 'estimatedArrival',
 }
 
 type StatusKey = 'AVAILABLE' | 'PREORDER' | 'SOLD_OUT' | 'COMING_SOON' | 'ARCHIVED'
@@ -89,6 +98,9 @@ interface ExcelRow {
   status: StatusKey
   featured: boolean
   imageUrl: string
+  allowPartialPreorder: boolean
+  depositPercent: number
+  estimatedArrival: Date
 }
 
 interface ParsedRow {
@@ -210,6 +222,48 @@ function parseSheet(
       normalized.featured = Boolean(featRaw)
     }
 
+    const partialRaw = normalized.allowPartialPreorder as unknown
+    if (typeof partialRaw === 'string') {
+      const p = partialRaw.toLowerCase().trim()
+      normalized.allowPartialPreorder = p === 'true' || p === '1' || p === 'si' || p === 'sí'
+    } else {
+      normalized.allowPartialPreorder = Boolean(partialRaw)
+    }
+    // La preventa parcial sin estado Preventa no hace nada (canPartialPreorder
+    // exige PREORDER) — se avisa en vez de importar algo que no va a funcionar.
+    if (normalized.allowPartialPreorder && normalized.status !== 'PREORDER') {
+      normalized.allowPartialPreorder = false
+      warnings.push('Preventa parcial ignorada: el estado no es Preventa')
+    }
+
+    const depositRaw = String(normalized.depositPercent ?? '').trim()
+    if (depositRaw) {
+      const pct = Number(depositRaw)
+      if (isNaN(pct) || pct < 1 || pct > 100) {
+        errors.push('Adelanto inválido: debe estar entre 1 y 100')
+        normalized.depositPercent = undefined
+      } else {
+        normalized.depositPercent = Math.round(pct)
+      }
+    } else {
+      normalized.depositPercent = undefined
+    }
+
+    const arrivalRaw = normalized.estimatedArrival as unknown
+    if (arrivalRaw instanceof Date) {
+      normalized.estimatedArrival = arrivalRaw
+    } else if (String(arrivalRaw ?? '').trim()) {
+      const parsedDate = new Date(String(arrivalRaw))
+      if (isNaN(parsedDate.getTime())) {
+        errors.push('Fecha de entrega estimada inválida')
+        normalized.estimatedArrival = undefined
+      } else {
+        normalized.estimatedArrival = parsedDate
+      }
+    } else {
+      normalized.estimatedArrival = undefined
+    }
+
     if (normalized.imageUrl && typeof normalized.imageUrl === 'string') {
       const urls = String(normalized.imageUrl)
         .split('|')
@@ -246,7 +300,9 @@ export function ExcelImportDrawer({ categories, brands, existingSkus, onClose, o
     const reader = new FileReader()
     reader.onload = (e) => {
       const data = new Uint8Array(e.target!.result as ArrayBuffer)
-      const wb = XLSX.read(data, { type: 'array' })
+      // cellDates: sin esto una fecha de Excel llega como número de serie
+      // (ej. 46477) y "entrega estimada" se parsearía mal.
+      const wb = XLSX.read(data, { type: 'array', cellDates: true })
       setRows(parseSheet(wb, categories, brands))
     }
     reader.readAsArrayBuffer(file)
@@ -288,6 +344,9 @@ export function ExcelImportDrawer({ categories, brands, existingSkus, onClose, o
       cat: r.data.cat!,
       status: r.data.status ?? 'AVAILABLE',
       featured: r.data.featured ?? false,
+      allowPartialPreorder: r.data.allowPartialPreorder ?? false,
+      depositPercent: r.data.depositPercent ?? null,
+      estimatedArrival: r.data.estimatedArrival ?? null,
       imageUrls: r.data.imageUrl
         ? String(r.data.imageUrl)
             .split('|')

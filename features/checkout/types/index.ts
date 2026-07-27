@@ -13,5 +13,8 @@ export type SuccessData = {
   discount: number
   discountName: string | null
   shippingCost: number
+  /** Lo que el cliente paga ahora */
   total: number
+  /** Saldo pendiente por preventa parcial; 0 en pedidos normales */
+  dueTotal: number
 }

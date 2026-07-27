@@ -144,6 +144,26 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
             Se cobra en el checkout salvo que una promoción de envío gratis lo anule.
           </p>
 
+          <FormField label="Adelanto de preventa parcial (%)">
+            <input
+              type="number"
+              min={1}
+              max={100}
+              step={1}
+              value={form.preorderDepositPercent}
+              onChange={(e) =>
+                setForm({ ...form, preorderDepositPercent: Number(e.target.value) })
+              }
+              className="adm-input"
+              placeholder="50"
+              inputMode="numeric"
+            />
+          </FormField>
+          <p className="text-[12px] text-muted -mt-3">
+            Cuánto paga el cliente por adelantado al reservar. Cada producto puede definir su propio
+            porcentaje; este es el que se usa cuando no lo hace.
+          </p>
+
           <div>
             <Button variant="accent" size="md" onClick={saveGeneral} disabled={general.isPending}>
               <Save size={15} className="mr-1.5" />

@@ -4,6 +4,7 @@ import { getBrands } from '@/features/brands/queries/brand.queries'
 import { getCategories } from '@/features/categories/queries/category.queries'
 import { getCollections } from '@/features/collections/queries/collection.queries'
 import { countProducts, getAdminProducts } from '@/features/products/queries/product.queries'
+import { getPreorderDepositPercent } from '@/features/settings/queries/store-settings.queries'
 import { AdminPagination } from '@/shared/components/admin/AdminPagination'
 import { ADMIN_PER_PAGE } from '@/shared/lib/admin/pagination'
 import { ServerSearchForm } from '@/shared/components/admin/ServerSearchForm'
@@ -41,7 +42,8 @@ export default async function ProductsPage({ searchParams }: PageProps) {
   const brandSlugs = brand ? brand.split(',').filter(Boolean) : []
   const collectionSlugs = collection ? collection.split(',').filter(Boolean) : []
 
-  const [products, categories, brands, collections, total] = await Promise.all([
+  const [products, categories, brands, collections, total, defaultDepositPercent] =
+    await Promise.all([
     getAdminProducts({
       search: q,
       categorySlug: categorySlugs.length > 0 ? categorySlugs : undefined,
@@ -61,6 +63,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
       collectionSlug: collectionSlugs.length > 0 ? collectionSlugs : undefined,
       status: 'ALL',
     }),
+    getPreorderDepositPercent(),
   ])
 
   // Serializar Decimals — todos los campos Decimal deben convertirse
@@ -202,6 +205,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
         brands={brands}
         collections={collections}
         total={total}
+        defaultDepositPercent={defaultDepositPercent}
       />
 
       <AdminPagination

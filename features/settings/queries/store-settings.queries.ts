@@ -1,4 +1,5 @@
 import { BASE_SHIPPING_COST } from '@/features/checkout/lib/pricing'
+import { DEFAULT_DEPOSIT_PERCENT } from '@/features/checkout/lib/preorder'
 import type { BannerLayout } from '@/generated/prisma/client'
 import { db } from '@/shared/lib/db'
 
@@ -15,6 +16,7 @@ export interface StoreSettingsData {
   whatsappNumber: string
   baseShippingCost: number
   bannerLayout: BannerLayout
+  preorderDepositPercent: number
 }
 
 const DEFAULTS: StoreSettingsData = {
@@ -22,6 +24,7 @@ const DEFAULTS: StoreSettingsData = {
   whatsappNumber: '',
   baseShippingCost: BASE_SHIPPING_COST,
   bannerLayout: 'CARD',
+  preorderDepositPercent: DEFAULT_DEPOSIT_PERCENT,
 }
 
 export async function getStoreSettings(): Promise<StoreSettingsData> {
@@ -32,9 +35,19 @@ export async function getStoreSettings(): Promise<StoreSettingsData> {
       whatsappNumber: true,
       baseShippingCost: true,
       bannerLayout: true,
+      preorderDepositPercent: true,
     },
   })
   return row ? { ...row, baseShippingCost: Number(row.baseShippingCost) } : DEFAULTS
+}
+
+/**
+ * Adelanto por defecto de la preventa parcial. Cada producto puede
+ * sobrescribirlo con `Product.preorderDepositPercent`.
+ */
+export async function getPreorderDepositPercent(): Promise<number> {
+  const { preorderDepositPercent } = await getStoreSettings()
+  return preorderDepositPercent
 }
 
 /**

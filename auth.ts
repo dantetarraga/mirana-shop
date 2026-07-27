@@ -6,6 +6,12 @@ import Credentials from 'next-auth/providers/credentials'
 import Google from 'next-auth/providers/google'
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  // El origen se deriva del host de la request (X-Forwarded-Host detrás del
+  // proxy del hosting) en vez de una URL fija. Sin esto, NextAuth usa AUTH_URL
+  // como base para resolver los redirects relativos, y `.env` la tenía en
+  // http://localhost:3000: cerrar sesión en producción mandaba a localhost.
+  trustHost: true,
+
   providers: [
     Google,
     Credentials({

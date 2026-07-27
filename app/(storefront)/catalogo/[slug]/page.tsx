@@ -3,6 +3,7 @@ import { AddToCartPanel } from '@/features/products/components/AddToCartPanel'
 import { ProductImageCarousel } from '@/features/products/components/ProductImageCarousel'
 import { RelatedProducts } from '@/features/products/components/RelatedProducts'
 import { getProductBySlug } from '@/features/products/queries/product.queries'
+import { getPreorderDepositPercent } from '@/features/settings/queries/store-settings.queries'
 import type { CatalogProduct } from '@/features/products/types/catalog.types'
 import { getCategoryLabel, getCategoryStripe } from '@/features/products/types/catalog.types'
 import { JsonLd } from '@/shared/components/JsonLd'
@@ -61,7 +62,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ProductDetailPage({ params }: PageProps) {
   const { slug } = await params
-  const raw = await getProductBySlug(slug)
+  const [raw, defaultDepositPercent] = await Promise.all([
+    getProductBySlug(slug),
+    getPreorderDepositPercent(),
+  ])
 
   if (!raw) notFound()
 
@@ -82,6 +86,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
     imageUrl: raw.images[0]?.url ?? null,
     images: raw.images.map((img) => ({ url: img.url, alt: img.alt })),
     stock: raw.inventory?.availableStock ?? 0,
+    allowPartialPreorder: raw.allowPartialPreorder,
+    preorderDepositPercent: raw.preorderDepositPercent,
+    estimatedArrival: raw.estimatedArrival,
   }
 
   const descriptionHtml = toRichHtml(raw.description)
@@ -224,6 +231,15 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 se calculaba sobre el stock crudo y seguía apareciendo aunque el
                 cliente ya tuviera todas esas unidades en su carrito. */}
 
+            {product.estimatedArrival && (
+              <div className="text-[13px] text-muted">
+                Entrega estimada:{' '}
+                <span className="text-text font-semibold">
+                  {Dates.format(product.estimatedArrival)}
+                </span>
+              </div>
+            )}
+
             {/* Description — HTML del editor del admin (saneado al guardar).
                 Las descripciones antiguas en texto plano/Markdown se convierten
                 al vuelo, escapando el contenido antes de renderizarlo. */}
@@ -235,7 +251,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             )}
 
             {/* Add to cart */}
-            <AddToCartPanel product={product} />
+            <AddToCartPanel product={product} defaultDepositPercent={defaultDepositPercent} />
           </div>
         </div>
       </div>

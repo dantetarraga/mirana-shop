@@ -56,6 +56,8 @@ interface ProductsClientProps {
   brands: BrandRow[]
   collections: CollectionRow[]
   total: number
+  /** % de adelanto por defecto de la tienda, para el bloque de preventa del form */
+  defaultDepositPercent: number
 }
 
 // ---------------------------------------------------------------------------
@@ -70,6 +72,7 @@ export function ProductsClient({
   brands,
   collections,
   total,
+  defaultDepositPercent,
 }: ProductsClientProps) {
   const crud = useCrudState<SerializedProduct>()
   const [showImport, setShowImport] = useState(false)
@@ -144,6 +147,19 @@ export function ProductsClient({
               status: data.status ?? 'AVAILABLE',
               featured: data.featured ?? false,
               createdAt: new Date(),
+              allowPartialPreorder: data.allowPartialPreorder ?? false,
+              preorderDepositPercent:
+                typeof data.preorderDepositPercent === 'number'
+                  ? data.preorderDepositPercent
+                  : null,
+              // El form manda la fecha como string yyyy-MM-dd (z.preprocess la
+              // tipa como unknown), pero la fila optimista de la tabla es Date.
+              estimatedArrival:
+                data.estimatedArrival instanceof Date
+                  ? data.estimatedArrival
+                  : typeof data.estimatedArrival === 'string' && data.estimatedArrival
+                    ? new Date(data.estimatedArrival)
+                    : null,
               category: category
                 ? { id: category.id, name: category.name, slug: category.slug }
                 : { id: data.categoryId, name: '', slug: '' },
@@ -361,6 +377,7 @@ export function ProductsClient({
           categories={categories}
           brands={brands}
           collections={collections}
+          defaultDepositPercent={defaultDepositPercent}
           onClose={crud.closeDrawer}
           onSubmit={onSubmit}
           isPending={isPending}

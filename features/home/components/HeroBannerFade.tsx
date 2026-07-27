@@ -1,6 +1,11 @@
 'use client'
 
 import { BannerImage } from '@/features/banners/components/BannerImage'
+import {
+  bannerFullImage,
+  bannerMobileImage,
+  hasBannerImage,
+} from '@/features/banners/lib/banner-image'
 import type { BannerRow } from '@/features/banners/types'
 import { useReducedMotion } from '@/shared/hooks'
 import Link from 'next/link'
@@ -28,11 +33,14 @@ interface HeroBannerFadeProps {
  * absoluto con `opacity`: arrastrar el DOM de slides (flex + transform) de un
  * carrusel solo para desactivar su desplazamiento sale más caro y más frágil.
  */
-export function HeroBannerFade({ banners }: HeroBannerFadeProps) {
+export function HeroBannerFade({ banners: allBanners }: HeroBannerFadeProps) {
   const [index, setIndex] = useState(0)
   const [paused, setPaused] = useState(false)
   const reducedMotion = useReducedMotion()
 
+  // Un banner sin ninguna imagen no se puede pintar: se descarta aunque esté
+  // activo. getActiveBanners ya lo hace; esto cubre a cualquier otro llamador.
+  const banners = allBanners.filter(hasBannerImage)
   const total = banners.length
   // Con un solo banner no hay nada que alternar: ni intervalo ni controles.
   const isStatic = total <= 1 || reducedMotion
@@ -88,9 +96,11 @@ export function HeroBannerFade({ banners }: HeroBannerFadeProps) {
             <BannerImage
               // La imagen dedicada al hero es opcional: sin ella se cae a la
               // de tarjeta, que es más baja pero encuadra igual con object-cover.
-              desktopUrl={banner.imageUrlFull || banner.imageUrl}
-              mobileUrl={banner.imageUrlMobile}
-              alt={banner.title}
+              // `!` es seguro porque `banners` ya viene filtrado (ver abajo).
+              desktopUrl={bannerFullImage(banner)!}
+              mobileUrl={bannerMobileImage(banner)}
+              // Sin título el banner es decorativo: alt vacío.
+              alt={banner.title ?? ''}
               sizes="100vw"
               priority={i === 0}
               desktopSize={DESKTOP_SIZE}
@@ -111,9 +121,11 @@ export function HeroBannerFade({ banners }: HeroBannerFadeProps) {
                 key={index}
                 className="animate-fade-up relative z-1 h-full shell flex flex-col items-start justify-end pb-14 sm:pb-16 md:pb-20 max-w-4xl"
               >
-                <h2 className="font-display font-black uppercase tracking-[-1px] leading-[0.95] text-[clamp(32px,6vw,72px)] text-on-media">
-                  {banner.title}
-                </h2>
+                {banner.title && (
+                  <h2 className="font-display font-black uppercase tracking-[-1px] leading-[0.95] text-[clamp(32px,6vw,72px)] text-on-media">
+                    {banner.title}
+                  </h2>
+                )}
                 {banner.subtitle && (
                   <p className="mt-3 text-[clamp(14px,1.5vw,18px)] font-light text-on-media/80 max-w-2xl">
                     {banner.subtitle}
@@ -137,7 +149,7 @@ export function HeroBannerFade({ banners }: HeroBannerFadeProps) {
             <button
               key={banner.id}
               type="button"
-              aria-label={`Ir al banner ${i + 1}: ${banner.title}`}
+              aria-label={banner.title ? `Ir al banner ${i + 1}: ${banner.title}` : `Ir al banner ${i + 1}`}
               aria-current={i === index}
               onClick={() => goTo(i)}
               className={`h-1.5 border-none transition-all duration-300 ${

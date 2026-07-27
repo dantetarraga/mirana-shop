@@ -183,7 +183,9 @@ export function Navbar() {
                 size="sm"
                 full
                 onClick={() => {
-                  signOut({ callbackUrl: '/' })
+                  // `redirectTo` es la opción de NextAuth v5; `callbackUrl` era
+                  // de la v4 y aquí se ignoraba en silencio.
+                  signOut({ redirectTo: '/' })
                   setMenuOpen(false)
                 }}
                 className="justify-start px-4.5 border-t border-(--bd)"

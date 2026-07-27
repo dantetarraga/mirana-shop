@@ -44,6 +44,7 @@ export async function getCartState(): Promise<{ items: CartLine[]; expired: bool
     items: cart.items.map((item) => ({
       product: toProductCard(item.product as ProductListItem),
       qty: item.quantity,
+      preorderMode: item.preorderMode,
     })),
     expired: false,
   }

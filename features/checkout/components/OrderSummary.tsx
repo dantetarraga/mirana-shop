@@ -1,5 +1,6 @@
 'use client'
 
+import { depositUnitPrice, type PreorderMode } from '@/features/checkout/lib/preorder'
 import { effectivePrice } from '@/features/checkout/lib/pricing'
 import { Button } from '@/shared/components/ui/Button'
 import { formatCurrency } from '@/shared/lib/utils'
@@ -13,13 +14,24 @@ type CartItem = {
     imageUrl: string | null
     price: number
     salePrice: number | null
+    status: string
+    allowPartialPreorder: boolean
+    preorderDepositPercent: number | null
   }
   qty: number
+  preorderMode: PreorderMode
 }
 
 type Props = {
   cart: CartItem[]
+  /** Valor completo del pedido */
   subtotal: number
+  /** Lo que se cobra hoy, antes de envío y descuentos */
+  payableNow: number
+  /** Saldo pendiente por preventa parcial; 0 en pedidos normales */
+  dueTotal: number
+  /** % de adelanto por defecto de la tienda */
+  depositPercent: number
   shippingCost: number
   shippingFree: boolean
   discount: number
@@ -33,6 +45,9 @@ type Props = {
 export function OrderSummary({
   cart,
   subtotal,
+  payableNow,
+  dueTotal,
+  depositPercent,
   shippingCost,
   shippingFree,
   discount,
@@ -50,7 +65,14 @@ export function OrderSummary({
 
         {/* Items */}
         <ul className="flex flex-col gap-3 mb-5 max-h-64 overflow-y-auto pr-1">
-          {cart.map((item) => (
+          {cart.map((item) => {
+            const isPartial = item.preorderMode === 'PARTIAL'
+            // En las líneas parciales se muestra el adelanto: es lo que suma al
+            // total que el cliente va a pagar hoy.
+            const unit = isPartial
+              ? depositUnitPrice(item.product, depositPercent)
+              : effectivePrice(item.product)
+            return (
             <li key={item.product.id} className="flex gap-3 items-start">
               <div className="w-12 h-12 bg-surf border border-(--bd) shrink-0 overflow-hidden">
                 {item.product.imageUrl ? (
@@ -70,22 +92,31 @@ export function OrderSummary({
                   {item.product.name}
                 </p>
                 <p className="text-[11px] text-muted">
-                  {item.qty} × {formatCurrency(effectivePrice(item.product))}
+                  {item.qty} × {formatCurrency(unit)}
+                  {isPartial && <span className="text-info"> · adelanto</span>}
                 </p>
               </div>
               <span className="font-semibold text-[13px] shrink-0">
-                {formatCurrency(effectivePrice(item.product) * item.qty)}
+                {formatCurrency(unit * item.qty)}
               </span>
             </li>
-          ))}
+            )
+          })}
         </ul>
 
         {/* Totals */}
         <div className="border-t border-(--bd) pt-4 flex flex-col gap-2">
           <div className="flex justify-between text-[13px]">
-            <span className="text-muted">Subtotal</span>
-            <span>{formatCurrency(subtotal)}</span>
+            <span className="text-muted">{dueTotal > 0 ? 'Subtotal a pagar hoy' : 'Subtotal'}</span>
+            <span>{formatCurrency(payableNow)}</span>
           </div>
+
+          {dueTotal > 0 && (
+            <div className="flex justify-between text-[12px]">
+              <span className="text-muted">Valor total del pedido</span>
+              <span className="text-muted">{formatCurrency(subtotal)}</span>
+            </div>
+          )}
 
           {discount > 0 && (
             <div className="flex justify-between text-[13px]">
@@ -111,16 +142,23 @@ export function OrderSummary({
             <p className="text-[11px] text-muted leading-snug">
               Agrega{' '}
               <span className="text-text font-semibold">
-                {formatCurrency(shippingThreshold - subtotal)}
+                {formatCurrency(shippingThreshold - payableNow)}
               </span>{' '}
               más para envío gratis.
             </p>
           )}
 
           <div className="flex justify-between font-display font-black text-[18px] uppercase tracking-tight border-t border-(--bd) pt-3 mt-1">
-            <span>Total</span>
+            <span>{dueTotal > 0 ? 'Pagas hoy' : 'Total'}</span>
             <span className="text-accent-ink">{formatCurrency(total)}</span>
           </div>
+
+          {dueTotal > 0 && (
+            <div className="flex justify-between text-[12px] border border-(--bd) px-3 py-2 mt-1">
+              <span className="text-muted">Saldo pendiente</span>
+              <span className="text-info font-semibold">{formatCurrency(dueTotal)}</span>
+            </div>
+          )}
         </div>
       </div>
 
