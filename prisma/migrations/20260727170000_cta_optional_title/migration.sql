@@ -1,0 +1,1 @@
+ALTER TABLE "HomeCta" ALTER COLUMN "title" SET DEFAULT '';

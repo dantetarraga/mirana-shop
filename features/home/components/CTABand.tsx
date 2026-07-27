@@ -24,14 +24,16 @@ export async function CTABand() {
       {hasImage && <div className="absolute inset-0 bg-media-scrim/70" aria-hidden />}
 
       <div className="relative z-1">
-        <h2
-          className={cn(
-            'font-display font-black uppercase leading-[0.95] tracking-[-1px] text-[clamp(26px,4vw,54px)] whitespace-pre-line',
-            hasImage ? 'text-on-media' : 'text-on-accent',
-          )}
-        >
-          {cta.title}
-        </h2>
+        {cta.title && (
+          <h2
+            className={cn(
+              'font-display font-black uppercase leading-[0.95] tracking-[-1px] text-[clamp(26px,4vw,54px)] whitespace-pre-line',
+              hasImage ? 'text-on-media' : 'text-on-accent',
+            )}
+          >
+            {cta.title}
+          </h2>
+        )}
         {cta.subtitle && (
           <p className={cn('text-[14px] mt-2', hasImage ? 'text-on-media/70' : 'text-on-accent/60')}>
             {cta.subtitle}

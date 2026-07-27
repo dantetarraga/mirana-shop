@@ -52,7 +52,7 @@ export function HomeCtaClient({ initial }: HomeCtaClientProps) {
                   form.imageUrl ? 'text-on-media' : 'text-on-accent'
                 }`}
               >
-                {form.title || 'Título'}
+                {form.title || (form.imageUrl ? '' : 'Título')}
               </div>
               {form.subtitle && (
                 <p
@@ -70,7 +70,7 @@ export function HomeCtaClient({ initial }: HomeCtaClientProps) {
           </div>
         </div>
 
-        <FormField label="Título (Enter para salto de línea)">
+        <FormField label="Título (opcional — Enter para salto de línea)">
           <textarea
             value={form.title}
             onChange={(e) => set('title', e.target.value)}
@@ -78,6 +78,9 @@ export function HomeCtaClient({ initial }: HomeCtaClientProps) {
             className={`${cls.input} resize-none`}
             placeholder={'Ediciones\nLimitadas'}
           />
+          <p className="text-[11px] text-muted mt-1.5">
+            Déjalo vacío si la imagen ya incluye el texto.
+          </p>
         </FormField>
 
         <FormField label="Subtítulo">
@@ -126,7 +129,7 @@ export function HomeCtaClient({ initial }: HomeCtaClientProps) {
             variant="accent"
             size="md"
             onClick={save}
-            disabled={isPending || !form.title.trim()}
+            disabled={isPending}
           >
             <Save size={15} className="mr-1.5" />
             {isPending ? 'Guardando…' : 'Guardar cambios'}

@@ -7,6 +7,7 @@ import { CategoryStrips } from '@/features/home/components/CategoryStrips'
 import { FeaturedProducts } from '@/features/home/components/FeaturedProducts'
 import { HeroBannerCarousel } from '@/features/home/components/HeroBannerCarousel'
 import { HeroBannerFade } from '@/features/home/components/HeroBannerFade'
+import { HomeSections } from '@/features/home/components/HomeSections'
 import { NewArrivals } from '@/features/home/components/NewArrivals'
 import { PreorderSection } from '@/features/home/components/PreorderSection'
 import { PromoBanner } from '@/features/home/components/PromoBanner'
@@ -66,6 +67,9 @@ export default async function HomePage() {
       <PromoBanner />
       <NewArrivals />
       <FeaturedProducts />
+      {/* Secciones armadas por el admin en /admin/sections — van después de las
+          fijas y entre ellas se ordenan por su propia posición. */}
+      <HomeSections />
       <CTABand />
       <CategoryStrips categories={categories} />
       <PreorderSection />

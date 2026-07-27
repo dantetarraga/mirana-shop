@@ -253,7 +253,8 @@ model Product {
   cartItems   CartItem[]
   movements   InventoryMovement[]
   preorders   Preorder[]
-  collections ProductCollection[]
+  collections  ProductCollection[]
+  homeSections ProductHomeSection[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -580,6 +581,44 @@ model ProductCollection {
 }
 
 // ---------------------------------------------------------------------------
+// Secciones del inicio creadas desde el admin. Funcionan como "Novedades",
+// pero en vez de calcular la lista (los últimos N) muestran los productos que
+// se les enlazan uno a uno desde la ficha de producto.
+// ---------------------------------------------------------------------------
+
+model HomeSection {
+  id String @id @default(cuid())
+  /// Título grande de la sección — el "Novedades" del inicio
+  title String
+  /// Antetítulo pequeño encima del título. Vacío = no se pinta.
+  eyebrow String @default("")
+  /// Destino del botón "Ver todos". Vacío = /catalogo.
+  ctaHref String @default("")
+  /// Orden en el inicio, de menor a mayor
+  position Int @default(0)
+  /// Oculta = no se pinta en el inicio; en el admin sigue visible para editarla
+  active Boolean @default(true)
+
+  products ProductHomeSection[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active, position])
+}
+
+model ProductHomeSection {
+  productId String
+  sectionId String
+
+  product Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  section HomeSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@id([productId, sectionId])
+  @@index([sectionId])
+}
+
+// ---------------------------------------------------------------------------
 // Promotions
 // ---------------------------------------------------------------------------
 
@@ -754,7 +793,7 @@ model LegalPage {
 
 model HomeCta {
   id       String  @id
-  title    String
+  title    String  @default("")
   subtitle String  @default("")
   ctaLabel String  @default("")
   ctaHref  String  @default("")

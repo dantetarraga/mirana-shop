@@ -50,6 +50,9 @@ export const PRODUCT_LIST_SELECT = {
 export const PRODUCT_ADMIN_LIST_SELECT = {
   ...PRODUCT_LIST_SELECT,
   description: true,
+  // Solo el admin las necesita: son las casillas de "Secciones del inicio" del
+  // formulario. La tienda pinta las secciones desde su propia consulta.
+  homeSections: { select: { sectionId: true } },
 } as const
 
 export const PRODUCT_DETAIL_SELECT = {

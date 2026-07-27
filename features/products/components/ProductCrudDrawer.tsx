@@ -3,6 +3,7 @@
 import type { BrandRow } from '@/features/brands/types'
 import type { CategoryRow } from '@/features/categories/types'
 import type { CollectionRow } from '@/features/collections/types'
+import type { HomeSectionOption } from '@/features/home-sections/types'
 import { PRODUCT_STATUS_OPTIONS } from '@/features/products/lib/product-status'
 import type { ProductAdminListItem } from '@/features/products/types'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
@@ -61,14 +62,17 @@ interface ProductCrudDrawerProps {
   categories: CategoryRow[]
   brands: BrandRow[]
   collections: CollectionRow[]
+  /** Secciones del inicio administradas en /admin/sections */
+  sections: HomeSectionOption[]
   /** % de adelanto por defecto de la tienda — se usa como placeholder y para la vista previa */
   defaultDepositPercent: number
   onClose: () => void
-  /** collectionIds = IDs seleccionados en el multi-select */
+  /** collectionIds / sectionIds = IDs seleccionados en cada multi-select */
   onSubmit: (
     data: ProductFormValues,
     collectionIds: string[],
     images: { url: string; alt: string }[],
+    sectionIds: string[],
   ) => void
   isPending: boolean
 }
@@ -79,6 +83,7 @@ export function ProductCrudDrawer({
   categories,
   brands,
   collections,
+  sections,
   defaultDepositPercent,
   onClose,
   onSubmit,
@@ -98,6 +103,9 @@ export function ProductCrudDrawer({
 
   // IDs de colecciones seleccionadas — estado separado del form (M2M)
   const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>([])
+
+  // Ídem para las secciones del inicio (/admin/sections)
+  const [selectedSectionIds, setSelectedSectionIds] = useState<string[]>([])
 
   // Imágenes — estado separado del form. El orden importa: la primera es la
   // principal y se guarda como `position` en BD.
@@ -132,14 +140,21 @@ export function ProductCrudDrawer({
     }),
   })
 
-  // Sincroniza colecciones e imágenes cuando cambia el producto seleccionado
+  // Sincroniza colecciones, secciones e imágenes cuando cambia el producto
   useEffect(() => {
     setSelectedCollectionIds(product ? product.collections.map((c) => c.collection.id) : [])
+    setSelectedSectionIds(product ? product.homeSections.map((s) => s.sectionId) : [])
     setImageInputs(product?.images.map((img) => ({ url: img.url, alt: img.alt ?? '' })) ?? [])
   }, [product?.id])
 
   const toggleCollection = (id: string) => {
     setSelectedCollectionIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    )
+  }
+
+  const toggleSection = (id: string) => {
+    setSelectedSectionIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     )
   }
@@ -180,7 +195,7 @@ export function ProductCrudDrawer({
   const handleFormSubmit = (data: ProductFormValues) => {
     // Filtra imágenes con URL vacía antes de enviar
     const validImages = imageInputs.filter((img) => img.url.trim() !== '')
-    onSubmit(data, selectedCollectionIds, validImages)
+    onSubmit(data, selectedCollectionIds, validImages, selectedSectionIds)
   }
 
   return (
@@ -308,6 +323,41 @@ export function ProductCrudDrawer({
                 {selectedCollectionIds.length} colección
                 {selectedCollectionIds.length !== 1 ? 'es' : ''} seleccionada
                 {selectedCollectionIds.length !== 1 ? 's' : ''}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* ── Secciones del inicio (M2M) — el listado y el orden se administran
+             en /admin/sections; acá solo se elige en cuáles aparece. ── */}
+        {sections.length > 0 && (
+          <div>
+            <div className={cn(cls.label, 'mb-2')}>Secciones del inicio</div>
+            <div className="border border-(--bd) divide-y divide-(--bd) max-h-45 overflow-y-auto">
+              {sections.map((sec) => (
+                <label
+                  key={sec.id}
+                  className="flex items-center gap-3 px-3.5 py-2.5 cursor-pointer hover:bg-hover-tint transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedSectionIds.includes(sec.id)}
+                    onChange={() => toggleSection(sec.id)}
+                    className="accent-(--gold) w-3.5 h-3.5 shrink-0"
+                  />
+                  <div className="text-[13px] font-semibold truncate">{sec.title}</div>
+                  {!sec.active && (
+                    <span className="ml-auto shrink-0 text-[9px] tracking-[1.5px] uppercase border border-(--bd) px-1.5 py-0.5 text-muted">
+                      Oculta
+                    </span>
+                  )}
+                </label>
+              ))}
+            </div>
+            {selectedSectionIds.length > 0 && (
+              <p className="text-[11px] text-muted mt-1.5">
+                {selectedSectionIds.length} sección{selectedSectionIds.length !== 1 ? 'es' : ''}{' '}
+                seleccionada{selectedSectionIds.length !== 1 ? 's' : ''}
               </p>
             )}
           </div>

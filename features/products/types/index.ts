@@ -31,9 +31,15 @@ export type ProductListItem = {
 /** Fila del listado del admin: incluye la descripción para el form de edición. */
 export type ProductAdminListItem = ProductListItem & {
   description: string
+  /** Secciones del inicio a las que está enlazado */
+  homeSections: { sectionId: string }[]
 }
 
-export type ProductDetail = ProductAdminListItem & {
+// La ficha pública no necesita las secciones del inicio (eso es cosa del
+// formulario del admin), así que cuelga de ProductListItem y no de la fila del
+// admin: si no, el tipo prometería un campo que su `select` no trae.
+export type ProductDetail = ProductListItem & {
+  description: string
   currency: string
   updatedAt: Date
 }

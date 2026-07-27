@@ -1,6 +1,8 @@
 'use client'
 
 import { syncProductCollections } from '@/features/collections/actions/collection.actions'
+import { syncProductHomeSections } from '@/features/home-sections/actions/home-section.actions'
+import type { HomeSectionOption } from '@/features/home-sections/types'
 import {
   createProduct,
   deleteProduct,
@@ -48,6 +50,8 @@ interface ProductsClientProps {
   categories: CategoryRow[]
   brands: BrandRow[]
   collections: CollectionRow[]
+  /** Secciones del inicio disponibles para enlazar desde la ficha */
+  sections: HomeSectionOption[]
   total: number
   /** % de adelanto por defecto de la tienda, para el bloque de preventa del form */
   defaultDepositPercent: number
@@ -64,6 +68,7 @@ export function ProductsClient({
   categories,
   brands,
   collections,
+  sections,
   total,
   defaultDepositPercent,
 }: ProductsClientProps) {
@@ -109,15 +114,19 @@ export function ProductsClient({
     data: ProductFormValues,
     collectionIds: string[],
     images: { url: string; alt: string }[],
+    sectionIds: string[],
   ) => {
     if (crud.isNew) {
       // Para create: pasar imágenes directamente al action via imageUrl (primera) + sync resto después
       run(() => createProduct({ ...data, imageUrl: images[0]?.url }), {
         successMsg: 'Producto creado',
         onSuccess: async (created) => {
-          // Sync colecciones
+          // Sync colecciones y secciones del inicio
           if (collectionIds.length > 0) {
             await syncProductCollections(created.id, collectionIds)
+          }
+          if (sectionIds.length > 0) {
+            await syncProductHomeSections(created.id, sectionIds)
           }
           // Re-sincroniza siempre que haya imágenes: createProduct solo guarda
           // la primera y le pone como alt el nombre del producto, así que este
@@ -169,6 +178,7 @@ export function ProductsClient({
               collections: selectedCollections.map((c) => ({
                 collection: { id: c.id, name: c.name, slug: c.slug },
               })),
+              homeSections: sectionIds.map((sectionId) => ({ sectionId })),
             },
             ...prev,
           ])
@@ -181,13 +191,17 @@ export function ProductsClient({
       run(() => updateProduct(id, data, images), {
         successMsg: 'Producto actualizado',
         onSuccess: async () => {
-          // Sincroniza colecciones junto con la actualización del producto
-          await syncProductCollections(id, collectionIds)
+          // Sincroniza colecciones y secciones junto con la actualización
+          await Promise.all([
+            syncProductCollections(id, collectionIds),
+            syncProductHomeSections(id, sectionIds),
+          ])
           setProducts((prev) =>
             prev.map((p) =>
               p.id === id
                 ? {
                     ...p,
+                    homeSections: sectionIds.map((sectionId) => ({ sectionId })),
                     name: data.name,
                     sku: data.sku,
                     slug: data.slug,
@@ -375,6 +389,7 @@ export function ProductsClient({
           categories={categories}
           brands={brands}
           collections={collections}
+          sections={sections}
           defaultDepositPercent={defaultDepositPercent}
           onClose={crud.closeDrawer}
           onSubmit={onSubmit}

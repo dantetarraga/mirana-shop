@@ -3,6 +3,7 @@ import { ProductFilters } from '@/features/products/components/ProductFilters'
 import { getBrands } from '@/features/brands/queries/brand.queries'
 import { getCategories } from '@/features/categories/queries/category.queries'
 import { getCollections } from '@/features/collections/queries/collection.queries'
+import { getHomeSectionOptions } from '@/features/home-sections/queries/home-section.queries'
 import { PRODUCT_STATUS_LABELS, parseProductStatuses } from '@/features/products/lib/product-status'
 import { countProducts, getAdminProducts } from '@/features/products/queries/product.queries'
 import { getPreorderDepositPercent } from '@/features/settings/queries/store-settings.queries'
@@ -58,12 +59,13 @@ export default async function ProductsPage({ searchParams }: PageProps) {
     status: statuses.length > 0 ? statuses : ('ALL' as const),
   }
 
-  const [products, categories, brands, collections, total, defaultDepositPercent] =
+  const [products, categories, brands, collections, sections, total, defaultDepositPercent] =
     await Promise.all([
       getAdminProducts({ ...queryFilters, take: PER_PAGE, skip }),
       getCategories(),
       getBrands(),
       getCollections({ perPage: 200 }),
+      getHomeSectionOptions(),
       countProducts(queryFilters),
       getPreorderDepositPercent(),
     ])
@@ -198,6 +200,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
         categories={categories}
         brands={brands}
         collections={collections}
+        sections={sections}
         total={total}
         defaultDepositPercent={defaultDepositPercent}
       />

@@ -9,7 +9,7 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
 const homeCtaSchema = z.object({
-  title: z.string().min(1, 'Título requerido').max(120),
+  title: z.string().max(120).optional().default(''),
   subtitle: z.string().max(200).optional().default(''),
   ctaLabel: z.string().max(40).optional().default(''),
   ctaHref: z.string().max(300).optional().default(''),
