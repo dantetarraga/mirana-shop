@@ -1,16 +1,9 @@
 import 'server-only'
 import type { Decimal } from '@/generated/prisma/internal/prismaNamespace'
-import type { OrderStatus } from '@/generated/prisma/client'
 import { db } from '@/shared/lib/db'
 import { formatDate } from '@/shared/lib/utils'
-import type { OrderDetail, OrderFilters, OrderListItem, OrderStatusGroup } from '@/features/orders/types'
-
-const STATUS_GROUP_MAP: Record<OrderStatusGroup, OrderStatus[]> = {
-  pendiente: ['PENDING', 'AWAITING_PROOF', 'PAID', 'PREPARING'],
-  enviado: ['SHIPPED'],
-  entregado: ['DELIVERED'],
-  cancelado: ['CANCELLED', 'REFUNDED'],
-}
+import { ORDER_STATUS_GROUPS as STATUS_GROUP_MAP } from '@/features/orders/lib/order-status'
+import type { OrderDetail, OrderFilters, OrderListItem } from '@/features/orders/types'
 
 export const ORDER_LIST_SELECT = {
   id: true,

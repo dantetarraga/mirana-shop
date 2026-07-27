@@ -2,10 +2,17 @@
 
 import type { OrderStatus } from '@/generated/prisma/client'
 import { DELIVERY_KIND_LABELS } from '@/features/delivery/types'
-import type { OrderListItem } from '@/features/orders/types'
+import {
+  ORDER_STATUS_FLOW,
+  ORDER_STATUS_GROUPS,
+  ORDER_STATUS_LABELS,
+  orderStatusGroup,
+} from '@/features/orders/lib/order-status'
+import type { OrderListItem, OrderStatusGroup } from '@/features/orders/types'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { DrawerSection } from '@/shared/components/admin/DrawerSection'
 import { Button } from '@/shared/components/ui/Button'
+import { InfoTooltip } from '@/shared/components/ui/InfoTooltip'
 import { ORDER_STATUS, fmt } from '@/shared/lib/admin/admin-constants'
 import { formatDate } from '@/shared/lib/utils'
 
@@ -22,32 +29,6 @@ export type SerializedOrder = Omit<
   shippingCost: number
   discountTotal: number
   dueTotal: number
-}
-
-// ---------------------------------------------------------------------------
-// Helpers locales
-// ---------------------------------------------------------------------------
-
-const UI_STATUS_LABELS: Record<string, string> = {
-  PENDING: 'Pendiente',
-  AWAITING_PROOF: 'Esperando comprobante',
-  PAID: 'Pagado',
-  PREPARING: 'Preparando',
-  SHIPPED: 'Enviado',
-  DELIVERED: 'Entregado',
-  CANCELLED: 'Cancelado',
-  REFUNDED: 'Reembolsado',
-}
-
-const DB_TO_UI_STATUS: Record<string, string> = {
-  PENDING: 'pendiente',
-  AWAITING_PROOF: 'pendiente',
-  PAID: 'pendiente',
-  PREPARING: 'pendiente',
-  SHIPPED: 'enviado',
-  DELIVERED: 'entregado',
-  CANCELLED: 'cancelado',
-  REFUNDED: 'cancelado',
 }
 
 // ---------------------------------------------------------------------------
@@ -215,22 +196,17 @@ export function OrderDetailDrawer({
         )}
       </DrawerSection>
 
-      <DrawerSection title="Cambiar estado">
+      <DrawerSection
+        title={
+          <span className="inline-flex items-center gap-1.5">
+            Cambiar estado
+            <StatusGroupsTooltip />
+          </span>
+        }
+      >
         <div className="flex flex-wrap gap-2">
-          {(
-            [
-              'PENDING',
-              'AWAITING_PROOF',
-              'PAID',
-              'PREPARING',
-              'SHIPPED',
-              'DELIVERED',
-              'CANCELLED',
-              'REFUNDED',
-            ] as OrderStatus[]
-          ).map((s) => {
-            const ui = DB_TO_UI_STATUS[s] ?? 'pendiente'
-            const config = ORDER_STATUS[ui] ?? ORDER_STATUS.pendiente
+          {ORDER_STATUS_FLOW.map((s) => {
+            const config = ORDER_STATUS[orderStatusGroup(s)] ?? ORDER_STATUS.pendiente
             return (
               <Button
                 key={s}
@@ -240,12 +216,45 @@ export function OrderDetailDrawer({
                 onClick={() => onStatusChange(order.id, s)}
                 className={order.status === s ? config.btnCls : 'text-muted'}
               >
-                {UI_STATUS_LABELS[s]}
+                {ORDER_STATUS_LABELS[s]}
               </Button>
             )
           })}
         </div>
       </DrawerSection>
     </AdminDrawer>
+  )
+}
+
+/**
+ * El admin maneja 8 estados pero el cliente solo ve 4: sin esto no había forma
+ * de saber, al elegir "Preparando", que el pedido le va a seguir figurando como
+ * "Pendiente". La lista se arma desde ORDER_STATUS_GROUPS, o sea desde la misma
+ * agrupación que usan los filtros y el badge de la tabla.
+ */
+function StatusGroupsTooltip() {
+  return (
+    <InfoTooltip label="Ver a qué estado del cliente pertenece cada uno">
+      <span className="block font-semibold mb-2">
+        El cliente solo ve 4 estados. Cada opción de aquí cae en uno:
+      </span>
+      <span className="flex flex-col gap-1.5">
+        {(Object.keys(ORDER_STATUS_GROUPS) as OrderStatusGroup[]).map((group) => (
+          <span key={group} className="flex gap-2">
+            <span
+              className="shrink-0 w-2 h-2 mt-[6px] rounded-full"
+              style={{ background: ORDER_STATUS[group]?.color }}
+              aria-hidden
+            />
+            <span>
+              <span className="font-semibold">{ORDER_STATUS[group]?.label}</span>{' '}
+              <span className="text-muted">
+                {ORDER_STATUS_GROUPS[group].map((s) => ORDER_STATUS_LABELS[s]).join(' · ')}
+              </span>
+            </span>
+          </span>
+        ))}
+      </span>
+    </InfoTooltip>
   )
 }

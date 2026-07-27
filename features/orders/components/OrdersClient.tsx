@@ -5,6 +5,7 @@ import {
   OrderDetailDrawer,
   type SerializedOrder,
 } from '@/features/orders/components/OrderDetailDrawer'
+import { ORDER_STATUS_LABELS, orderStatusGroup } from '@/features/orders/lib/order-status'
 import type { OrderStatus } from '@/generated/prisma/client'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
 import { StatusBadge } from '@/features/orders/components/StatusBadge'
@@ -18,17 +19,6 @@ import { useMemo, useState } from 'react'
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-const DB_TO_UI_STATUS: Record<string, string> = {
-  PENDING: 'pendiente',
-  AWAITING_PROOF: 'pendiente',
-  PAID: 'pendiente',
-  PREPARING: 'pendiente',
-  SHIPPED: 'enviado',
-  DELIVERED: 'entregado',
-  CANCELLED: 'cancelado',
-  REFUNDED: 'cancelado',
-}
 
 function fmtDate(d: Date): string {
   return formatDate(d, 'd MMM')
@@ -49,7 +39,9 @@ export function OrdersClient({ orders }: OrdersClientProps) {
 
   const handleStatusChange = (orderId: string, status: OrderStatus) => {
     run(() => updateOrderStatus({ orderId, status }), {
-      successMsg: `Estado: ${ORDER_STATUS[DB_TO_UI_STATUS[status]]?.label ?? status}`,
+      // El toast nombra el estado exacto que se eligió, no el grupo: si dijera
+      // "Pendiente" al marcar "Preparando" parecería que no guardó nada.
+      successMsg: `Estado: ${ORDER_STATUS_LABELS[status] ?? status}`,
       // Actualización optimista del drawer — el toast sobrevive al refresh
       onSuccess: () => setDetail((d) => (d?.id === orderId ? { ...d, status } : d)),
       // router.refresh() trae los pedidos actualizados del servidor
@@ -101,12 +93,12 @@ export function OrdersClient({ orders }: OrdersClientProps) {
       },
       {
         header: 'Estado',
-        render: (o) => {
-          const ui = DB_TO_UI_STATUS[o.status] ?? 'pendiente'
-          return (
-            <StatusBadge config={ORDER_STATUS[ui] ?? ORDER_STATUS.pendiente} variant="filled" />
-          )
-        },
+        render: (o) => (
+          <StatusBadge
+            config={ORDER_STATUS[orderStatusGroup(o.status)] ?? ORDER_STATUS.pendiente}
+            variant="filled"
+          />
+        ),
       },
       {
         header: '',

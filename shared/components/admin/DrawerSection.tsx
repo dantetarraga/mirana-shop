@@ -2,7 +2,8 @@ import { cls } from '@/shared/lib/admin/admin-classes'
 import { cn } from '@/shared/lib/utils'
 
 interface Props {
-  title: string
+  /** Nodo y no `string` para poder colgarle un InfoTooltip al lado. */
+  title: React.ReactNode
   children: React.ReactNode
   divider?: boolean
 }
