@@ -10,6 +10,7 @@ import { HeroBannerFade } from '@/features/home/components/HeroBannerFade'
 import { HomeSections } from '@/features/home/components/HomeSections'
 import { NewArrivals } from '@/features/home/components/NewArrivals'
 import { PreorderSection } from '@/features/home/components/PreorderSection'
+import { PromoAnnouncementBar } from '@/features/home/components/PromoAnnouncementBar'
 import { PromoBanner } from '@/features/home/components/PromoBanner'
 import { QuickFiltersBar } from '@/features/home/components/QuickFiltersBar'
 import { ReviewsSection } from '@/features/home/components/ReviewsSection'
@@ -59,6 +60,8 @@ export default async function HomePage() {
           navbar; como tarjetas van en su grid/carrusel debajo de las marcas. */}
       <div className="pt-(--nh)">
         {isFullscreen && <HeroBannerFade banners={activeBanners} />}
+        {/* Banner dinámico de promociones activas — solo aparece si hay alguna */}
+        <PromoAnnouncementBar />
         <QuickFiltersBar categories={categories} />
         <BrandsCarousel brands={brands} />
         {!isFullscreen && <HeroBannerCarousel banners={activeBanners} />}
