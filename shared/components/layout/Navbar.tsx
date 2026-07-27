@@ -15,7 +15,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
 export function Navbar() {
-  const { cartCount, setCartOpen } = useCartStore()
+  const { cartCount, setCartOpen, hydrated } = useCartStore()
   const { openAuth } = useAuthModalStore()
   const { user } = useUser()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -92,11 +92,16 @@ export function Navbar() {
           variant="icon"
           size="md"
           onClick={() => setCartOpen(true)}
-          aria-label={cartCount > 0 ? `Carrito, ${cartCount} artículos` : 'Carrito, vacío'}
+          // Hasta que CartHydrator siembra el carrito del servidor no se sabe
+          // cuántos artículos hay: el HTML del SSR sale siempre con 0 y afirmar
+          // "vacío" sería mentira durante el primer pintado.
+          aria-label={
+            !hydrated ? 'Carrito' : cartCount > 0 ? `Carrito, ${cartCount} artículos` : 'Carrito, vacío'
+          }
           className="relative"
         >
           <ShoppingBag size={17} />
-          {cartCount > 0 && (
+          {hydrated && cartCount > 0 && (
             <span
               aria-hidden
               className="absolute top-1.5 -right-1.5 w-4.5 h-4.5 rounded-full flex items-center justify-center text-[10px] font-bold font-display bg-(--gold) text-black"

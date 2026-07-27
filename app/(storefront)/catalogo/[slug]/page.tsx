@@ -1,3 +1,4 @@
+import { effectivePrice } from '@/features/checkout/lib/pricing'
 import { AddToCartPanel } from '@/features/products/components/AddToCartPanel'
 import { ProductImageCarousel } from '@/features/products/components/ProductImageCarousel'
 import { RelatedProducts } from '@/features/products/components/RelatedProducts'
@@ -13,9 +14,6 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-
-/** Bajo este stock se muestra el aviso de urgencia (sin decir la cifra exacta). */
-const LOW_STOCK_HINT_THRESHOLD = 8
 
 /** Máximo de caracteres del meta description (Google corta ~160). */
 const META_DESCRIPTION_MAX = 300
@@ -89,10 +87,20 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const descriptionHtml = toRichHtml(raw.description)
   const stripe = getCategoryStripe(product.category.slug)
   const catLabel = getCategoryLabel(product.category.slug)
-  const isOutOfStock = product.stock === 0 || product.status === 'SOLD_OUT'
-  const displayPrice = product.salePrice && product.salePrice < product.price
-    ? product.salePrice
-    : product.price
+  // Misma regla que la card y el modal: la preventa se reserva sin stock, así
+  // que no cuenta como agotada (antes esta página la marcaba AGOTADO y PREVENTA
+  // a la vez, y su panel de compra la daba por no comprable).
+  const isPreorder = product.status === 'PREORDER'
+  const isOutOfStock = product.status === 'SOLD_OUT' || (!isPreorder && product.stock === 0)
+  const displayPrice = effectivePrice(product)
+
+  const badge = isOutOfStock
+    ? { label: 'AGOTADO', className: 'bg-danger text-white' }
+    : isPreorder
+      ? { label: 'PREVENTA', className: 'bg-info text-white' }
+      : product.featured
+        ? { label: 'DESTACADO', className: 'bg-(--gold) text-black' }
+        : null
 
   const productJsonLd = {
     '@context': 'https://schema.org',
@@ -107,9 +115,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
       url: `${BASE_URL}/catalogo/${product.slug}`,
       priceCurrency: raw.currency ?? 'PEN',
       price: displayPrice.toFixed(2),
-      availability:
-        product.status === 'PREORDER'
-          ? 'https://schema.org/PreOrder'
+      availability: isPreorder
+        ? 'https://schema.org/PreOrder'
           : isOutOfStock
             ? 'https://schema.org/OutOfStock'
             : 'https://schema.org/InStock',
@@ -173,20 +180,13 @@ export default async function ProductDetailPage({ params }: PageProps) {
             sizes="(max-width: 1024px) 100vw, 50vw"
             className={`${stripe} glow-section glow-section--card aspect-square flex items-center justify-center relative`}
           >
-            {/* Badges */}
-            {product.featured && !isOutOfStock && (
-              <div className="z-1 absolute top-4 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-3 py-1.5 bg-(--gold) text-black">
-                DESTACADO
-              </div>
-            )}
-            {isOutOfStock && (
-              <div className="z-1 absolute top-4 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-3 py-1.5 bg-danger text-white">
-                AGOTADO
-              </div>
-            )}
-            {product.status === 'PREORDER' && (
-              <div className="z-1 absolute top-4 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-3 py-1.5 bg-info text-white">
-                PREVENTA
+            {/* Una sola badge por prioridad, como en ProductCard: las tres se
+                posicionaban en el mismo top/left y se pisaban entre sí. */}
+            {badge && (
+              <div
+                className={`z-1 absolute top-4 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-3 py-1.5 ${badge.className}`}
+              >
+                {badge.label}
               </div>
             )}
           </ProductImageCarousel>
@@ -220,12 +220,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
               )}
             </div>
 
-            {/* Aviso de urgencia — sin revelar cuántas unidades quedan */}
-            {!isOutOfStock && product.stock <= LOW_STOCK_HINT_THRESHOLD && (
-              <div className="text-[12px] text-[#ffb84a] font-semibold tracking-[0.5px]">
-                ⚠ ¡Últimas unidades disponibles!
-              </div>
-            )}
+            {/* El aviso de "últimas unidades" vive ahora en AddToCartPanel: aquí
+                se calculaba sobre el stock crudo y seguía apareciendo aunque el
+                cliente ya tuviera todas esas unidades en su carrito. */}
 
             {/* Description — HTML del editor del admin (saneado al guardar).
                 Las descripciones antiguas en texto plano/Markdown se convierten

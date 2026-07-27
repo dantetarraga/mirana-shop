@@ -6,6 +6,7 @@ import {
   effectivePrice,
   type PricingRules,
 } from '@/features/checkout/lib/pricing'
+import { maxPurchasable } from '@/features/products/lib/stock'
 import { getCategoryLabel, getCategoryStripe } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
@@ -83,6 +84,8 @@ export function CartView({ pricingRules }: CartViewProps) {
               const catLabel = getCategoryLabel(item.product.category.slug)
               const unitPrice = effectivePrice(item.product)
               const lineTotal = unitPrice * item.qty
+              const max = maxPurchasable(item.product)
+              const atLimit = max !== null && item.qty >= max
 
               return (
                 <div
@@ -138,7 +141,8 @@ export function CartView({ pricingRules }: CartViewProps) {
                           </span>
                           <button
                             onClick={() => updateQty(item.product.id, 1)}
-                            className="px-3 py-2 text-muted hover:text-text transition-colors duration-150"
+                            disabled={atLimit}
+                            className="px-3 py-2 text-muted hover:text-text disabled:opacity-30 transition-colors duration-150"
                             aria-label="Aumentar cantidad"
                           >
                             <Plus size={13} />

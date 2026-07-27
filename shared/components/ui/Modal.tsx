@@ -2,6 +2,7 @@
 
 import { Button } from '@/shared/components/ui/Button'
 import { useFocusTrap } from '@/shared/hooks/useFocusTrap'
+import { useScrollLock } from '@/shared/hooks/useScrollLock'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { cn } from '@/shared/lib/utils'
 import { X } from 'lucide-react'
@@ -54,16 +55,9 @@ export function Modal({
     return () => window.removeEventListener('keydown', handler)
   }, [open, onClose])
 
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [open])
+  // Contador compartido: este modal puede estar anidado dentro de otro diálogo
+  // (el ConfirmModal del CartDrawer) y no debe liberar un bloqueo ajeno.
+  useScrollLock(open)
 
   if (!open) return null
 

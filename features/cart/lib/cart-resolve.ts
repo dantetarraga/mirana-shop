@@ -1,6 +1,7 @@
 import 'server-only'
 import { auth } from '@/auth'
 import { isCartExpired } from '@/features/cart/lib/cart-ttl'
+import { maxPurchasable } from '@/features/products/lib/stock'
 import { getCartSessionId, getOrCreateCartSessionId } from '@/shared/lib/cart-session'
 import { db } from '@/shared/lib/db'
 
@@ -34,12 +35,42 @@ export async function mergeAnonymousCartIntoUser(email: string): Promise<void> {
 
   if (anonCart.id === userCart.id) return
 
+  // Tope de stock por producto. Sin esto la fusión sumaba a ciegas (era la
+  // única ruta de escritura que no clampeaba): un invitado con 3 unidades y una
+  // cuenta con 3 de un producto con stock 4 terminaba con una línea de 6, que
+  // luego llegaba intacta a placeOrder → reserveStockForOrder.
+  const products = await db.product.findMany({
+    where: { id: { in: anonCart.items.map((i) => i.productId) } },
+    select: { id: true, status: true, deletedAt: true, inventory: { select: { availableStock: true } } },
+  })
+  const caps = new Map<string, number | null>(
+    products.map((p) => [
+      p.id,
+      p.deletedAt
+        ? 0
+        : maxPurchasable({ status: p.status, stock: p.inventory?.availableStock ?? 0 }),
+    ]),
+  )
+
   await db.$transaction(async (tx) => {
     for (const item of anonCart.items) {
+      const max = caps.get(item.productId) ?? 0
+      const existing = await tx.cartItem.findUnique({
+        where: { cartId_productId: { cartId: userCart.id, productId: item.productId } },
+      })
+      const target = (existing?.quantity ?? 0) + item.quantity
+      const quantity = max === null ? target : Math.min(target, max)
+
+      if (quantity <= 0) {
+        // Agotado o borrado mientras estaba en el carrito anónimo: no se arrastra.
+        if (existing) await tx.cartItem.delete({ where: { id: existing.id } })
+        continue
+      }
+
       await tx.cartItem.upsert({
         where: { cartId_productId: { cartId: userCart.id, productId: item.productId } },
-        update: { quantity: { increment: item.quantity } },
-        create: { cartId: userCart.id, productId: item.productId, quantity: item.quantity },
+        update: { quantity },
+        create: { cartId: userCart.id, productId: item.productId, quantity },
       })
     }
     await tx.cart.delete({ where: { id: anonCart.id } })

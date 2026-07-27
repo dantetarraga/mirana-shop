@@ -1,5 +1,6 @@
 'use client'
 
+import { useCartLine } from '@/features/cart/hooks/useCartLine'
 import { useCartStore } from '@/features/cart/stores/cart.store'
 import { useProductModalStore } from '@/features/products/stores/product-modal.store'
 import type { CatalogProduct } from '@/features/products/types/catalog.types'
@@ -21,23 +22,24 @@ interface ProductCardProps {
 }
 
 export function ProductCard({
-  product: p,
+  product,
   showBadge = true,
   noAnimation = false,
 }: ProductCardProps) {
   const { openProductModal } = useProductModalStore()
-  const { cart, addToCart, updateQty, removeItem } = useCartStore()
+  const { addToCart, updateQty, removeItem } = useCartStore()
   const [confirmRemove, setConfirmRemove] = useState(false)
   const { justAdded, trigger } = useJustAdded()
+  // Disponibilidad, tope y precio salen del mismo hook que el modal y el PDP.
+  // `p` es el producto de la línea del carrito cuando existe: antes el botón `+`
+  // usaba ese stock fresco pero "Agregar al carrito" el del prop, ya rancio.
+  const { product: p, qtyInCart, isPreorder, isOutOfStock, remaining, unitPrice, hasDiscount, hydrated } =
+    useCartLine(product)
   const stripe = getCategoryStripe(p.category.slug)
   const catLabel = getCategoryLabel(p.category.slug)
-  const isPreorder = p.status === 'PREORDER'
-  const isOutOfStock = p.status === 'SOLD_OUT' || (!isPreorder && p.stock === 0)
   // const isNew = p.status === 'AVAILABLE' && p.stock > 0 — solo se usaba para las estrellas ocultas
-  const qtyInCart = cart.find((i) => i.product.id === p.id)?.qty ?? 0
 
-  const discountPct =
-    p.salePrice && p.salePrice < p.price ? Math.round((1 - p.salePrice / p.price) * 100) : 0
+  const discountPct = hasDiscount ? Math.round((1 - unitPrice / p.price) * 100) : 0
   // isNewArrival viene precalculado del server (toProductCard) — no usar
   // Date.now() en render: es impuro y el React Compiler lo rechaza.
   const isNewArrival = p.isNewArrival
@@ -107,9 +109,9 @@ export function ProductCard({
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-baseline gap-1.5 min-w-0">
             <span className="font-display text-[19px] sm:text-[26px] font-black text-accent-ink whitespace-nowrap">
-              S/ {(p.salePrice && p.salePrice < p.price ? p.salePrice : p.price).toFixed(2)}
+              S/ {unitPrice.toFixed(2)}
             </span>
-            {p.salePrice && p.salePrice < p.price && (
+            {hasDiscount && (
               <span className="text-[11px] sm:text-[14px] font-normal text-muted line-through whitespace-nowrap">
                 S/ {p.price.toFixed(2)}
               </span>
@@ -160,6 +162,7 @@ export function ProductCard({
               variant="icon"
               size="md"
               className="flex-1"
+              disabled={remaining !== null && remaining === 0}
               aria-label={`Agregar una unidad de "${p.name}"`}
               onClick={(e) => {
                 e.stopPropagation()
@@ -177,7 +180,7 @@ export function ProductCard({
             variant={justAdded ? 'success' : 'accent'}
             size="md"
             className="add-btn w-full"
-            disabled={isOutOfStock}
+            disabled={isOutOfStock || !hydrated}
             onClick={(e) => {
               e.stopPropagation()
               if (!isOutOfStock && addToCart(p, 1) > 0) {

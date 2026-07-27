@@ -2,15 +2,17 @@
 
 import { useCartStore } from '@/features/cart/stores/cart.store'
 import { computeTotals, effectivePrice, type PricingRules } from '@/features/checkout/lib/pricing'
+import { maxPurchasable } from '@/features/products/lib/stock'
 import { getCategoryStripe } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
+import { useScrollLock } from '@/shared/hooks'
 import { useFocusTrap } from '@/shared/hooks/useFocusTrap'
 import { formatCurrency } from '@/shared/lib/utils'
 import { ArrowRight, Minus, Plus, X } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { toast } from 'sonner'
 
 interface CartDrawerProps {
@@ -18,7 +20,7 @@ interface CartDrawerProps {
 }
 
 export function CartDrawer({ pricingRules }: CartDrawerProps) {
-  const { cartOpen } = useCartStore()
+  const cartOpen = useCartStore((s) => s.cartOpen)
 
   if (!cartOpen) return null
 
@@ -27,27 +29,52 @@ export function CartDrawer({ pricingRules }: CartDrawerProps) {
   return <CartDrawerContent pricingRules={pricingRules} />
 }
 
+/** Elementos del layout que quedan fuera del diálogo mientras está abierto. */
+const BACKGROUND_SELECTOR = 'nav, #main, footer'
+
 function CartDrawerContent({ pricingRules }: CartDrawerProps) {
-  const { cart, cartCount, setCartOpen, updateQty, removeItem } = useCartStore()
+  const { cart, cartCount, setCartOpen, updateQty, removeItem, refreshCart } = useCartStore()
+  const busy = useCartStore((s) => s.pendingWrites > 0)
   const subtotal = cart.reduce((s, i) => s + effectivePrice(i.product) * i.qty, 0)
-  const { shippingFree, discount, discountName, total } = computeTotals(subtotal, pricingRules)
+  const { shippingFree, shippingCost, discount, discountName, total } = computeTotals(
+    subtotal,
+    pricingRules,
+  )
   const [pendingRemove, setPendingRemove] = useState<{ id: string; name: string } | null>(null)
   const panelRef = useFocusTrap<HTMLDivElement>(true)
+  const titleId = useId()
+
+  useScrollLock(true)
+
+  // Al abrir se relee el carrito del servidor: es el momento en que el usuario
+  // va a revisar precios y cantidades, y hasta ahora el drawer nunca revalidaba
+  // (la primera señal de que algo no cuadraba era el rechazo de placeOrder).
+  useEffect(() => {
+    refreshCart()
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refreshCart()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [refreshCart])
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setCartOpen(false)
+      // El ConfirmModal de borrado también escucha Escape en `window`: sin este
+      // guardia una sola pulsación cerraba la confirmación Y el drawer entero.
+      if (e.key === 'Escape' && pendingRemove === null) setCartOpen(false)
     }
     window.addEventListener('keydown', h)
     return () => window.removeEventListener('keydown', h)
-  }, [setCartOpen])
+  }, [setCartOpen, pendingRemove])
 
-  // Bloquea el scroll del fondo mientras el drawer está abierto (Modal ya lo
-  // hace; el CartDrawer no lo tenía y el contenido de atrás seguía scrolleando).
+  // El fondo queda inerte para el lector de pantalla y para el tabulador; antes
+  // el foco estaba atrapado pero el cursor virtual seguía recorriendo la página.
   useEffect(() => {
-    document.body.style.overflow = 'hidden'
+    const nodes = Array.from(document.querySelectorAll<HTMLElement>(BACKGROUND_SELECTOR))
+    for (const node of nodes) node.inert = true
     return () => {
-      document.body.style.overflow = ''
+      for (const node of nodes) node.inert = false
     }
   }, [])
 
@@ -61,17 +88,34 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
         ref={panelRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Carrito de compras"
+        aria-labelledby={titleId}
         className="fixed top-0 right-0 bottom-0 z-401 w-full sm:w-105 bg-surf border-l border-(--bd) flex flex-col animate-slide-right"
       >
         {/* Header */}
         <div className="px-5 sm:px-7 py-6 border-b border-(--bd) flex items-center justify-between">
-          <div className="font-display text-[26px] font-black uppercase tracking-[1px]">
-            Carrito <span className="text-accent-ink">({cartCount})</span>
+          <h2
+            id={titleId}
+            className="font-display text-[26px] font-black uppercase tracking-[1px]"
+          >
+            Carrito{' '}
+            <span className="text-accent-ink" aria-live="polite">
+              ({cartCount})
+            </span>
+          </h2>
+          <div className="flex items-center gap-2">
+            {/* Los controles no se deshabilitan mientras se guarda: la UI es
+                optimista y bloquearlos rompería el +/− rápido. El estado se
+                comunica en su lugar. */}
+            <span
+              className={`text-[10px] tracking-[1px] uppercase text-muted transition-opacity duration-200 ${busy ? 'opacity-100' : 'opacity-0'}`}
+              aria-live="polite"
+            >
+              {busy ? 'Guardando…' : ''}
+            </span>
+            <Button variant="icon" size="md" aria-label="Cerrar carrito" onClick={() => setCartOpen(false)}>
+              <X size={16} />
+            </Button>
           </div>
-          <Button variant="icon" size="md" aria-label="Cerrar carrito" onClick={() => setCartOpen(false)}>
-            <X size={16} />
-          </Button>
         </div>
 
         {/* Items */}
@@ -82,70 +126,91 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
               <div className="font-display text-[22px] font-black uppercase mb-2">
                 Carrito vacío
               </div>
-              <div className="text-[13px]">Agrega productos para continuar</div>
+              <div className="text-[13px] mb-6">Agrega productos para continuar</div>
+              <Link
+                href="/catalogo"
+                onClick={() => setCartOpen(false)}
+                className="ui-btn ui-btn--accent ui-btn--md"
+              >
+                Ver catálogo
+              </Link>
             </div>
           ) : (
-            cart.map((item) => (
-              <div
-                key={item.product.id}
-                className="flex gap-3.5 items-center pb-3.5 border-b border-(--bd)"
-              >
-                <div className="relative w-17.5 h-17.5 shrink-0 overflow-hidden">
-                  {item.product.imageUrl ? (
-                    <Image
-                      src={item.product.imageUrl}
-                      alt={item.product.name}
-                      fill
-                      sizes="70px"
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div
-                      className={`${getCategoryStripe(item.product.category.slug)} w-full h-full`}
-                    />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-display text-[17px] font-extrabold uppercase whitespace-nowrap overflow-hidden text-ellipsis">
-                    {item.product.name}
-                  </div>
-                  <div className="text-accent-ink font-display text-[20px] font-extrabold mt-px">
-                    {formatCurrency(effectivePrice(item.product))}
-                  </div>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Button
-                      variant="icon"
-                      size="sm"
-                      aria-label={`Quitar una unidad de "${item.product.name}"`}
-                      onClick={() => updateQty(item.product.id, -1)}
-                    >
-                      <Minus size={14} />
-                    </Button>
-                    <span className="font-display font-extrabold min-w-6 text-center">
-                      {item.qty}
-                    </span>
-                    <Button
-                      variant="icon"
-                      size="sm"
-                      aria-label={`Agregar una unidad de "${item.product.name}"`}
-                      onClick={() => updateQty(item.product.id, 1)}
-                    >
-                      <Plus size={14} />
-                    </Button>
-                  </div>
-                </div>
-                <Button
-                  variant="icon"
-                  size="sm"
-                  destructive
-                  aria-label={`Eliminar "${item.product.name}" del carrito`}
-                  onClick={() => setPendingRemove({ id: item.product.id, name: item.product.name })}
-                  className="self-start"
+            cart.map((item) => {
+              const max = maxPurchasable(item.product)
+              const atLimit = max !== null && item.qty >= max
+              const unavailable = max === 0
+
+              return (
+                <div
+                  key={item.product.id}
+                  className="flex gap-3.5 items-center pb-3.5 border-b border-(--bd)"
                 >
-                  <X size={14} />
-                </Button>
-              </div>
-            ))
+                  <div className="relative w-17.5 h-17.5 shrink-0 overflow-hidden">
+                    {item.product.imageUrl ? (
+                      <Image
+                        src={item.product.imageUrl}
+                        alt={item.product.name}
+                        fill
+                        sizes="70px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div
+                        className={`${getCategoryStripe(item.product.category.slug)} w-full h-full`}
+                      />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-display text-[17px] font-extrabold uppercase whitespace-nowrap overflow-hidden text-ellipsis">
+                      {item.product.name}
+                    </div>
+                    <div className="text-accent-ink font-display text-[20px] font-extrabold mt-px">
+                      {formatCurrency(effectivePrice(item.product))}
+                    </div>
+                    {/* Un producto puede agotarse mientras está en el carrito. */}
+                    {unavailable && (
+                      <div className="text-[11px] text-danger font-semibold mt-0.5">
+                        Sin stock — quitalo para continuar
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 mt-2">
+                      <Button
+                        variant="icon"
+                        size="sm"
+                        disabled={item.qty <= 1}
+                        aria-label={`Quitar una unidad de "${item.product.name}"`}
+                        onClick={() => updateQty(item.product.id, -1)}
+                      >
+                        <Minus size={14} />
+                      </Button>
+                      <span className="font-display font-extrabold min-w-6 text-center">
+                        {item.qty}
+                      </span>
+                      <Button
+                        variant="icon"
+                        size="sm"
+                        disabled={atLimit}
+                        aria-label={`Agregar una unidad de "${item.product.name}"`}
+                        onClick={() => updateQty(item.product.id, 1)}
+                      >
+                        <Plus size={14} />
+                      </Button>
+                    </div>
+                  </div>
+                  <Button
+                    variant="icon"
+                    size="sm"
+                    destructive
+                    aria-label={`Eliminar "${item.product.name}" del carrito`}
+                    onClick={() => setPendingRemove({ id: item.product.id, name: item.product.name })}
+                    className="self-start"
+                  >
+                    <X size={14} />
+                  </Button>
+                </div>
+              )
+            })
           )}
         </div>
 
@@ -169,15 +234,37 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
         {/* Footer */}
         {cart.length > 0 && (
           <div className="px-5 sm:px-7 py-6 border-t border-(--bd)">
-            {discount > 0 && (
-              <div className="flex justify-between items-baseline mb-2 text-[13px]">
-                <span className="text-muted">Descuento{discountName ? ` — ${discountName}` : ''}</span>
-                <span className="text-green-400 font-semibold">−{formatCurrency(discount)}</span>
+            {/* computeTotals mete el envío dentro de `total`. Antes solo se veían
+                Descuento y Total, así que el número no cuadraba con las líneas a
+                la vista ni con el desglose de /carrito. */}
+            <div className="flex flex-col gap-2 mb-4 text-[13px]">
+              <div className="flex justify-between items-baseline">
+                <span className="text-muted">Subtotal</span>
+                <span className="font-semibold">{formatCurrency(subtotal)}</span>
               </div>
-            )}
-            <div className="flex justify-between items-baseline mb-5">
+              {discount > 0 && (
+                <div className="flex justify-between items-baseline">
+                  <span className="text-muted">
+                    Descuento{discountName ? ` — ${discountName}` : ''}
+                  </span>
+                  <span className="text-green-400 font-semibold">−{formatCurrency(discount)}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-baseline">
+                <span className="text-muted">Envío</span>
+                {shippingFree ? (
+                  <span className="text-green-400 font-semibold">Gratis</span>
+                ) : (
+                  <span className="font-semibold">{formatCurrency(shippingCost)}</span>
+                )}
+              </div>
+            </div>
+            <div className="flex justify-between items-baseline mb-5 border-t border-(--bd) pt-3.5">
               <span className="text-[12px] uppercase tracking-[1px] text-muted">Total</span>
-              <span className="font-display text-[38px] font-black text-accent-ink">
+              <span
+                className="font-display text-[38px] font-black text-accent-ink"
+                aria-live="polite"
+              >
                 {formatCurrency(total)}
               </span>
             </div>

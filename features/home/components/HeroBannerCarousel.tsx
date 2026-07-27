@@ -54,14 +54,21 @@ function BannerCard({ card, priority, className }: { card: SlideCard; priority: 
       />
       <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-media-scrim to-transparent pointer-events-none" />
 
+      {/* Todo este bloque va sobre el velo oscuro (`media-scrim`), que es oscuro
+          en ambos temas: usa --on-media (blanco fijo), no los tokens del tema.
+          Con `text-text` el botón quedaba casi negro sobre fondo oscuro en modo
+          claro y solo se leía al pasar el mouse, cuando el hover lo pinta de
+          dorado. Mismo criterio que CategoryStrips y HeroBannerFade. */}
       <div className="relative z-1 p-5 pb-6 sm:p-7 sm:pb-8 text-center">
-        <h3 className="font-display font-black uppercase tracking-[-0.5px] leading-[0.95] text-[clamp(20px,2.2vw,34px)] mb-1.5">
+        <h3 className="font-display font-black uppercase tracking-[-0.5px] leading-[0.95] text-[clamp(20px,2.2vw,34px)] mb-1.5 text-on-media">
           {card.title}
         </h3>
         {card.subtitle && (
-          <p className="text-[13px] text-muted font-light mb-4 sm:mb-5 max-w-70 mx-auto">{card.subtitle}</p>
+          <p className="text-[13px] text-on-media/75 font-light mb-4 sm:mb-5 max-w-70 mx-auto">
+            {card.subtitle}
+          </p>
         )}
-        <span className="inline-block border border-(--bdh) bg-media-scrim/70 px-6 sm:px-8 py-2.5 sm:py-3 font-display font-extrabold uppercase text-[12px] sm:text-[13px] tracking-[2px] text-text transition-colors duration-200 hover:bg-(--gold) hover:text-on-accent hover:border-(--gold)">
+        <span className="inline-block border border-(--bdh) bg-media-scrim/70 px-6 sm:px-8 py-2.5 sm:py-3 font-display font-extrabold uppercase text-[12px] sm:text-[13px] tracking-[2px] text-on-media transition-colors duration-200 hover:bg-(--gold) hover:text-on-accent hover:border-(--gold)">
           {card.ctaLabel}
         </span>
       </div>

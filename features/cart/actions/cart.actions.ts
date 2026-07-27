@@ -83,9 +83,18 @@ export async function addCartItemsAction(
   return getCart()
 }
 
-export async function updateCartItemQtyAction(
+/**
+ * Fija la cantidad de una línea a un valor ABSOLUTO.
+ *
+ * Antes recibía un delta y hacía `existing.quantity + delta`. Como cada action
+ * devuelve el carrito entero y no hay orden garantizado de respuestas, pulsar
+ * +/− rápido aplicaba los deltas sobre estados distintos y la cantidad
+ * retrocedía sola. Con cantidad absoluta la última respuesta que llega es
+ * coherente con el último click, sin importar el orden.
+ */
+export async function setCartItemQtyAction(
   productId: string,
-  delta: number,
+  quantity: number,
 ): Promise<CartLine[]> {
   const cartId = await getOrCreateCartId()
   const [existing, max] = await Promise.all([
@@ -98,7 +107,7 @@ export async function updateCartItemQtyAction(
       // Se agotó mientras el producto estaba en el carrito: la línea ya no vale.
       await db.cartItem.delete({ where: { id: existing.id } })
     } else {
-      const target = Math.max(1, existing.quantity + delta)
+      const target = Math.max(1, Math.floor(quantity))
       await db.cartItem.update({
         where: { id: existing.id },
         data: { quantity: max === null ? target : Math.min(target, max) },

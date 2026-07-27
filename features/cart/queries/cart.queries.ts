@@ -28,17 +28,28 @@ async function findCartWithItems() {
   })
 }
 
-/** Carrito persistido en servidor — por cuenta si hay sesión, por cookie anónima si no. */
-export async function getCart(): Promise<CartLine[]> {
+/**
+ * Carrito + si se vació por caducidad, para poder avisarlo en la UI: antes los
+ * ítems simplemente desaparecían sin explicación.
+ */
+export async function getCartState(): Promise<{ items: CartLine[]; expired: boolean }> {
   const cart = await findCartWithItems()
-  if (!cart) return []
+  if (!cart) return { items: [], expired: false }
 
   // Caducado: se muestra vacío. El vaciado real ocurre al volver a escribir
   // (`getOrCreateCartId`) o en el cron de limpieza — la lectura no muta la DB.
-  if (isCartExpired(cart)) return []
+  if (isCartExpired(cart)) return { items: [], expired: cart.items.length > 0 }
 
-  return cart.items.map((item) => ({
-    product: toProductCard(item.product as ProductListItem),
-    qty: item.quantity,
-  }))
+  return {
+    items: cart.items.map((item) => ({
+      product: toProductCard(item.product as ProductListItem),
+      qty: item.quantity,
+    })),
+    expired: false,
+  }
+}
+
+/** Carrito persistido en servidor — por cuenta si hay sesión, por cookie anónima si no. */
+export async function getCart(): Promise<CartLine[]> {
+  return (await getCartState()).items
 }

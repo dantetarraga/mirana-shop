@@ -16,6 +16,13 @@ export interface StockInfo {
   stock: number
 }
 
+/**
+ * Por debajo de estas unidades disponibles se muestra el aviso de urgencia.
+ * Se compara contra lo que al cliente le queda por llevar (stock menos lo que
+ * ya tiene en el carrito), no contra el stock crudo.
+ */
+export const LOW_STOCK_HINT_THRESHOLD = 8
+
 /** Unidades máximas que el cliente puede llevar. `null` = sin tope (preventa). */
 export function maxPurchasable({ status, stock }: StockInfo): number | null {
   if (status === 'PREORDER') return null

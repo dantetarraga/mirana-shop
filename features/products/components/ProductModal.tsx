@@ -1,13 +1,13 @@
 'use client'
 
+import { useCartLine } from '@/features/cart/hooks/useCartLine'
 import { useCartStore } from '@/features/cart/stores/cart.store'
-import { effectivePrice } from '@/features/checkout/lib/pricing'
 import { ProductImageCarousel } from '@/features/products/components/ProductImageCarousel'
-import { remainingStock, stockLimitMessage } from '@/features/products/lib/stock'
+import { stockLimitMessage } from '@/features/products/lib/stock'
 import { useProductModalStore } from '@/features/products/stores/product-modal.store'
 import { getCategoryStripe, type CatalogProduct } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
-import { useJustAdded } from '@/shared/hooks'
+import { useJustAdded, useScrollLock } from '@/shared/hooks'
 import { useFocusTrap } from '@/shared/hooks/useFocusTrap'
 import { ArrowRight, Check, Minus, Plus, X } from 'lucide-react'
 import Link from 'next/link'
@@ -27,9 +27,11 @@ export function ProductModal() {
   return <ProductModalContent key={p.id} p={p} onClose={closeProductModal} />
 }
 
-function ProductModalContent({ p, onClose }: { p: CatalogProduct; onClose: () => void }) {
-  const { cart, addToCart } = useCartStore()
-  const [qty, setQty] = useState(1)
+function ProductModalContent({ p: initial, onClose }: { p: CatalogProduct; onClose: () => void }) {
+  const { addToCart, updateQty } = useCartStore()
+  const { product: p, qtyInCart, isPreorder, isOutOfStock, remaining, unitPrice, hasDiscount, hydrated } =
+    useCartLine(initial)
+  const [chosenQty, setQty] = useState(1)
   const { justAdded, trigger } = useJustAdded(CLOSE_AFTER_ADD_MS)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const panelRef = useFocusTrap<HTMLDivElement>(true)
@@ -55,24 +57,13 @@ function ProductModalContent({ p, onClose }: { p: CatalogProduct; onClose: () =>
   }, [onClose])
 
   // Bloquea el scroll del fondo mientras el modal está abierto.
-  useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [])
+  useScrollLock(true)
 
-  const isPreorder = p.status === 'PREORDER'
-  const isOutOfStock = !isPreorder && (p.stock === 0 || p.status === 'SOLD_OUT')
-
-  // Precio con oferta aplicada — igual que carrito y checkout. Antes mostraba
-  // p.price (sin descuento) mientras el carrito cobraba el precio rebajado.
-  const unitPrice = effectivePrice(p)
-  const hasDiscount = p.salePrice != null && p.salePrice < p.price
-
-  // El tope descuenta lo que ya está en el carrito.
-  const inCart = cart.find((i) => i.product.id === p.id)?.qty ?? 0
-  const remaining = remainingStock(p, inCart)
+  // Disponibilidad, tope y precio salen de useCartLine para que la card, este
+  // modal y el PDP no puedan divergir (antes tenían tres cálculos distintos).
+  const canAdd = remaining === null || remaining > 0
+  // Recorta la cantidad elegida si el remanente baja mientras el modal está abierto.
+  const qty = remaining === null ? chosenQty : Math.min(chosenQty, Math.max(1, remaining))
   const atLimit = remaining !== null && qty >= remaining
 
   const increase = () => {
@@ -80,7 +71,7 @@ function ProductModalContent({ p, onClose }: { p: CatalogProduct; onClose: () =>
       toast.warning(stockLimitMessage(p.name))
       return
     }
-    setQty((q) => q + 1)
+    setQty(qty + 1)
   }
 
   return (
@@ -139,22 +130,66 @@ function ProductModalContent({ p, onClose }: { p: CatalogProduct; onClose: () =>
             )}
           </div>
 
-          {!isOutOfStock && (
+          {/* Lo que ya está en el carrito — el modal tampoco lo mostraba. */}
+          {qtyInCart > 0 && (
+            <div className="border border-(--bd) px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
+              <div className="text-[12px] tracking-[1px] uppercase text-muted" aria-live="polite">
+                En tu carrito:{' '}
+                <span className="text-accent-ink font-display font-extrabold text-[15px]">
+                  {qtyInCart}
+                </span>
+              </div>
+              <div className="flex items-center border border-(--bd)">
+                <Button
+                  variant="icon"
+                  size="sm"
+                  disabled={qtyInCart <= 1}
+                  aria-label={`Quitar una unidad de "${p.name}"`}
+                  onClick={() => updateQty(p.id, -1)}
+                >
+                  <Minus size={13} />
+                </Button>
+                <div className="w-9 text-center font-display text-[15px] font-extrabold border-l border-r border-(--bd) flex items-center justify-center h-8">
+                  {qtyInCart}
+                </div>
+                <Button
+                  variant="icon"
+                  size="sm"
+                  disabled={remaining !== null && remaining === 0}
+                  aria-label={`Agregar una unidad de "${p.name}"`}
+                  onClick={() => updateQty(p.id, 1)}
+                >
+                  <Plus size={13} />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {!isOutOfStock && canAdd && (
             <div>
-              <div className="text-[10px] tracking-[2px] uppercase text-muted mb-2.5">Cantidad</div>
+              <div className="text-[10px] tracking-[2px] uppercase text-muted mb-2.5">
+                {qtyInCart > 0 ? 'Agregar más' : 'Cantidad'}
+              </div>
               <div className="flex items-center border border-(--bd) w-fit">
                 <Button
                   variant="icon"
                   size="md"
+                  disabled={qty <= 1}
                   aria-label="Quitar una unidad"
-                  onClick={() => setQty((q) => Math.max(1, q - 1))}
+                  onClick={() => setQty(Math.max(1, qty - 1))}
                 >
                   <Minus size={14} />
                 </Button>
                 <div className="w-13 text-center font-display text-[20px] font-extrabold border-l border-r border-(--bd) flex items-center justify-center h-10.5">
                   {qty}
                 </div>
-                <Button variant="icon" size="md" aria-label="Agregar una unidad" onClick={increase}>
+                <Button
+                  variant="icon"
+                  size="md"
+                  disabled={atLimit}
+                  aria-label="Agregar una unidad"
+                  onClick={increase}
+                >
                   <Plus size={14} />
                 </Button>
               </div>
@@ -165,7 +200,7 @@ function ProductModalContent({ p, onClose }: { p: CatalogProduct; onClose: () =>
             variant={justAdded ? 'success' : 'accent'}
             size="lg"
             full
-            disabled={isOutOfStock}
+            disabled={isOutOfStock || !canAdd || !hydrated}
             onClick={() => {
               // El store vuelve a aplicar el tope y avisa si ya no cabe nada.
               if (addToCart(p, qty) > 0) {
@@ -181,6 +216,8 @@ function ProductModalContent({ p, onClose }: { p: CatalogProduct; onClose: () =>
           >
             {isOutOfStock ? (
               'Sin stock'
+            ) : !canAdd ? (
+              'Ya tenés todo el stock disponible'
             ) : justAdded ? (
               <>
                 <Check size={16} strokeWidth={3} />
