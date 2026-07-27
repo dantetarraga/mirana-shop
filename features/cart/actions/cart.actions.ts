@@ -2,6 +2,11 @@
 
 import { auth } from '@/auth'
 import { getCart } from '@/features/cart/queries/cart.queries'
+import {
+  cartKindOf,
+  conflictsWithCart,
+  productCartKind,
+} from '@/features/cart/lib/cart-kind'
 import { getOrCreateCartId, mergeAnonymousCartIntoUser } from '@/features/cart/lib/cart-resolve'
 import type { CartLine } from '@/features/cart/types'
 import { canPartialPreorder, type PreorderMode } from '@/features/checkout/lib/preorder'
@@ -42,6 +47,32 @@ async function resolveMode(productId: string, requested: PreorderMode): Promise<
   return product && canPartialPreorder(product) ? 'PARTIAL' : 'FULL'
 }
 
+/** Estados de los productos que ya están en el carrito, para conocer su tipo. */
+async function storedCartStatuses(cartId: string) {
+  const items = await db.cartItem.findMany({
+    where: { cartId, product: { deletedAt: null } },
+    select: { product: { select: { status: true } } },
+  })
+  return items.map((i) => i.product)
+}
+
+/**
+ * ¿Agregar este producto mezclaría preventa con entrega inmediata?
+ *
+ * La regla la aplica el carrito del cliente, que además ofrece las tres salidas
+ * (pagar, reemplazar, vaciar). Acá solo se corta el paso porque estas actions
+ * son un endpoint público — y porque dos pestañas pueden estar escribiendo el
+ * mismo carrito. El producto simplemente no entra: la respuesta trae el carrito
+ * real y el store deshace su agregado optimista.
+ */
+async function wouldMixKinds(cartId: string, productId: string): Promise<boolean> {
+  const [product, stored] = await Promise.all([
+    db.product.findUnique({ where: { id: productId }, select: { status: true } }),
+    storedCartStatuses(cartId),
+  ])
+  return product != null && conflictsWithCart(stored, product)
+}
+
 export async function getCartAction(): Promise<CartLine[]> {
   return getCart()
 }
@@ -52,6 +83,8 @@ export async function addCartItemAction(
   preorderMode: PreorderMode = 'FULL',
 ): Promise<CartLine[]> {
   const cartId = await getOrCreateCartId()
+  if (await wouldMixKinds(cartId, productId)) return getCart()
+
   const [existing, max, mode] = await Promise.all([
     db.cartItem.findUnique({ where: { cartId_productId: { cartId, productId } } }),
     maxQtyFor(productId),
@@ -100,7 +133,27 @@ export async function addCartItemsAction(
 
   const cartId = await getOrCreateCartId()
 
+  // Mismo criterio que `addManyToCart` en el cliente: manda el tipo de lo que
+  // ya hay en el carrito y, si está vacío, lo fija el primer producto que entra.
+  // Lo incompatible se ignora — el cliente ya avisó qué quedó fuera.
+  const [incoming, stored] = await Promise.all([
+    db.product.findMany({
+      where: { id: { in: items.map((i) => i.productId) } },
+      select: { id: true, status: true },
+    }),
+    storedCartStatuses(cartId),
+  ])
+  const statusById = new Map(incoming.map((p) => [p.id, p.status]))
+  let kind = cartKindOf(stored)
+
   for (const { productId, qty } of items) {
+    const status = statusById.get(productId)
+    if (!status) continue
+
+    const itemKind = productCartKind({ status })
+    if (kind === null) kind = itemKind
+    if (itemKind !== kind) continue
+
     const [existing, max] = await Promise.all([
       db.cartItem.findUnique({ where: { cartId_productId: { cartId, productId } } }),
       maxQtyFor(productId),

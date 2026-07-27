@@ -4,6 +4,7 @@ import type { SerializedComplaint } from '@/features/complaints/components/Compl
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { DrawerSection } from '@/shared/components/admin/DrawerSection'
 import { Button } from '@/shared/components/ui/Button'
+import { cls } from '@/shared/lib/admin/admin-classes'
 import { formatDate } from '@/shared/lib/utils'
 import { Send } from 'lucide-react'
 import { useState } from 'react'
@@ -67,7 +68,7 @@ export function ComplaintDetailDrawer({
           onChange={(e) => setResponse(e.target.value)}
           rows={4}
           disabled={isPending}
-          className="adm-input"
+          className={cls.input}
           placeholder="Escribe la respuesta que se enviará al consumidor..."
         />
         <Button

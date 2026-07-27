@@ -1,6 +1,8 @@
 'use client'
 
+import { cartKindOf } from '@/features/cart/lib/cart-kind'
 import { useCartStore } from '@/features/cart/stores/cart.store'
+import { eligibleDeliveryMethods } from '@/features/checkout/lib/delivery-eligibility'
 import { depositUnitPrice, splitPreorderTotals } from '@/features/checkout/lib/preorder'
 import { computeTotals, effectivePrice, type PricingRules } from '@/features/checkout/lib/pricing'
 import { maxPurchasable } from '@/features/products/lib/stock'
@@ -43,9 +45,17 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
     cart,
     pricingRules.preorderDepositPercent,
   )
+  // El envío que se adelanta es el de la entrega que el checkout va a
+  // preseleccionar para ESTE carrito: con preventa el envío a domicilio no es
+  // elegible (features/checkout/lib/delivery-eligibility.ts).
+  const deliveryMethods = eligibleDeliveryMethods(
+    pricingRules.deliveryMethods,
+    cartKindOf(cart.map((i) => i.product)),
+  )
   const { shippingFree, shippingCost, discount, discountName, total } = computeTotals(
     payableNow,
     pricingRules,
+    { shippingCost: deliveryMethods[0]?.cost },
   )
   const [pendingRemove, setPendingRemove] = useState<{ id: string; name: string } | null>(null)
   const panelRef = useFocusTrap<HTMLDivElement>(true)

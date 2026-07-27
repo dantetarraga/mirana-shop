@@ -19,7 +19,9 @@ import {
   AddressFormPanel,
   type AddressFormValues,
 } from '@/features/profile/components/AddressFormPanel'
+import { cartKindOf, hasMixedKinds } from '@/features/cart/lib/cart-kind'
 import { useCartStore } from '@/features/cart/stores/cart.store'
+import { eligibleDeliveryMethods } from '@/features/checkout/lib/delivery-eligibility'
 import {
   computeTotals,
   defaultDeliveryMethod,
@@ -40,7 +42,7 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ShoppingBag, ShoppingCart } from 'lucide-react'
 import Link from 'next/link'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useForm, type Resolver } from 'react-hook-form'
 import { toast } from 'sonner'
 
@@ -65,8 +67,25 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
   const [showNewAddressForm, setShowNewAddressForm] = useState(false)
   const [coupon, setCoupon] = useState<AppliedCoupon | null>(null)
 
-  const deliveryMethods = pricingRules.deliveryMethods
+  // Un carrito es de preventa o de entrega inmediata, nunca los dos (lo impide
+  // el propio carrito). De ahí sale qué entregas se pueden ofrecer: la preventa
+  // se coordina y no se despacha a domicilio, así que su lista es "entrega de
+  // preventa + retiro en tienda" y la del resto "envío + retiro".
+  const cartKind = cartKindOf(cart.map((i) => i.product))
+  const deliveryMethods = useMemo(
+    () => eligibleDeliveryMethods(pricingRules.deliveryMethods, cartKind),
+    [pricingRules.deliveryMethods, cartKind],
+  )
   const initialMethod = defaultDeliveryMethod(deliveryMethods)
+
+  // Se explica el filtro solo cuando algo quedó fuera: si no, el cliente ve una
+  // lista más corta que en el carrito sin saber por qué.
+  const deliveryHint =
+    cartKind !== null && deliveryMethods.length < pricingRules.deliveryMethods.length
+      ? cartKind === 'PREORDER'
+        ? 'Tu pedido es de preventa: se coordina cuando llegue la mercadería, así que solo puedes elegir entre las entregas compatibles.'
+        : 'Solo se muestran las formas de entrega disponibles para los productos de tu carrito.'
+      : undefined
 
   // El esquema depende de la forma de entrega elegida (¿pide dirección?, ¿pide
   // sede?), así que el resolver lo reconstruye leyendo una ref. Con un resolver
@@ -132,17 +151,31 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
     }
   }, [deliveryMethods.length, requiresAddress, requiresLocation])
 
-  const handleSelectMethod = (method: DeliveryMethodOption) => {
-    setValue('deliveryMethodId', method.id)
-    // Preselecciona la primera sede si el método la exige; si no, la limpia
-    // para no arrastrar la de un método anterior.
-    setValue(
-      'deliveryLocationId',
-      method.requiresLocation ? (method.locations[0]?.id ?? '') : '',
-    )
-    clearErrors(['deliveryMethodId', 'deliveryLocationId'])
-    if (!method.requiresAddress) clearErrors(['address', 'district', 'city'])
-  }
+  const handleSelectMethod = useCallback(
+    (method: DeliveryMethodOption) => {
+      setValue('deliveryMethodId', method.id)
+      // Preselecciona la primera sede si el método la exige; si no, la limpia
+      // para no arrastrar la de un método anterior.
+      setValue(
+        'deliveryLocationId',
+        method.requiresLocation ? (method.locations[0]?.id ?? '') : '',
+      )
+      clearErrors(['deliveryMethodId', 'deliveryLocationId'])
+      if (!method.requiresAddress) clearErrors(['address', 'district', 'city'])
+    },
+    [setValue, clearErrors],
+  )
+
+  // El carrito se hidrata después del primer pintado, así que la preselección
+  // inicial se hizo sobre la lista sin filtrar. Cuando ya se sabe de qué tipo
+  // es el carrito (o cambia porque se vació una línea), la entrega elegida
+  // puede haber desaparecido de la lista: se vuelve a la primera vigente.
+  useEffect(() => {
+    if (deliveryMethods.length === 0) return
+    if (deliveryMethods.some((m) => m.id === deliveryMethodId)) return
+    const next = defaultDeliveryMethod(deliveryMethods)
+    if (next) handleSelectMethod(next)
+  }, [deliveryMethods, deliveryMethodId, handleSelectMethod])
 
   // Totales con precio efectivo (oferta si existe) + promociones y cupón.
   // El servidor recalcula y valida todo esto de nuevo en placeOrder.
@@ -248,6 +281,17 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
 
   const onSubmit = async (data: CheckoutInput) => {
     if (loading) return
+
+    // Red de seguridad: el carrito no deja mezclar preventa con el resto, pero
+    // si algo se coló (dos pestañas escribiendo el mismo carrito) se corta acá
+    // con un mensaje claro en vez de dejar que el servidor rechace el pedido.
+    if (hasMixedKinds(cart.map((i) => i.product))) {
+      toast.error(
+        'Tu carrito mezcla productos de preventa con productos de entrega inmediata. Deja solo uno de los dos tipos para continuar.',
+      )
+      return
+    }
+
     setLoading(true)
 
     // Solo id, cantidad y forma de pago: los precios, promociones y la validez
@@ -322,6 +366,7 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
                   setValue('deliveryLocationId', id)
                   clearErrors('deliveryLocationId')
                 }}
+                hint={deliveryHint}
                 methodError={errors.deliveryMethodId?.message}
                 locationError={errors.deliveryLocationId?.message}
               />

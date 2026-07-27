@@ -1,6 +1,8 @@
 'use client'
 
+import { cartKindOf } from '@/features/cart/lib/cart-kind'
 import { useCartStore } from '@/features/cart/stores/cart.store'
+import { eligibleDeliveryMethods } from '@/features/checkout/lib/delivery-eligibility'
 import {
   computeTotals,
   effectivePrice,
@@ -38,11 +40,21 @@ export function CartView({ pricingRules }: CartViewProps) {
     pricingRules.preorderDepositPercent,
   )
   const itemCount = cart.reduce((s, i) => s + i.qty, 0)
+  // Las entregas que este carrito va a poder elegir: la preventa se coordina y
+  // no se despacha a domicilio (features/checkout/lib/delivery-eligibility.ts).
+  const deliveryMethods = eligibleDeliveryMethods(
+    pricingRules.deliveryMethods,
+    cartKindOf(cart.map((i) => i.product)),
+  )
   // Las promociones se calculan sobre lo que se cobra hoy, no sobre el valor
-  // completo del pedido (ver features/checkout/lib/preorder.ts).
+  // completo del pedido (ver features/checkout/lib/preorder.ts). El envío que
+  // se adelanta es el de la entrega que el checkout va a preseleccionar para
+  // ESTE carrito, no el primero del admin: con un carrito de preventa el envío
+  // a domicilio ni siquiera es elegible.
   const { shippingFree, shippingCost, discount, discountName, total } = computeTotals(
     payableNow,
     pricingRules,
+    { shippingCost: deliveryMethods[0]?.cost },
   )
 
   /* ── Empty state ─────────────────────────────────── */
@@ -269,9 +281,10 @@ export function CartView({ pricingRules }: CartViewProps) {
 
               {/* El costo mostrado es el de la forma de entrega preseleccionada;
                   el cliente puede cambiarla (y con ella el costo) en el checkout. */}
-              {pricingRules.deliveryMethods.length > 1 && (
+              {deliveryMethods.length > 1 && (
                 <p className="text-[12px] text-muted leading-snug">
-                  Eliges la forma de entrega en el checkout: retiro en tienda, preventa o envío.
+                  Eliges la forma de entrega en el checkout:{' '}
+                  {deliveryMethods.map((m) => m.name).join(' o ')}.
                 </p>
               )}
 

@@ -6,6 +6,7 @@ import { RichTextEditor } from '@/shared/components/admin/RichTextEditor'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
 import { useServerAction } from '@/shared/hooks/admin'
+import { cls } from '@/shared/lib/admin/admin-classes'
 import { cn } from '@/shared/lib/utils'
 import { ExternalLink, Save } from 'lucide-react'
 import { useState } from 'react'
@@ -43,7 +44,7 @@ function DocPanel({ doc, hidden }: { doc: LegalDoc; hidden: boolean }) {
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="adm-input"
+          className={cls.input}
           placeholder="Título"
         />
       </FormField>

@@ -1,12 +1,16 @@
 'use client'
 
+import { inputCls } from '@/shared/lib/ui-classes'
 import { cn } from '@/shared/lib/utils'
 import { ChevronDown } from 'lucide-react'
 import { forwardRef } from 'react'
 
 // ---------------------------------------------------------------------------
-// Select — select nativo con el estilo del design system (adm-input) y
-// chevron propio. Compatible con react-hook-form vía register(...).
+// Select — select nativo con el mismo estilo de campo que los inputs (inputCls)
+// y chevron propio. Compatible con react-hook-form vía register(...).
+//
+// El desplegable lo sigue pintando el navegador, pero `color-scheme` (globals)
+// hace que respete el tema claro/oscuro.
 // ---------------------------------------------------------------------------
 
 type SelectProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
@@ -24,7 +28,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
       <select
         ref={ref}
         {...props}
-        className={cn('adm-input appearance-none pr-9 w-full cursor-pointer', className)}
+        className={cn(inputCls, 'appearance-none pr-9 cursor-pointer', className)}
       >
         {children}
       </select>

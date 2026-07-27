@@ -75,7 +75,7 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
               onChange={(e) =>
                 setForm({ ...form, whatsappNumber: e.target.value.replace(/\D/g, '') })
               }
-              className="adm-input"
+              className={cls.input}
               placeholder="51987654321"
               inputMode="numeric"
             />
@@ -135,7 +135,7 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
               step="0.01"
               value={form.baseShippingCost}
               onChange={(e) => setForm({ ...form, baseShippingCost: Number(e.target.value) })}
-              className="adm-input"
+              className={cls.input}
               placeholder="15.00"
               inputMode="decimal"
             />
@@ -154,7 +154,7 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
               onChange={(e) =>
                 setForm({ ...form, preorderDepositPercent: Number(e.target.value) })
               }
-              className="adm-input"
+              className={cls.input}
               placeholder="50"
               inputMode="numeric"
             />

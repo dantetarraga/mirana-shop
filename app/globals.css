@@ -834,15 +834,8 @@ textarea:focus-visible,
     background: #c77cff;
   }
 
-  /* ── Form input ── */
-  .adm-input {
-    @apply w-full font-sans text-sm text-text bg-card border border-border
-           outline-none placeholder:text-muted/50 transition-colors duration-200;
-    padding: 10px 14px;
-  }
-  .adm-input:focus {
-    border-color: var(--bdh);
-  }
+  /* El estilo de campo (antes `.adm-input`) vive ahora en
+     shared/lib/ui-classes.ts — una sola definición para admin y tienda. */
 
   /* ── Campos de fecha (ver shared/components/ui/DateField.tsx) ──
      El indicador de calendario nativo se pinta con el color del navegador y no

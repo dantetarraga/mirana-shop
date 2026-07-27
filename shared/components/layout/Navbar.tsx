@@ -57,16 +57,26 @@ export function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-200 flex items-center gap-3 sm:gap-5 md:gap-8 shell transition-[background] duration-300 h-(--nh) bg-surf/92 backdrop-blur-[28px] border-b border-(--bd)">
       <div className="flex items-center gap-4 md:gap-7 shrink-0">
         <Link href="/" className="flex items-center shrink-0">
-          {/* El logo es un PNG blanco rasterizado dentro del SVG (el color está
-              horneado en un feColorMatrix, no hay `fill` editable), así que en
-              tema claro se invierte a sólido oscuro con un filtro. */}
+          {/* El logo es un PNG rasterizado dentro del SVG (el color está horneado
+              en un feColorMatrix, no hay `fill` editable), así que el tema claro
+              se resuelve con un filtro CSS.
+
+              Antes era `brightness(0)`: pintaba de negro TODO lo opaco, y el
+              emblema deja de leerse — sus garras están dibujadas en claro sobre
+              el navy, así que al aplanarlas a un solo color se funden en una
+              mancha y el cyan de "MIRA" desaparece.
+
+              `invert(1) hue-rotate(180deg)` conserva la estructura clara/oscura
+              (la invierte, que es justo lo que hace falta sobre blanco) y el
+              hue-rotate devuelve el tono: sin él, invert manda el cyan al
+              naranja. El `saturate` compensa el lavado del invert. */}
           <Image
             src="/logo.svg"
             alt="Mirana"
             width={150}
             height={90}
             priority
-            className="h-8 sm:h-9 md:h-10 w-auto [filter:brightness(0)] dark:[filter:none]"
+            className="h-8 sm:h-9 md:h-10 w-auto [filter:invert(1)_hue-rotate(180deg)_saturate(1.4)] dark:[filter:none]"
           />
         </Link>
         {/* Sin padding inferior: el `items-center` del nav centra la caja del

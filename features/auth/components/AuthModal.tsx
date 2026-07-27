@@ -13,6 +13,7 @@ import {
   type LoginInput,
   type RegisterInput,
 } from '@/features/auth/schemas/auth.schema'
+import { inputCls } from '@/shared/lib/ui-classes'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { signIn } from 'next-auth/react'
 import { useState } from 'react'
@@ -122,7 +123,7 @@ function AuthForm({ mode, onClose }: { mode: AuthMode; onClose: () => void }) {
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-3.5">
         {mode === 'register' && (
           <FormField label="Nombre completo" error={errors.name?.message}>
-            <input {...register('name')} className="adm-input" placeholder="Tu nombre" />
+            <input {...register('name')} className={inputCls} placeholder="Tu nombre" />
           </FormField>
         )}
 
@@ -130,7 +131,7 @@ function AuthForm({ mode, onClose }: { mode: AuthMode; onClose: () => void }) {
           <input
             {...register('email')}
             type="email"
-            className="adm-input"
+            className={inputCls}
             placeholder="tucorreo@ejemplo.com"
           />
         </FormField>
@@ -139,7 +140,7 @@ function AuthForm({ mode, onClose }: { mode: AuthMode; onClose: () => void }) {
           <input
             {...register('password')}
             type="password"
-            className="adm-input"
+            className={inputCls}
             placeholder="••••••••"
           />
         </FormField>
@@ -149,7 +150,7 @@ function AuthForm({ mode, onClose }: { mode: AuthMode; onClose: () => void }) {
             <input
               {...register('confirm')}
               type="password"
-              className="adm-input"
+              className={inputCls}
               placeholder="••••••••"
             />
           </FormField>

@@ -1,5 +1,6 @@
 'use client'
 
+import { cartKindOf, splitByCartKind } from '@/features/cart/lib/cart-kind'
 import { useCartStore } from '@/features/cart/stores/cart.store'
 import { effectivePrice } from '@/features/checkout/lib/pricing'
 import { remainingStock } from '@/features/products/lib/stock'
@@ -24,23 +25,35 @@ interface CollectionAddAllButtonProps {
 export function CollectionAddAllButton({ products, collectionName }: CollectionAddAllButtonProps) {
   const { cart, addManyToCart } = useCartStore()
 
-  // Lo que realmente entraría ahora mismo — el mismo criterio que aplica
-  // addManyToCart, para que el total del botón no prometa de más.
-  const addable = products.filter((p) => {
+  // Lo que realmente entraría ahora mismo — el mismo criterio y el mismo orden
+  // que aplica addManyToCart (primero stock, después tipo de carrito), para que
+  // el total del botón no prometa de más.
+  const available = products.filter((p) => {
     const inCart = cart.find((i) => i.product.id === p.id)?.qty ?? 0
     const remaining = remainingStock(p, inCart)
     return remaining === null || remaining > 0
   })
+  const { compatible: addable } = splitByCartKind(
+    available,
+    cartKindOf(cart.map((i) => i.product)),
+  )
   const total = addable.reduce((sum, p) => sum + effectivePrice(p), 0)
 
   const isEmpty = products.length === 0
-  const allInCart = !isEmpty && addable.length === 0
+  const allInCart = !isEmpty && available.length === 0
+  // Todo lo disponible choca con el tipo de carrito actual (colección de
+  // preventa con un carrito de stock, o al revés).
+  const allBlocked = !isEmpty && !allInCart && addable.length === 0
 
   const handleClick = () => {
-    const { added, skipped } = addManyToCart(products)
+    const { added, skipped, blocked } = addManyToCart(products)
 
     if (added === 0) {
-      toast.warning(`No hay nada disponible para agregar de "${collectionName}"`)
+      toast.warning(
+        blocked.length > 0
+          ? `No puedes combinar "${collectionName}" con lo que ya tienes en el carrito`
+          : `No hay nada disponible para agregar de "${collectionName}"`,
+      )
       return
     }
 
@@ -48,6 +61,13 @@ export function CollectionAddAllButton({ products, collectionName }: CollectionA
     if (skipped.length > 0) {
       toast.warning(
         `${skipped.length} producto${skipped.length !== 1 ? 's' : ''} sin disponibilidad: ${skipped.join(', ')}`,
+      )
+    }
+    // La preventa no se mezcla con el resto: se dice qué quedó fuera y por qué,
+    // en vez de agregar en silencio solo una parte de la colección.
+    if (blocked.length > 0) {
+      toast.warning(
+        `${blocked.length} producto${blocked.length !== 1 ? 's' : ''} no se pueden combinar con tu carrito: ${blocked.join(', ')}`,
       )
     }
   }
@@ -66,14 +86,16 @@ export function CollectionAddAllButton({ products, collectionName }: CollectionA
         variant="accent"
         size="lg"
         full
-        disabled={isEmpty || allInCart}
+        disabled={isEmpty || allInCart || allBlocked}
         onClick={handleClick}
       >
         {isEmpty
           ? 'Sin productos disponibles'
           : allInCart
             ? 'Ya está todo en el carrito'
-            : `Agregar todo · S/ ${total.toFixed(2)}`}
+            : allBlocked
+              ? 'No se puede combinar con tu carrito'
+              : `Agregar todo · S/ ${total.toFixed(2)}`}
       </Button>
     </div>
   )

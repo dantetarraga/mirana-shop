@@ -1,4 +1,6 @@
-﻿/**
+﻿import { inputCls } from '@/shared/lib/ui-classes'
+
+/**
  * Tailwind class strings para los elementos de UI del admin.
  * Reemplaza las clases CSS globales .adm-* — los estilos viven aquí,
  * en el código de componentes, no en globals.css.
@@ -23,7 +25,6 @@ export const cls = {
   rowName: 'font-display font-extrabold text-[15px] uppercase',
   rowSub: 'text-[11px] text-muted uppercase tracking-[1px]',
 
-  // Input
-  input:
-    'w-full bg-card border border-(--bd) text-text font-sans text-[14px] px-[13px] py-[11px] outline-none',
+  // Input — definición única, compartida con la tienda. Ver ui-classes.ts.
+  input: inputCls,
 } as const

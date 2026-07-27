@@ -7,6 +7,12 @@ import {
   setCartItemModeAction,
   setCartItemQtyAction,
 } from '@/features/cart/actions/cart.actions'
+import {
+  cartKindOf,
+  conflictsWithCart,
+  splitByCartKind,
+  type CartKind,
+} from '@/features/cart/lib/cart-kind'
 import type { CartLine } from '@/features/cart/types'
 import { canPartialPreorder, type PreorderMode } from '@/features/checkout/lib/preorder'
 import {
@@ -24,6 +30,26 @@ import { toast } from 'sonner'
 
 export type CartItem = CartLine
 
+/**
+ * Intento de agregar un producto que rompe la regla de tipos del carrito
+ * (`features/cart/lib/cart-kind.ts`). Queda guardado mientras el cliente decide
+ * qué hacer en el modal; ninguna de las tres salidas es un descarte silencioso.
+ */
+export interface CartMixConflict {
+  product: CatalogProduct
+  qty: number
+  preorderMode: PreorderMode
+  /** Tipo de lo que ya hay en el carrito — lo que produce el choque. */
+  cartKind: CartKind
+}
+
+/** Qué hacer con el carrito actual cuando choca con lo que se quiso agregar. */
+export type CartMixResolution =
+  /** Vaciarlo y dejar dentro solo el producto nuevo. */
+  | 'replace'
+  /** Vaciarlo sin agregar nada. */
+  | 'empty'
+
 interface CartState {
   cart: CartItem[]
   cartCount: number
@@ -38,19 +64,38 @@ interface CartState {
   hydrated: boolean
   /** Escrituras en vuelo. Mientras haya alguna no se acepta una siembra externa. */
   pendingWrites: number
+  /**
+   * Choque de tipos esperando decisión del cliente. Lo pinta `CartMixModal`
+   * (montado una sola vez en StoreOverlays), así que cualquier superficie que
+   * llame a `addToCart` muestra el mismo modal sin cablearlo.
+   */
+  mixConflict: CartMixConflict | null
   hydrateCart: (items: CartItem[]) => void
   /** Relee el carrito del servidor (al abrir el drawer, al volver a la pestaña). */
   refreshCart: () => void
-  /** Agrega respetando el stock. Devuelve cuántas unidades entraron (0 = tope). */
+  /**
+   * Agrega respetando el stock. Devuelve cuántas unidades entraron:
+   * 0 = no entró nada (llegó al tope de stock, o chocó con el tipo del carrito
+   * y quedó un `mixConflict` abierto). Quien llama solo confirma si entró algo.
+   */
   addToCart: (product: CatalogProduct, qty?: number, preorderMode?: PreorderMode) => number
+  /** Cierra el modal de conflicto dejando el carrito como está. */
+  dismissMixConflict: () => void
+  /** Resuelve el conflicto abierto. Ver `CartMixResolution`. */
+  resolveMixConflict: (resolution: CartMixResolution) => void
   /** Cambia total ↔ parcial en una línea de preventa ya agregada. */
   setLineMode: (id: string, preorderMode: PreorderMode) => void
   /**
    * Agrega una unidad de cada producto en una sola operación. Devuelve los
-   * nombres de los que no entraron (agotados o ya al tope) para que quien
-   * llama muestre un único aviso en vez de uno por producto.
+   * nombres de los que no entraron para que quien llama muestre un único aviso
+   * en vez de uno por producto: `skipped` = agotados o ya al tope, `blocked` =
+   * no se pueden combinar con el tipo del carrito.
    */
-  addManyToCart: (products: CatalogProduct[]) => { added: number; skipped: string[] }
+  addManyToCart: (products: CatalogProduct[]) => {
+    added: number
+    skipped: string[]
+    blocked: string[]
+  }
   /** Ajusta la cantidad respetando el stock. Devuelve si hubo cambio. */
   updateQty: (id: string, delta: number) => boolean
   removeItem: (id: string) => void
@@ -114,6 +159,7 @@ export const useCartStore = create<CartState>()((set, get) => ({
   cartOpen: false,
   hydrated: false,
   pendingWrites: 0,
+  mixConflict: null,
 
   hydrateCart: (items) => {
     // Una siembra del servidor que llega mientras hay una escritura en vuelo
@@ -138,6 +184,18 @@ export const useCartStore = create<CartState>()((set, get) => ({
   },
 
   addToCart: (product, qty = 1, preorderMode = 'FULL') => {
+    // Preventa y entrega inmediata no viajan en el mismo pedido. En vez de
+    // rechazar con un aviso, se abre el modal: el cliente decide si paga lo que
+    // ya tenía, lo reemplaza o lo vacía. Los botones de compra recién se
+    // habilitan con el carrito hidratado (`ctaState`), así que acá `cart` ya es
+    // el del servidor y no un vacío del primer pintado.
+    const current = get().cart.map((i) => i.product)
+    const currentKind = cartKindOf(current)
+    if (currentKind !== null && conflictsWithCart(current, product)) {
+      set({ mixConflict: { product, qty, preorderMode, cartKind: currentKind } })
+      return 0
+    }
+
     const inCart = get().cart.find((i) => i.product.id === product.id)?.qty ?? 0
     const remaining = remainingStock(product, inCart)
     const toAdd = remaining === null ? qty : Math.min(qty, remaining)
@@ -166,6 +224,45 @@ export const useCartStore = create<CartState>()((set, get) => ({
     return toAdd
   },
 
+  dismissMixConflict: () => set({ mixConflict: null }),
+
+  resolveMixConflict: (resolution) => {
+    const pending = get().mixConflict
+    set({ mixConflict: null })
+    if (!pending) return
+
+    if (resolution === 'empty') {
+      get().clearCart()
+      return
+    }
+
+    // 'replace': el carrito queda con una sola línea, así que el tope es el
+    // stock completo del producto y no lo que le faltaba por agregar.
+    const { product, qty, preorderMode } = pending
+    const max = maxPurchasable(product)
+    const toAdd = max === null ? qty : Math.min(qty, max)
+
+    if (toAdd <= 0) {
+      // Se agotó entre que abrió el modal y que eligió: se vacía igual (es lo
+      // que pidió) y se avisa por qué el producto no entró.
+      toast.warning(stockLimitMessage(product.name))
+      get().clearCart()
+      return
+    }
+
+    const mode: PreorderMode =
+      preorderMode === 'PARTIAL' && canPartialPreorder(product) ? 'PARTIAL' : 'FULL'
+
+    set({ cart: [{ product, qty: toAdd, preorderMode: mode }], cartCount: toAdd })
+    // Vaciar y agregar van encadenados dentro de la MISMA escritura: lanzados
+    // por separado, el vaciado podía resolverse después del alta y dejar el
+    // carrito sin el producto nuevo.
+    runWrite(set, async () => {
+      await clearCartAction()
+      return addCartItemAction(product.id, toAdd, mode)
+    })
+  },
+
   setLineMode: (id, preorderMode) => {
     const item = get().cart.find((i) => i.product.id === id)
     if (!item || item.preorderMode === preorderMode) return
@@ -182,7 +279,7 @@ export const useCartStore = create<CartState>()((set, get) => ({
   addManyToCart: (products) => {
     const current = get().cart
     const skipped: string[] = []
-    const toAdd: CatalogProduct[] = []
+    const available: CatalogProduct[] = []
 
     for (const product of products) {
       const inCart = current.find((i) => i.product.id === product.id)?.qty ?? 0
@@ -190,10 +287,18 @@ export const useCartStore = create<CartState>()((set, get) => ({
       // Se descarta antes de llamar a addToCart para no disparar un aviso de
       // tope por cada producto: aquí se resume todo en uno solo.
       if (remaining !== null && remaining <= 0) skipped.push(product.name)
-      else toAdd.push(product)
+      else available.push(product)
     }
 
-    if (toAdd.length === 0) return { added: 0, skipped }
+    // Una colección puede mezclar preventa y stock. Acá no se abre el modal de
+    // conflicto (sería una decisión por producto sobre una acción masiva): se
+    // agrega lo compatible y se devuelven los nombres del resto para avisarlo.
+    const { compatible: toAdd, blocked } = splitByCartKind(
+      available,
+      cartKindOf(current.map((i) => i.product)),
+    )
+
+    if (toAdd.length === 0) return { added: 0, skipped, blocked: blocked.map((p) => p.name) }
 
     set((s) => {
       const cart = [...s.cart]
@@ -209,7 +314,7 @@ export const useCartStore = create<CartState>()((set, get) => ({
 
     runWrite(set, () => addCartItemsAction(toAdd.map((p) => ({ productId: p.id, qty: 1 }))))
 
-    return { added: toAdd.length, skipped }
+    return { added: toAdd.length, skipped, blocked: blocked.map((p) => p.name) }
   },
 
   updateQty: (id, delta) => {

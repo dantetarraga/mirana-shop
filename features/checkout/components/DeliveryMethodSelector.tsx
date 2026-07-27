@@ -17,6 +17,8 @@ type Props = {
   /** Sede elegida dentro del método seleccionado */
   selectedLocationId: string
   onSelectLocation: (locationId: string) => void
+  /** Aclaración de por qué la lista está recortada (ver `delivery-eligibility.ts`) */
+  hint?: string
   methodError?: string
   locationError?: string
 }
@@ -32,6 +34,7 @@ export function DeliveryMethodSelector({
   onSelect,
   selectedLocationId,
   onSelectLocation,
+  hint,
   methodError,
   locationError,
 }: Props) {
@@ -40,6 +43,8 @@ export function DeliveryMethodSelector({
       <h2 className="font-display font-black uppercase text-[14px] tracking-[2px] text-accent-ink mb-5">
         Forma de entrega
       </h2>
+
+      {hint && <p className="text-[12px] text-muted leading-snug -mt-3 mb-4">{hint}</p>}
 
       <ul className="flex flex-col divide-y divide-(--bd) border border-(--bd)">
         {methods.map((method) => {

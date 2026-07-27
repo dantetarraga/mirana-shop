@@ -1,11 +1,16 @@
 'use server'
 
-import type { PaymentMethod } from '@/generated/prisma/client'
+import type { PaymentMethod, ProductStatus } from '@/generated/prisma/client'
+import { cartKindOf, hasMixedKinds } from '@/features/cart/lib/cart-kind'
 import {
   depositUnitPrice,
   effectiveMode,
   type PreorderMode,
 } from '@/features/checkout/lib/preorder'
+import {
+  eligibleDeliveryMethods,
+  isDeliveryMethodEligible,
+} from '@/features/checkout/lib/delivery-eligibility'
 import { computeTotals, effectivePrice } from '@/features/checkout/lib/pricing'
 import { getPricingRules } from '@/features/checkout/queries/pricing.queries'
 import { buildCheckoutSchema } from '@/features/checkout/schemas/checkout.schema'
@@ -100,7 +105,90 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   }
 
   const rules = await getPricingRules()
-  const hasDeliveryMethods = rules.deliveryMethods.length > 0
+
+  // SEGURIDAD: el cliente solo envía productId + cantidad. Precios, subtotal,
+  // promociones (envío gratis / descuentos) y total se recalculan SIEMPRE
+  // desde la BD — nunca se confía en los montos del navegador.
+  //
+  // Se lee antes que la forma de entrega porque el estado de los productos es
+  // lo que decide qué entregas valen para este pedido.
+  const products = await db.product.findMany({
+    where: { id: { in: parsedItems.data.map((i) => i.productId) }, deletedAt: null },
+    select: {
+      id: true,
+      name: true,
+      sku: true,
+      price: true,
+      salePrice: true,
+      status: true,
+      allowPartialPreorder: true,
+      preorderDepositPercent: true,
+    },
+  })
+  const productById = new Map(products.map((p) => [p.id, p]))
+
+  const orderItems: {
+    productId: string
+    productName: string
+    productSku: string
+    quantity: number
+    unitPrice: number
+    isPreorder: boolean
+    preorderMode: PreorderMode
+    depositUnitPrice: number | null
+  }[] = []
+  /** Estados tal como están en la BD — para decidir el tipo del pedido. */
+  const orderProducts: { status: ProductStatus }[] = []
+
+  for (const item of parsedItems.data) {
+    const product = productById.get(item.productId)
+    if (!product || product.status === 'ARCHIVED') {
+      return { success: false, error: 'Un producto de tu carrito ya no está disponible' }
+    }
+
+    const pricing = {
+      price: Number(product.price),
+      salePrice: product.salePrice != null ? Number(product.salePrice) : null,
+      status: product.status,
+      allowPartialPreorder: product.allowPartialPreorder,
+      preorderDepositPercent: product.preorderDepositPercent,
+    }
+
+    // El modo se recalcula contra la BD: un payload que pida 'PARTIAL' para un
+    // producto que no lo admite se cobra completo.
+    const mode = effectiveMode(pricing, item.preorderMode)
+
+    orderProducts.push({ status: product.status })
+    orderItems.push({
+      productId: product.id,
+      productName: product.name,
+      productSku: product.sku,
+      quantity: item.quantity,
+      unitPrice: effectivePrice(pricing),
+      isPreorder: product.status === 'PREORDER',
+      preorderMode: mode,
+      depositUnitPrice:
+        mode === 'PARTIAL' ? depositUnitPrice(pricing, rules.preorderDepositPercent) : null,
+    })
+  }
+
+  // Un pedido es de preventa o de entrega inmediata, nunca los dos: cambian la
+  // fecha de entrega y la forma de envío. El carrito ya lo impide en el cliente,
+  // pero estas actions son un endpoint público — y un producto puede haber
+  // pasado a preventa mientras el carrito estaba armado.
+  if (hasMixedKinds(orderProducts)) {
+    return {
+      success: false,
+      error:
+        'No puedes combinar productos de preventa con productos de entrega inmediata en el mismo pedido. Deja solo uno de los dos tipos en tu carrito.',
+    }
+  }
+  const orderKind = cartKindOf(orderProducts)
+
+  // La lista se recorta al tipo del pedido antes de exigir una elección: si la
+  // tienda no tiene ninguna entrega compatible, el checkout tampoco mostró el
+  // selector y se cae al envío base, igual que cuando no hay ninguna configurada.
+  const hasDeliveryMethods = eligibleDeliveryMethods(rules.deliveryMethods, orderKind).length > 0
 
   let method: DeliveryMethodOption | null = null
   if (hasDeliveryMethods) {
@@ -112,6 +200,12 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       return {
         success: false,
         error: 'La forma de entrega elegida ya no está disponible. Elige otra e inténtalo de nuevo.',
+      }
+    }
+    if (!isDeliveryMethodEligible(method, orderKind)) {
+      return {
+        success: false,
+        error: 'Esa forma de entrega no está disponible para los productos de tu pedido',
       }
     }
   }
@@ -147,66 +241,6 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     const lookup = await findRedeemableCoupon(rawCouponCode)
     if (!lookup.ok) return { success: false, error: lookup.error }
     coupon = lookup.coupon
-  }
-
-  // SEGURIDAD: el cliente solo envía productId + cantidad. Precios, subtotal,
-  // promociones (envío gratis / descuentos) y total se recalculan SIEMPRE
-  // desde la BD — nunca se confía en los montos del navegador.
-  const products = await db.product.findMany({
-    where: { id: { in: parsedItems.data.map((i) => i.productId) }, deletedAt: null },
-    select: {
-      id: true,
-      name: true,
-      sku: true,
-      price: true,
-      salePrice: true,
-      status: true,
-      allowPartialPreorder: true,
-      preorderDepositPercent: true,
-    },
-  })
-  const productById = new Map(products.map((p) => [p.id, p]))
-
-  const orderItems: {
-    productId: string
-    productName: string
-    productSku: string
-    quantity: number
-    unitPrice: number
-    isPreorder: boolean
-    preorderMode: PreorderMode
-    depositUnitPrice: number | null
-  }[] = []
-
-  for (const item of parsedItems.data) {
-    const product = productById.get(item.productId)
-    if (!product || product.status === 'ARCHIVED') {
-      return { success: false, error: 'Un producto de tu carrito ya no está disponible' }
-    }
-
-    const pricing = {
-      price: Number(product.price),
-      salePrice: product.salePrice != null ? Number(product.salePrice) : null,
-      status: product.status,
-      allowPartialPreorder: product.allowPartialPreorder,
-      preorderDepositPercent: product.preorderDepositPercent,
-    }
-
-    // El modo se recalcula contra la BD: un payload que pida 'PARTIAL' para un
-    // producto que no lo admite se cobra completo.
-    const mode = effectiveMode(pricing, item.preorderMode)
-
-    orderItems.push({
-      productId: product.id,
-      productName: product.name,
-      productSku: product.sku,
-      quantity: item.quantity,
-      unitPrice: effectivePrice(pricing),
-      isPreorder: product.status === 'PREORDER',
-      preorderMode: mode,
-      depositUnitPrice:
-        mode === 'PARTIAL' ? depositUnitPrice(pricing, rules.preorderDepositPercent) : null,
-    })
   }
 
   const round2 = (n: number) => Math.round(n * 100) / 100
@@ -285,7 +319,9 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
           currency: 'PEN',
           deliveryMethodId: method?.id ?? null,
           deliveryMethodName: method?.name ?? '',
-          deliveryKind: method?.kind ?? 'SHIPPING',
+          // Sin formas de entrega configuradas el pedido igual queda etiquetado
+          // por lo que es: un pedido de preventa no se despacha como un envío.
+          deliveryKind: method?.kind ?? (orderKind === 'PREORDER' ? 'PREORDER' : 'SHIPPING'),
           deliveryLocation: deliveryLocationText,
           couponId: redeemedCoupon?.id ?? null,
           couponCode: totals.couponCode,

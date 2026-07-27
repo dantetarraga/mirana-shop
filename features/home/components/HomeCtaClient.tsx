@@ -7,6 +7,7 @@ import { ImageUploadField } from '@/shared/components/admin/ImageUploadField'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
+import { cls } from '@/shared/lib/admin/admin-classes'
 import { useServerAction } from '@/shared/hooks/admin'
 import { ArrowRight, ExternalLink, Save } from 'lucide-react'
 import { useState } from 'react'
@@ -74,7 +75,7 @@ export function HomeCtaClient({ initial }: HomeCtaClientProps) {
             value={form.title}
             onChange={(e) => set('title', e.target.value)}
             rows={2}
-            className="adm-input resize-none"
+            className={`${cls.input} resize-none`}
             placeholder={'Ediciones\nLimitadas'}
           />
         </FormField>
@@ -83,7 +84,7 @@ export function HomeCtaClient({ initial }: HomeCtaClientProps) {
           <input
             value={form.subtitle}
             onChange={(e) => set('subtitle', e.target.value)}
-            className="adm-input"
+            className={cls.input}
             placeholder="Piezas por tiempo limitado — no te quedes sin las tuyas"
           />
         </FormField>
@@ -92,7 +93,7 @@ export function HomeCtaClient({ initial }: HomeCtaClientProps) {
           <input
             value={form.ctaLabel}
             onChange={(e) => set('ctaLabel', e.target.value)}
-            className="adm-input"
+            className={cls.input}
             placeholder="Explorar ahora"
           />
         </FormField>
