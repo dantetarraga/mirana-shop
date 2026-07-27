@@ -65,7 +65,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${barlowCondensed.variable} ${plusJakarta.variable} h-full`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">
+      {/* También en <body>: varias extensiones del navegador (ColorZilla,
+          gestores de contraseñas, traductores) le inyectan atributos como
+          `cz-shortcut-listen` antes de que React hidrate, y eso dispara un
+          error de hydration mismatch que no tiene nada que ver con la app. */}
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[1000] focus:bg-(--gold) focus:text-on-accent focus:px-4 focus:py-2 focus:font-display focus:font-bold focus:uppercase focus:tracking-[1px]"

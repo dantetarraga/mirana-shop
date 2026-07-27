@@ -1,5 +1,6 @@
 'use client'
 
+import { CartCtaSkeleton } from '@/features/cart/components/CartCtaSkeleton'
 import { useCartLine } from '@/features/cart/hooks/useCartLine'
 import { useCartStore } from '@/features/cart/stores/cart.store'
 import { useProductModalStore } from '@/features/products/stores/product-modal.store'
@@ -7,9 +8,8 @@ import type { CatalogProduct } from '@/features/products/types/catalog.types'
 import { getCategoryLabel, getCategoryStripe } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
-import { useJustAdded } from '@/shared/hooks'
 // import { StarRating } from '@/shared/components/ui/StarRating' — oculto hasta tener reviews reales
-import { Check, Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react'
+import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState, type MouseEvent } from 'react'
@@ -29,12 +29,12 @@ export function ProductCard({
   const { openProductModal } = useProductModalStore()
   const { addToCart, updateQty, removeItem } = useCartStore()
   const [confirmRemove, setConfirmRemove] = useState(false)
-  const { justAdded, trigger } = useJustAdded()
   // Disponibilidad, tope y precio salen del mismo hook que el modal y el PDP.
   // `p` es el producto de la línea del carrito cuando existe: antes el botón `+`
   // usaba ese stock fresco pero "Agregar al carrito" el del prop, ya rancio.
-  const { product: p, qtyInCart, isPreorder, isOutOfStock, remaining, unitPrice, hasDiscount, hydrated } =
+  const { product: p, qtyInCart, isPreorder, isOutOfStock, remaining, unitPrice, hasDiscount, ctaState } =
     useCartLine(product)
+  const loading = ctaState === 'loading'
   const stripe = getCategoryStripe(p.category.slug)
   const catLabel = getCategoryLabel(p.category.slug)
   // const isNew = p.status === 'AVAILABLE' && p.stock > 0 — solo se usaba para las estrellas ocultas
@@ -123,7 +123,12 @@ export function ProductCard({
           </div>
           */}
         </div>
-        {qtyInCart > 0 && !isOutOfStock && !justAdded ? (
+        {/* El selector aparece apenas se agrega. Antes esperaba a que expirara
+            el verde de `useJustAdded` (1,8 s), así que el botón se ponía verde y
+            recién después mutaba en controles: dos transiciones para una acción. */}
+        {loading ? (
+          <CartCtaSkeleton size="md" />
+        ) : ctaState === 'in-cart' && !isOutOfStock ? (
           <div className="flex items-center border border-(--bd) w-full">
             {qtyInCart === 1 ? (
               <Button
@@ -177,27 +182,23 @@ export function ProductCard({
           </div>
         ) : (
           <Button
-            variant={justAdded ? 'success' : 'accent'}
+            variant="accent"
             size="md"
             className="add-btn w-full"
-            disabled={isOutOfStock || !hydrated}
+            disabled={ctaState !== 'idle'}
             onClick={(e) => {
               e.stopPropagation()
-              if (!isOutOfStock && addToCart(p, 1) > 0) {
+              if (addToCart(p, 1) > 0) {
                 toast.success(
                   isPreorder ? `"${p.name}" reservado` : `"${p.name}" agregado al carrito`,
                 )
-                trigger()
               }
             }}
           >
-            {isOutOfStock ? (
+            {ctaState === 'out-of-stock' ? (
               'Sin stock'
-            ) : justAdded ? (
-              <>
-                <Check size={15} strokeWidth={3} />
-                {isPreorder ? 'Reservado' : 'Agregado'}
-              </>
+            ) : ctaState === 'capped' ? (
+              'Sin más stock'
             ) : (
               <>
                 <ShoppingCart size={15} />

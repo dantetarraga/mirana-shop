@@ -18,6 +18,8 @@ interface ProductImageCarouselProps {
   /** Badges/botones absolutos que van dentro del contenedor principal (junto a la imagen) */
   children?: ReactNode
   thumbClassName?: string
+  /** Clases de la tira de miniaturas (p. ej. separarlas del borde del panel) */
+  thumbsWrapperClassName?: string
 }
 
 export function ProductImageCarousel({
@@ -28,6 +30,7 @@ export function ProductImageCarousel({
   priority,
   children,
   thumbClassName,
+  thumbsWrapperClassName,
 }: ProductImageCarouselProps) {
   const [index, setIndex] = useState(0)
   const hasMultiple = images.length > 1
@@ -85,7 +88,7 @@ export function ProductImageCarousel({
       </div>
 
       {hasMultiple && (
-        <div className="flex gap-2 overflow-x-auto">
+        <div className={cn('flex gap-2 overflow-x-auto', thumbsWrapperClassName)}>
           {images.map((img, i) => (
             <button
               key={img.url + i}

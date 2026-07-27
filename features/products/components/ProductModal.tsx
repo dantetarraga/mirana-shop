@@ -1,22 +1,20 @@
 'use client'
 
+import { CartCtaSkeleton } from '@/features/cart/components/CartCtaSkeleton'
 import { useCartLine } from '@/features/cart/hooks/useCartLine'
 import { useCartStore } from '@/features/cart/stores/cart.store'
 import type { PreorderMode } from '@/features/checkout/lib/preorder'
 import { ProductImageCarousel } from '@/features/products/components/ProductImageCarousel'
-import { stockLimitMessage } from '@/features/products/lib/stock'
+import { maxPurchasable, stockLimitMessage } from '@/features/products/lib/stock'
 import { useProductModalStore } from '@/features/products/stores/product-modal.store'
 import { getCategoryStripe, type CatalogProduct } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
-import { useJustAdded, useScrollLock } from '@/shared/hooks'
+import { useScrollLock } from '@/shared/hooks'
 import { useFocusTrap } from '@/shared/hooks/useFocusTrap'
 import { ArrowRight, Check, Minus, Plus, X } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { toast } from 'sonner'
-
-/** El modal se cierra tras confirmar; lo justo para que la palomita se vea. */
-const CLOSE_AFTER_ADD_MS = 900
 
 export function ProductModal({ defaultDepositPercent }: { defaultDepositPercent: number }) {
   const { activeProduct: p, closeProductModal } = useProductModalStore()
@@ -50,31 +48,19 @@ function ProductModalContent({
     qtyInCart,
     isPreorder,
     isOutOfStock,
-    remaining,
     unitPrice,
     hasDiscount,
-    hydrated,
     preorder,
     preorderMode,
+    ctaState,
   } = useCartLine(initial, defaultDepositPercent)
   const [chosenQty, setQty] = useState(1)
   const [chosenMode, setChosenMode] = useState<PreorderMode>('FULL')
-  const mode: PreorderMode = qtyInCart > 0 ? preorderMode : chosenMode
+  const loading = ctaState === 'loading'
+  const inCart = qtyInCart > 0
+  const mode: PreorderMode = inCart ? preorderMode : chosenMode
   const payNowUnit = preorder && mode === 'PARTIAL' ? preorder.depositUnit : unitPrice
-  const { justAdded, trigger } = useJustAdded(CLOSE_AFTER_ADD_MS)
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const panelRef = useFocusTrap<HTMLDivElement>(true)
-
-  // Si el modal se cierra a mano (o se cambia de producto) antes de que expire
-  // el cierre diferido, el temporizador se cancela: si no, cerraría el modal
-  // siguiente. El contenido se remonta por `key`, así que el efecto limpia el
-  // temporizador de la instancia anterior.
-  useEffect(
-    () => () => {
-      if (closeTimer.current) clearTimeout(closeTimer.current)
-    },
-    [],
-  )
   const titleId = useId()
 
   useEffect(() => {
@@ -90,17 +76,40 @@ function ProductModalContent({
 
   // Disponibilidad, tope y precio salen de useCartLine para que la card, este
   // modal y el PDP no puedan divergir (antes tenían tres cálculos distintos).
-  const canAdd = remaining === null || remaining > 0
-  // Recorta la cantidad elegida si el remanente baja mientras el modal está abierto.
-  const qty = remaining === null ? chosenQty : Math.min(chosenQty, Math.max(1, remaining))
-  const atLimit = remaining !== null && qty >= remaining
+  //
+  // El selector de cantidad tiene dos vidas: antes de agregar decide CUÁNTAS se
+  // van a agregar (estado local), y una vez agregado ES la cantidad del carrito
+  // y la edita en vivo. Por eso ya no hace falta un bloque aparte de "En tu
+  // carrito": el mismo control muestra y sincroniza.
+  const max = maxPurchasable(p) // null = sin tope (preventa)
+  const qty = inCart
+    ? qtyInCart
+    : max === null
+      ? chosenQty
+      : Math.min(chosenQty, Math.max(1, max))
+  const atLimit = max !== null && qty >= max
 
+  // Con el producto ya en el carrito el selector escribe en el servidor, así que
+  // se confirma con un toast (ver AddToCartPanel).
   const increase = () => {
     if (atLimit) {
       toast.warning(stockLimitMessage(p.name))
       return
     }
-    setQty(qty + 1)
+    if (!inCart) {
+      setQty(qty + 1)
+      return
+    }
+    if (updateQty(p.id, 1)) toast.success(`"${p.name}" agregado — ${qty + 1} en el carrito`)
+  }
+
+  const decrease = () => {
+    if (qty <= 1) return
+    if (!inCart) {
+      setQty(qty - 1)
+      return
+    }
+    if (updateQty(p.id, -1)) toast.success(`"${p.name}" — ${qty - 1} en el carrito`)
   }
 
   return (
@@ -132,11 +141,20 @@ function ProductModalContent({
 
         <div className="overflow-y-auto grid grid-cols-1 sm:grid-cols-2 sm:items-stretch">
           {/* Image */}
+          {/* `sm:flex-1` y no `sm:min-h-full`: el carrusel es un flex-col con la
+              imagen grande arriba y las miniaturas abajo, así que pedirle el
+              100% del alto a la imagen dejaba a las miniaturas sin espacio y
+              desaparecían. Con flex-1 la imagen absorbe el sobrante y las
+              miniaturas conservan su tamaño natural. */}
           <ProductImageCarousel
             images={p.images}
             name={p.name}
             sizes="(max-width: 640px) 100vw, 50vw"
-            className={`${getCategoryStripe(p.category.slug)} min-h-70 sm:min-h-full flex items-center justify-center relative`}
+            className={`${getCategoryStripe(p.category.slug)} min-h-70 sm:min-h-100 sm:flex-1 flex items-center justify-center relative`}
+            thumbClassName="w-14 h-14 sm:w-15 sm:h-15"
+            // La imagen grande va de borde a borde, pero las miniaturas pegadas
+            // al filo del panel se ven apretadas.
+            thumbsWrapperClassName="px-3 pb-3 sm:px-4 sm:pb-4"
           />
 
           {/* Info — `justify-center` reparte el sobrante arriba y abajo en vez
@@ -165,47 +183,12 @@ function ProductModalContent({
             )}
           </div>
 
-          {/* Lo que ya está en el carrito — el modal tampoco lo mostraba. */}
-          {qtyInCart > 0 && (
-            <div className="border border-(--bd) px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
-              <div className="text-[12px] tracking-[1px] uppercase text-muted" aria-live="polite">
-                En tu carrito:{' '}
-                <span className="text-accent-ink font-display font-extrabold text-[15px]">
-                  {qtyInCart}
-                </span>
-              </div>
-              <div className="flex items-center border border-(--bd)">
-                <Button
-                  variant="icon"
-                  size="sm"
-                  disabled={qtyInCart <= 1}
-                  aria-label={`Quitar una unidad de "${p.name}"`}
-                  onClick={() => updateQty(p.id, -1)}
-                >
-                  <Minus size={13} />
-                </Button>
-                <div className="w-9 text-center font-display text-[15px] font-extrabold border-l border-r border-(--bd) flex items-center justify-center h-8">
-                  {qtyInCart}
-                </div>
-                <Button
-                  variant="icon"
-                  size="sm"
-                  disabled={remaining !== null && remaining === 0}
-                  aria-label={`Agregar una unidad de "${p.name}"`}
-                  onClick={() => updateQty(p.id, 1)}
-                >
-                  <Plus size={13} />
-                </Button>
-              </div>
-            </div>
-          )}
-
           {/* Preventa total vs parcial — mismo contrato que el PDP. */}
           {preorder && !isOutOfStock && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {(
                 [
-                  { value: 'FULL' as const, title: 'Preventa total', amount: unitPrice, hint: 'Pagás todo ahora' },
+                  { value: 'FULL' as const, title: 'Preventa total', amount: unitPrice, hint: 'Pagas todo ahora' },
                   {
                     value: 'PARTIAL' as const,
                     title: 'Preventa parcial',
@@ -239,68 +222,89 @@ function ProductModalContent({
             </div>
           )}
 
-          {!isOutOfStock && canAdd && (
+          {!isOutOfStock && ctaState !== 'capped' && !loading && (
             <div>
               <div className="text-[10px] tracking-[2px] uppercase text-muted mb-2.5">
-                {qtyInCart > 0 ? 'Agregar más' : 'Cantidad'}
+                {inCart ? 'En tu carrito' : 'Cantidad'}
               </div>
-              <div className="flex items-center border border-(--bd) w-fit">
-                <Button
-                  variant="icon"
-                  size="md"
-                  disabled={qty <= 1}
-                  aria-label="Quitar una unidad"
-                  onClick={() => setQty(Math.max(1, qty - 1))}
-                >
-                  <Minus size={14} />
-                </Button>
-                <div className="w-13 text-center font-display text-[20px] font-extrabold border-l border-r border-(--bd) flex items-center justify-center h-10.5">
-                  {qty}
-                </div>
-                <Button
-                  variant="icon"
-                  size="md"
-                  disabled={atLimit}
-                  aria-label="Agregar una unidad"
-                  onClick={increase}
-                >
-                  <Plus size={14} />
-                </Button>
-              </div>
+              {
+                <>
+                  <div className="flex items-center border border-(--bd) w-fit">
+                    <Button
+                      variant="icon"
+                      size="md"
+                      disabled={qty <= 1}
+                      aria-label="Quitar una unidad"
+                      onClick={decrease}
+                    >
+                      <Minus size={14} />
+                    </Button>
+                    <div
+                      className="w-13 text-center font-display text-[20px] font-extrabold border-l border-r border-(--bd) flex items-center justify-center h-10.5"
+                      aria-live="polite"
+                    >
+                      {qty}
+                    </div>
+                    <Button
+                      variant="icon"
+                      size="md"
+                      disabled={atLimit}
+                      aria-label="Agregar una unidad"
+                      onClick={increase}
+                    >
+                      <Plus size={14} />
+                    </Button>
+                  </div>
+                  {inCart && (
+                    <p className="text-[11px] text-muted mt-1.5">
+                      Se actualiza en tu carrito al instante.
+                    </p>
+                  )}
+                </>
+              }
             </div>
           )}
 
-          <Button
-            variant={justAdded ? 'success' : 'accent'}
-            size="lg"
-            full
-            disabled={isOutOfStock || !canAdd || !hydrated}
-            onClick={() => {
-              // El store vuelve a aplicar el tope y avisa si ya no cabe nada.
-              if (addToCart(p, qty, mode) > 0) {
-                toast.success(
-                  isPreorder ? `"${p.name}" reservado` : `"${p.name}" agregado al carrito`,
-                )
-                trigger()
-                // Se retrasa el cierre para que la confirmación llegue a verse;
-                // si se cerrara al instante el botón desaparecería antes.
-                closeTimer.current = setTimeout(onClose, CLOSE_AFTER_ADD_MS)
-              }
-            }}
-          >
-            {isOutOfStock ? (
-              'Sin stock'
-            ) : !canAdd ? (
-              'Ya tenés todo el stock disponible'
-            ) : justAdded ? (
-              <>
-                <Check size={16} strokeWidth={3} />
-                {isPreorder ? 'Reservado' : 'Agregado al carrito'}
-              </>
-            ) : (
-              `${isPreorder ? 'Reservar ahora' : 'Agregar al carrito'} · S/ ${(payNowUnit * qty).toFixed(2)}`
-            )}
-          </Button>
+          {/* Una vez agregado el botón queda en verde de forma permanente (no
+              un destello): mientras el producto siga en el carrito, ese es su
+              estado. Ya no cierra el modal — se puede seguir ajustando la
+              cantidad o cambiar la forma de pago sin perder la ficha. */}
+          {loading ? (
+            <CartCtaSkeleton withQuantity={!isOutOfStock} />
+          ) : (
+            <Button
+              variant={ctaState === 'in-cart' ? 'success' : 'accent'}
+              size="lg"
+              full
+              // Ver AddToCartPanel: "Agregado" es un estado, no un botón
+              // inhabilitado — con `disabled` el verde se veía al 40%.
+              disabled={ctaState === 'out-of-stock' || ctaState === 'capped'}
+              aria-disabled={ctaState === 'in-cart' || undefined}
+              className={ctaState === 'in-cart' ? 'cursor-default' : undefined}
+              onClick={() => {
+                if (ctaState !== 'idle') return
+                // El store vuelve a aplicar el tope y avisa si ya no cabe nada.
+                if (addToCart(p, qty, mode) > 0) {
+                  toast.success(
+                    isPreorder ? `"${p.name}" reservado` : `"${p.name}" agregado al carrito`,
+                  )
+                }
+              }}
+            >
+              {ctaState === 'out-of-stock' ? (
+                'Sin stock'
+              ) : ctaState === 'capped' ? (
+                'Ya tienes todo el stock disponible'
+              ) : ctaState === 'in-cart' ? (
+                <>
+                  <Check size={16} strokeWidth={3} />
+                  {isPreorder ? 'Reservado' : 'Agregado al carrito'}
+                </>
+              ) : (
+                `${isPreorder ? 'Reservar ahora' : 'Agregar al carrito'} · S/ ${(payNowUnit * qty).toFixed(2)}`
+              )}
+            </Button>
+          )}
 
           <Link
             href={`/catalogo/${p.slug}`}

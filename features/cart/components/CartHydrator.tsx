@@ -35,7 +35,7 @@ export function CartHydrator({ initialCart, expired = false }: Props) {
   useEffect(() => {
     if (!expired || warned.current) return
     warned.current = true
-    toast.info('Tu carrito caducó y se vació. Volvé a agregar los productos que quieras.')
+    toast.info('Tu carrito caducó y se vació. Vuelve a agregar los productos que quieras.')
   }, [expired])
 
   return null

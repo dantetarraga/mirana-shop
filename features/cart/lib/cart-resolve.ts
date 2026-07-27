@@ -89,22 +89,35 @@ async function touchCart(cart: { id: string; userId: string | null; updatedAt: D
   return cart.id
 }
 
+/** Carrito anónimo, ligado a la cookie `cart_sid`. */
+async function guestCartId(): Promise<string> {
+  const sessionId = await getOrCreateCartSessionId()
+  const cart = await db.cart.findUnique({ where: { sessionId } })
+  if (cart) return touchCart(cart)
+  return (await db.cart.create({ data: { sessionId } })).id
+}
+
 /** Resuelve (y crea si falta) el id del Cart vigente: por cuenta si hay sesión, por cookie si no. */
 export async function getOrCreateCartId(): Promise<string> {
   const session = await auth()
   const email = session?.user?.email
 
-  if (!email) {
-    const sessionId = await getOrCreateCartSessionId()
-    const cart = await db.cart.findUnique({ where: { sessionId } })
-    if (cart) return touchCart(cart)
-    return (await db.cart.create({ data: { sessionId } })).id
-  }
+  if (!email) return guestCartId()
+
+  // La sesión es un JWT: se valida por firma y NO se vuelve a contrastar con la
+  // BD en cada request, así que un token sigue siendo válido aunque su usuario
+  // ya no exista (purgado desde la papelera, base restaurada, otro entorno) o
+  // esté dado de baja. Antes eso lanzaba "Usuario no encontrado" y dejaba el
+  // carrito inutilizable: 500 en cada intento de agregar, sin forma de salir
+  // salvo borrando cookies a mano. A efectos prácticos esa persona es un
+  // invitado, así que se le da el carrito anónimo.
+  const dbUser = await db.user.findUnique({
+    where: { email },
+    select: { id: true, deletedAt: true },
+  })
+  if (!dbUser || dbUser.deletedAt) return guestCartId()
 
   await mergeAnonymousCartIntoUser(email)
-
-  const dbUser = await db.user.findUnique({ where: { email }, select: { id: true } })
-  if (!dbUser) throw new Error('Usuario no encontrado')
 
   const userCart = await db.cart.findUnique({ where: { userId: dbUser.id } })
   if (userCart) return touchCart(userCart)

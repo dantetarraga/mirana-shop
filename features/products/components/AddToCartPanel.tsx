@@ -1,14 +1,17 @@
 'use client'
 
+import { CartCtaSkeleton } from '@/features/cart/components/CartCtaSkeleton'
 import { useCartLine } from '@/features/cart/hooks/useCartLine'
 import { useCartStore } from '@/features/cart/stores/cart.store'
 import type { PreorderMode } from '@/features/checkout/lib/preorder'
-import { LOW_STOCK_HINT_THRESHOLD, stockLimitMessage } from '@/features/products/lib/stock'
+import {
+  LOW_STOCK_HINT_THRESHOLD,
+  maxPurchasable,
+  stockLimitMessage,
+} from '@/features/products/lib/stock'
 import type { CatalogProduct } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
-import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
-import { useJustAdded } from '@/shared/hooks'
-import { Check, Minus, Plus, Trash2 } from 'lucide-react'
+import { Check, Minus, PackageCheck, Plus, TriangleAlert } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
@@ -19,103 +22,96 @@ interface Props {
 }
 
 export function AddToCartPanel({ product, defaultDepositPercent }: Props) {
-  const { addToCart, updateQty, removeItem, setLineMode } = useCartStore()
+  const { addToCart, updateQty, setLineMode } = useCartStore()
   const {
     product: p,
     qtyInCart,
     isPreorder,
     isOutOfStock,
-    remaining,
     unitPrice,
-    hydrated,
     preorder,
     preorderMode,
+    ctaState,
   } = useCartLine(product, defaultDepositPercent)
   const [chosenQty, setQty] = useState(1)
   const [chosenMode, setChosenMode] = useState<PreorderMode>('FULL')
-  const [confirmRemove, setConfirmRemove] = useState(false)
-  const { justAdded, trigger } = useJustAdded()
+
+  const loading = ctaState === 'loading'
+  const inCart = qtyInCart > 0
 
   // Con el producto ya en el carrito manda el modo guardado (así el selector
   // refleja lo que realmente se va a cobrar); si no, el que eligió el usuario.
-  const mode: PreorderMode = qtyInCart > 0 ? preorderMode : chosenMode
+  const mode: PreorderMode = inCart ? preorderMode : chosenMode
   const payNowUnit = preorder && mode === 'PARTIAL' ? preorder.depositUnit : unitPrice
 
-  // Si el remanente baja (se agregó desde otra superficie, o cambió el stock en
-  // el servidor) la cantidad elegida se recorta al vuelo. Antes quedaba en 1
-  // aunque no quedara nada por llevar y el botón solo avisaba al pulsarlo.
-  const qty = remaining === null ? chosenQty : Math.min(chosenQty, Math.max(1, remaining))
+  // El selector tiene dos vidas: antes de agregar decide CUÁNTAS se van a
+  // agregar (estado local), y una vez agregado ES la cantidad del carrito y la
+  // edita en vivo. Por eso el tope es `maxPurchasable` (el total disponible) y
+  // no `remaining` (lo que falta por agregar): el número mostrado ya es el total.
+  const max = maxPurchasable(p) // null = sin tope (preventa)
+  const qty = inCart
+    ? qtyInCart
+    : max === null
+      ? chosenQty
+      : Math.min(chosenQty, Math.max(1, max))
 
-  const canAdd = remaining === null || remaining > 0
-  const atLimit = remaining !== null && qty >= remaining
-  const showLowStock =
-    !isOutOfStock && !isPreorder && remaining !== null && remaining > 0 &&
-    remaining <= LOW_STOCK_HINT_THRESHOLD
+  const atLimit = max !== null && qty >= max
 
+  // Aviso de disponibilidad. En vez de aparecer y desaparecer (que hacía
+  // parpadear el bloque al usar el selector), cambia de mensaje:
+  //   - llegaste al tope  → ya te llevaste todo lo que había
+  //   - queda poco stock  → urgencia
+  // El botón no puede decirlo: con unidades en el carrito muestra "Agregado".
+  // Ninguno de los dos revela la cifra exacta de stock.
+  const stockNotice =
+    isOutOfStock || isPreorder || loading
+      ? null
+      : max !== null && qtyInCart > 0 && qtyInCart >= max
+        ? {
+            text: 'Ya tienes todas las unidades disponibles en tu carrito',
+            tone: 'info' as const,
+            Icon: PackageCheck,
+          }
+        : p.stock > 0 && p.stock <= LOW_STOCK_HINT_THRESHOLD
+          ? { text: '¡Últimas unidades disponibles!', tone: 'warn' as const, Icon: TriangleAlert }
+          : null
+
+  // Al tocar el selector con el producto ya en el carrito se está escribiendo en
+  // el servidor, así que se confirma con un toast — mismo texto que la card.
+  // Antes de agregar no hay nada que confirmar: solo se elige un número.
   const increase = () => {
     if (atLimit) {
       toast.warning(stockLimitMessage(p.name))
       return
     }
-    setQty(qty + 1)
+    if (!inCart) {
+      setQty(qty + 1)
+      return
+    }
+    if (updateQty(p.id, 1)) toast.success(`"${p.name}" agregado — ${qty + 1} en el carrito`)
+  }
+
+  const decrease = () => {
+    if (qty <= 1) return
+    if (!inCart) {
+      setQty(qty - 1)
+      return
+    }
+    if (updateQty(p.id, -1)) toast.success(`"${p.name}" — ${qty - 1} en el carrito`)
   }
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Lo que ya está en el carrito. El PDP no lo mostraba: con 3 unidades ya
-          agregadas seguía diciendo "Cantidad 1" como si no hubiera nada. */}
-      {qtyInCart > 0 && (
-        <div className="border border-(--bd) px-4 py-3.5 flex items-center justify-between gap-4 flex-wrap">
-          <div className="text-[12px] tracking-[1px] uppercase text-muted" aria-live="polite">
-            En tu carrito:{' '}
-            <span className="text-accent-ink font-display font-extrabold text-[15px]">
-              {qtyInCart}
-            </span>
-          </div>
-          <div className="flex items-center border border-(--bd)">
-            {qtyInCart === 1 ? (
-              <Button
-                variant="icon"
-                size="md"
-                destructive
-                aria-label={`Quitar "${p.name}" del carrito`}
-                onClick={() => setConfirmRemove(true)}
-              >
-                <Trash2 size={14} />
-              </Button>
-            ) : (
-              <Button
-                variant="icon"
-                size="md"
-                aria-label={`Quitar una unidad de "${p.name}"`}
-                onClick={() => updateQty(p.id, -1)}
-              >
-                <Minus size={14} />
-              </Button>
-            )}
-            <div className="w-11 text-center font-display text-[17px] font-extrabold border-l border-r border-(--bd) flex items-center justify-center h-9.5">
-              {qtyInCart}
-            </div>
-            <Button
-              variant="icon"
-              size="md"
-              // updateQty avisa por sí solo cuando se llegó al tope.
-              disabled={remaining !== null && remaining === 0}
-              aria-label={`Agregar una unidad de "${p.name}"`}
-              onClick={() => updateQty(p.id, 1)}
-            >
-              <Plus size={14} />
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Aviso de urgencia — sobre lo que al cliente le queda por llevar, sin
-          revelar la cifra. Antes se calculaba en el servidor con el stock crudo,
-          así que seguía diciendo "últimas unidades" aunque ya las tuviera todas. */}
-      {showLowStock && (
-        <div className="text-[12px] text-[#ffb84a] font-semibold tracking-[0.5px]">
-          ⚠ ¡Últimas unidades disponibles!
+      {/* Aviso de disponibilidad — ver `stockNotice`. */}
+      {stockNotice && (
+        <div
+          aria-live="polite"
+          className={`text-[12px] font-semibold tracking-[0.5px] flex items-center gap-1.5 ${
+            stockNotice.tone === 'warn' ? 'text-[#ffb84a]' : 'text-info'
+          }`}
+        >
+          <stockNotice.Icon size={14} className="shrink-0" aria-hidden />
+          {stockNotice.text}
         </div>
       )}
 
@@ -134,7 +130,7 @@ export function AddToCartPanel({ product, defaultDepositPercent }: Props) {
                   value: 'FULL' as const,
                   title: 'Preventa total',
                   amount: unitPrice,
-                  hint: 'Pagás todo ahora',
+                  hint: 'Pagas todo ahora',
                 },
                 {
                   value: 'PARTIAL' as const,
@@ -148,9 +144,7 @@ export function AddToCartPanel({ product, defaultDepositPercent }: Props) {
                 key={opt.value}
                 type="button"
                 aria-pressed={mode === opt.value}
-                onClick={() =>
-                  qtyInCart > 0 ? setLineMode(p.id, opt.value) : setChosenMode(opt.value)
-                }
+                onClick={() => (inCart ? setLineMode(p.id, opt.value) : setChosenMode(opt.value))}
                 className={`text-left border px-3.5 py-3 transition-colors duration-200 ${
                   mode === opt.value
                     ? 'border-(--gold) bg-(--gold)/10'
@@ -170,86 +164,102 @@ export function AddToCartPanel({ product, defaultDepositPercent }: Props) {
         </div>
       )}
 
-      {!isOutOfStock && canAdd && (
+      {/* Selector de cantidad. Mientras no se sabe si el producto está en el
+          carrito se deja el hueco: pintarlo con "Cantidad 1" y corregirlo a
+          "En tu carrito 3" al hidratar era el mismo parpadeo que el botón. */}
+      {!isOutOfStock && ctaState !== 'capped' && !loading && (
         <div>
           <div className="text-[10px] tracking-[2px] uppercase text-muted mb-2.5">
-            {qtyInCart > 0 ? 'Agregar más' : 'Cantidad'}
+            {inCart ? 'En tu carrito' : 'Cantidad'}
           </div>
-          <div className="flex items-center border border-(--bd) w-fit">
-            <Button
-              variant="icon"
-              size="md"
-              disabled={qty <= 1}
-              aria-label="Quitar una unidad"
-              onClick={() => setQty(Math.max(1, qty - 1))}
-            >
-              <Minus size={14} />
-            </Button>
-            <div className="w-13 text-center font-display text-[20px] font-extrabold border-l border-r border-(--bd) flex items-center justify-center h-10.5">
-              {qty}
-            </div>
-            <Button
-              variant="icon"
-              size="md"
-              disabled={atLimit}
-              aria-label="Agregar una unidad"
-              onClick={increase}
-            >
-              <Plus size={14} />
-            </Button>
-          </div>
+          {
+            <>
+              <div className="flex items-center border border-(--bd) w-fit">
+                <Button
+                  variant="icon"
+                  size="md"
+                  disabled={qty <= 1}
+                  aria-label="Quitar una unidad"
+                  onClick={decrease}
+                >
+                  <Minus size={14} />
+                </Button>
+                <div
+                  className="w-13 text-center font-display text-[20px] font-extrabold border-l border-r border-(--bd) flex items-center justify-center h-10.5"
+                  aria-live="polite"
+                >
+                  {qty}
+                </div>
+                <Button
+                  variant="icon"
+                  size="md"
+                  disabled={atLimit}
+                  aria-label="Agregar una unidad"
+                  onClick={increase}
+                >
+                  <Plus size={14} />
+                </Button>
+              </div>
+              {inCart && (
+                <p className="text-[11px] text-muted mt-1.5">
+                  Se actualiza en tu carrito al instante.
+                </p>
+              )}
+            </>
+          }
         </div>
       )}
 
-      <Button
-        variant={justAdded ? 'success' : 'accent'}
-        size="lg"
-        full
-        disabled={isOutOfStock || !canAdd || !hydrated}
-        onClick={() => {
-          // El store vuelve a aplicar el tope y avisa si ya no cabe nada.
-          if (addToCart(p, qty, mode) > 0) {
-            toast.success(isPreorder ? `"${p.name}" reservado` : `"${p.name}" agregado al carrito`)
-            trigger()
-            setQty(1)
-          }
-        }}
-      >
-        {isOutOfStock ? (
-          'Sin stock'
-        ) : !canAdd ? (
-          'Ya tenés todo el stock disponible'
-        ) : justAdded ? (
-          <>
-            <Check size={16} strokeWidth={3} />
-            {isPreorder ? 'Reservado' : 'Agregado al carrito'}
-          </>
-        ) : (
-          `${isPreorder ? 'Reservar' : 'Agregar al carrito'} · S/ ${(payNowUnit * qty).toFixed(2)}`
-        )}
-      </Button>
+      {/* El verde deriva del carrito, no de un temporizador: mientras el
+          producto siga agregado, ese es su estado. */}
+      {loading ? (
+        <CartCtaSkeleton withQuantity={!isOutOfStock} />
+      ) : (
+        <Button
+          variant={ctaState === 'in-cart' ? 'success' : 'accent'}
+          size="lg"
+          full
+          // "Agregado" no lleva `disabled`: esa regla lo pinta al 40% de opacidad
+          // (globals.css `.ui-btn:disabled`) y el verde quedaba apagado. Es un
+          // estado, no un botón inhabilitado. Se marca con `aria-disabled` y el
+          // handler corta igual, así que no dispara nada.
+          disabled={ctaState === 'out-of-stock' || ctaState === 'capped'}
+          aria-disabled={ctaState === 'in-cart' || undefined}
+          className={ctaState === 'in-cart' ? 'cursor-default' : undefined}
+          onClick={() => {
+            if (ctaState !== 'idle') return
+            // El store vuelve a aplicar el tope y avisa si ya no cabe nada.
+            if (addToCart(p, qty, mode) > 0) {
+              toast.success(
+                isPreorder ? `"${p.name}" reservado` : `"${p.name}" agregado al carrito`,
+              )
+            }
+          }}
+        >
+          {ctaState === 'out-of-stock' ? (
+            'Sin stock'
+          ) : ctaState === 'capped' ? (
+            'Ya tienes todo el stock disponible'
+          ) : ctaState === 'in-cart' ? (
+            <>
+              <Check size={16} strokeWidth={3} />
+              {isPreorder ? 'Reservado' : 'Agregado al carrito'}
+            </>
+          ) : (
+            `${isPreorder ? 'Reservar' : 'Agregar al carrito'} · S/ ${(payNowUnit * qty).toFixed(2)}`
+          )}
+        </Button>
+      )}
 
-      {preorder && mode === 'PARTIAL' && !isOutOfStock && canAdd && (
+      {preorder && mode === 'PARTIAL' && !isOutOfStock && !loading && (
         <p className="text-[12px] text-muted -mt-2">
-          Pagás S/ {(preorder.depositUnit * qty).toFixed(2)} ahora y{' '}
+          Pagas S/ {(preorder.depositUnit * qty).toFixed(2)} ahora y{' '}
           <span className="text-info font-semibold">
             S/ {(preorder.balanceUnit * qty).toFixed(2)}
           </span>{' '}
           cuando el producto esté listo para entregarse.
         </p>
       )}
-
-      <ConfirmModal
-        open={confirmRemove}
-        onClose={() => setConfirmRemove(false)}
-        onConfirm={() => {
-          removeItem(p.id)
-          toast.success(`"${p.name}" eliminado del carrito`)
-          setConfirmRemove(false)
-        }}
-        title="¿Eliminar producto?"
-        description={`"${p.name}" será eliminado de tu carrito.`}
-      />
     </div>
   )
 }

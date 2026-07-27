@@ -3,6 +3,7 @@ import { PromotionCard } from '@/features/promotions/components/PromotionCard'
 import { PromotionCrudProvider } from '@/features/promotions/components/PromotionCrudProvider'
 import { getPromotions } from '@/features/promotions/queries/promotion.queries'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
+import { Tag } from 'lucide-react'
 
 export const metadata = { title: 'Promociones | Mirana Admin' }
 
@@ -22,7 +23,7 @@ export default async function PromotionsPage() {
 
         {promotions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-muted gap-3">
-            <span className="text-[48px]">🏷️</span>
+            <Tag size={48} strokeWidth={1} aria-hidden />
             <p className="text-[14px]">No hay promociones creadas todavía.</p>
             <NewPromotionButton>Crear primera promoción</NewPromotionButton>
           </div>

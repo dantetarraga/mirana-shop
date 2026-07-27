@@ -77,7 +77,7 @@ export function BannerCard({ banner }: BannerCardProps) {
             y sin este mensaje el admin no tendría cómo enterarse. */}
         {!previewImage && banner.active && (
           <p className="text-[11px] text-danger py-1.5 leading-snug">
-            Este banner está activo pero no se muestra en el inicio: agregá al menos una imagen.
+            Este banner está activo pero no se muestra en el inicio: agrega al menos una imagen.
           </p>
         )}
         {banner.ctaHref && (

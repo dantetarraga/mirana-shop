@@ -10,7 +10,7 @@ import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
 import { useScrollLock } from '@/shared/hooks'
 import { useFocusTrap } from '@/shared/hooks/useFocusTrap'
 import { formatCurrency } from '@/shared/lib/utils'
-import { ArrowRight, Minus, Plus, X } from 'lucide-react'
+import { ArrowRight, Minus, Plus, ShoppingCart, X } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useId, useState } from 'react'
@@ -129,7 +129,9 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
         <div className="flex-1 overflow-y-auto px-5 sm:px-7 py-5 flex flex-col gap-3.5">
           {cart.length === 0 ? (
             <div className="text-center py-16 px-5 text-muted">
-              <div className="text-[52px] mb-4 opacity-25">🛒</div>
+              {/* Icono de lucide, no emoji: el emoji lo dibuja el sistema
+                  operativo y cambia de estilo y color entre plataformas. */}
+              <ShoppingCart size={52} strokeWidth={1} className="mx-auto mb-4 opacity-25" />
               <div className="font-display text-[22px] font-black uppercase mb-2">
                 Carrito vacío
               </div>

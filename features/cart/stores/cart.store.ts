@@ -248,7 +248,7 @@ export const useCartStore = create<CartState>()((set, get) => ({
     // Si el vaciado falla el carrito reaparece en la próxima lectura del
     // servidor, así que se avisa en vez de tragarse el error en silencio.
     clearCartAction().catch(() => {
-      toast.error('No se pudo vaciar el carrito. Recargá la página para ver su estado real.')
+      toast.error('No se pudo vaciar el carrito. Recarga la página para ver su estado real.')
     })
   },
 

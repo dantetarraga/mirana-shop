@@ -23,6 +23,22 @@ export interface PreorderInfo {
   balanceUnit: number
 }
 
+/**
+ * Estado del botón de compra. Es una función del carrito, NO de un temporizador:
+ * antes el verde lo producía `useJustAdded` y se apagaba a los 1,8 s, así que el
+ * botón terminaba diciendo "Agregar al carrito" con el producto ya agregado.
+ *
+ * `loading` gana sobre todos: mientras el carrito del servidor no llegó no se
+ * afirma nada. Sin ese estado, al recargar una ficha cuyo producto ya está en el
+ * carrito se pintaba "Agregar al carrito" y saltaba a verde al hidratar.
+ */
+export type CartCtaState =
+  | 'loading'
+  | 'out-of-stock'
+  | 'capped'
+  | 'idle'
+  | 'in-cart'
+
 export interface CartLineState {
   /** El producto más fresco disponible (línea del carrito si existe, si no el prop). */
   product: CatalogProduct
@@ -41,6 +57,8 @@ export interface CartLineState {
   preorderMode: PreorderMode
   /** Datos del adelanto — `null` si el producto no admite preventa parcial. */
   preorder: PreorderInfo | null
+  /** Qué debe mostrar el botón de compra. Ver `CartCtaState`. */
+  ctaState: CartCtaState
 }
 
 /**
@@ -77,16 +95,30 @@ export function useCartLine(
       }
     : null
 
+  const isOutOfStock = p.status === 'SOLD_OUT' || (!isPreorder && p.stock === 0)
+  const remaining = remainingStock(p, qtyInCart)
+
+  const ctaState: CartCtaState = !hydrated
+    ? 'loading'
+    : isOutOfStock
+      ? 'out-of-stock'
+      : qtyInCart > 0
+        ? 'in-cart'
+        : remaining !== null && remaining <= 0
+          ? 'capped'
+          : 'idle'
+
   return {
     product: p,
     qtyInCart,
     isPreorder,
-    isOutOfStock: p.status === 'SOLD_OUT' || (!isPreorder && p.stock === 0),
-    remaining: remainingStock(p, qtyInCart),
+    isOutOfStock,
+    remaining,
     unitPrice: effectivePrice(p),
     hasDiscount: p.salePrice != null && p.salePrice < p.price,
     hydrated,
     preorderMode: line?.preorderMode ?? 'FULL',
     preorder,
+    ctaState,
   }
 }
