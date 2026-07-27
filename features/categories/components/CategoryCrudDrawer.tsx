@@ -5,12 +5,12 @@ import type { CategoryRow } from '@/features/categories/types'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { EntityProductsPanel } from '@/shared/components/admin/EntityProductsPanel'
 import { FilterMultiSelect } from '@/shared/components/admin/FilterMultiSelect'
+import { ImageUploadField } from '@/shared/components/admin/ImageUploadField'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
 import { useAutoSlug, useFormEntity, useServerAction } from '@/shared/hooks/admin'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { imageUrlSchema } from '@/shared/schemas/image-url.schema'
-import { ImageUploadField } from '@/shared/components/admin/ImageUploadField'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -91,7 +91,9 @@ export function CategoryCrudDrawer({
   const onSubmit = (data: FormValues) => {
     const payload = {
       ...data,
-      parentId: data.parentId || undefined,
+      // Vacío ("") → null para que el UPDATE borre el padre en la BD.
+      // undefined no dispara la condición del action y el campo se ignora.
+      parentId: data.parentId || null,
       ...(category && { id: category.id }),
     }
     run(category ? () => updateCategory(payload) : () => createCategory(payload), {

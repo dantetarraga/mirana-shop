@@ -33,7 +33,16 @@ const FOOTER_NAVIGATION = [
 
 function InstagramIcon({ size = 18 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
       <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
       <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
@@ -77,11 +86,21 @@ export async function Footer() {
   const settings = await getStoreSettings()
 
   const socialLinks = [
-    { name: 'Instagram', url: settings.instagramUrl, Icon: InstagramIcon },
-    { name: 'TikTok', url: settings.tiktokUrl, Icon: TikTokIcon },
-    { name: 'YouTube', url: settings.youtubeUrl, Icon: YouTubeIcon },
-    { name: 'Facebook', url: settings.facebookUrl, Icon: FacebookIcon },
-    { name: 'WhatsApp', url: settings.whatsappNumber ? `https://wa.me/${settings.whatsappNumber}` : '', Icon: WhatsAppIcon },
+    { name: 'Instagram', url: settings.instagramUrl, Icon: InstagramIcon, color: 'text-[#E1306C]' },
+    {
+      name: 'TikTok',
+      url: settings.tiktokUrl,
+      Icon: TikTokIcon,
+      color: 'text-text dark:text-white',
+    },
+    { name: 'YouTube', url: settings.youtubeUrl, Icon: YouTubeIcon, color: 'text-[#FF0000]' },
+    { name: 'Facebook', url: settings.facebookUrl, Icon: FacebookIcon, color: 'text-[#1877F2]' },
+    {
+      name: 'WhatsApp',
+      url: settings.whatsappNumber ? `https://wa.me/${settings.whatsappNumber}` : '',
+      Icon: WhatsAppIcon,
+      color: 'text-[#25D366]',
+    },
   ].filter((s) => s.url)
 
   return (
@@ -123,16 +142,16 @@ export async function Footer() {
         <span>© 2026 MIRANA. Todos los derechos reservados.</span>
         {socialLinks.length > 0 && (
           <div className="flex gap-4 flex-wrap items-center">
-            {socialLinks.map(({ name, url, Icon }) => (
+            {socialLinks.map(({ name, url, Icon, color }) => (
               <a
                 key={name}
                 href={url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="footer-link text-muted hover:text-accent-ink no-underline transition-colors duration-200 block"
+                className={`${color} hover:opacity-75 no-underline transition-opacity duration-200 block`}
                 title={name}
               >
-                <Icon size={18} />
+                <Icon size={22} />
               </a>
             ))}
           </div>

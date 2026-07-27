@@ -1,11 +1,9 @@
 ﻿export function PromoBanner() {
   const items = [
-    'Envío gratis en pedidos +$75',
-    'Figuras exclusivas de importación',
-    'Preventas con adelanto',
-    'Más de 500 productos',
+    'Trabajamos con todos los bancos',
+    'Hacemos envíos a todo el Perú',
+    'Más de 450 figuras vendidas',
     'Coordina tu pago por WhatsApp',
-    'Devoluciones en 30 días',
   ]
   const doubled = [...items, ...items]
   return (

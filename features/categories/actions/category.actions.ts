@@ -5,14 +5,11 @@ import {
   getCategoryById,
   getCategoryBySlug,
 } from '@/features/categories/queries/category.queries'
-import {
-  findTrashedConflict,
-  trashedConflictError,
-} from '@/features/trash/lib/trashed-conflict'
+import { findTrashedConflict, trashedConflictError } from '@/features/trash/lib/trashed-conflict'
 import { db } from '@/shared/lib/db'
 import { requireAdmin } from '@/shared/lib/require-admin'
-import { imageUrlSchema } from '@/shared/schemas/image-url.schema'
 import { slugify } from '@/shared/lib/utils'
+import { imageUrlSchema } from '@/shared/schemas/image-url.schema'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import type { DrawerProduct } from '@/shared/types/entity-products.types'
 import { revalidatePath, revalidateTag } from 'next/cache'
@@ -30,7 +27,7 @@ const slugSchema = z
 const createCategorySchema = z.object({
   name: z.string().min(1, 'Nombre requerido').max(100),
   slug: slugSchema,
-  parentId: z.string().optional(),
+  parentId: z.string().nullable().optional(),
   description: z.string().max(500).optional(),
   imageUrl: imageUrlSchema().optional().or(z.literal('')),
 })
@@ -151,7 +148,9 @@ export async function updateCategory(rawInput: unknown): Promise<ActionResult<{ 
       data: {
         ...(fields.name !== undefined && { name: fields.name }),
         ...(fields.slug !== undefined && { slug: fields.slug }),
-        ...(fields.parentId !== undefined && { parentId: fields.parentId }),
+        // parentId puede llegar como null (quitar padre) o string (asignar padre).
+        // Si no viene en el payload (undefined) se omite y no se toca.
+        ...(fields.parentId !== undefined && { parentId: fields.parentId ?? null }),
         ...(fields.description !== undefined && { description: fields.description || null }),
         ...(fields.imageUrl !== undefined && { imageUrl: fields.imageUrl || null }),
       },

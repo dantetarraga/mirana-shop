@@ -186,8 +186,12 @@
    para texto se usa --accent-ink (azul profundo), porque #00c8ff sobre blanco
    da 1.9:1 y reprueba WCAG. */
 :root {
-  /* Altura navbar (usada en calc() — no tiene equivalente en @theme) */
-  --nh: 68px;
+  /* Altura de la barra de anuncios (la setea PromoAnnouncementBarClient via JS) */
+  --ab: 0px;
+  /* Altura del navbar puro */
+  --nav-h: 68px;
+  /* Offset total del contenido fijo arriba (barra + navbar) */
+  --nh: calc(var(--nav-h) + var(--ab));
 
   /* Superficies y texto */
   --bg: #ffffff;

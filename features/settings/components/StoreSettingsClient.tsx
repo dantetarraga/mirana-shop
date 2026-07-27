@@ -209,7 +209,7 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
             </span>
           </div>
 
-          <FormField label="Logo del footer">
+          <FormField label="Logo (navbar y footer)">
             <ImageUploadField
               value={form.footerLogoUrl}
               onChange={(url) => setForm({ ...form, footerLogoUrl: url })}

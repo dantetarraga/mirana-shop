@@ -1,5 +1,6 @@
 'use client'
 
+import { logout } from '@/features/auth/lib/logout'
 import { useAuthModalStore } from '@/features/auth/stores/auth-modal.store'
 import { useCartStore } from '@/features/cart/stores/cart.store'
 import { SearchBox } from '@/features/search/components/SearchBox'
@@ -8,13 +9,12 @@ import { ThemeToggle } from '@/shared/components/ui/ThemeToggle'
 import { useUser } from '@/shared/hooks'
 import { cn } from '@/shared/lib/utils'
 import { LayoutGrid, LogOut, MapPin, Package, ShoppingBag, User } from 'lucide-react'
-import { logout } from '@/features/auth/lib/logout'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
-export function Navbar() {
+export function Navbar({ logoUrl = '/logo.svg' }: { logoUrl?: string }) {
   const { cartCount, setCartOpen, hydrated } = useCartStore()
   const { openAuth } = useAuthModalStore()
   const { user } = useUser()
@@ -54,7 +54,7 @@ export function Navbar() {
     : ''
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-200 flex items-center gap-3 sm:gap-5 md:gap-8 shell transition-[background] duration-300 h-(--nh) bg-surf/92 backdrop-blur-[28px] border-b border-(--bd)">
+    <nav className="fixed top-(--ab) left-0 right-0 z-200 flex items-center gap-3 sm:gap-5 md:gap-8 shell transition-[background] duration-300 h-(--nav-h) bg-surf/92 backdrop-blur-[28px] border-b border-(--bd)">
       <div className="flex items-center gap-4 md:gap-7 shrink-0">
         <Link href="/" className="flex items-center shrink-0">
           {/* El logo es un PNG rasterizado dentro del SVG (el color está horneado
@@ -71,7 +71,7 @@ export function Navbar() {
               hue-rotate devuelve el tono: sin él, invert manda el cyan al
               naranja. El `saturate` compensa el lavado del invert. */}
           <Image
-            src="/logo.svg"
+            src={logoUrl}
             alt="Mirana"
             width={150}
             height={90}
@@ -106,7 +106,11 @@ export function Navbar() {
           // cuántos artículos hay: el HTML del SSR sale siempre con 0 y afirmar
           // "vacío" sería mentira durante el primer pintado.
           aria-label={
-            !hydrated ? 'Carrito' : cartCount > 0 ? `Carrito, ${cartCount} artículos` : 'Carrito, vacío'
+            !hydrated
+              ? 'Carrito'
+              : cartCount > 0
+                ? `Carrito, ${cartCount} artículos`
+                : 'Carrito, vacío'
           }
           className="relative"
         >
