@@ -222,7 +222,7 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
   const steps = useMemo<CheckoutStep[]>(
     () =>
       deliveryMethods.length > 0
-        ? [DELIVERY_STEP, DATA_STEP, PAYMENT_STEP]
+        ? [DATA_STEP, DELIVERY_STEP, PAYMENT_STEP]
         : [DATA_STEP, PAYMENT_STEP],
     [deliveryMethods.length],
   )
@@ -241,19 +241,25 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
   }, [])
 
   /**
-   * Cambia de paso. Retroceder es libre; avanzar valida todos los pasos que
-   * quedan por detrás y se detiene en el primero que tenga algo pendiente.
+   * Cambia de paso. Retroceder es libre; avanzar revalida TODOS los pasos
+   * anteriores —no solo el actual— y se detiene en el primero que tenga algo
+   * pendiente. Hace falta porque la forma de entrega se elige después de los
+   * datos y puede encender una regla de un paso ya recorrido: quien pasó por
+   * "Tus datos" con un retiro en tienda preseleccionado y luego cambia a envío
+   * a domicilio todavía no ha dado su dirección.
    */
   const goToStep = useCallback(
     async (target: number) => {
       const clamped = Math.max(0, Math.min(target, steps.length - 1))
 
-      for (let i = current; i < clamped; i++) {
-        const valid = await trigger(steps[i].fields)
-        if (!valid) {
-          setStep(i)
-          scrollToSteps()
-          return
+      if (clamped > current) {
+        for (let i = 0; i < clamped; i++) {
+          const valid = await trigger(steps[i].fields)
+          if (!valid) {
+            setStep(i)
+            scrollToSteps()
+            return
+          }
         }
       }
 
