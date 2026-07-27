@@ -3,6 +3,7 @@
 import { savePaymentAccount } from '@/features/settings/actions/payment-accounts.actions'
 import type { PaymentAccountData } from '@/features/settings/queries/payment-accounts.queries'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
+import { ImageUploadField } from '@/shared/components/admin/ImageUploadField'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
 import { useFormEntity, useServerAction } from '@/shared/hooks/admin'
@@ -16,12 +17,20 @@ const formSchema = z.object({
   holder: z.string().max(80).optional(),
   number: z.string().min(1, 'Número requerido').max(40),
   cci: z.string().max(40).optional(),
+  qrImageUrl: z.string().optional(),
   active: z.boolean(),
 })
 
 type FormValues = z.infer<typeof formSchema>
 
-const DEFAULTS: FormValues = { name: '', holder: '', number: '', cci: '', active: true }
+const DEFAULTS: FormValues = {
+  name: '',
+  holder: '',
+  number: '',
+  cci: '',
+  qrImageUrl: '',
+  active: true,
+}
 
 interface PaymentAccountDrawerProps {
   account: PaymentAccountData | null
@@ -36,6 +45,8 @@ export function PaymentAccountDrawer({ account, isNew, onClose }: PaymentAccount
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -51,6 +62,7 @@ export function PaymentAccountDrawer({ account, isNew, onClose }: PaymentAccount
       holder: a.holder,
       number: a.number,
       cci: a.cci,
+      qrImageUrl: a.qrImageUrl,
       active: a.active,
     }),
   })
@@ -95,6 +107,18 @@ export function PaymentAccountDrawer({ account, isNew, onClose }: PaymentAccount
         </FormField>
         <p className="text-[12px] text-muted -mt-2.5">
           Para billeteras como Yape o Plin deja el CCI vacío.
+        </p>
+
+        <FormField label="Código QR (opcional)" error={errors.qrImageUrl?.message}>
+          <ImageUploadField
+            value={watch('qrImageUrl') ?? ''}
+            onChange={(url) => setValue('qrImageUrl', url, { shouldValidate: true })}
+            folder="payments"
+          />
+        </FormField>
+        <p className="text-[12px] text-muted -mt-2.5">
+          Sube la captura del QR de Yape o Plin para que el cliente lo escanee desde el checkout.
+          En transferencias bancarias déjalo vacío.
         </p>
 
         <label className="flex items-center gap-2.5 cursor-pointer text-[13px] select-none">

@@ -260,14 +260,22 @@ export function CartView({ pricingRules }: CartViewProps) {
 
               <div className="flex justify-between items-baseline">
                 <span className="text-muted">Envío</span>
-                {shippingFree ? (
+                {shippingFree || shippingCost === 0 ? (
                   <span className="text-green-400 font-semibold text-[13px]">Gratis</span>
                 ) : (
                   <span className="font-semibold">{formatCurrency(shippingCost)}</span>
                 )}
               </div>
 
-              {!shippingFree && pricingRules.freeShippingThreshold != null && (
+              {/* El costo mostrado es el de la forma de entrega preseleccionada;
+                  el cliente puede cambiarla (y con ella el costo) en el checkout. */}
+              {pricingRules.deliveryMethods.length > 1 && (
+                <p className="text-[12px] text-muted leading-snug">
+                  Eliges la forma de entrega en el checkout: retiro en tienda, preventa o envío.
+                </p>
+              )}
+
+              {!shippingFree && shippingCost > 0 && pricingRules.freeShippingThreshold != null && (
                 <div className="text-[12px] text-muted border border-(--bd) px-3.5 py-2.5 leading-relaxed">
                   Agrega{' '}
                   <span className="text-accent-ink font-semibold">

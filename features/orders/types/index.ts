@@ -1,4 +1,5 @@
 import type {
+  DeliveryKind,
   OrderStatus,
   PaymentMethod,
   PaymentStatus,
@@ -31,6 +32,8 @@ export type OrderListItem = {
   /** Valor completo del pedido */
   subtotal: Decimal
   shippingCost: Decimal
+  /** Descuento aplicado por una promoción o un cupón */
+  discountTotal: Decimal
   /** Saldo pendiente por preventa parcial; 0 en pedidos normales */
   dueTotal: Decimal
   /** Cuándo el admin marcó el saldo como cobrado; null = pendiente */
@@ -38,9 +41,24 @@ export type OrderListItem = {
   currency: string
   createdAt: Date
   updatedAt: Date
+  /** Snapshot del nombre de la forma de entrega; '' en pedidos anteriores */
+  deliveryMethodName: string
+  deliveryKind: DeliveryKind
+  /** Sede de retiro elegida, ya formateada; null si no aplica */
+  deliveryLocation: string | null
+  /** Cupón canjeado; null si no hubo */
+  couponCode: string | null
   user: { id: string; name: string | null; email: string } | null
   guestEmail: string | null
-  shipping: { fullName: string; city: string; district: string; phone: string } | null
+  shipping: {
+    fullName: string
+    city: string
+    district: string
+    phone: string
+    dni: string
+    address: string
+    reference: string | null
+  } | null
   _count: { items: number }
 }
 

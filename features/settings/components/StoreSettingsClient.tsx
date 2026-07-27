@@ -12,7 +12,7 @@ import { FormField } from '@/shared/components/ui/FormField'
 import { useEntityCrud, useServerAction } from '@/shared/hooks/admin'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { cn } from '@/shared/lib/utils'
-import { Check, Landmark, Pencil, Plus, Save, Smartphone, Trash2 } from 'lucide-react'
+import { Check, Landmark, Pencil, Plus, QrCode, Save, Smartphone, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
 interface StoreSettingsClientProps {
@@ -220,6 +220,11 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
                         {acc.cci && (
                           <span className="shrink-0 inline-flex items-center gap-0.5 text-[10px] tracking-[1px] uppercase text-accent-ink/80">
                             CCI <Check size={10} />
+                          </span>
+                        )}
+                        {acc.qrImageUrl && (
+                          <span className="shrink-0 inline-flex items-center gap-0.5 text-[10px] tracking-[1px] uppercase text-accent-ink/80">
+                            <QrCode size={11} /> QR
                           </span>
                         )}
                         {acc.holder && <span className="truncate">· {acc.holder}</span>}

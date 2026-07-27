@@ -9,6 +9,10 @@ export type PromotionRow = {
   minAmount: number | null
   discountAmount: number | null
   discountPercent: number | null
+  /** Solo se aplica si el cliente escribe uno de sus cupones en el checkout */
+  requiresCoupon: boolean
+  /** Cuántos cupones apuntan a esta promoción */
+  couponCount: number
   startsAt: Date | null
   endsAt: Date | null
   createdAt: Date
@@ -23,6 +27,7 @@ export type CreatePromotionInput = {
   minAmount?: number
   discountAmount?: number
   discountPercent?: number
+  requiresCoupon?: boolean
   startsAt?: Date
   endsAt?: Date
 }

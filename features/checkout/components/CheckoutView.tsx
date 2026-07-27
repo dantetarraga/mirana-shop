@@ -1,6 +1,8 @@
 'use client'
 
+import { CouponField } from '@/features/checkout/components/CouponField'
 import { DeliveryForm } from '@/features/checkout/components/DeliveryForm'
+import { DeliveryMethodSelector } from '@/features/checkout/components/DeliveryMethodSelector'
 import { OrderSummary } from '@/features/checkout/components/OrderSummary'
 import { PaymentSection } from '@/features/checkout/components/PaymentSection'
 import { SavedAddressSelector } from '@/features/checkout/components/SavedAddressSelector'
@@ -10,6 +12,7 @@ import { placeOrder } from '@/features/checkout/actions/checkout.actions'
 import {
   createAddress,
   getMyAddresses,
+  getMyProfile,
   type AddressData,
 } from '@/features/profile/actions/account-profile.actions'
 import {
@@ -19,19 +22,26 @@ import {
 import { useCartStore } from '@/features/cart/stores/cart.store'
 import {
   computeTotals,
+  defaultDeliveryMethod,
   effectivePrice,
+  type AppliedCoupon,
   type PricingRules,
 } from '@/features/checkout/lib/pricing'
 import { depositUnitPrice, splitPreorderTotals } from '@/features/checkout/lib/preorder'
+import type { DeliveryMethodOption } from '@/features/delivery/types'
 import type { PaymentAccountData } from '@/features/settings/queries/payment-accounts.queries'
 import { Button } from '@/shared/components/ui/Button'
 import { useUser } from '@/shared/hooks'
-import { checkoutSchema, type CheckoutInput } from '@/features/checkout/schemas/checkout.schema'
+import {
+  buildCheckoutSchema,
+  type CheckoutFormRules,
+  type CheckoutInput,
+} from '@/features/checkout/schemas/checkout.schema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ShoppingBag, ShoppingCart } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useForm, type Resolver } from 'react-hook-form'
 import { toast } from 'sonner'
 
 // ---------------------------------------------------------------------------
@@ -41,7 +51,7 @@ import { toast } from 'sonner'
 interface CheckoutViewProps {
   paymentAccounts: PaymentAccountData[]
   whatsappPhone: string
-  /** Reglas de precios (envío y promociones activas) calculadas en el server */
+  /** Reglas de precios (envío, entregas y promociones activas) del server */
   pricingRules: PricingRules
 }
 
@@ -53,36 +63,106 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
   const [savedAddresses, setSavedAddresses] = useState<AddressData[]>([])
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
   const [showNewAddressForm, setShowNewAddressForm] = useState(false)
+  const [coupon, setCoupon] = useState<AppliedCoupon | null>(null)
 
-  // Totales con precio efectivo (oferta si existe) + promociones de la BD.
-  // El servidor recalcula y valida todo esto de nuevo en placeOrder.
-  const { subtotal, payableNow, dueTotal } = splitPreorderTotals(
-    cart,
-    pricingRules.preorderDepositPercent,
-  )
-  const { shippingFree, shippingCost, discount, discountName, total } = computeTotals(
-    payableNow,
-    pricingRules,
+  const deliveryMethods = pricingRules.deliveryMethods
+  const initialMethod = defaultDeliveryMethod(deliveryMethods)
+
+  // El esquema depende de la forma de entrega elegida (¿pide dirección?, ¿pide
+  // sede?), así que el resolver lo reconstruye leyendo una ref. Con un resolver
+  // recreado en cada render, react-hook-form seguiría usando el de la primera
+  // llamada; con la ref siempre valida contra las reglas vigentes.
+  const formRulesRef = useRef<CheckoutFormRules>({
+    requiresMethod: deliveryMethods.length > 0,
+    requiresAddress: initialMethod ? initialMethod.requiresAddress : true,
+    requiresLocation: initialMethod
+      ? initialMethod.requiresLocation && initialMethod.locations.length > 0
+      : false,
+  })
+
+  const resolver = useCallback<Resolver<CheckoutInput>>(
+    (values, context, options) =>
+      zodResolver(buildCheckoutSchema(formRulesRef.current))(values, context, options),
+    [],
   )
 
   const {
     register,
     handleSubmit,
     setValue,
+    watch,
+    clearErrors,
     formState: { errors },
   } = useForm<CheckoutInput>({
-    resolver: zodResolver(checkoutSchema),
+    resolver,
     defaultValues: {
       fullName: user?.name ?? '',
       email: user?.email ?? '',
       phone: '',
+      dni: '',
+      deliveryMethodId: initialMethod?.id ?? '',
+      deliveryLocationId:
+        initialMethod?.requiresLocation ? (initialMethod.locations[0]?.id ?? '') : '',
       address: '',
       district: '',
       city: 'Lima',
       reference: '',
+      couponCode: '',
+      acceptTerms: false,
       paymentMethod: 'WHATSAPP_TRANSFER',
     },
   })
+
+  const deliveryMethodId = watch('deliveryMethodId') ?? ''
+  const deliveryLocationId = watch('deliveryLocationId') ?? ''
+  const selectedMethod = deliveryMethods.find((m) => m.id === deliveryMethodId) ?? null
+
+  // Sin métodos configurados el checkout se comporta como antes: pide dirección
+  // y cobra el envío base de la configuración de la tienda.
+  const requiresAddress = selectedMethod ? selectedMethod.requiresAddress : true
+  const requiresLocation = selectedMethod
+    ? selectedMethod.requiresLocation && selectedMethod.locations.length > 0
+    : false
+
+  useEffect(() => {
+    formRulesRef.current = {
+      requiresMethod: deliveryMethods.length > 0,
+      requiresAddress,
+      requiresLocation,
+    }
+  }, [deliveryMethods.length, requiresAddress, requiresLocation])
+
+  const handleSelectMethod = (method: DeliveryMethodOption) => {
+    setValue('deliveryMethodId', method.id)
+    // Preselecciona la primera sede si el método la exige; si no, la limpia
+    // para no arrastrar la de un método anterior.
+    setValue(
+      'deliveryLocationId',
+      method.requiresLocation ? (method.locations[0]?.id ?? '') : '',
+    )
+    clearErrors(['deliveryMethodId', 'deliveryLocationId'])
+    if (!method.requiresAddress) clearErrors(['address', 'district', 'city'])
+  }
+
+  // Totales con precio efectivo (oferta si existe) + promociones y cupón.
+  // El servidor recalcula y valida todo esto de nuevo en placeOrder.
+  const { subtotal, payableNow, dueTotal } = splitPreorderTotals(
+    cart,
+    pricingRules.preorderDepositPercent,
+  )
+  const { shippingFree, shippingCost, discount, discountName, couponCode, total } = computeTotals(
+    payableNow,
+    pricingRules,
+    { shippingCost: selectedMethod?.cost, coupon },
+  )
+
+  // Prellenar el DNI con el de la cuenta: ya lo dio al registrarse
+  useEffect(() => {
+    if (!user) return
+    getMyProfile().then((profile) => {
+      if (profile?.dni) setValue('dni', profile.dni)
+    })
+  }, [user, setValue])
 
   // Cargar direcciones guardadas si el usuario está logueado
   useEffect(() => {
@@ -179,7 +259,7 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
     }))
 
     const result = await placeOrder({
-      form: data,
+      form: { ...data, couponCode: coupon?.code ?? '' },
       items,
       clientTotal: total,
     })
@@ -209,7 +289,10 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
       subtotal: result.data.subtotal,
       discount: result.data.discount,
       discountName: result.data.discountName,
+      couponCode: result.data.couponCode,
       shippingCost: result.data.shippingCost,
+      deliveryLabel: result.data.deliveryLabel,
+      deliveryLocation: result.data.deliveryLocation,
       total: result.data.total,
       dueTotal: result.data.dueTotal,
     })
@@ -229,7 +312,22 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 lg:gap-8 items-start">
           {/* ── Left column ──────────────────────────────── */}
           <div className="flex flex-col gap-6">
-            {savedAddresses.length > 0 && (
+            {deliveryMethods.length > 0 && (
+              <DeliveryMethodSelector
+                methods={deliveryMethods}
+                selectedId={deliveryMethodId}
+                onSelect={handleSelectMethod}
+                selectedLocationId={deliveryLocationId}
+                onSelectLocation={(id) => {
+                  setValue('deliveryLocationId', id)
+                  clearErrors('deliveryLocationId')
+                }}
+                methodError={errors.deliveryMethodId?.message}
+                locationError={errors.deliveryLocationId?.message}
+              />
+            )}
+
+            {requiresAddress && savedAddresses.length > 0 && (
               <>
                 <SavedAddressSelector
                   addresses={savedAddresses}
@@ -248,7 +346,15 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
               </>
             )}
 
-            <DeliveryForm register={register} errors={errors} />
+            <DeliveryForm register={register} errors={errors} requiresAddress={requiresAddress} />
+
+            <CouponField
+              coupon={coupon}
+              onApply={setCoupon}
+              onRemove={() => setCoupon(null)}
+              subtotal={payableNow}
+              disabled={loading}
+            />
 
             <PaymentSection
               register={register}
@@ -269,9 +375,13 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
             shippingFree={shippingFree}
             discount={discount}
             discountName={discountName}
+            couponCode={couponCode}
             total={total}
             loading={loading}
             shippingThreshold={pricingRules.freeShippingThreshold}
+            deliveryLabel={selectedMethod?.name ?? null}
+            registerTerms={register('acceptTerms')}
+            termsError={errors.acceptTerms?.message}
           />
         </div>
       </form>

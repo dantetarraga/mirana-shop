@@ -21,6 +21,7 @@ export const ORDER_LIST_SELECT = {
   total: true,
   subtotal: true,
   shippingCost: true,
+  discountTotal: true,
   // Saldo pendiente por preventa parcial (0 en pedidos normales)
   dueTotal: true,
   duePaidAt: true,
@@ -28,8 +29,24 @@ export const ORDER_LIST_SELECT = {
   createdAt: true,
   updatedAt: true,
   guestEmail: true,
+  // Entrega y cupón: son snapshots, así que siguen siendo legibles aunque el
+  // método o el código se hayan eliminado del admin después.
+  deliveryMethodName: true,
+  deliveryKind: true,
+  deliveryLocation: true,
+  couponCode: true,
   user: { select: { id: true, name: true, email: true } },
-  shipping: { select: { fullName: true, city: true, district: true, phone: true } },
+  shipping: {
+    select: {
+      fullName: true,
+      city: true,
+      district: true,
+      phone: true,
+      dni: true,
+      address: true,
+      reference: true,
+    },
+  },
   _count: { select: { items: true } },
 } as const
 

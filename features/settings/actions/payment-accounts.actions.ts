@@ -1,5 +1,6 @@
 'use server'
 
+import { imageUrlSchema } from '@/shared/schemas/image-url.schema'
 import { db } from '@/shared/lib/db'
 import { requireAdmin } from '@/shared/lib/require-admin'
 import type { ActionResult } from '@/shared/types/action-result.types'
@@ -16,6 +17,12 @@ const paymentAccountSchema = z.object({
   holder: z.string().max(80).optional().default(''),
   number: z.string().min(1, 'Número requerido').max(40),
   cci: z.string().max(40).optional().default(''),
+  // QR opcional (Yape/Plin). Se acepta URL absoluta o ruta interna, igual que
+  // el resto de imágenes subidas desde el admin.
+  qrImageUrl: z
+    .union([imageUrlSchema('URL de imagen inválida'), z.literal('')])
+    .optional()
+    .default(''),
   active: z.boolean().default(true),
 })
 

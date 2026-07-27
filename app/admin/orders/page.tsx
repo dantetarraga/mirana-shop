@@ -51,10 +51,11 @@ export default async function OrdersPage({ searchParams }: PageProps) {
   // Serializar Decimals antes de pasar al Client Component
   const serializedOrders = orders.map((o) => ({
     ...o,
-    total:        Number(o.total),
-    subtotal:     Number(o.subtotal),
-    shippingCost: Number(o.shippingCost),
-    dueTotal:     Number(o.dueTotal),
+    total:         Number(o.total),
+    subtotal:      Number(o.subtotal),
+    shippingCost:  Number(o.shippingCost),
+    discountTotal: Number(o.discountTotal),
+    dueTotal:      Number(o.dueTotal),
   }));
 
   const totalPages = Math.ceil(total / PER_PAGE);

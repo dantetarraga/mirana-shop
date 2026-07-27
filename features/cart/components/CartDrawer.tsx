@@ -279,7 +279,7 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
               )}
               <div className="flex justify-between items-baseline">
                 <span className="text-muted">Envío</span>
-                {shippingFree ? (
+                {shippingFree || shippingCost === 0 ? (
                   <span className="text-green-400 font-semibold">Gratis</span>
                 ) : (
                   <span className="font-semibold">{formatCurrency(shippingCost)}</span>

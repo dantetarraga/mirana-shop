@@ -23,6 +23,7 @@ const EMPTY_FORM: FormValues = {
   minAmount: undefined,
   discountAmount: undefined,
   discountPercent: undefined,
+  requiresCoupon: false,
   startsAt: '',
   endsAt: '',
 }
@@ -67,6 +68,7 @@ export function PromotionFormDrawer({ promotion, isNew, onClose, onSubmit, isPen
       minAmount: p.minAmount ?? undefined,
       discountAmount: p.discountAmount ?? undefined,
       discountPercent: p.discountPercent ?? undefined,
+      requiresCoupon: p.requiresCoupon,
       startsAt: p.startsAt ? p.startsAt.toISOString().slice(0, 10) : '',
       endsAt: p.endsAt ? p.endsAt.toISOString().slice(0, 10) : '',
     }),
@@ -145,6 +147,23 @@ export function PromotionFormDrawer({ promotion, isNew, onClose, onSubmit, isPen
             />
           </FormField>
         )}
+
+        {/* Solo con cupón — la promoción deja de aplicarse sola */}
+        <label className="flex items-start gap-2.5 cursor-pointer text-[13px] select-none border border-(--bd) p-3.5">
+          <input
+            type="checkbox"
+            {...register('requiresCoupon')}
+            className="mt-0.5 accent-(--gold)"
+          />
+          <span>
+            <span className="block font-semibold">Solo con cupón</span>
+            <span className="block text-[12px] text-muted mt-0.5">
+              La promoción deja de aplicarse sola: el cliente tiene que escribir uno de sus códigos
+              en el checkout. Los cupones se crean en{' '}
+              <span className="text-text">Marketing → Cupones</span>.
+            </span>
+          </span>
+        </label>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <FormField label="Inicio (opcional)" error={errors.startsAt?.message}>

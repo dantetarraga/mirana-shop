@@ -3,11 +3,11 @@
 import type { PaymentAccountData } from '@/features/settings/queries/payment-accounts.queries'
 import { Button } from '@/shared/components/ui/Button'
 import { formatCurrency } from '@/shared/lib/utils'
-import { BadgeCheck, Home, Landmark, MessageCircle, ShoppingCart } from 'lucide-react'
+import { BadgeCheck, Home, MessageCircle, ShoppingCart } from 'lucide-react'
 import Link from 'next/link'
 import { buildWhatsappOrderUrl, formatPhoneDisplay } from '../lib/whatsapp'
 import type { SuccessData } from '../types'
-import { CopyValue } from './PaymentSection'
+import { PaymentAccountsPanel } from './PaymentAccountsPanel'
 import { Step } from './ui'
 
 export function SuccessScreen({
@@ -87,23 +87,36 @@ export function SuccessScreen({
               </div>
             )}
             {data.discount > 0 && (
-              <div className="flex justify-between text-[13px]">
-                <span className="text-muted">
+              <div className="flex justify-between text-[13px] gap-3">
+                <span className="text-muted min-w-0">
                   Descuento{data.discountName ? ` — ${data.discountName}` : ''}
+                  {data.couponCode && (
+                    <span className="font-mono text-[11px] text-accent-ink">
+                      {' '}
+                      · {data.couponCode}
+                    </span>
+                  )}
                 </span>
-                <span className="text-emerald-400 font-semibold">
+                <span className="text-emerald-400 font-semibold shrink-0">
                   −{formatCurrency(data.discount)}
                 </span>
               </div>
             )}
-            <div className="flex justify-between text-[13px]">
-              <span className="text-muted">Envío</span>
+            <div className="flex justify-between text-[13px] gap-3">
+              <span className="text-muted min-w-0 truncate">{data.deliveryLabel ?? 'Envío'}</span>
               {data.shippingCost === 0 ? (
-                <span className="text-emerald-400 font-semibold text-[12px] uppercase">Gratis</span>
+                <span className="text-emerald-400 font-semibold text-[12px] uppercase shrink-0">
+                  Gratis
+                </span>
               ) : (
-                <span>{formatCurrency(data.shippingCost)}</span>
+                <span className="shrink-0">{formatCurrency(data.shippingCost)}</span>
               )}
             </div>
+            {data.deliveryLocation && (
+              <p className="text-[12px] text-muted leading-snug">
+                Retiro en: <span className="text-text">{data.deliveryLocation}</span>
+              </p>
+            )}
             <div className="flex justify-between font-display font-black text-[17px] uppercase tracking-tight border-t border-(--bd) pt-2 mt-1">
               <span>{data.dueTotal > 0 ? 'Pagas hoy' : 'Total pagado'}</span>
               <span className="text-accent-ink">{formatCurrency(data.total)}</span>
@@ -137,39 +150,7 @@ export function SuccessScreen({
             <Step n={3}>Una vez confirmado el pago, prepararemos y enviaremos tu pedido.</Step>
           </div>
 
-          {accounts.length > 0 && (
-            <div className="mb-5 border border-(--bd) bg-card">
-              <div className="px-4 py-3 border-b border-(--bd) flex items-center gap-2">
-                <Landmark size={14} className="text-accent-ink" />
-                <span className="text-[10px] tracking-[2px] uppercase text-muted">
-                  Cuentas para realizar tu pago
-                </span>
-              </div>
-              <ul className="divide-y divide-(--bd)">
-                {accounts.map((acc) => (
-                  <li key={acc.id} className="px-4 py-3 flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-display font-bold text-[13px] uppercase tracking-tight">
-                        {acc.name}
-                      </span>
-                      {acc.holder && <span className="text-[11px] text-muted">— {acc.holder}</span>}
-                    </div>
-                    <div className="flex flex-wrap gap-x-6 gap-y-1">
-                      <span className="text-[11px] text-muted">
-                        {acc.cci ? 'Cuenta: ' : 'Número: '}
-                        <CopyValue label="Número" value={acc.number} />
-                      </span>
-                      {acc.cci && (
-                        <span className="text-[11px] text-muted">
-                          CCI: <CopyValue label="CCI" value={acc.cci} />
-                        </span>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          <PaymentAccountsPanel accounts={accounts} className="mb-5 bg-card" />
 
           {whatsappPhone && (
             <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="block">

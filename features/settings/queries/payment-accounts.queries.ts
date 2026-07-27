@@ -2,7 +2,7 @@ import { db } from '@/shared/lib/db'
 
 // ---------------------------------------------------------------------------
 // Métodos de pago manuales (Yape, BCP, BBVA, etc.) mostrados en el checkout.
-// Yape/Plin solo llevan número; cuentas bancarias llevan número y CCI.
+// Yape/Plin solo llevan número (y su QR); las cuentas bancarias, número y CCI.
 // ---------------------------------------------------------------------------
 
 export interface PaymentAccountData {
@@ -11,6 +11,8 @@ export interface PaymentAccountData {
   holder: string
   number: string
   cci: string
+  /** QR para escanear desde la app; '' = no se muestra */
+  qrImageUrl: string
   active: boolean
 }
 
@@ -20,6 +22,7 @@ const SELECT = {
   holder: true,
   number: true,
   cci: true,
+  qrImageUrl: true,
   active: true,
 } as const
 

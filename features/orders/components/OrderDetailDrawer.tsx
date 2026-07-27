@@ -1,6 +1,7 @@
 'use client'
 
 import type { OrderStatus } from '@/generated/prisma/client'
+import { DELIVERY_KIND_LABELS } from '@/features/delivery/types'
 import type { OrderListItem } from '@/features/orders/types'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { DrawerSection } from '@/shared/components/admin/DrawerSection'
@@ -14,11 +15,12 @@ import { formatDate } from '@/shared/lib/utils'
 
 export type SerializedOrder = Omit<
   OrderListItem,
-  'total' | 'subtotal' | 'shippingCost' | 'dueTotal'
+  'total' | 'subtotal' | 'shippingCost' | 'discountTotal' | 'dueTotal'
 > & {
   total: number
   subtotal: number
   shippingCost: number
+  discountTotal: number
   dueTotal: number
 }
 
@@ -87,7 +89,73 @@ export function OrderDetailDrawer({
         </div>
       </DrawerSection>
 
+      <DrawerSection title="Entrega">
+        <div className="flex flex-col gap-2 pt-2 text-[13px]">
+          <div className="flex justify-between gap-3">
+            <span className="text-[12px] tracking-[1px] uppercase text-muted">Forma</span>
+            <span className="text-right">
+              {order.deliveryMethodName || DELIVERY_KIND_LABELS[order.deliveryKind]}
+              {order.shippingCost > 0 && (
+                <span className="text-muted"> · S/ {fmt(order.shippingCost)}</span>
+              )}
+            </span>
+          </div>
+
+          {order.deliveryLocation && (
+            <div className="flex justify-between gap-3">
+              <span className="text-[12px] tracking-[1px] uppercase text-muted shrink-0">
+                Retiro en
+              </span>
+              <span className="text-right">{order.deliveryLocation}</span>
+            </div>
+          )}
+
+          {order.shipping?.dni && (
+            <div className="flex justify-between gap-3">
+              <span className="text-[12px] tracking-[1px] uppercase text-muted">DNI</span>
+              <span className="font-mono">{order.shipping.dni}</span>
+            </div>
+          )}
+
+          {order.shipping?.phone && (
+            <div className="flex justify-between gap-3">
+              <span className="text-[12px] tracking-[1px] uppercase text-muted">Teléfono</span>
+              <span className="font-mono">{order.shipping.phone}</span>
+            </div>
+          )}
+
+          {order.shipping?.address && (
+            <div className="flex justify-between gap-3">
+              <span className="text-[12px] tracking-[1px] uppercase text-muted shrink-0">
+                Dirección
+              </span>
+              <span className="text-right">
+                {order.shipping.address}
+                <span className="block text-[12px] text-muted">
+                  {[order.shipping.district, order.shipping.city].filter(Boolean).join(', ')}
+                </span>
+                {order.shipping.reference && (
+                  <span className="block text-[12px] text-muted">{order.shipping.reference}</span>
+                )}
+              </span>
+            </div>
+          )}
+        </div>
+      </DrawerSection>
+
       <DrawerSection title="Resumen">
+        {(order.discountTotal > 0 || order.couponCode) && (
+          <div className="flex justify-between items-baseline pt-2 gap-3">
+            <span className="text-[12px] tracking-[1px] uppercase text-muted">
+              Descuento
+              {order.couponCode && (
+                <span className="font-mono text-accent-ink normal-case"> · {order.couponCode}</span>
+              )}
+            </span>
+            <span className="text-success font-semibold">−S/ {fmt(order.discountTotal)}</span>
+          </div>
+        )}
+
         <div className="flex justify-between items-baseline pt-2">
           <span className="text-[12px] tracking-[1px] uppercase text-muted">
             {hasBalance ? 'Pagado a cuenta' : 'Total'} ({order._count.items} artículo

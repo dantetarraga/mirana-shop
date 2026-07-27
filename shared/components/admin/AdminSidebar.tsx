@@ -18,7 +18,9 @@ import {
   ShoppingCart,
   Star,
   Tag,
+  Ticket,
   Trash2,
+  Truck,
   Users,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -45,6 +47,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/admin/inventory', label: 'Inventario', icon: Archive },
   { href: '/admin/banners', label: 'Banners', icon: Image },
   { href: '/admin/promotions', label: 'Promociones', icon: BadgePercent },
+  { href: '/admin/coupons', label: 'Cupones', icon: Ticket },
   { href: '/admin/media', label: 'Imágenes', icon: Images },
   { section: 'Contenido' },
   { href: '/admin/cta', label: 'CTA de Inicio', icon: Megaphone },
@@ -54,6 +57,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/admin/complaints', label: 'Libro de Reclamaciones', icon: BookText },
   { section: 'Configuración' },
   { href: '/admin/settings', label: 'Tienda', icon: Settings },
+  { href: '/admin/delivery', label: 'Entregas', icon: Truck },
   { href: '/admin/trash', label: 'Papelera', icon: Trash2 },
 ]
 

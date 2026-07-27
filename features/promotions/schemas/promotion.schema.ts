@@ -20,6 +20,7 @@ export const promotionDbSchema = z
       (v) => (v === '' || v === null || v === undefined ? undefined : Number(v)),
       z.number().min(1).max(100).optional(),
     ),
+    requiresCoupon: z.boolean().default(false),
     startsAt: z.string().optional(),
     endsAt: z.string().optional(),
   })

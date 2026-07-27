@@ -6,6 +6,8 @@ import { Button } from '@/shared/components/ui/Button'
 import { formatCurrency } from '@/shared/lib/utils'
 import { ArrowLeft, Loader2, Truck } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
+import type { UseFormRegisterReturn } from 'react-hook-form'
 
 type CartItem = {
   product: {
@@ -36,10 +38,17 @@ type Props = {
   shippingFree: boolean
   discount: number
   discountName: string | null
+  /** Código del cupón que produjo el beneficio; null si fue una promo automática */
+  couponCode: string | null
   total: number
   loading: boolean
   /** null = no hay promoción de envío gratis activa */
   shippingThreshold: number | null
+  /** Nombre de la forma de entrega elegida, para el desglose */
+  deliveryLabel: string | null
+  /** Casilla de Términos y Condiciones — obligatoria para comprar */
+  registerTerms: UseFormRegisterReturn
+  termsError?: string
 }
 
 export function OrderSummary({
@@ -52,10 +61,17 @@ export function OrderSummary({
   shippingFree,
   discount,
   discountName,
+  couponCode,
   total,
   loading,
   shippingThreshold,
+  deliveryLabel,
+  registerTerms,
+  termsError,
 }: Props) {
+  // Un método de retiro cuesta 0 sin que exista promoción de envío gratis: en
+  // ambos casos al cliente hay que decirle "Gratis", no "S/ 0.00".
+  const shippingIsFree = shippingFree || shippingCost === 0
   return (
     <div className="lg:sticky lg:top-6 flex flex-col gap-4">
       <div className="bg-card border border-(--bd) p-6">
@@ -119,26 +135,31 @@ export function OrderSummary({
           )}
 
           {discount > 0 && (
-            <div className="flex justify-between text-[13px]">
-              <span className="text-muted">Descuento{discountName ? ` — ${discountName}` : ''}</span>
-              <span className="text-emerald-400 font-semibold">
+            <div className="flex justify-between text-[13px] gap-3">
+              <span className="text-muted min-w-0">
+                Descuento{discountName ? ` — ${discountName}` : ''}
+                {couponCode && (
+                  <span className="font-mono text-[11px] text-accent-ink"> · {couponCode}</span>
+                )}
+              </span>
+              <span className="text-emerald-400 font-semibold shrink-0">
                 −{formatCurrency(discount)}
               </span>
             </div>
           )}
 
-          <div className="flex justify-between text-[13px]">
-            <span className="text-muted">Envío</span>
-            {shippingFree ? (
-              <span className="text-emerald-400 font-semibold text-[12px] uppercase tracking-wide">
+          <div className="flex justify-between text-[13px] gap-3">
+            <span className="text-muted min-w-0 truncate">{deliveryLabel ?? 'Envío'}</span>
+            {shippingIsFree ? (
+              <span className="text-emerald-400 font-semibold text-[12px] uppercase tracking-wide shrink-0">
                 Gratis
               </span>
             ) : (
-              <span>{formatCurrency(shippingCost)}</span>
+              <span className="shrink-0">{formatCurrency(shippingCost)}</span>
             )}
           </div>
 
-          {!shippingFree && shippingThreshold != null && (
+          {!shippingIsFree && shippingThreshold != null && (
             <p className="text-[11px] text-muted leading-snug">
               Agrega{' '}
               <span className="text-text font-semibold">
@@ -160,6 +181,38 @@ export function OrderSummary({
             </div>
           )}
         </div>
+      </div>
+
+      {/* Términos y condiciones — obligatorio antes de comprar */}
+      <div className="bg-card border border-(--bd) px-4 py-3.5">
+        <label className="flex items-start gap-3 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            {...registerTerms}
+            aria-invalid={termsError ? true : undefined}
+            className="mt-0.5 accent-(--gold) w-4 h-4 shrink-0"
+          />
+          <span className="text-[12px] leading-snug">
+            He leído y acepto los{' '}
+            <Link
+              href="/terminos-y-condiciones"
+              target="_blank"
+              className="text-accent-ink underline"
+            >
+              Términos y Condiciones
+            </Link>{' '}
+            y la{' '}
+            <Link
+              href="/politica-de-privacidad"
+              target="_blank"
+              className="text-accent-ink underline"
+            >
+              Política de Privacidad
+            </Link>
+            .
+          </span>
+        </label>
+        {termsError && <p className="text-red-500 text-[12px] mt-2">{termsError}</p>}
       </div>
 
       {/* CTA */}

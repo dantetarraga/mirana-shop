@@ -2,7 +2,7 @@ import { PromotionCardActions } from '@/features/promotions/components/Promotion
 import type { PromotionRow } from '@/features/promotions/types'
 import { StatusBadge } from '@/features/orders/components/StatusBadge'
 import { formatCurrency, formatDate } from '@/shared/lib/utils'
-import { BadgePercent, MoveRight, Package, Truck } from 'lucide-react'
+import { BadgePercent, MoveRight, Package, Ticket, Truck } from 'lucide-react'
 
 interface Props {
   promotion: PromotionRow
@@ -75,6 +75,20 @@ export function PromotionCard({ promotion }: Props) {
           <div className="flex justify-between text-[13px]">
             <span className="text-muted">Porcentaje</span>
             <span className="font-semibold text-violet-400">{promotion.discountPercent}%</span>
+          </div>
+        )}
+
+        {promotion.requiresCoupon && (
+          <div className="flex justify-between text-[13px]">
+            <span className="text-muted inline-flex items-center gap-1.5">
+              <Ticket size={13} className="text-accent-ink" />
+              Solo con cupón
+            </span>
+            <span className="font-semibold">
+              {promotion.couponCount === 0
+                ? 'Sin cupones'
+                : `${promotion.couponCount} código${promotion.couponCount !== 1 ? 's' : ''}`}
+            </span>
           </div>
         )}
 

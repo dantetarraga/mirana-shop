@@ -31,7 +31,16 @@ function buildOrderMessage(data: SuccessData): string {
     ),
     '',
     `Subtotal: ${formatCurrency(data.subtotal - data.dueTotal)}`,
-    `Envío: ${data.shippingCost === 0 ? 'Gratis' : formatCurrency(data.shippingCost)}`,
+    ...(data.discount > 0
+      ? [
+          `Descuento${data.couponCode ? ` (cupón ${data.couponCode})` : ''}: -${formatCurrency(data.discount)}`,
+        ]
+      : []),
+    `${data.deliveryLabel ?? 'Envío'}: ${
+      data.shippingCost === 0 ? 'Gratis' : formatCurrency(data.shippingCost)
+    }`,
+    // La sede queda escrita en el mensaje: es donde el cliente va a recoger.
+    ...(data.deliveryLocation ? [`Retiro en: ${data.deliveryLocation}`] : []),
     `${data.dueTotal > 0 ? 'Pago hoy' : 'Total'}: ${formatCurrency(data.total)}`,
     // Que el saldo quede escrito en el mensaje evita malentendidos: el cliente
     // pagó solo el adelanto y el comprobante es por ese monto.

@@ -74,6 +74,15 @@ enum PreorderStatus {
   EXPIRED
 }
 
+/// Naturaleza de una forma de entrega. Solo cambia los textos y los iconos que
+/// ve el cliente: lo que decide si se pide dirección o sede son los flags
+/// `requiresAddress` / `requiresLocation` de DeliveryMethod.
+enum DeliveryKind {
+  PICKUP // Retiro en tienda
+  PREORDER // Preventa: se coordina cuando llega la mercadería
+  SHIPPING // Envío a domicilio
+}
+
 // ---------------------------------------------------------------------------
 // Auth.js / NextAuth models
 // ---------------------------------------------------------------------------
@@ -359,6 +368,24 @@ model Order {
   /// Cuándo el admin marcó el saldo como cobrado. null = sigue pendiente.
   duePaidAt DateTime?
 
+  /// Forma de entrega elegida en el checkout. El nombre y la sede se guardan
+  /// como snapshot porque el método se puede renombrar o eliminar después.
+  deliveryMethodId   String?
+  deliveryMethod     DeliveryMethod? @relation(fields: [deliveryMethodId], references: [id])
+  deliveryMethodName String          @default("")
+  deliveryKind       DeliveryKind    @default(SHIPPING)
+  /// Sede de retiro elegida, ya formateada: "LIMA — Av. José Pardo 1167 Int. 206"
+  deliveryLocation   String?         @db.Text
+
+  /// Cupón canjeado, si el descuento/envío gratis vino de uno.
+  /// `couponCode` es snapshot: el cupón se puede eliminar después.
+  couponId   String?
+  coupon     Coupon? @relation(fields: [couponId], references: [id])
+  couponCode String?
+
+  /// Cuándo el cliente marcó la casilla de Términos y Condiciones al comprar.
+  termsAcceptedAt DateTime?
+
   items     OrderItem[]
   payment   Payment?
   shipping  ShippingAddress?
@@ -376,6 +403,8 @@ model Order {
   @@index([status])
   @@index([paymentStatus])
   @@index([createdAt])
+  @@index([deliveryMethodId])
+  @@index([couponId])
 }
 
 model OrderItem {
@@ -425,6 +454,8 @@ model Payment {
   updatedAt DateTime @updatedAt
 }
 
+/// Datos de entrega del pedido. Se crea siempre — también en retiro en tienda,
+/// donde guarda el contacto (nombre, teléfono, DNI) y deja la dirección vacía.
 model ShippingAddress {
   id      String @id @default(cuid())
   orderId String @unique
@@ -432,8 +463,10 @@ model ShippingAddress {
 
   fullName  String
   phone     String
-  address   String
-  district  String
+  /// DNI del cliente — obligatorio para la boleta/factura y para el retiro
+  dni       String  @default("")
+  address   String  @default("")
+  district  String  @default("")
   city      String  @default("Lima")
   reference String?
 }
@@ -570,13 +603,102 @@ model Promotion {
   /// Porcentaje de descuento 0-100 (para PERCENT_DISCOUNT)
   discountPercent Decimal? @db.Decimal(5, 2)
 
+  /// La promoción NO se aplica sola: hace falta que el cliente escriba uno de
+  /// sus cupones en el checkout. Con `false` sigue siendo automática como antes.
+  requiresCoupon Boolean @default(false)
+
   startsAt DateTime?
   endsAt   DateTime?
+
+  coupons Coupon[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([type, active])
+}
+
+// ---------------------------------------------------------------------------
+// Cupones — códigos que desbloquean una promoción concreta en el checkout.
+// Varios cupones pueden apuntar a la misma promoción (ej. una campaña con un
+// código por influencer): el beneficio siempre lo define la promoción.
+// ---------------------------------------------------------------------------
+
+model Coupon {
+  id String @id @default(cuid())
+  /// Se guarda y se compara SIEMPRE en mayúsculas y sin espacios
+  code String @unique
+
+  promotionId String
+  promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+
+  active Boolean @default(true)
+
+  /// Límite total de canjes; null = ilimitado
+  maxUses   Int?
+  /// Canjes consumidos. Se incrementa dentro de la transacción del pedido.
+  usedCount Int  @default(0)
+
+  /// Vigencia propia del código, además de la de la promoción
+  startsAt DateTime?
+  endsAt   DateTime?
+
+  orders Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active])
+  @@index([promotionId])
+}
+
+// ---------------------------------------------------------------------------
+// Formas de entrega mostradas en el checkout (retiro en tienda, preventa,
+// envío local...). El costo, el texto y las sedes se administran en
+// /admin/delivery; el checkout solo lee lo que hay configurado.
+// ---------------------------------------------------------------------------
+
+model DeliveryMethod {
+  id          String       @id @default(cuid())
+  name        String
+  description String?      @db.Text
+  kind        DeliveryKind @default(SHIPPING)
+  /// Costo que se suma al pedido. 0 = "Gratis".
+  cost        Decimal      @default(0) @db.Decimal(10, 2)
+
+  /// El cliente debe escribir su dirección de entrega. Falso en retiro en
+  /// tienda y en preventa (ahí el envío se coordina después).
+  requiresAddress  Boolean @default(true)
+  /// El cliente debe elegir una de las sedes de `locations`.
+  requiresLocation Boolean @default(false)
+
+  position Int     @default(0)
+  active   Boolean @default(true)
+
+  locations DeliveryLocation[]
+  orders    Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active, position])
+}
+
+/// Sede/punto de entrega de un método (las tiendas donde se puede retirar).
+model DeliveryLocation {
+  id       String         @id @default(cuid())
+  methodId String
+  method   DeliveryMethod @relation(fields: [methodId], references: [id], onDelete: Cascade)
+
+  /// Etiqueta corta de la sede: "LIMA", "AREQUIPA"
+  label   String
+  address String
+  /// Enlace a Google Maps para el botón "Ver en el mapa" del checkout
+  mapUrl  String? @db.Text
+
+  position Int @default(0)
+
+  @@index([methodId, position])
 }
 
 // ---------------------------------------------------------------------------
@@ -680,6 +802,9 @@ model PaymentAccount {
   holder   String  @default("")
   number   String
   cci      String  @default("")
+  /// Código QR para escanear desde la app (Yape, Plin). Vacío = no se muestra.
+  /// Las transferencias bancarias normalmente no lo usan.
+  qrImageUrl String @default("")
   position Int     @default(0)
   active   Boolean @default(true)
 

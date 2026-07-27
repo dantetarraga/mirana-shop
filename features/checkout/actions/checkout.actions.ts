@@ -8,7 +8,13 @@ import {
 } from '@/features/checkout/lib/preorder'
 import { computeTotals, effectivePrice } from '@/features/checkout/lib/pricing'
 import { getPricingRules } from '@/features/checkout/queries/pricing.queries'
-import { checkoutSchema } from '@/features/checkout/schemas/checkout.schema'
+import { buildCheckoutSchema } from '@/features/checkout/schemas/checkout.schema'
+import {
+  findRedeemableCoupon,
+  type RedeemableCoupon,
+} from '@/features/coupons/queries/coupon.queries'
+import { getActiveDeliveryMethodById } from '@/features/delivery/queries/delivery.queries'
+import { formatDeliveryLocation, type DeliveryMethodOption } from '@/features/delivery/types'
 import { reserveStockForOrder } from '@/features/inventory/lib/stock'
 import { db } from '@/shared/lib/db'
 import { revalidatePath } from 'next/cache'
@@ -37,7 +43,13 @@ export type PlaceOrderTotals = {
   subtotal: number
   discount: number
   discountName: string | null
+  /** Cupón realmente canjeado; null si el beneficio vino de una promo automática */
+  couponCode: string | null
   shippingCost: number
+  /** Nombre de la forma de entrega; null si la tienda no configuró ninguna */
+  deliveryLabel: string | null
+  /** Sede de retiro elegida, ya formateada; null si no aplica */
+  deliveryLocation: string | null
   /** Lo que el cliente paga ahora */
   total: number
   /** Saldo pendiente por preventa parcial; 0 en pedidos normales */
@@ -59,6 +71,12 @@ const itemsSchema = z
   .min(1, 'El carrito está vacío')
   .max(50)
 
+/** Lo mínimo que hace falta leer del formulario antes de conocer sus reglas */
+const deliveryPickSchema = z.object({
+  deliveryMethodId: z.string().optional(),
+  couponCode: z.string().optional(),
+})
+
 // ---------------------------------------------------------------------------
 // placeOrder — valida, crea la orden (con reserva de stock) y retorna el código
 //
@@ -67,25 +85,75 @@ const itemsSchema = z
 // ---------------------------------------------------------------------------
 
 export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResult> {
-  const parsed = checkoutSchema.safeParse(input.form)
-  if (!parsed.success) {
-    const firstError = parsed.error.issues[0]?.message ?? 'Datos inválidos'
-    return { success: false, error: firstError }
-  }
-
   const parsedItems = itemsSchema.safeParse(input.items)
   if (!parsedItems.success) {
     return { success: false, error: parsedItems.error.issues[0]?.message ?? 'Carrito inválido' }
   }
 
+  // SEGURIDAD: el formulario se valida contra las reglas que dicta la BD, no
+  // contra las que diga el navegador. Primero se lee qué método pidió el
+  // cliente, se carga de la BD y recién ahí se arma el esquema definitivo: así
+  // un payload manipulado no puede saltarse la dirección de un envío.
+  const picked = deliveryPickSchema.safeParse(input.form)
+  if (!picked.success) {
+    return { success: false, error: 'Datos de entrega inválidos' }
+  }
+
+  const rules = await getPricingRules()
+  const hasDeliveryMethods = rules.deliveryMethods.length > 0
+
+  let method: DeliveryMethodOption | null = null
+  if (hasDeliveryMethods) {
+    const methodId = (picked.data.deliveryMethodId ?? '').trim()
+    if (!methodId) return { success: false, error: 'Selecciona una forma de entrega' }
+
+    method = await getActiveDeliveryMethodById(methodId)
+    if (!method) {
+      return {
+        success: false,
+        error: 'La forma de entrega elegida ya no está disponible. Elige otra e inténtalo de nuevo.',
+      }
+    }
+  }
+
+  const requiresLocation = method != null && method.requiresLocation && method.locations.length > 0
+
+  const parsed = buildCheckoutSchema({
+    requiresMethod: hasDeliveryMethods,
+    requiresAddress: method ? method.requiresAddress : true,
+    requiresLocation,
+  }).safeParse(input.form)
+
+  if (!parsed.success) {
+    const firstError = parsed.error.issues[0]?.message ?? 'Datos inválidos'
+    return { success: false, error: firstError }
+  }
+
   const d = parsed.data
-  const requestedItems = parsedItems.data
+
+  // La sede tiene que pertenecer al método elegido
+  const location = requiresLocation
+    ? (method?.locations.find((loc) => loc.id === d.deliveryLocationId) ?? null)
+    : null
+  if (requiresLocation && !location) {
+    return { success: false, error: 'La tienda de retiro elegida ya no está disponible' }
+  }
+
+  // El cupón se vuelve a resolver contra la BD: el beneficio nunca se toma del
+  // navegador, solo el código escrito.
+  let coupon: RedeemableCoupon | null = null
+  const rawCouponCode = (d.couponCode ?? '').trim()
+  if (rawCouponCode) {
+    const lookup = await findRedeemableCoupon(rawCouponCode)
+    if (!lookup.ok) return { success: false, error: lookup.error }
+    coupon = lookup.coupon
+  }
 
   // SEGURIDAD: el cliente solo envía productId + cantidad. Precios, subtotal,
   // promociones (envío gratis / descuentos) y total se recalculan SIEMPRE
   // desde la BD — nunca se confía en los montos del navegador.
   const products = await db.product.findMany({
-    where: { id: { in: requestedItems.map((i) => i.productId) }, deletedAt: null },
+    where: { id: { in: parsedItems.data.map((i) => i.productId) }, deletedAt: null },
     select: {
       id: true,
       name: true,
@@ -99,8 +167,6 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   })
   const productById = new Map(products.map((p) => [p.id, p]))
 
-  const rules = await getPricingRules()
-
   const orderItems: {
     productId: string
     productName: string
@@ -112,7 +178,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     depositUnitPrice: number | null
   }[] = []
 
-  for (const item of requestedItems) {
+  for (const item of parsedItems.data) {
     const product = productById.get(item.productId)
     if (!product || product.status === 'ARCHIVED') {
       return { success: false, error: 'Un producto de tu carrito ya no está disponible' }
@@ -154,7 +220,10 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   )
   const dueTotal = round2(subtotal - payableNow)
 
-  const totals = computeTotals(payableNow, rules)
+  const totals = computeTotals(payableNow, rules, {
+    shippingCost: method?.cost,
+    coupon: coupon?.rule ?? null,
+  })
 
   // Si el cliente vio un total distinto (cambió un precio o una promo mientras
   // compraba), no procesamos el pedido con montos sorpresa.
@@ -166,12 +235,37 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     }
   }
 
+  // Solo se consume el cupón si computeTotals lo terminó aplicando: si su
+  // descuento perdió contra una promoción automática mejor, el código sigue
+  // disponible para otra compra.
+  const redeemedCoupon = coupon != null && totals.couponCode === coupon.code ? coupon : null
+  const deliveryLocationText = location ? formatDeliveryLocation(location) : null
+
   // El código MIR-YYYY-NNNN se calcula con count(): dos checkouts simultáneos
   // pueden chocar en el unique de `code` — reintentamos hasta 3 veces.
   const MAX_CODE_RETRIES = 3
 
   const createOrder = async () =>
     db.$transaction(async (tx) => {
+      // Se consume el cupón ANTES de crear el pedido y con las condiciones en
+      // el WHERE: si dos clientes canjean el último uso a la vez, el segundo
+      // no encuentra fila que actualizar y la transacción se revierte entera.
+      if (redeemedCoupon) {
+        const claimed = await tx.coupon.updateMany({
+          where: {
+            id: redeemedCoupon.id,
+            active: true,
+            ...(redeemedCoupon.maxUses != null
+              ? { usedCount: { lt: redeemedCoupon.maxUses } }
+              : {}),
+          },
+          data: { usedCount: { increment: 1 } },
+        })
+        if (claimed.count === 0) {
+          throw new Error('El cupón alcanzó su límite de canjes. Quítalo e inténtalo de nuevo.')
+        }
+      }
+
       const year = new Date().getFullYear()
       const count = await tx.order.count()
       const code = `MIR-${year}-${String(count + 1).padStart(4, '0')}`
@@ -189,6 +283,15 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
           total: totals.total,
           dueTotal,
           currency: 'PEN',
+          deliveryMethodId: method?.id ?? null,
+          deliveryMethodName: method?.name ?? '',
+          deliveryKind: method?.kind ?? 'SHIPPING',
+          deliveryLocation: deliveryLocationText,
+          couponId: redeemedCoupon?.id ?? null,
+          couponCode: totals.couponCode,
+          // El checkout no deja confirmar sin marcar la casilla; se guarda la
+          // fecha como constancia de esa aceptación.
+          termsAcceptedAt: new Date(),
           items: {
             create: orderItems.map((item) => ({
               productId: item.productId,
@@ -213,9 +316,12 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
             create: {
               fullName: d.fullName,
               phone: d.phone,
-              address: d.address,
-              district: d.district,
-              city: d.city,
+              dni: d.dni,
+              // En retiro en tienda y preventa no se pide dirección: la fila
+              // guarda solo el contacto y la sede vive en el pedido.
+              address: d.address?.trim() ?? '',
+              district: d.district?.trim() ?? '',
+              city: d.city?.trim() || 'Lima',
               reference: d.reference || undefined,
             },
           },
@@ -254,6 +360,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
 
     revalidatePath('/admin/orders')
     revalidatePath('/admin/dashboard')
+    if (redeemedCoupon) revalidatePath('/admin/coupons')
 
     return {
       success: true,
@@ -263,7 +370,10 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
         subtotal,
         discount: totals.discount,
         discountName: totals.discountName,
+        couponCode: totals.couponCode,
         shippingCost: totals.shippingCost,
+        deliveryLabel: method?.name ?? null,
+        deliveryLocation: deliveryLocationText,
         total: totals.total,
         dueTotal,
       },

@@ -7,9 +7,14 @@ import { Field, input } from './ui'
 type Props = {
   register: UseFormRegister<CheckoutInput>
   errors: FieldErrors<CheckoutInput>
+  /**
+   * La forma de entrega elegida pide dirección. En retiro en tienda y preventa
+   * solo se piden los datos de contacto.
+   */
+  requiresAddress: boolean
 }
 
-export function DeliveryForm({ register, errors }: Props) {
+export function DeliveryForm({ register, errors, requiresAddress }: Props) {
   return (
     <section className="bg-card border border-(--bd) p-6">
       <h2 className="font-display font-black uppercase text-[14px] tracking-[2px] text-accent-ink mb-5">
@@ -21,12 +26,14 @@ export function DeliveryForm({ register, errors }: Props) {
           <input {...register('fullName')} className={input} placeholder="Juan García" />
         </Field>
 
-        <Field label="Correo electrónico" error={errors.email?.message}>
+        <Field label="DNI" error={errors.dni?.message}>
           <input
-            {...register('email')}
-            type="email"
+            {...register('dni')}
             className={input}
-            placeholder="tu@correo.com"
+            placeholder="12345678"
+            inputMode="numeric"
+            maxLength={8}
+            autoComplete="off"
           />
         </Field>
 
@@ -39,30 +46,50 @@ export function DeliveryForm({ register, errors }: Props) {
           />
         </Field>
 
-        <Field label="Dirección" error={errors.address?.message} span={2}>
+        <Field label="Correo electrónico" error={errors.email?.message} span={2}>
           <input
-            {...register('address')}
+            {...register('email')}
+            type="email"
             className={input}
-            placeholder="Av. Principal 123, Dpto. 4B"
+            placeholder="tu@correo.com"
           />
         </Field>
 
-        <Field label="Distrito" error={errors.district?.message}>
-          <input {...register('district')} className={input} placeholder="Miraflores" />
-        </Field>
+        {requiresAddress && (
+          <>
+            <Field label="Dirección" error={errors.address?.message} span={2}>
+              <input
+                {...register('address')}
+                className={input}
+                placeholder="Av. Principal 123, Dpto. 4B"
+              />
+            </Field>
 
-        <Field label="Ciudad" error={errors.city?.message}>
-          <input {...register('city')} className={input} placeholder="Lima" />
-        </Field>
+            <Field label="Distrito" error={errors.district?.message}>
+              <input {...register('district')} className={input} placeholder="Miraflores" />
+            </Field>
 
-        <Field label="Referencia (opcional)" error={errors.reference?.message} span={2}>
-          <input
-            {...register('reference')}
-            className={input}
-            placeholder="Frente al parque, puerta roja..."
-          />
-        </Field>
+            <Field label="Ciudad" error={errors.city?.message}>
+              <input {...register('city')} className={input} placeholder="Lima" />
+            </Field>
+
+            <Field label="Referencia (opcional)" error={errors.reference?.message} span={2}>
+              <input
+                {...register('reference')}
+                className={input}
+                placeholder="Frente al parque, puerta roja..."
+              />
+            </Field>
+          </>
+        )}
       </div>
+
+      {!requiresAddress && (
+        <p className="text-[12px] text-muted mt-4 leading-snug">
+          Con esta forma de entrega no necesitamos tu dirección. Te contactaremos al teléfono y
+          correo que dejaste para coordinar.
+        </p>
+      )}
     </section>
   )
 }

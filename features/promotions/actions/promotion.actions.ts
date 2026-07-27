@@ -10,7 +10,9 @@ import { revalidatePath } from 'next/cache'
 
 function invalidateCaches() {
   revalidatePath('/admin/promotions')
+  revalidatePath('/admin/coupons')
   revalidatePath('/admin/dashboard')
+  revalidatePath('/checkout')
 }
 
 export async function savePromotion(
@@ -36,6 +38,7 @@ export async function savePromotion(
     minAmount: d.minAmount,
     discountAmount: d.discountAmount,
     discountPercent: d.discountPercent,
+    requiresCoupon: d.requiresCoupon,
     startsAt: d.startsAt ? new Date(d.startsAt) : undefined,
     endsAt: d.endsAt ? new Date(d.endsAt) : undefined,
   }
@@ -52,6 +55,7 @@ export async function savePromotion(
           ...(input.minAmount !== undefined && { minAmount: input.minAmount }),
           ...(input.discountAmount !== undefined && { discountAmount: input.discountAmount }),
           ...(input.discountPercent !== undefined && { discountPercent: input.discountPercent }),
+          ...(input.requiresCoupon !== undefined && { requiresCoupon: input.requiresCoupon }),
           ...(input.startsAt !== undefined && { startsAt: input.startsAt }),
           ...(input.endsAt !== undefined && { endsAt: input.endsAt }),
         },
@@ -69,6 +73,7 @@ export async function savePromotion(
           minAmount: input.minAmount,
           discountAmount: input.discountAmount,
           discountPercent: input.discountPercent,
+          requiresCoupon: input.requiresCoupon ?? false,
           startsAt: input.startsAt,
           endsAt: input.endsAt,
         },
