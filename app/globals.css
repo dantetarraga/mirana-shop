@@ -843,6 +843,33 @@ textarea:focus-visible,
   .adm-input:focus {
     border-color: var(--bdh);
   }
+
+  /* ── Campos de fecha (ver shared/components/ui/DateField.tsx) ──
+     El indicador de calendario nativo se pinta con el color del navegador y no
+     sigue la paleta. Se hace invisible y se estira sobre todo el campo: así el
+     icono visible lo dibuja DateField con el acento, y un click en cualquier
+     parte del campo abre el calendario en vez de solo sobre el iconito. */
+  .ui-date::-webkit-calendar-picker-indicator {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .ui-date {
+    position: relative;
+  }
+  /* Un campo vacío muestra "dd/mm/aaaa" con el color de texto normal, que pesa
+     igual que un valor real: se atenúa como un placeholder. */
+  .ui-date:not(:focus):invalid::-webkit-datetime-edit {
+    color: color-mix(in oklab, var(--mt) 75%, transparent);
+  }
+  .ui-date:focus {
+    border-color: var(--bdh);
+  }
 }
 
 /* ── Contenido enriquecido (editor TipTap y páginas públicas) ── */

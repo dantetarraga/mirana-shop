@@ -9,6 +9,7 @@ import { FilterMultiSelect } from '@/shared/components/admin/FilterMultiSelect'
 import { MultiImageField, type ImageItem } from '@/shared/components/admin/MultiImageField'
 import { RichTextEditor } from '@/shared/components/admin/RichTextEditor'
 import { Button } from '@/shared/components/ui/Button'
+import { DateField } from '@/shared/components/ui/DateField'
 import { FormField } from '@/shared/components/ui/FormField'
 import { useAutoSlug, useFormEntity } from '@/shared/hooks/admin'
 import { cls } from '@/shared/lib/admin/admin-classes'
@@ -353,7 +354,15 @@ export function ProductCrudDrawer({
             <div className={cls.label}>Preventa</div>
 
             <FormField label="Entrega estimada" error={errors.estimatedArrival?.message}>
-              <input type="date" className={cls.input} {...register('estimatedArrival')} />
+              <DateField
+                clearable
+                {...register('estimatedArrival')}
+                onClear={() => setValue('estimatedArrival', '', { shouldValidate: true })}
+                value={(watch('estimatedArrival') as string) ?? ''}
+                onChange={(e) =>
+                  setValue('estimatedArrival', e.target.value, { shouldValidate: true })
+                }
+              />
             </FormField>
 
             <FormField label="Preventa parcial" error={errors.allowPartialPreorder?.message}>

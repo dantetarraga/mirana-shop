@@ -8,7 +8,7 @@ import { ProfileEditForm } from '@/features/profile/components/ProfileEditForm'
 import { Button } from '@/shared/components/ui/Button'
 import type { SessionUser } from '@/shared/hooks/useUser'
 import { LogOut } from 'lucide-react'
-import { signOut } from 'next-auth/react'
+import { logout } from '@/features/auth/lib/logout'
 import Link from 'next/link'
 import { use, useState } from 'react'
 
@@ -36,8 +36,7 @@ export function PerfilContent({
   )
 
   const handleLogout = () => {
-    // `redirectTo` es la opción de NextAuth v5; `callbackUrl` era de la v4.
-    signOut({ redirectTo: '/' })
+    logout()
   }
 
   return (

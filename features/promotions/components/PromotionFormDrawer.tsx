@@ -3,6 +3,7 @@
 import type { PromotionRow } from '@/features/promotions/types'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { Button } from '@/shared/components/ui/Button'
+import { DateField } from '@/shared/components/ui/DateField'
 import { FormField } from '@/shared/components/ui/FormField'
 import { Select } from '@/shared/components/ui/Select'
 import { useFormEntity } from '@/shared/hooks/admin'
@@ -147,10 +148,10 @@ export function PromotionFormDrawer({ promotion, isNew, onClose, onSubmit, isPen
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <FormField label="Inicio (opcional)" error={errors.startsAt?.message}>
-            <input {...register('startsAt')} type="date" className={cls.input} />
+            <DateField {...register('startsAt')} />
           </FormField>
           <FormField label="Fin (opcional)" error={errors.endsAt?.message}>
-            <input {...register('endsAt')} type="date" className={cls.input} />
+            <DateField {...register('endsAt')} />
           </FormField>
         </div>
 

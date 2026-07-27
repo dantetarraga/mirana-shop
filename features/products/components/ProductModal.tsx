@@ -114,28 +114,34 @@ function ProductModalContent({
         aria-modal="true"
         aria-labelledby={titleId}
         onClick={(e) => e.stopPropagation()}
-        className="bg-surf border border-(--bd) max-w-220 w-full max-h-[92vh] overflow-y-auto grid grid-cols-1 sm:grid-cols-2 relative"
+        className="bg-surf border border-(--bd) max-w-220 w-full max-h-[92vh] flex flex-col relative overflow-hidden"
       >
-        {/* Image */}
-        <ProductImageCarousel
-          images={p.images}
-          name={p.name}
-          sizes="(max-width: 640px) 100vw, 50vw"
-          className={`${getCategoryStripe(p.category.slug)} min-h-70 sm:min-h-110 flex items-center justify-center relative`}
+        {/* La X vive en el panel, no dentro del carrusel: ahí quedaba pegada al
+            borde derecho de la IMAGEN, o sea a mitad del modal en desktop, y
+            además se iba con el scroll. Fuera del contenedor que scrollea queda
+            siempre en la esquina superior derecha del diálogo. */}
+        <Button
+          variant="icon"
+          size="md"
+          aria-label="Cerrar"
+          onClick={onClose}
+          className="absolute top-3 right-3 z-20 bg-surf/80 backdrop-blur-sm"
         >
-          <Button
-            variant="icon"
-            size="md"
-            aria-label="Cerrar"
-            onClick={onClose}
-            className="absolute top-4 right-4 z-10"
-          >
-            <X size={16} />
-          </Button>
-        </ProductImageCarousel>
+          <X size={16} />
+        </Button>
 
-        {/* Info */}
-        <div className="p-5 sm:p-11 flex flex-col gap-4.5">
+        <div className="overflow-y-auto grid grid-cols-1 sm:grid-cols-2 sm:items-stretch">
+          {/* Image */}
+          <ProductImageCarousel
+            images={p.images}
+            name={p.name}
+            sizes="(max-width: 640px) 100vw, 50vw"
+            className={`${getCategoryStripe(p.category.slug)} min-h-70 sm:min-h-full flex items-center justify-center relative`}
+          />
+
+          {/* Info — `justify-center` reparte el sobrante arriba y abajo en vez
+              de dejar un hueco grande solo al pie cuando la ficha es corta. */}
+          <div className="p-5 sm:px-9 sm:py-8 flex flex-col justify-center gap-4">
           <div>
             <div className="text-[10px] tracking-[3px] uppercase text-muted">
               {p.category.name} · {p.brand.name}
@@ -305,9 +311,10 @@ function ProductModalContent({
             <ArrowRight className="ml-1" size={14} strokeWidth={3} />
           </Link>
 
-          <Button variant="ghost" size="lg" full onClick={onClose}>
-            Seguir explorando
-          </Button>
+            <Button variant="ghost" size="lg" full onClick={onClose}>
+              Seguir explorando
+            </Button>
+          </div>
         </div>
       </div>
     </div>

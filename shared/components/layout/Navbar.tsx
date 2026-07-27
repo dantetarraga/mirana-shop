@@ -8,7 +8,7 @@ import { ThemeToggle } from '@/shared/components/ui/ThemeToggle'
 import { useUser } from '@/shared/hooks'
 import { cn } from '@/shared/lib/utils'
 import { LayoutGrid, LogOut, MapPin, Package, ShoppingBag, User } from 'lucide-react'
-import { signOut } from 'next-auth/react'
+import { logout } from '@/features/auth/lib/logout'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -183,10 +183,8 @@ export function Navbar() {
                 size="sm"
                 full
                 onClick={() => {
-                  // `redirectTo` es la opción de NextAuth v5; `callbackUrl` era
-                  // de la v4 y aquí se ignoraba en silencio.
-                  signOut({ redirectTo: '/' })
                   setMenuOpen(false)
+                  logout()
                 }}
                 className="justify-start px-4.5 border-t border-(--bd)"
               >
