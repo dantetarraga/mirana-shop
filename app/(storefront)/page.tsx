@@ -1,6 +1,7 @@
 import { getActiveBanners } from '@/features/banners/queries/banner.queries'
 import { getBrands } from '@/features/brands/queries/brand.queries'
 import { getCategories } from '@/features/categories/queries/category.queries'
+import { getCollections } from '@/features/collections/queries/collection.queries'
 import { BrandsCarousel } from '@/features/home/components/BrandsCarousel'
 import { CTABand } from '@/features/home/components/CTABand'
 import { CategoryStrips } from '@/features/home/components/CategoryStrips'
@@ -39,11 +40,12 @@ const websiteJsonLd = {
 }
 
 export default async function HomePage() {
-  const [activeBanners, categories, brands, bannerLayout] = await Promise.all([
+  const [activeBanners, categories, brands, bannerLayout, collections] = await Promise.all([
     getActiveBanners(),
     getCategories({ perPage: 50 }),
     getBrands({ perPage: 50 }),
     getBannerLayout(),
+    getCollections({ active: true, perPage: 50 }),
   ])
 
   const isFullscreen = bannerLayout === 'FULLSCREEN'
@@ -59,7 +61,7 @@ export default async function HomePage() {
           navbar; como tarjetas van en su grid/carrusel debajo de las marcas. */}
       <div className="pt-(--nh)">
         {isFullscreen && <HeroBannerFade banners={activeBanners} />}
-        <QuickFiltersBar categories={categories} />
+        <QuickFiltersBar categories={categories} brands={brands} collections={collections} />
         <BrandsCarousel brands={brands} />
         {!isFullscreen && <HeroBannerCarousel banners={activeBanners} />}
       </div>
