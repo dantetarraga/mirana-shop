@@ -1,5 +1,6 @@
 'use client'
 
+import { CheckoutSteps, type CheckoutStepInfo } from '@/features/checkout/components/CheckoutSteps'
 import { CouponField } from '@/features/checkout/components/CouponField'
 import { DeliveryForm } from '@/features/checkout/components/DeliveryForm'
 import { DeliveryMethodSelector } from '@/features/checkout/components/DeliveryMethodSelector'
@@ -40,11 +41,50 @@ import {
   type CheckoutInput,
 } from '@/features/checkout/schemas/checkout.schema'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ShoppingBag, ShoppingCart } from 'lucide-react'
+import {
+  ArrowLeft,
+  ArrowRight,
+  CreditCard,
+  ShoppingBag,
+  ShoppingCart,
+  Truck,
+  User,
+} from 'lucide-react'
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useForm, type Resolver } from 'react-hook-form'
+import { useForm, type FieldErrors, type Resolver } from 'react-hook-form'
 import { toast } from 'sonner'
+
+// ---------------------------------------------------------------------------
+// Pasos
+//
+// El checkout se recorre en tres pantallas en vez de un formulario largo: el
+// resumen queda siempre a la vista y el botón de confirmar no se pierde abajo.
+// Cada paso declara qué campos valida para poder avanzar.
+// ---------------------------------------------------------------------------
+
+type CheckoutStep = CheckoutStepInfo & { fields: (keyof CheckoutInput)[] }
+
+const DELIVERY_STEP: CheckoutStep = {
+  id: 'entrega',
+  label: 'Entrega',
+  icon: Truck,
+  fields: ['deliveryMethodId', 'deliveryLocationId'],
+}
+
+const DATA_STEP: CheckoutStep = {
+  id: 'datos',
+  label: 'Tus datos',
+  icon: User,
+  fields: ['fullName', 'dni', 'phone', 'email', 'address', 'district', 'city', 'reference'],
+}
+
+const PAYMENT_STEP: CheckoutStep = {
+  id: 'pago',
+  label: 'Pago',
+  icon: CreditCard,
+  fields: ['paymentMethod', 'acceptTerms'],
+}
 
 // ---------------------------------------------------------------------------
 // View
@@ -110,6 +150,7 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
     handleSubmit,
     setValue,
     watch,
+    trigger,
     clearErrors,
     formState: { errors },
   } = useForm<CheckoutInput>({
@@ -120,8 +161,9 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
       phone: '',
       dni: '',
       deliveryMethodId: initialMethod?.id ?? '',
-      deliveryLocationId:
-        initialMethod?.requiresLocation ? (initialMethod.locations[0]?.id ?? '') : '',
+      deliveryLocationId: initialMethod?.requiresLocation
+        ? (initialMethod.locations[0]?.id ?? '')
+        : '',
       address: '',
       district: '',
       city: 'Lima',
@@ -156,10 +198,7 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
       setValue('deliveryMethodId', method.id)
       // Preselecciona la primera sede si el método la exige; si no, la limpia
       // para no arrastrar la de un método anterior.
-      setValue(
-        'deliveryLocationId',
-        method.requiresLocation ? (method.locations[0]?.id ?? '') : '',
-      )
+      setValue('deliveryLocationId', method.requiresLocation ? (method.locations[0]?.id ?? '') : '')
       clearErrors(['deliveryMethodId', 'deliveryLocationId'])
       if (!method.requiresAddress) clearErrors(['address', 'district', 'city'])
     },
@@ -176,6 +215,67 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
     const next = defaultDeliveryMethod(deliveryMethods)
     if (next) handleSelectMethod(next)
   }, [deliveryMethods, deliveryMethodId, handleSelectMethod])
+
+  // ── Navegación por pasos ────────────────────────────────────────────────
+  // Sin formas de entrega configuradas el primer paso no tendría nada que
+  // mostrar, así que en ese caso el checkout se recorre en dos pantallas.
+  const steps = useMemo<CheckoutStep[]>(
+    () =>
+      deliveryMethods.length > 0
+        ? [DELIVERY_STEP, DATA_STEP, PAYMENT_STEP]
+        : [DATA_STEP, PAYMENT_STEP],
+    [deliveryMethods.length],
+  )
+
+  const [step, setStep] = useState(0)
+  // La lista de pasos se acorta después de hidratar el carrito: sin el clamp
+  // el índice guardado podría quedar fuera de rango y no renderizar nada.
+  const current = Math.min(step, steps.length - 1)
+  const activeStep = steps[current]
+  const isFirstStep = current === 0
+  const isLastStep = current === steps.length - 1
+
+  const stepsRef = useRef<HTMLDivElement>(null)
+  const scrollToSteps = useCallback(() => {
+    stepsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [])
+
+  /**
+   * Cambia de paso. Retroceder es libre; avanzar valida todos los pasos que
+   * quedan por detrás y se detiene en el primero que tenga algo pendiente.
+   */
+  const goToStep = useCallback(
+    async (target: number) => {
+      const clamped = Math.max(0, Math.min(target, steps.length - 1))
+
+      for (let i = current; i < clamped; i++) {
+        const valid = await trigger(steps[i].fields)
+        if (!valid) {
+          setStep(i)
+          scrollToSteps()
+          return
+        }
+      }
+
+      setStep(clamped)
+      scrollToSteps()
+    },
+    [current, steps, trigger, scrollToSteps],
+  )
+
+  // Si al confirmar queda un error en un paso que no está a la vista, se salta
+  // a ese paso: si no, el pedido "no hace nada" y el cliente no ve por qué.
+  const onInvalid = useCallback(
+    (formErrors: FieldErrors<CheckoutInput>) => {
+      const failing = steps.findIndex((s) => s.fields.some((f) => formErrors[f]))
+      if (failing >= 0 && failing !== current) {
+        setStep(failing)
+        scrollToSteps()
+        toast.error('Falta completar algún dato antes de confirmar tu pedido.')
+      }
+    },
+    [steps, current, scrollToSteps],
+  )
 
   // Totales con precio efectivo (oferta si existe) + promociones y cupón.
   // El servidor recalcula y valida todo esto de nuevo en placeOrder.
@@ -282,6 +382,13 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
   const onSubmit = async (data: CheckoutInput) => {
     if (loading) return
 
+    // Enter dentro de un input envía el formulario: si el cliente todavía no
+    // llegó al último paso, eso avanza en vez de comprar.
+    if (!isLastStep) {
+      void goToStep(current + 1)
+      return
+    }
+
     // Red de seguridad: el carrito no deja mezclar preventa con el resto, pero
     // si algo se coló (dos pestañas escribiendo el mismo carrito) se corta acá
     // con un mensaje claro en vez de dejar que el servidor rechace el pedido.
@@ -352,11 +459,15 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
         </h1>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      <form onSubmit={handleSubmit(onSubmit, onInvalid)} noValidate>
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 lg:gap-8 items-start">
-          {/* ── Left column ──────────────────────────────── */}
+          {/* ── Left column — un paso por vez ─────────────── */}
           <div className="flex flex-col gap-6">
-            {deliveryMethods.length > 0 && (
+            <div ref={stepsRef} className="scroll-mt-[calc(var(--nh)+24px)]">
+              <CheckoutSteps steps={steps} current={current} onSelect={(i) => void goToStep(i)} />
+            </div>
+
+            {activeStep.id === 'entrega' && (
               <DeliveryMethodSelector
                 methods={deliveryMethods}
                 selectedId={deliveryMethodId}
@@ -372,41 +483,74 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
               />
             )}
 
-            {requiresAddress && savedAddresses.length > 0 && (
+            {activeStep.id === 'datos' && (
               <>
-                <SavedAddressSelector
-                  addresses={savedAddresses}
-                  selectedId={selectedAddressId}
-                  onSelect={applyAddress}
-                  onClearManual={clearSavedAddress}
-                  onAddNew={user ? () => setShowNewAddressForm(true) : undefined}
-                />
-                {showNewAddressForm && (
-                  <AddressFormPanel
-                    title="Agregar y guardar dirección"
-                    onSave={handleSaveNewAddress}
-                    onCancel={() => setShowNewAddressForm(false)}
-                  />
+                {requiresAddress && savedAddresses.length > 0 && (
+                  <>
+                    <SavedAddressSelector
+                      addresses={savedAddresses}
+                      selectedId={selectedAddressId}
+                      onSelect={applyAddress}
+                      onClearManual={clearSavedAddress}
+                      onAddNew={user ? () => setShowNewAddressForm(true) : undefined}
+                    />
+                    {showNewAddressForm && (
+                      <AddressFormPanel
+                        title="Agregar y guardar dirección"
+                        onSave={handleSaveNewAddress}
+                        onCancel={() => setShowNewAddressForm(false)}
+                      />
+                    )}
+                  </>
                 )}
+
+                <DeliveryForm
+                  register={register}
+                  errors={errors}
+                  requiresAddress={requiresAddress}
+                />
               </>
             )}
 
-            <DeliveryForm register={register} errors={errors} requiresAddress={requiresAddress} />
+            {activeStep.id === 'pago' && (
+              <PaymentSection
+                register={register}
+                errors={errors}
+                accounts={paymentAccounts}
+                whatsappPhone={whatsappPhone}
+              />
+            )}
 
-            <CouponField
-              coupon={coupon}
-              onApply={setCoupon}
-              onRemove={() => setCoupon(null)}
-              subtotal={payableNow}
-              disabled={loading}
-            />
-
-            <PaymentSection
-              register={register}
-              errors={errors}
-              accounts={paymentAccounts}
-              whatsappPhone={whatsappPhone}
-            />
+            {/* En móvil el resumen queda debajo del paso: sin esto habría que
+                pasarlo entero de largo solo para avanzar. En el último paso no
+                se repite — ahí se confirma desde el resumen, que es donde están
+                el total y los términos. */}
+            {!isLastStep && (
+              <div className="flex gap-3 lg:hidden">
+                {!isFirstStep && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="md"
+                    full
+                    onClick={() => void goToStep(current - 1)}
+                  >
+                    <ArrowLeft size={14} className="mr-1.5" />
+                    Atrás
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant="accent"
+                  size="md"
+                  full
+                  onClick={() => void goToStep(current + 1)}
+                >
+                  Continuar
+                  <ArrowRight size={15} className="ml-2" />
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* ── Right column ───────────────────────────────── */}
@@ -427,6 +571,19 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
             deliveryLabel={selectedMethod?.name ?? null}
             registerTerms={register('acceptTerms')}
             termsError={errors.acceptTerms?.message}
+            isFirstStep={isFirstStep}
+            isLastStep={isLastStep}
+            onNext={() => void goToStep(current + 1)}
+            onBack={() => void goToStep(current - 1)}
+            couponSlot={
+              <CouponField
+                coupon={coupon}
+                onApply={setCoupon}
+                onRemove={() => setCoupon(null)}
+                subtotal={payableNow}
+                disabled={loading}
+              />
+            }
           />
         </div>
       </form>

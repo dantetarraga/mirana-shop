@@ -22,6 +22,9 @@ type Props = {
 // ---------------------------------------------------------------------------
 // Cupón de descuento. La validación real la hace el servidor: acá solo se
 // consulta para poder mostrar el total ya con el beneficio aplicado.
+//
+// Vive dentro del resumen del pedido: es donde el cliente mira el total, así
+// que es donde espera poder canjear el código y ver el efecto al instante.
 // ---------------------------------------------------------------------------
 
 export function CouponField({ coupon, onApply, onRemove, subtotal, disabled }: Props) {
@@ -47,13 +50,13 @@ export function CouponField({ coupon, onApply, onRemove, subtotal, disabled }: P
   const eligible = coupon != null && isCouponEligible(coupon, subtotal)
 
   return (
-    <section className="bg-card border border-(--bd) p-6">
-      <h2 className="font-display font-black uppercase text-[14px] tracking-[2px] text-accent-ink mb-5">
+    <div className="border-t border-(--bd) pt-4 mt-4">
+      <p className="text-[10px] tracking-[2px] uppercase text-accent-ink mb-2.5">
         Cupón de descuento
-      </h2>
+      </p>
 
       {coupon ? (
-        <div className="flex items-start gap-3 border border-(--bd) bg-surf px-4 py-3">
+        <div className="flex items-start gap-3 border border-(--bd) bg-surf px-3 py-2.5">
           <Ticket size={16} className="mt-0.5 shrink-0 text-accent-ink" aria-hidden />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
@@ -87,7 +90,7 @@ export function CouponField({ coupon, onApply, onRemove, subtotal, disabled }: P
           </Button>
         </div>
       ) : (
-        <div className="flex gap-2.5">
+        <div className="flex gap-2">
           <input
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}
@@ -98,7 +101,7 @@ export function CouponField({ coupon, onApply, onRemove, subtotal, disabled }: P
                 void submit()
               }
             }}
-            className={`${input} font-mono uppercase tracking-[1px]`}
+            className={`${input} font-mono uppercase tracking-[1px] py-[9px] text-[13px]`}
             placeholder="MIRANA10"
             aria-label="Código de cupón"
             autoComplete="off"
@@ -107,14 +110,15 @@ export function CouponField({ coupon, onApply, onRemove, subtotal, disabled }: P
           <Button
             type="button"
             variant="outline"
-            size="md"
+            size="sm"
             onClick={submit}
             disabled={disabled || checking || !code.trim()}
+            className="shrink-0"
           >
             {checking ? <Loader2 size={14} className="animate-spin" /> : 'Aplicar'}
           </Button>
         </div>
       )}
-    </section>
+    </div>
   )
 }

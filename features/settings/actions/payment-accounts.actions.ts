@@ -23,6 +23,11 @@ const paymentAccountSchema = z.object({
     .union([imageUrlSchema('URL de imagen inválida'), z.literal('')])
     .optional()
     .default(''),
+  // Logo de la marca, también opcional: sin él se muestra el ícono genérico.
+  logoUrl: z
+    .union([imageUrlSchema('URL de logo inválida'), z.literal('')])
+    .optional()
+    .default(''),
   active: z.boolean().default(true),
 })
 

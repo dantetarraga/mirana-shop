@@ -4,9 +4,10 @@ import { depositUnitPrice, type PreorderMode } from '@/features/checkout/lib/pre
 import { effectivePrice } from '@/features/checkout/lib/pricing'
 import { Button } from '@/shared/components/ui/Button'
 import { formatCurrency } from '@/shared/lib/utils'
-import { ArrowLeft, Loader2, Truck } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Loader2, Truck } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import type { ReactNode } from 'react'
 import type { UseFormRegisterReturn } from 'react-hook-form'
 
 type CartItem = {
@@ -49,6 +50,16 @@ type Props = {
   /** Casilla de Términos y Condiciones — obligatoria para comprar */
   registerTerms: UseFormRegisterReturn
   termsError?: string
+  /** Campo de cupón — se canjea acá, junto al total que modifica */
+  couponSlot?: ReactNode
+  /** El paso visible es el último: recién ahí se confirma el pedido */
+  isLastStep: boolean
+  /** El paso visible es el primero: el botón secundario vuelve al carrito */
+  isFirstStep: boolean
+  /** Avanzar al siguiente paso (valida el actual) */
+  onNext: () => void
+  /** Retroceder un paso */
+  onBack: () => void
 }
 
 export function OrderSummary({
@@ -68,6 +79,11 @@ export function OrderSummary({
   deliveryLabel,
   registerTerms,
   termsError,
+  couponSlot,
+  isLastStep,
+  isFirstStep,
+  onNext,
+  onBack,
 }: Props) {
   // Un método de retiro cuesta 0 sin que exista promoción de envío gratis: en
   // ambos casos al cliente hay que decirle "Gratis", no "S/ 0.00".
@@ -80,7 +96,7 @@ export function OrderSummary({
         </h2>
 
         {/* Items */}
-        <ul className="flex flex-col gap-3 mb-5 max-h-64 overflow-y-auto pr-1">
+        <ul className="flex flex-col gap-3 mb-1 max-h-64 overflow-y-auto pr-1">
           {cart.map((item) => {
             const isPartial = item.preorderMode === 'PARTIAL'
             // En las líneas parciales se muestra el adelanto: es lo que suma al
@@ -89,39 +105,42 @@ export function OrderSummary({
               ? depositUnitPrice(item.product, depositPercent)
               : effectivePrice(item.product)
             return (
-            <li key={item.product.id} className="flex gap-3 items-start">
-              <div className="w-12 h-12 bg-surf border border-(--bd) shrink-0 overflow-hidden">
-                {item.product.imageUrl ? (
-                  <Image
-                    src={item.product.imageUrl}
-                    alt={item.product.name}
-                    width={48}
-                    height={48}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full stripe-fig" />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-display font-bold text-[13px] uppercase leading-tight truncate">
-                  {item.product.name}
-                </p>
-                <p className="text-[11px] text-muted">
-                  {item.qty} × {formatCurrency(unit)}
-                  {isPartial && <span className="text-info"> · adelanto</span>}
-                </p>
-              </div>
-              <span className="font-semibold text-[13px] shrink-0">
-                {formatCurrency(unit * item.qty)}
-              </span>
-            </li>
+              <li key={item.product.id} className="flex gap-3 items-start">
+                <div className="w-12 h-12 bg-surf border border-(--bd) shrink-0 overflow-hidden">
+                  {item.product.imageUrl ? (
+                    <Image
+                      src={item.product.imageUrl}
+                      alt={item.product.name}
+                      width={48}
+                      height={48}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full stripe-fig" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-display font-bold text-[13px] uppercase leading-tight truncate">
+                    {item.product.name}
+                  </p>
+                  <p className="text-[11px] text-muted">
+                    {item.qty} × {formatCurrency(unit)}
+                    {isPartial && <span className="text-info"> · adelanto</span>}
+                  </p>
+                </div>
+                <span className="font-semibold text-[13px] shrink-0">
+                  {formatCurrency(unit * item.qty)}
+                </span>
+              </li>
             )
           })}
         </ul>
 
+        {/* Cupón — antes de los totales, que es lo que modifica */}
+        {couponSlot}
+
         {/* Totals */}
-        <div className="border-t border-(--bd) pt-4 flex flex-col gap-2">
+        <div className="border-t border-(--bd) pt-4 mt-4 flex flex-col gap-2">
           <div className="flex justify-between text-[13px]">
             <span className="text-muted">{dueTotal > 0 ? 'Subtotal a pagar hoy' : 'Subtotal'}</span>
             <span>{formatCurrency(payableNow)}</span>
@@ -183,8 +202,9 @@ export function OrderSummary({
         </div>
       </div>
 
-      {/* Términos y condiciones — obligatorio antes de comprar */}
-      <div className="bg-card border border-(--bd) px-4 py-3.5">
+      {/* Términos y condiciones — solo en el último paso, junto al botón que
+          confirma: es lo que se está aceptando al pulsarlo. */}
+      <div className={`bg-card border border-(--bd) px-4 py-3.5 ${isLastStep ? '' : 'hidden'}`}>
         <label className="flex items-start gap-3 cursor-pointer select-none">
           <input
             type="checkbox"
@@ -215,31 +235,38 @@ export function OrderSummary({
         {termsError && <p className="text-red-500 text-[12px] mt-2">{termsError}</p>}
       </div>
 
-      {/* CTA */}
-      <Button type="submit" variant="accent" size="lg" full disabled={loading}>
-        {loading ? (
-          <>
-            <Loader2 size={16} className="mr-2 animate-spin" />
-            Procesando...
-          </>
-        ) : (
-          <>
-            <Truck size={16} className="mr-2" />
-            Confirmar pedido
-          </>
-        )}
-      </Button>
+      {/* CTA — solo el último paso confirma; los anteriores avanzan */}
+      {isLastStep ? (
+        <Button type="submit" variant="accent" size="lg" full disabled={loading}>
+          {loading ? (
+            <>
+              <Loader2 size={16} className="mr-2 animate-spin" />
+              Procesando...
+            </>
+          ) : (
+            <>
+              <Truck size={16} className="mr-2" />
+              Confirmar pedido
+            </>
+          )}
+        </Button>
+      ) : (
+        <Button type="button" variant="accent" size="lg" full onClick={onNext}>
+          Continuar
+          <ArrowRight size={16} className="ml-2" />
+        </Button>
+      )}
 
       <Button
         type="button"
         variant="outline"
         size="md"
         full
-        onClick={() => window.history.back()}
+        onClick={() => (isFirstStep ? window.history.back() : onBack())}
         disabled={loading}
       >
         <ArrowLeft size={14} className="mr-1.5" />
-        Volver al carrito
+        {isFirstStep ? 'Volver al carrito' : 'Paso anterior'}
       </Button>
     </div>
   )

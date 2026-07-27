@@ -14,13 +14,20 @@ import {
   parseLinkHref,
   type LinkTargetType,
 } from '@/features/marketing/lib/link-target'
-import { Select } from '@/shared/components/ui/Select'
+import { FilterMultiSelect } from '@/shared/components/admin/FilterMultiSelect'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { Loader2, Search, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 const SEARCH_DEBOUNCE_MS = 300
 const MIN_QUERY_LENGTH = 2
+
+/** Placeholder del segundo desplegable según el tipo de destino elegido */
+const PICK_LABELS: Record<string, string> = {
+  category: 'Elige una categoría',
+  brand: 'Elige una marca',
+  collection: 'Elige una colección',
+}
 
 interface LinkPickerProps {
   /** href actual (lo que se guarda en BD). */
@@ -30,8 +37,12 @@ interface LinkPickerProps {
 
 // ---------------------------------------------------------------------------
 // Selector de destino para los CTA de marketing: el admin elige categoría,
-// marca o producto y aquí se arma la URL del storefront. La opción "URL
-// personalizada" sigue disponible para enlaces externos o rutas sueltas.
+// marca, colección o producto y aquí se arma la URL del storefront. La opción
+// "URL personalizada" sigue disponible para enlaces externos o rutas sueltas.
+//
+// Los desplegables son el FilterMultiSelect del admin (modo `singleSelect`),
+// el mismo de Estado y de los filtros de listado: así el formulario no mezcla
+// el desplegable nativo del navegador con el del resto del panel.
 // ---------------------------------------------------------------------------
 
 export function LinkPicker({ value, onChange }: LinkPickerProps) {
@@ -45,7 +56,11 @@ export function LinkPicker({ value, onChange }: LinkPickerProps) {
   const type = choice?.href === value ? choice.type : parsed.type
   const target = type === 'custom' ? value : type === parsed.type ? parsed.value : ''
 
-  const [options, setOptions] = useState<LinkTargetOptions>({ categories: [], brands: [] })
+  const [options, setOptions] = useState<LinkTargetOptions>({
+    categories: [],
+    brands: [],
+    collections: [],
+  })
   const [product, setProduct] = useState<LinkOption | null>(null)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<LinkOption[]>([])
@@ -118,29 +133,44 @@ export function LinkPicker({ value, onChange }: LinkPickerProps) {
     emit('product', option.value)
   }
 
-  const list = type === 'category' ? options.categories : options.brands
+  // Los tres destinos de lista comparten desplegable; solo cambia de dónde
+  // salen las opciones. El hint va dentro de la etiqueta porque el desplegable
+  // del admin pinta una sola línea por opción.
+  const isListType = type === 'category' || type === 'brand' || type === 'collection'
+  const list =
+    type === 'category'
+      ? options.categories
+      : type === 'brand'
+        ? options.brands
+        : type === 'collection'
+          ? options.collections
+          : []
+
+  const listOptions = list.map((o) => ({
+    value: o.value,
+    label: o.hint ? `${o.label} · ${o.hint}` : o.label,
+  }))
 
   return (
     <div className="flex flex-col gap-2">
-      <Select value={type} onChange={(e) => changeType(e.target.value as LinkTargetType)}>
-        {LINK_TARGET_TYPES.map((t) => (
-          <option key={t} value={t}>
-            {LINK_TARGET_LABELS[t]}
-          </option>
-        ))}
-      </Select>
+      <FilterMultiSelect
+        singleSelect
+        label="Destino"
+        className="w-full"
+        options={LINK_TARGET_TYPES.map((t) => ({ value: t, label: LINK_TARGET_LABELS[t] }))}
+        selected={[type]}
+        onToggle={(val) => changeType(val as LinkTargetType)}
+      />
 
-      {(type === 'category' || type === 'brand') && (
-        <Select value={target} onChange={(e) => emit(type, e.target.value)}>
-          <option value="">
-            {type === 'category' ? '— Elige una categoría —' : '— Elige una marca —'}
-          </option>
-          {list.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.hint ? `${o.label} · ${o.hint}` : o.label}
-            </option>
-          ))}
-        </Select>
+      {isListType && (
+        <FilterMultiSelect
+          singleSelect
+          label={PICK_LABELS[type] ?? 'Elige una opción'}
+          className="w-full"
+          options={listOptions}
+          selected={target ? [target] : []}
+          onToggle={(val) => emit(type, val)}
+        />
       )}
 
       {type === 'product' &&

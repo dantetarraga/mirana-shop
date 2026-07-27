@@ -13,6 +13,7 @@ import { useEntityCrud, useServerAction } from '@/shared/hooks/admin'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { cn } from '@/shared/lib/utils'
 import { Check, Landmark, Pencil, Plus, QrCode, Save, Smartphone, Trash2 } from 'lucide-react'
+import Image from 'next/image'
 import { useState } from 'react'
 
 interface StoreSettingsClientProps {
@@ -151,9 +152,7 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
               max={100}
               step={1}
               value={form.preorderDepositPercent}
-              onChange={(e) =>
-                setForm({ ...form, preorderDepositPercent: Number(e.target.value) })
-              }
+              onChange={(e) => setForm({ ...form, preorderDepositPercent: Number(e.target.value) })}
               className={cls.input}
               placeholder="50"
               inputMode="numeric"
@@ -197,13 +196,20 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
                 return (
                   <li
                     key={acc.id}
-                    className={cn(
-                      'flex items-center gap-4 px-4 py-3',
-                      !acc.active && 'opacity-50',
-                    )}
+                    className={cn('flex items-center gap-4 px-4 py-3', !acc.active && 'opacity-50')}
                   >
-                    <div className="w-9 h-9 shrink-0 bg-surf border border-(--bd) flex items-center justify-center">
-                      <Icon size={16} className="text-accent-ink" />
+                    <div className="w-9 h-9 shrink-0 bg-surf border border-(--bd) flex items-center justify-center overflow-hidden">
+                      {acc.logoUrl ? (
+                        <Image
+                          src={acc.logoUrl}
+                          alt=""
+                          width={36}
+                          height={36}
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <Icon size={16} className="text-accent-ink" />
+                      )}
                     </div>
 
                     <div className="flex-1 min-w-0">

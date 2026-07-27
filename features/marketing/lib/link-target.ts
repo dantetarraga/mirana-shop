@@ -12,6 +12,7 @@
 //   /catalogo?cat=<slug>     filtrado por categoría
 //   /catalogo?brand=<slug>   filtrado por marca
 //   /catalogo/<slug>         detalle de producto
+//   /colecciones/<slug>      ficha de colección
 // ---------------------------------------------------------------------------
 
 export type LinkTargetType =
@@ -21,12 +22,13 @@ export type LinkTargetType =
   | 'offers'
   | 'category'
   | 'brand'
+  | 'collection'
   | 'product'
   | 'custom'
 
 export interface LinkTarget {
   type: LinkTargetType
-  /** Slug de categoría/marca/producto; la URL cruda cuando `type` es 'custom'. */
+  /** Slug de categoría/marca/colección/producto; URL cruda cuando es 'custom'. */
   value: string
 }
 
@@ -37,6 +39,7 @@ export const LINK_TARGET_LABELS: Record<LinkTargetType, string> = {
   offers: 'Ofertas',
   category: 'Categoría',
   brand: 'Marca',
+  collection: 'Colección',
   product: 'Producto',
   custom: 'URL personalizada',
 }
@@ -47,11 +50,15 @@ export const LINK_TARGET_TYPES: LinkTargetType[] = [
   'catalog',
   'category',
   'brand',
+  'collection',
   'product',
   'offers',
   'home',
   'custom',
 ]
+
+/** Prefijo de la ficha de colección en el storefront */
+const COLLECTION_PATH = '/colecciones/'
 
 /** Destino → href del storefront. Devuelve '' si aún falta elegir el slug. */
 export function buildLinkHref({ type, value }: LinkTarget): string {
@@ -68,6 +75,8 @@ export function buildLinkHref({ type, value }: LinkTarget): string {
       return value ? `/catalogo?cat=${encodeURIComponent(value)}` : ''
     case 'brand':
       return value ? `/catalogo?brand=${encodeURIComponent(value)}` : ''
+    case 'collection':
+      return value ? `${COLLECTION_PATH}${encodeURIComponent(value)}` : ''
     case 'product':
       return value ? `/catalogo/${encodeURIComponent(value)}` : ''
     case 'custom':
@@ -80,6 +89,15 @@ export function parseLinkHref(href: string | null | undefined): LinkTarget {
   const raw = (href ?? '').trim()
   if (!raw) return { type: 'none', value: '' }
   if (raw === '/') return { type: 'home', value: '' }
+
+  if (raw.startsWith(COLLECTION_PATH)) {
+    const slug = raw.slice(COLLECTION_PATH.length)
+    if (slug && !slug.includes('/') && !slug.includes('?')) {
+      return { type: 'collection', value: decodeURIComponent(slug) }
+    }
+    return { type: 'custom', value: raw }
+  }
+
   if (!raw.startsWith('/catalogo')) return { type: 'custom', value: raw }
 
   const [path, query = ''] = raw.split('?')

@@ -805,6 +805,9 @@ model PaymentAccount {
   /// Código QR para escanear desde la app (Yape, Plin). Vacío = no se muestra.
   /// Las transferencias bancarias normalmente no lo usan.
   qrImageUrl String @default("")
+  /// Logo de la marca (Yape, BCP, Interbank...). Vacío = se cae al ícono por
+  /// defecto según el método tenga CCI o no.
+  logoUrl    String @default("")
   position Int     @default(0)
   active   Boolean @default(true)
 

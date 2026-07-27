@@ -24,6 +24,7 @@ import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
 import { useCrudState, useServerAction } from '@/shared/hooks/admin'
 import { cls } from '@/shared/lib/admin/admin-classes'
+import { PRODUCT_STATUS_LABELS } from '@/features/products/lib/product-status'
 import type { ImportProductRow } from '@/features/products/schemas/product.schema'
 import { productDbSchema } from '@/features/products/schemas/product.schema'
 import { FileDown, FileSpreadsheet, Pencil, Plus, Trash2 } from 'lucide-react'
@@ -40,14 +41,6 @@ function getCategoryStripe(slug: string): string {
     anime: 'stripe-fig',
   }
   return map[slug] ?? 'stripe-fig'
-}
-
-const STATUS_LABELS: Record<string, string> = {
-  AVAILABLE: 'Disponible',
-  PREORDER: 'Preventa',
-  SOLD_OUT: 'Agotado',
-  COMING_SOON: 'Próximamente',
-  ARCHIVED: 'Archivado',
 }
 
 interface ProductsClientProps {
@@ -166,7 +159,12 @@ export function ProductsClient({
               brand: brand
                 ? { id: brand.id, name: brand.name, slug: brand.slug }
                 : { id: data.brandId, name: '', slug: '' },
-              images: images.map((img, i) => ({ id: `tmp-${i}`, url: img.url, alt: img.alt, position: i })),
+              images: images.map((img, i) => ({
+                id: `tmp-${i}`,
+                url: img.url,
+                alt: img.alt,
+                position: i,
+              })),
               inventory: { availableStock: data.stock ?? 0 },
               collections: selectedCollections.map((c) => ({
                 collection: { id: c.id, name: c.name, slug: c.slug },
@@ -257,7 +255,7 @@ export function ProductsClient({
             )}
             <div>
               <div className={cls.rowName}>{p.name}</div>
-              <div className={cls.rowSub}>{STATUS_LABELS[p.status] ?? p.status}</div>
+              <div className={cls.rowSub}>{PRODUCT_STATUS_LABELS[p.status] ?? p.status}</div>
             </div>
           </div>
         ),

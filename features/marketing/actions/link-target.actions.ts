@@ -2,6 +2,7 @@
 
 import { getBrands } from '@/features/brands/queries/brand.queries'
 import { getCategories } from '@/features/categories/queries/category.queries'
+import { getCollections } from '@/features/collections/queries/collection.queries'
 import { db } from '@/shared/lib/db'
 import { requireAdmin } from '@/shared/lib/require-admin'
 import type { ActionResult } from '@/shared/types/action-result.types'
@@ -20,18 +21,26 @@ export interface LinkOption {
 export interface LinkTargetOptions {
   categories: LinkOption[]
   brands: LinkOption[]
+  collections: LinkOption[]
 }
 
 const PRODUCT_SEARCH_LIMIT = 15
+const OPTIONS_LIMIT = 100
+
+/** "3 productos" / "1 producto" */
+function productCountHint(count: number): string {
+  return `${count} producto${count !== 1 ? 's' : ''}`
+}
 
 export async function getLinkTargetOptions(): Promise<ActionResult<LinkTargetOptions>> {
   const denied = await requireAdmin()
   if (denied) return denied
 
   try {
-    const [categories, brands] = await Promise.all([
-      getCategories({ perPage: 100 }),
-      getBrands({ perPage: 100 }),
+    const [categories, brands, collections] = await Promise.all([
+      getCategories({ perPage: OPTIONS_LIMIT }),
+      getBrands({ perPage: OPTIONS_LIMIT }),
+      getCollections({ perPage: OPTIONS_LIMIT }),
     ])
 
     return {
@@ -40,12 +49,19 @@ export async function getLinkTargetOptions(): Promise<ActionResult<LinkTargetOpt
         categories: categories.map((c) => ({
           value: c.slug,
           label: c.name,
-          hint: `${c.productCount} producto${c.productCount !== 1 ? 's' : ''}`,
+          hint: productCountHint(c.productCount),
         })),
         brands: brands.map((b) => ({
           value: b.slug,
           label: b.name,
-          hint: `${b.productCount} producto${b.productCount !== 1 ? 's' : ''}`,
+          hint: productCountHint(b.productCount),
+        })),
+        // Las inactivas se ofrecen igual — puede que el banner se prepare antes
+        // de publicar la colección — pero se avisa: hoy esa ficha da 404.
+        collections: collections.map((c) => ({
+          value: c.slug,
+          label: c.name,
+          hint: c.active ? productCountHint(c.productCount) : 'oculta — aún no publicada',
         })),
       },
     }

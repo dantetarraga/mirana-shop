@@ -3,6 +3,7 @@
 import type { BrandRow } from '@/features/brands/types'
 import type { CategoryRow } from '@/features/categories/types'
 import type { CollectionRow } from '@/features/collections/types'
+import { PRODUCT_STATUS_OPTIONS } from '@/features/products/lib/product-status'
 import type { ProductAdminListItem } from '@/features/products/types'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { FilterMultiSelect } from '@/shared/components/admin/FilterMultiSelect'
@@ -319,13 +320,7 @@ export function ProductCrudDrawer({
               singleSelect
               label="Estado"
               className="w-full"
-              options={[
-                { label: 'Disponible', value: 'AVAILABLE' },
-                { label: 'Preventa', value: 'PREORDER' },
-                { label: 'Agotado', value: 'SOLD_OUT' },
-                { label: 'Próximamente', value: 'COMING_SOON' },
-                { label: 'Archivado', value: 'ARCHIVED' },
-              ]}
+              options={PRODUCT_STATUS_OPTIONS}
               selected={watch('status') ? [watch('status') as string] : []}
               onToggle={(val) =>
                 setValue('status', val as ProductFormValues['status'], { shouldValidate: true })
@@ -397,7 +392,8 @@ export function ProductCrudDrawer({
                 />
                 {depositPreview !== null && (
                   <p className="text-[11px] text-muted mt-1.5">
-                    El cliente paga <span className="text-accent-ink font-semibold">
+                    El cliente paga{' '}
+                    <span className="text-accent-ink font-semibold">
                       S/ {depositPreview.deposit.toFixed(2)}
                     </span>{' '}
                     ahora y S/ {depositPreview.balance.toFixed(2)} después.

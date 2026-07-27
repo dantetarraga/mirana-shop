@@ -18,6 +18,7 @@ const formSchema = z.object({
   number: z.string().min(1, 'Número requerido').max(40),
   cci: z.string().max(40).optional(),
   qrImageUrl: z.string().optional(),
+  logoUrl: z.string().optional(),
   active: z.boolean(),
 })
 
@@ -29,6 +30,7 @@ const DEFAULTS: FormValues = {
   number: '',
   cci: '',
   qrImageUrl: '',
+  logoUrl: '',
   active: true,
 }
 
@@ -63,6 +65,7 @@ export function PaymentAccountDrawer({ account, isNew, onClose }: PaymentAccount
       number: a.number,
       cci: a.cci,
       qrImageUrl: a.qrImageUrl,
+      logoUrl: a.logoUrl,
       active: a.active,
     }),
   })
@@ -83,8 +86,24 @@ export function PaymentAccountDrawer({ account, isNew, onClose }: PaymentAccount
     >
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4.5">
         <FormField label="Nombre" error={errors.name?.message}>
-          <input {...register('name')} className={cls.input} placeholder="Yape / BCP Soles / BBVA" />
+          <input
+            {...register('name')}
+            className={cls.input}
+            placeholder="Yape / BCP Soles / BBVA"
+          />
         </FormField>
+
+        <FormField label="Logo (opcional)" error={errors.logoUrl?.message}>
+          <ImageUploadField
+            value={watch('logoUrl') ?? ''}
+            onChange={(url) => setValue('logoUrl', url, { shouldValidate: true })}
+            folder="payments"
+          />
+        </FormField>
+        <p className="text-[12px] text-muted -mt-2.5">
+          Logo de la marca (Yape, BCP, Interbank...) para que el cliente reconozca el método de un
+          vistazo. Si lo dejas vacío se muestra un ícono genérico.
+        </p>
 
         <FormField label="Titular (opcional)" error={errors.holder?.message}>
           <input {...register('holder')} className={cls.input} placeholder="Nombre del titular" />
@@ -99,11 +118,7 @@ export function PaymentAccountDrawer({ account, isNew, onClose }: PaymentAccount
         </FormField>
 
         <FormField label="CCI — solo cuentas bancarias (opcional)" error={errors.cci?.message}>
-          <input
-            {...register('cci')}
-            className={cls.input}
-            placeholder="002-191-001234567000-00"
-          />
+          <input {...register('cci')} className={cls.input} placeholder="002-191-001234567000-00" />
         </FormField>
         <p className="text-[12px] text-muted -mt-2.5">
           Para billeteras como Yape o Plin deja el CCI vacío.
@@ -117,8 +132,8 @@ export function PaymentAccountDrawer({ account, isNew, onClose }: PaymentAccount
           />
         </FormField>
         <p className="text-[12px] text-muted -mt-2.5">
-          Sube la captura del QR de Yape o Plin para que el cliente lo escanee desde el checkout.
-          En transferencias bancarias déjalo vacío.
+          Sube la captura del QR de Yape o Plin para que el cliente lo escanee desde el checkout. En
+          transferencias bancarias déjalo vacío.
         </p>
 
         <label className="flex items-center gap-2.5 cursor-pointer text-[13px] select-none">

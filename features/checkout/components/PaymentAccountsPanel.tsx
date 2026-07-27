@@ -53,6 +53,16 @@ export function PaymentAccountsPanel({ accounts, className }: Props) {
         {accounts.map((acc) => (
           <li key={acc.id} className="px-4 py-3 flex flex-col gap-2">
             <div className="flex items-center gap-2">
+              {/* El logo es decorativo: el nombre del método va al lado */}
+              {acc.logoUrl && (
+                <Image
+                  src={acc.logoUrl}
+                  alt=""
+                  width={44}
+                  height={22}
+                  className="h-5.5 w-auto max-w-11 object-contain shrink-0"
+                />
+              )}
               <span className="font-display font-bold text-[13px] uppercase tracking-tight">
                 {acc.name}
               </span>

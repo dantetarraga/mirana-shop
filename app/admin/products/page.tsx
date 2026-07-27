@@ -3,6 +3,7 @@ import { ProductFilters } from '@/features/products/components/ProductFilters'
 import { getBrands } from '@/features/brands/queries/brand.queries'
 import { getCategories } from '@/features/categories/queries/category.queries'
 import { getCollections } from '@/features/collections/queries/collection.queries'
+import { PRODUCT_STATUS_LABELS, parseProductStatuses } from '@/features/products/lib/product-status'
 import { countProducts, getAdminProducts } from '@/features/products/queries/product.queries'
 import { getPreorderDepositPercent } from '@/features/settings/queries/store-settings.queries'
 import { AdminPagination } from '@/shared/components/admin/AdminPagination'
@@ -18,6 +19,7 @@ interface PageProps {
     cat?: string
     brand?: string
     collection?: string
+    status?: string
     page?: string
   }>
 }
@@ -33,38 +35,38 @@ function buildUrl(params: Record<string, string | string[] | undefined>) {
   return qs ? `/admin/products?${qs}` : '/admin/products'
 }
 
+const chipCls =
+  'group flex items-center gap-1.5 px-2.5 py-1 bg-(--sub) border border-(--bd) hover:border-(--gold) transition-colors'
+
 export default async function ProductsPage({ searchParams }: PageProps) {
-  const { q, cat, brand, collection, page: rawPage } = await searchParams
+  const { q, cat, brand, collection, status, page: rawPage } = await searchParams
   const page = Math.max(1, Number(rawPage ?? 1))
   const skip = (page - 1) * PER_PAGE
 
   const categorySlugs = cat ? cat.split(',').filter(Boolean) : []
   const brandSlugs = brand ? brand.split(',').filter(Boolean) : []
   const collectionSlugs = collection ? collection.split(',').filter(Boolean) : []
+  // El listado del admin muestra todos los estados salvo que se pida alguno:
+  // así el filtro vacío sigue incluyendo archivados, como hasta ahora.
+  const statuses = parseProductStatuses(status)
+
+  const queryFilters = {
+    search: q,
+    categorySlug: categorySlugs.length > 0 ? categorySlugs : undefined,
+    brandSlug: brandSlugs.length > 0 ? brandSlugs : undefined,
+    collectionSlug: collectionSlugs.length > 0 ? collectionSlugs : undefined,
+    status: statuses.length > 0 ? statuses : ('ALL' as const),
+  }
 
   const [products, categories, brands, collections, total, defaultDepositPercent] =
     await Promise.all([
-    getAdminProducts({
-      search: q,
-      categorySlug: categorySlugs.length > 0 ? categorySlugs : undefined,
-      brandSlug: brandSlugs.length > 0 ? brandSlugs : undefined,
-      collectionSlug: collectionSlugs.length > 0 ? collectionSlugs : undefined,
-      status: 'ALL',
-      take: PER_PAGE,
-      skip,
-    }),
-    getCategories(),
-    getBrands(),
-    getCollections({ perPage: 200 }),
-    countProducts({
-      search: q,
-      categorySlug: categorySlugs.length > 0 ? categorySlugs : undefined,
-      brandSlug: brandSlugs.length > 0 ? brandSlugs : undefined,
-      collectionSlug: collectionSlugs.length > 0 ? collectionSlugs : undefined,
-      status: 'ALL',
-    }),
-    getPreorderDepositPercent(),
-  ])
+      getAdminProducts({ ...queryFilters, take: PER_PAGE, skip }),
+      getCategories(),
+      getBrands(),
+      getCollections({ perPage: 200 }),
+      countProducts(queryFilters),
+      getPreorderDepositPercent(),
+    ])
 
   // Serializar Decimals — todos los campos Decimal deben convertirse
   const serializedProducts = products.map((p) => ({
@@ -75,11 +77,47 @@ export default async function ProductsPage({ searchParams }: PageProps) {
 
   const totalPages = Math.ceil(total / PER_PAGE)
   const currentQ = q ?? ''
+
+  // Los filtros de lista viajan en la URL con estas mismas claves: se pasan
+  // enteros a cada enlace y solo se cambia el que toca.
+  const activeFilters = {
+    cat: categorySlugs,
+    brand: brandSlugs,
+    collection: collectionSlugs,
+    status: statuses,
+  }
+
   const hasFilters =
-    currentQ !== '' ||
-    categorySlugs.length > 0 ||
-    brandSlugs.length > 0 ||
-    collectionSlugs.length > 0
+    currentQ !== '' || Object.values(activeFilters).some((values) => values.length > 0)
+
+  // Un descriptor por filtro para no repetir el mismo chip cuatro veces.
+  const chipGroups = [
+    {
+      key: 'cat' as const,
+      prefix: 'Cat',
+      values: categorySlugs,
+      labelOf: (slug: string) => categories.find((c) => c.slug === slug)?.name ?? slug,
+    },
+    {
+      key: 'brand' as const,
+      prefix: 'Marca',
+      values: brandSlugs,
+      labelOf: (slug: string) => brands.find((b) => b.slug === slug)?.name ?? slug,
+    },
+    {
+      key: 'collection' as const,
+      prefix: 'Col',
+      values: collectionSlugs,
+      labelOf: (slug: string) => collections.find((c) => c.slug === slug)?.name ?? slug,
+    },
+    {
+      key: 'status' as const,
+      prefix: 'Estado',
+      values: statuses,
+      labelOf: (value: string) =>
+        PRODUCT_STATUS_LABELS[value as keyof typeof PRODUCT_STATUS_LABELS] ?? value,
+    },
+  ]
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 pt-5 lg:pt-7 pb-12">
@@ -90,11 +128,11 @@ export default async function ProductsPage({ searchParams }: PageProps) {
             placeholder="Buscar producto o SKU..."
             defaultValue={currentQ}
             paramName="q"
-            extraParams={{
-              ...(categorySlugs.length > 0 && { cat: categorySlugs.join(',') }),
-              ...(brandSlugs.length > 0 && { brand: brandSlugs.join(',') }),
-              ...(collectionSlugs.length > 0 && { collection: collectionSlugs.join(',') }),
-            }}
+            extraParams={Object.fromEntries(
+              Object.entries(activeFilters)
+                .filter(([, values]) => values.length > 0)
+                .map(([key, values]) => [key, values.join(',')]),
+            )}
           />
           <ProductFilters
             categories={categories}
@@ -104,6 +142,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
             currentCats={categorySlugs}
             currentBrands={brandSlugs}
             currentCollections={collectionSlugs}
+            currentStatuses={statuses}
           />
           {hasFilters && (
             <a
@@ -122,79 +161,34 @@ export default async function ProductsPage({ searchParams }: PageProps) {
               Activos:
             </span>
             {currentQ && (
-              <a
-                href={buildUrl({
-                  cat: categorySlugs.length > 0 ? categorySlugs : undefined,
-                  brand: brandSlugs.length > 0 ? brandSlugs : undefined,
-                  collection: collectionSlugs.length > 0 ? collectionSlugs : undefined,
-                })}
-                className="group flex items-center gap-1.5 px-2.5 py-1 bg-(--sub) border border-(--bd) hover:border-(--gold) transition-colors"
-              >
+              <a href={buildUrl(activeFilters)} className={chipCls}>
                 <span className="text-[11px] text-muted">Búsqueda:</span>
                 <span className="text-[11px] text-text font-semibold">{currentQ}</span>
                 <X size={10} className="text-muted group-hover:text-accent-ink transition-colors" />
               </a>
             )}
-            {categorySlugs.map((slug) => {
-              const name = categories.find((c) => c.slug === slug)?.name ?? slug
-              const remaining = categorySlugs.filter((s) => s !== slug)
-              return (
+            {chipGroups.flatMap((group) =>
+              group.values.map((value) => (
                 <a
-                  key={`cat-${slug}`}
+                  key={`${group.key}-${value}`}
                   href={buildUrl({
                     q: currentQ || undefined,
-                    cat: remaining.length > 0 ? remaining : undefined,
-                    brand: brandSlugs.length > 0 ? brandSlugs : undefined,
-                    collection: collectionSlugs.length > 0 ? collectionSlugs : undefined,
+                    ...activeFilters,
+                    [group.key]: group.values.filter((v) => v !== value),
                   })}
-                  className="group flex items-center gap-1.5 px-2.5 py-1 bg-(--sub) border border-(--bd) hover:border-(--gold) transition-colors"
+                  className={chipCls}
                 >
-                  <span className="text-[11px] text-muted">Cat:</span>
-                  <span className="text-[11px] text-text font-semibold">{name}</span>
-                  <X size={10} className="text-muted group-hover:text-accent-ink transition-colors" />
+                  <span className="text-[11px] text-muted">{group.prefix}:</span>
+                  <span className="text-[11px] text-text font-semibold">
+                    {group.labelOf(value)}
+                  </span>
+                  <X
+                    size={10}
+                    className="text-muted group-hover:text-accent-ink transition-colors"
+                  />
                 </a>
-              )
-            })}
-            {brandSlugs.map((slug) => {
-              const name = brands.find((b) => b.slug === slug)?.name ?? slug
-              const remaining = brandSlugs.filter((s) => s !== slug)
-              return (
-                <a
-                  key={`brd-${slug}`}
-                  href={buildUrl({
-                    q: currentQ || undefined,
-                    cat: categorySlugs.length > 0 ? categorySlugs : undefined,
-                    brand: remaining.length > 0 ? remaining : undefined,
-                    collection: collectionSlugs.length > 0 ? collectionSlugs : undefined,
-                  })}
-                  className="group flex items-center gap-1.5 px-2.5 py-1 bg-(--sub) border border-(--bd) hover:border-(--gold) transition-colors"
-                >
-                  <span className="text-[11px] text-muted">Marca:</span>
-                  <span className="text-[11px] text-text font-semibold">{name}</span>
-                  <X size={10} className="text-muted group-hover:text-accent-ink transition-colors" />
-                </a>
-              )
-            })}
-            {collectionSlugs.map((slug) => {
-              const name = collections.find((c) => c.slug === slug)?.name ?? slug
-              const remaining = collectionSlugs.filter((s) => s !== slug)
-              return (
-                <a
-                  key={`col-${slug}`}
-                  href={buildUrl({
-                    q: currentQ || undefined,
-                    cat: categorySlugs.length > 0 ? categorySlugs : undefined,
-                    brand: brandSlugs.length > 0 ? brandSlugs : undefined,
-                    collection: remaining.length > 0 ? remaining : undefined,
-                  })}
-                  className="group flex items-center gap-1.5 px-2.5 py-1 bg-(--sub) border border-(--bd) hover:border-(--gold) transition-colors"
-                >
-                  <span className="text-[11px] text-muted">Col:</span>
-                  <span className="text-[11px] text-text font-semibold">{name}</span>
-                  <X size={10} className="text-muted group-hover:text-accent-ink transition-colors" />
-                </a>
-              )
-            })}
+              )),
+            )}
           </div>
         )}
       </div>
@@ -214,15 +208,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
         total={total}
         perPage={PER_PAGE}
         className="mt-4"
-        buildHref={(p) =>
-          buildUrl({
-            q: currentQ || undefined,
-            cat: categorySlugs.length > 0 ? categorySlugs : undefined,
-            brand: brandSlugs.length > 0 ? brandSlugs : undefined,
-            collection: collectionSlugs.length > 0 ? collectionSlugs : undefined,
-            page: String(p),
-          })
-        }
+        buildHref={(p) => buildUrl({ q: currentQ || undefined, ...activeFilters, page: String(p) })}
       />
     </div>
   )

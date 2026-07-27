@@ -13,6 +13,8 @@ export interface PaymentAccountData {
   cci: string
   /** QR para escanear desde la app; '' = no se muestra */
   qrImageUrl: string
+  /** Logo de la marca; '' = se usa el ícono genérico */
+  logoUrl: string
   active: boolean
 }
 
@@ -23,6 +25,7 @@ const SELECT = {
   number: true,
   cci: true,
   qrImageUrl: true,
+  logoUrl: true,
   active: true,
 } as const
 
