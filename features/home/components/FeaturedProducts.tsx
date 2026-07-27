@@ -1,7 +1,11 @@
+import { HOME_BLOCKS, isBlockHidden } from '@/features/home/lib/home-blocks'
 import { ProductCard } from '@/features/products/components/ProductCard'
 import { toProductCards } from '@/features/products/lib/product-card'
 import { getFeaturedProducts, getProducts } from '@/features/products/queries/product.queries'
-import { getHideOutOfStock } from '@/features/settings/queries/store-settings.queries'
+import {
+  getHideOutOfStock,
+  getStoreSettings,
+} from '@/features/settings/queries/store-settings.queries'
 import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
@@ -10,7 +14,12 @@ import Link from 'next/link'
 const FEATURED_COUNT = 4
 
 export async function FeaturedProducts() {
-  const featured = await getFeaturedProducts(FEATURED_COUNT)
+  const [featured, { hiddenHomeBlocks }] = await Promise.all([
+    getFeaturedProducts(FEATURED_COUNT),
+    getStoreSettings(),
+  ])
+
+  if (isBlockHidden(hiddenHomeBlocks, HOME_BLOCKS.FEATURED_PRODUCTS)) return null
 
   let source = featured
 

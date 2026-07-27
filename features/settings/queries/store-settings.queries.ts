@@ -1,5 +1,5 @@
-import { BASE_SHIPPING_COST } from '@/features/checkout/lib/pricing'
 import { DEFAULT_DEPOSIT_PERCENT } from '@/features/checkout/lib/preorder'
+import { BASE_SHIPPING_COST } from '@/features/checkout/lib/pricing'
 import type { BannerLayout } from '@/generated/prisma/client'
 import { db } from '@/shared/lib/db'
 
@@ -17,6 +17,13 @@ export interface StoreSettingsData {
   baseShippingCost: number
   bannerLayout: BannerLayout
   preorderDepositPercent: number
+  footerLogoUrl: string
+  instagramUrl: string
+  tiktokUrl: string
+  youtubeUrl: string
+  facebookUrl: string
+  /** CSV de claves de bloques fijos del inicio que están ocultos */
+  hiddenHomeBlocks: string
 }
 
 const DEFAULTS: StoreSettingsData = {
@@ -25,6 +32,12 @@ const DEFAULTS: StoreSettingsData = {
   baseShippingCost: BASE_SHIPPING_COST,
   bannerLayout: 'CARD',
   preorderDepositPercent: DEFAULT_DEPOSIT_PERCENT,
+  footerLogoUrl: '',
+  instagramUrl: '',
+  tiktokUrl: '',
+  youtubeUrl: '',
+  facebookUrl: '',
+  hiddenHomeBlocks: '',
 }
 
 export async function getStoreSettings(): Promise<StoreSettingsData> {
@@ -36,6 +49,12 @@ export async function getStoreSettings(): Promise<StoreSettingsData> {
       baseShippingCost: true,
       bannerLayout: true,
       preorderDepositPercent: true,
+      footerLogoUrl: true,
+      instagramUrl: true,
+      tiktokUrl: true,
+      youtubeUrl: true,
+      facebookUrl: true,
+      hiddenHomeBlocks: true,
     },
   })
   return row ? { ...row, baseShippingCost: Number(row.baseShippingCost) } : DEFAULTS

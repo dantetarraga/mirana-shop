@@ -6,6 +6,7 @@ export const ALLOWED_FOLDERS = [
   'cta',
   'collections',
   'payments',
+  'settings',
 ] as const
 export type UploadFolder = (typeof ALLOWED_FOLDERS)[number]
 
@@ -17,6 +18,7 @@ export const FOLDER_LABELS: Record<UploadFolder, string> = {
   cta: 'CTA',
   collections: 'Colecciones',
   payments: 'Pagos (QR)',
+  settings: 'Configuración',
 }
 
 /** Inyecta f_auto,q_auto (formato/calidad automáticos) en una URL de Cloudinary. */

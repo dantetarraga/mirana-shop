@@ -826,6 +826,17 @@ model StoreSettings {
   /// Adelanto por defecto de la preventa parcial (1-100). Cada producto puede
   /// sobrescribirlo con Product.preorderDepositPercent.
   preorderDepositPercent Int @default(50)
+  /// Bloques fijos del inicio (novedades, favoritos, reseñas...) que el admin
+  /// ocultó, separados por coma. Las claves viven en features/home/lib/home-blocks.ts.
+  /// Vacío = se muestran todos, que es como estaba antes de existir el ajuste.
+  hiddenHomeBlocks String @default("")
+  /// Logo personalizado del footer (URL de Cloudinary). Si está vacío se usa el texto MIRANA.
+  footerLogoUrl    String @default("")
+  /// URLs de redes sociales mostradas en el footer.
+  instagramUrl     String @default("")
+  tiktokUrl        String @default("")
+  youtubeUrl       String @default("")
+  facebookUrl      String @default("")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

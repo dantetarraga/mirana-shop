@@ -15,9 +15,7 @@ const storeSettingsSchema = z.object({
     .regex(/^\d*$/, 'Solo dígitos, con código de país (ej: 51987654321)')
     .max(15, 'Número demasiado largo'),
   baseShippingCost: z.number().min(0, 'Debe ser mayor o igual a 0'),
-  // Cómo se muestran todos los banners del inicio (ajuste global)
   bannerLayout: z.enum(['CARD', 'FULLSCREEN']).optional().default('CARD'),
-  // Adelanto por defecto de la preventa parcial; cada producto puede pisarlo
   preorderDepositPercent: z
     .number()
     .int()
@@ -25,6 +23,12 @@ const storeSettingsSchema = z.object({
     .max(100, 'Máximo 100%')
     .optional()
     .default(DEFAULT_DEPOSIT_PERCENT),
+  footerLogoUrl: z.string().optional().default(''),
+  instagramUrl: z.string().optional().default(''),
+  tiktokUrl: z.string().optional().default(''),
+  youtubeUrl: z.string().optional().default(''),
+  facebookUrl: z.string().optional().default(''),
+  hiddenHomeBlocks: z.string().optional().default(''),
 })
 
 export async function saveStoreSettings(rawInput: unknown): Promise<ActionResult> {

@@ -1,7 +1,11 @@
+import { HOME_BLOCKS, isBlockHidden } from '@/features/home/lib/home-blocks'
 import { ProductCard } from '@/features/products/components/ProductCard'
 import { toProductCards } from '@/features/products/lib/product-card'
 import { getNewProducts } from '@/features/products/queries/product.queries'
-import { getHideOutOfStock } from '@/features/settings/queries/store-settings.queries'
+import {
+  getHideOutOfStock,
+  getStoreSettings,
+} from '@/features/settings/queries/store-settings.queries'
 import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
@@ -11,7 +15,13 @@ const NEW_ARRIVALS_COUNT = 4
 
 // Server Component — no necesita "use client"
 export async function NewArrivals() {
-  const products = await getNewProducts(NEW_ARRIVALS_COUNT, await getHideOutOfStock())
+  const [products, { hiddenHomeBlocks }] = await Promise.all([
+    getNewProducts(NEW_ARRIVALS_COUNT, await getHideOutOfStock()),
+    getStoreSettings(),
+  ])
+
+  if (isBlockHidden(hiddenHomeBlocks, HOME_BLOCKS.NEW_ARRIVALS)) return null
+
   const items = toProductCards(products)
 
   if (items.length === 0) return null

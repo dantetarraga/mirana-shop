@@ -1,10 +1,18 @@
 'use client'
 
+import {
+  HOME_BLOCK_LABELS,
+  HOME_BLOCKS,
+  parseHiddenBlocks,
+  serializeHiddenBlocks,
+  type HomeBlockKey,
+} from '@/features/home/lib/home-blocks'
 import { deletePaymentAccount } from '@/features/settings/actions/payment-accounts.actions'
 import { saveStoreSettings } from '@/features/settings/actions/store-settings.actions'
 import { PaymentAccountDrawer } from '@/features/settings/components/PaymentAccountDrawer'
 import type { PaymentAccountData } from '@/features/settings/queries/payment-accounts.queries'
 import type { StoreSettingsData } from '@/features/settings/queries/store-settings.queries'
+import { ImageUploadField } from '@/shared/components/admin/ImageUploadField'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
@@ -12,7 +20,20 @@ import { FormField } from '@/shared/components/ui/FormField'
 import { useEntityCrud, useServerAction } from '@/shared/hooks/admin'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { cn } from '@/shared/lib/utils'
-import { Check, Landmark, Pencil, Plus, QrCode, Save, Smartphone, Trash2 } from 'lucide-react'
+import {
+  Check,
+  Eye,
+  EyeOff,
+  Landmark,
+  LayoutList,
+  Link2,
+  Pencil,
+  Plus,
+  QrCode,
+  Save,
+  Smartphone,
+  Trash2,
+} from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
 
@@ -171,6 +192,85 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
           </div>
         </div>
 
+        {/* ── Bloques del inicio ───────────────────────────── */}
+        <HomeSectionBlocksPanel
+          hiddenHomeBlocks={form.hiddenHomeBlocks}
+          onChange={(val) => setForm({ ...form, hiddenHomeBlocks: val })}
+          onSave={saveGeneral}
+          isPending={general.isPending}
+        />
+
+        {/* ── Footer ──────────────────────────────────────── */}
+        <div className="bg-card border border-(--bd) p-5 flex flex-col gap-5">
+          <div className="flex items-center gap-2">
+            <Link2 size={15} className="text-accent-ink" />
+            <span className="text-[10px] font-bold tracking-[2px] uppercase text-muted">
+              Footer
+            </span>
+          </div>
+
+          <FormField label="Logo del footer">
+            <ImageUploadField
+              value={form.footerLogoUrl}
+              onChange={(url) => setForm({ ...form, footerLogoUrl: url })}
+              folder="settings"
+              placeholder="https://..."
+            />
+          </FormField>
+          <p className="text-[12px] text-muted -mt-3">
+            Se muestra en el footer de la tienda. Si se deja vacío, aparece el texto MIRANA.
+          </p>
+
+          <div className="border-t border-(--bd) pt-4 flex flex-col gap-4">
+            <span className="text-[10px] font-bold tracking-[2px] uppercase text-muted">
+              Redes sociales
+            </span>
+
+            <FormField label="Instagram">
+              <input
+                value={form.instagramUrl}
+                onChange={(e) => setForm({ ...form, instagramUrl: e.target.value })}
+                className={cls.input}
+                placeholder="https://www.instagram.com/mirana.shop"
+              />
+            </FormField>
+
+            <FormField label="TikTok">
+              <input
+                value={form.tiktokUrl}
+                onChange={(e) => setForm({ ...form, tiktokUrl: e.target.value })}
+                className={cls.input}
+                placeholder="https://www.tiktok.com/@mirana.shop"
+              />
+            </FormField>
+
+            <FormField label="YouTube">
+              <input
+                value={form.youtubeUrl}
+                onChange={(e) => setForm({ ...form, youtubeUrl: e.target.value })}
+                className={cls.input}
+                placeholder="https://www.youtube.com/@miranashop"
+              />
+            </FormField>
+
+            <FormField label="Facebook">
+              <input
+                value={form.facebookUrl}
+                onChange={(e) => setForm({ ...form, facebookUrl: e.target.value })}
+                className={cls.input}
+                placeholder="https://www.facebook.com/mirana.shop"
+              />
+            </FormField>
+          </div>
+
+          <div>
+            <Button variant="accent" size="md" onClick={saveGeneral} disabled={general.isPending}>
+              <Save size={15} className="mr-1.5" />
+              {general.isPending ? 'Guardando…' : 'Guardar cambios'}
+            </Button>
+          </div>
+        </div>
+
         {/* ── Métodos de pago ─────────────────────────────── */}
         <div className="bg-card border border-(--bd) p-5 flex flex-col gap-4">
           <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -287,6 +387,102 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
           onClose={crud.closeDrawer}
         />
       )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Sub-componente: panel para mostrar/ocultar los bloques fijos del inicio
+// ---------------------------------------------------------------------------
+
+interface HomeSectionBlocksPanelProps {
+  hiddenHomeBlocks: string
+  onChange: (csv: string) => void
+  onSave: () => void
+  isPending: boolean
+}
+
+const BLOCK_KEYS = Object.values(HOME_BLOCKS) as HomeBlockKey[]
+
+function HomeSectionBlocksPanel({
+  hiddenHomeBlocks,
+  onChange,
+  onSave,
+  isPending,
+}: HomeSectionBlocksPanelProps) {
+  const hidden = parseHiddenBlocks(hiddenHomeBlocks)
+
+  const toggle = (key: HomeBlockKey) => {
+    const next = new Set(hidden)
+    if (next.has(key)) next.delete(key)
+    else next.add(key)
+    onChange(serializeHiddenBlocks(next))
+  }
+
+  return (
+    <div className="bg-card border border-(--bd) p-5 flex flex-col gap-5">
+      <div className="flex items-center gap-2">
+        <LayoutList size={15} className="text-accent-ink" />
+        <span className="text-[10px] font-bold tracking-[2px] uppercase text-muted">
+          Bloques del inicio
+        </span>
+      </div>
+      <p className="text-[12px] text-muted -mt-3">
+        Los bloques ocultos no se muestran en el inicio de la tienda. Las secciones personalizadas
+        se administran en{' '}
+        <a href="/admin/sections" className="underline hover:text-accent-ink transition-colors">
+          Secciones
+        </a>
+        .
+      </p>
+
+      <ul className="flex flex-col divide-y divide-(--bd) border border-(--bd)">
+        {BLOCK_KEYS.map((key) => {
+          const isVisible = !hidden.has(key)
+          const { title, desc } = HOME_BLOCK_LABELS[key]
+          return (
+            <li
+              key={key}
+              className={cn('flex items-start gap-4 px-4 py-3.5', !isVisible && 'opacity-55')}
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-[14px] font-semibold">{title}</span>
+                  {!isVisible && (
+                    <span className="text-[9px] tracking-[1.5px] uppercase border border-(--bd) px-1.5 py-0.5 text-muted">
+                      Oculto
+                    </span>
+                  )}
+                </div>
+                <p className="text-[12px] text-muted mt-0.5">{desc}</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => toggle(key)}
+                className="shrink-0 self-center"
+              >
+                {isVisible ? (
+                  <>
+                    <EyeOff size={13} className="mr-1.5" /> Ocultar
+                  </>
+                ) : (
+                  <>
+                    <Eye size={13} className="mr-1.5" /> Mostrar
+                  </>
+                )}
+              </Button>
+            </li>
+          )
+        })}
+      </ul>
+
+      <div>
+        <Button variant="accent" size="md" onClick={onSave} disabled={isPending}>
+          <Save size={15} className="mr-1.5" />
+          {isPending ? 'Guardando…' : 'Guardar cambios'}
+        </Button>
+      </div>
     </div>
   )
 }

@@ -110,10 +110,7 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
       >
         {/* Header */}
         <div className="px-5 sm:px-7 py-6 border-b border-(--bd) flex items-center justify-between">
-          <h2
-            id={titleId}
-            className="font-display text-[26px] font-black uppercase tracking-[1px]"
-          >
+          <h2 id={titleId} className="font-display text-[26px] font-black uppercase tracking-[1px]">
             Carrito{' '}
             <span className="text-accent-ink" aria-live="polite">
               ({cartCount})
@@ -129,7 +126,12 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
             >
               {busy ? 'Guardando…' : ''}
             </span>
-            <Button variant="icon" size="md" aria-label="Cerrar carrito" onClick={() => setCartOpen(false)}>
+            <Button
+              variant="icon"
+              size="md"
+              aria-label="Cerrar carrito"
+              onClick={() => setCartOpen(false)}
+            >
               <X size={16} />
             </Button>
           </div>
@@ -169,7 +171,11 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
                   key={item.product.id}
                   className="flex gap-3.5 items-center pb-3.5 border-b border-(--bd)"
                 >
-                  <div className="relative w-17.5 h-17.5 shrink-0 overflow-hidden">
+                  <Link
+                    href={`/catalogo/${item.product.slug}`}
+                    onClick={() => setCartOpen(false)}
+                    className="relative w-17.5 h-17.5 shrink-0 overflow-hidden block"
+                  >
                     {item.product.imageUrl ? (
                       <Image
                         src={item.product.imageUrl}
@@ -183,11 +189,15 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
                         className={`${getCategoryStripe(item.product.category.slug)} w-full h-full`}
                       />
                     )}
-                  </div>
+                  </Link>
                   <div className="flex-1 min-w-0">
-                    <div className="font-display text-[17px] font-extrabold uppercase whitespace-nowrap overflow-hidden text-ellipsis">
+                    <Link
+                      href={`/catalogo/${item.product.slug}`}
+                      onClick={() => setCartOpen(false)}
+                      className="font-display text-[17px] font-extrabold uppercase whitespace-nowrap overflow-hidden text-ellipsis block hover:text-accent-ink transition-colors duration-150"
+                    >
                       {item.product.name}
-                    </div>
+                    </Link>
                     <div className="text-accent-ink font-display text-[20px] font-extrabold mt-px">
                       {formatCurrency(deposit ?? effectivePrice(item.product))}
                     </div>
@@ -232,7 +242,9 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
                     size="sm"
                     destructive
                     aria-label={`Eliminar "${item.product.name}" del carrito`}
-                    onClick={() => setPendingRemove({ id: item.product.id, name: item.product.name })}
+                    onClick={() =>
+                      setPendingRemove({ id: item.product.id, name: item.product.name })
+                    }
                     className="self-start"
                   >
                     <X size={14} />
