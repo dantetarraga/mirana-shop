@@ -1,6 +1,11 @@
 'use client'
 
-import { deleteUser } from '@/features/users/actions/user.actions'
+import { logout } from '@/features/auth/lib/logout'
+import {
+  deleteUser,
+  revokeAllSessions,
+  revokeUserSessions,
+} from '@/features/users/actions/user.actions'
 import type { UserRow } from '@/features/users/types'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
@@ -12,7 +17,7 @@ import { useEntityCrud } from '@/shared/hooks/admin/useEntityCrud'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { USER_STATUS } from '@/shared/lib/admin/admin-constants'
 import { cn, formatDate } from '@/shared/lib/utils'
-import { UserMinus } from 'lucide-react'
+import { LogOut, UserMinus } from 'lucide-react'
 import { useState } from 'react'
 
 // ---------------------------------------------------------------------------
@@ -45,6 +50,30 @@ interface UsersClientProps {
 export function UsersClient({ users }: UsersClientProps) {
   const [detail, setDetail] = useState<UserRow | null>(null)
   const crud = useEntityCrud<UserRow>(deleteUser, (u) => `"${u.name ?? u.email}" dado de baja`)
+  // Revocación de sesiones (ver shared/lib/session-version.ts)
+  const [pendingRevoke, setPendingRevoke] = useState<UserRow | null>(null)
+  const [confirmRevokeAll, setConfirmRevokeAll] = useState(false)
+
+  const handleRevoke = () => {
+    if (!pendingRevoke) return
+    const user = pendingRevoke
+    setPendingRevoke(null)
+    crud.run(() => revokeUserSessions(user.id), {
+      successMsg: `Sesiones de "${user.name ?? user.email}" cerradas`,
+      // Si el admin se revocó a sí mismo, su token ya no vale: se cierra la
+      // sesión en vez de dejarlo en un panel que rechazará cada acción.
+      onSuccess: ({ self }) => (self ? logout() : undefined),
+    })
+  }
+
+  const handleRevokeAll = () => {
+    setConfirmRevokeAll(false)
+    crud.run(() => revokeAllSessions(), {
+      successMsg: 'Se cerraron todas las sesiones',
+      // La sesión del propio admin también queda revocada.
+      onSuccess: () => logout(),
+    })
+  }
 
   // Sin useMemo: las columnas leen `crud.isPending`, que cambia en cada
   // transición. Memoizarlas con deps vacías congelaba ese valor y el botón de
@@ -91,7 +120,20 @@ export function UsersClient({ users }: UsersClientProps) {
         headerClassName: 'text-right',
         className: 'text-right',
         render: (u) => (
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-1.5">
+            <Button
+              variant="icon"
+              size="sm"
+              disabled={crud.isPending}
+              onClick={(e) => {
+                e.stopPropagation()
+                setPendingRevoke(u)
+              }}
+              title="Cerrar sesiones"
+              aria-label={`Cerrar sesiones de ${u.name ?? u.email}`}
+            >
+              <LogOut size={14} />
+            </Button>
             <Button
               variant="icon"
               size="sm"
@@ -112,6 +154,19 @@ export function UsersClient({ users }: UsersClientProps) {
 
   return (
     <>
+      <div className="flex justify-end mb-3">
+        <Button
+          variant="outline"
+          size="sm"
+          destructive
+          disabled={crud.isPending}
+          onClick={() => setConfirmRevokeAll(true)}
+        >
+          <LogOut size={14} />
+          Cerrar todas las sesiones
+        </Button>
+      </div>
+
       <AdminTable columns={columns} data={users} keyExtractor={(u) => u.id} onRowClick={setDetail} />
 
       <ConfirmModal
@@ -121,6 +176,26 @@ export function UsersClient({ users }: UsersClientProps) {
         title="¿Dar de baja esta cuenta?"
         description={`${crud.pendingDelete?.name ?? crud.pendingDelete?.email} dejará de poder iniciar sesión y se vaciará su carrito. Sus pedidos se conservan, y la cuenta queda en la papelera por si hay que restaurarla.`}
         confirmLabel="Dar de baja"
+        isPending={crud.isPending}
+      />
+
+      <ConfirmModal
+        open={!!pendingRevoke}
+        onClose={() => setPendingRevoke(null)}
+        onConfirm={handleRevoke}
+        title="¿Cerrar sesiones de esta cuenta?"
+        description={`${pendingRevoke?.name ?? pendingRevoke?.email} tendrá que volver a iniciar sesión en todos sus dispositivos. La cuenta sigue activa.`}
+        confirmLabel="Cerrar sesiones"
+        isPending={crud.isPending}
+      />
+
+      <ConfirmModal
+        open={confirmRevokeAll}
+        onClose={() => setConfirmRevokeAll(false)}
+        onConfirm={handleRevokeAll}
+        title="¿Cerrar todas las sesiones?"
+        description="Se cerrará la sesión de todas las cuentas en todos los dispositivos, incluida la tuya: tendrás que volver a iniciar sesión. Úsalo si sospechas que una sesión fue robada."
+        confirmLabel="Cerrar todas las sesiones"
         isPending={crud.isPending}
       />
 

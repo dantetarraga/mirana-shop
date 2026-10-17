@@ -1,3 +1,4 @@
+import { tokenSessionVersion } from '@/shared/lib/session-version'
 import type { NextAuthConfig } from 'next-auth'
 
 // ---------------------------------------------------------------------------
@@ -22,11 +23,16 @@ export const authConfig = {
   session: { strategy: 'jwt' },
 
   callbacks: {
-    /** Expone el role en el objeto session.user */
+    /**
+     * Expone el role en session.user y la versión de sesión (`sv`) en session,
+     * para que los guards la contrasten con la BD. La validación en sí vive en
+     * auth.ts y shared/lib: aquí no se puede consultar la BD (ver arriba).
+     */
     session({ session, token }) {
       if (session.user) {
         session.user.role = (token.role ?? 'customer') as 'admin' | 'customer'
       }
+      session.sv = tokenSessionVersion(token.sv)
       return session
     },
   },

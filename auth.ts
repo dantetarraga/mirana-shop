@@ -1,10 +1,12 @@
 import { authConfig } from '@/auth.config'
 import { db } from '@/shared/lib/db'
 import { consumeRateLimits, ipFromHeaders, RateLimitError } from '@/shared/lib/rate-limit'
+import { isSessionVersionValid, shouldRecheckSession } from '@/shared/lib/session-version'
 import bcrypt from 'bcryptjs'
 import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import Google from 'next-auth/providers/google'
+import { cache } from 'react'
 
 // Ventana y topes del login con contraseña. Se cuentan TODOS los intentos
 // (también los correctos) antes de bcrypt: así un atacante no puede usar el
@@ -12,6 +14,18 @@ import Google from 'next-auth/providers/google'
 const LOGIN_WINDOW_MS = 15 * 60_000
 const LOGIN_LIMIT_PER_EMAIL = 10
 const LOGIN_LIMIT_PER_IP = 30
+
+/**
+ * Estado vigente de la cuenta para revalidar el token. Envuelto en cache(): en
+ * un render del servidor auth() se llama varias veces (layout, page, guards) y
+ * todas comparten una sola consulta. Fuera de un render, cache() no memoiza.
+ */
+const getSessionState = cache((email: string) =>
+  db.user.findUnique({
+    where: { email },
+    select: { role: true, deletedAt: true, sessionVersion: true },
+  }),
+)
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
@@ -60,7 +74,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const valid = await bcrypt.compare(password, user.passwordHash)
         if (!valid) return null
 
-        return { id: user.id, name: user.name, email: user.email, role: user.role }
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          sessionVersion: user.sessionVersion,
+        }
       },
     }),
   ],
@@ -74,9 +94,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
      * Google ocurre en el callback jwt, que se ejecuta después: sin esto, un
      * usuario dado de baja volvería a entrar con Google.
      *
-     * Ojo: la sesión es JWT, así que esto solo bloquea logins nuevos. Un token
-     * ya emitido sigue siendo válido hasta que expira — cortar una sesión en
-     * curso exigiría consultar la BD en cada request.
+     * Esto solo bloquea logins nuevos. Las sesiones ya emitidas se cortan por
+     * la versión de sesión: deleteUser la incrementa (ver jwt() y los guards
+     * de shared/lib).
      */
     async signIn({ user, account, profile }) {
       // Google solo cuenta como prueba de propiedad del correo si Google lo
@@ -92,9 +112,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
 
     /**
-     * Añade el role al token JWT en cada login.
-     * - Credentials: llega en `user.role` desde authorize().
+     * Añade el role y la versión de sesión (`sv`) al token JWT en cada login.
+     * - Credentials: llegan en `user` desde authorize().
      * - Google: busca en DB o crea el usuario con role CUSTOMER.
+     *
+     * En el resto de llamadas (auth() en el servidor, /api/auth/session)
+     * revalida el token contra la BD como mucho cada SESSION_RECHECK_MS:
+     * devolver null invalida la sesión si la versión cambió (revocada), la
+     * cuenta está dada de baja o el rol ya no coincide. Los guards de
+     * shared/lib comparan `sv` en cada request; esto cubre lo que solo mira
+     * auth() (cabecera, useSession) y acota la vida de un token revocado.
      */
     async jwt({ token, user, account }) {
       if (user) {
@@ -114,14 +141,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           // nunca se verificó, se descarta la contraseña (y cualquier sesión
           // en BD) y se marca verificada. Si el dueño legítimo se había
           // registrado con contraseña, pierde ese método y sigue entrando con
-          // Google. Limitación: los JWT ya emitidos al atacante siguen siendo
-          // válidos hasta que expiran (la sesión no se consulta en BD).
+          // Google. Se sube además la versión de sesión: los JWT que el
+          // atacante obtuviera con su contraseña dejan de valer.
           if (existing && !existing.emailVerified) {
             await db.$transaction([
               db.session.deleteMany({ where: { userId: existing.id } }),
               db.user.update({
                 where: { id: existing.id },
-                data: { emailVerified: new Date(), passwordHash: null },
+                data: {
+                  emailVerified: new Date(),
+                  passwordHash: null,
+                  sessionVersion: { increment: 1 },
+                },
               }),
             ])
           }
@@ -138,12 +169,34 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             },
           })
           token.role = dbUser.role === 'ADMIN' ? 'admin' : 'customer'
+          token.sv = dbUser.sessionVersion
         } else {
-          // Credentials: el role viene del authorize()
-          const u = user as typeof user & { role?: string }
+          // Credentials: role y versión vienen del authorize()
+          const u = user as typeof user & { role?: string; sessionVersion?: number }
           token.role = u.role === 'ADMIN' ? 'admin' : 'customer'
+          token.sv = u.sessionVersion ?? 0
         }
+        token.svCheckedAt = Date.now()
+        return token
       }
+
+      // Revalidación periódica de una sesión ya emitida.
+      const now = Date.now()
+      if (!token.email || !shouldRecheckSession(token.svCheckedAt, now)) return token
+
+      try {
+        const state = await getSessionState(token.email)
+        if (!state || state.deletedAt) return null
+        if (!isSessionVersionValid(token.sv, state.sessionVersion)) return null
+        if ((state.role === 'ADMIN' ? 'admin' : 'customer') !== token.role) return null
+      } catch {
+        // BD caída: no se cierra la sesión por un fallo transitorio. Los
+        // guards de shared/lib vuelven a consultar la BD en cada acción
+        // sensible, así que esto no abre acceso; se reintenta en la próxima.
+        return token
+      }
+
+      token.svCheckedAt = now
       return token
     },
   },

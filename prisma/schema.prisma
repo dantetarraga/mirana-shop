@@ -96,6 +96,11 @@ model User {
   image         String?
   role          Role      @default(CUSTOMER)
 
+  // Versión de sesión: viaja en el JWT (`sv`) y se compara con la BD en cada
+  // guard. Incrementarla revoca todas las sesiones emitidas de la cuenta
+  // (cambio de contraseña o de rol, baja, "Cerrar sesiones" en el admin).
+  sessionVersion Int @default(0)
+
   termsAcceptedAt DateTime? // Fecha en que aceptó los Términos y Condiciones
   termsVersion    String? // Versión del documento aceptado, e.g. "v1.0"
 
