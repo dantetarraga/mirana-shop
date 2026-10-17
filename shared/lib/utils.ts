@@ -14,15 +14,8 @@ export function formatCurrency(amount: number, currency = 'PEN') {
   }).format(amount)
 }
 
-export function slugify(str: string) {
-  return str
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-}
+/** @deprecated Importa desde '@/shared/lib/slug' — se re-exporta por compatibilidad. */
+export { slugify } from '@/shared/lib/slug'
 
 /** @deprecated Usa Dates.format de '@/shared/lib/dates' — se mantiene por compatibilidad */
 export function formatDate(date: Date | string, fmt = "d 'de' MMMM 'de' yyyy"): string {

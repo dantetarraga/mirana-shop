@@ -147,7 +147,12 @@ function buildWhere(filters: Omit<ProductFilters, 'take' | 'skip'>) {
     deletedAt: null,
     status: statusWhere,
     featured: featured ?? undefined,
-    category: catSlugs?.length ? { slug: { in: catSlugs } } : undefined,
+    // Filtrar por una categoría incluye sus subcategorías: el producto puede
+    // estar en la propia o en una hija. Con MAX_CATEGORY_DEPTH = 2 basta con
+    // mirar un nivel hacia arriba, sin consulta previa de ids.
+    category: catSlugs?.length
+      ? { OR: [{ slug: { in: catSlugs } }, { parent: { slug: { in: catSlugs } } }] }
+      : undefined,
     brand: brdSlugs?.length ? { slug: { in: brdSlugs } } : undefined,
     collections: colSlugs?.length
       ? { some: { collection: { slug: { in: colSlugs }, deletedAt: null } } }

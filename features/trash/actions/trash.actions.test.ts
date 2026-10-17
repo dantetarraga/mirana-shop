@@ -6,10 +6,11 @@ const mocks = vi.hoisted(() => ({
   count: vi.fn().mockResolvedValue(1),
   update: vi.fn(),
   upsert: vi.fn(),
+  findUnique: vi.fn(),
 }))
 vi.mock('@/shared/lib/db', () => ({ db: {
   $transaction: mocks.transaction,
-  product: { count: mocks.count, update: mocks.update },
+  product: { count: mocks.count, update: mocks.update, findUnique: mocks.findUnique },
   productInventory: { upsert: mocks.upsert },
 } }))
 vi.mock('@/shared/lib/require-admin', () => ({ requireAdmin: vi.fn().mockResolvedValue(null) }))
@@ -18,6 +19,32 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }
 beforeEach(() => {
   vi.clearAllMocks()
   mocks.transaction.mockImplementation((operations: Promise<unknown>[]) => Promise.all(operations))
+  mocks.findUnique.mockResolvedValue({
+    category: { name: 'Figuras', deletedAt: null },
+    brand: { name: 'Bandai', deletedAt: null },
+  })
+})
+
+describe('restauración bloqueada por referencias en la papelera', () => {
+  it('no restaura un producto cuya categoría está en la papelera y la nombra', async () => {
+    mocks.findUnique.mockResolvedValue({
+      category: { name: 'Figuras', deletedAt: new Date() },
+      brand: { name: 'Bandai', deletedAt: null },
+    })
+    const result = await restoreTrashItem('product', 'product')
+    expect(result).toMatchObject({ success: false, code: 422 })
+    expect(!result.success && result.error).toMatch(/categoría "Figuras"/)
+    expect(mocks.transaction).not.toHaveBeenCalled()
+  })
+
+  it('nombra categoría y marca si ambas están en la papelera', async () => {
+    mocks.findUnique.mockResolvedValue({
+      category: { name: 'Figuras', deletedAt: new Date() },
+      brand: { name: 'Bandai', deletedAt: new Date() },
+    })
+    const result = await restoreTrashItem('product', 'product')
+    expect(!result.success && result.error).toMatch(/categoría "Figuras" y la marca "Bandai"/)
+  })
 })
 
 describe('restauración del inventario', () => {

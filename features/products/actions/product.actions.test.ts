@@ -4,7 +4,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const mocks = vi.hoisted(() => ({ transaction: vi.fn(), findProduct: vi.fn() }))
 vi.mock('server-only', () => ({}))
 vi.mock('@/shared/lib/db', () => ({
-  db: { $transaction: mocks.transaction, product: { findUnique: mocks.findProduct } },
+  db: {
+    $transaction: mocks.transaction,
+    product: { findUnique: mocks.findProduct },
+    category: { findMany: vi.fn().mockResolvedValue([{ slug: 'figuras' }]) },
+    brand: { findMany: vi.fn().mockResolvedValue([{ slug: 'marca' }]) },
+  },
 }))
 vi.mock('@/shared/lib/require-admin', () => ({ requireAdmin: vi.fn().mockResolvedValue(null) }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }))

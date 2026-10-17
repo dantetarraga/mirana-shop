@@ -4,12 +4,13 @@ import {
   COLLECTION_SELECT,
   getCollectionBySlug,
 } from '@/features/collections/queries/collection.queries'
+import { collectionBaseSchema } from '@/features/collections/schemas/collection.schema'
+import { findDrawerProducts } from '@/features/products/queries/drawer-product.queries'
 import {
   findTrashedConflict,
   trashedConflictError,
 } from '@/features/trash/lib/trashed-conflict'
 import { db } from '@/shared/lib/db'
-import { imageUrlSchema } from '@/shared/schemas/image-url.schema'
 import { requireAdmin } from '@/shared/lib/require-admin'
 import { isRichTextEmpty, sanitizeRichText } from '@/shared/lib/rich-text'
 import type { ActionResult } from '@/shared/types/action-result.types'
@@ -21,21 +22,13 @@ import { z } from 'zod'
 // Schemas Zod
 // ---------------------------------------------------------------------------
 
-const slugSchema = z
-  .string()
-  .min(1, 'Slug requerido')
-  .regex(/^[a-z0-9-]+$/, 'Solo minúsculas, números y guiones')
-
-const createCollectionSchema = z.object({
-  name: z.string().min(1, 'Nombre requerido').max(100),
-  slug: slugSchema,
-  description: z
-    .string()
-    .max(50_000)
+// Los campos y límites salen del schema base que también usa el formulario;
+// aquí solo se añade lo propio del servidor (saneado del HTML y productIds).
+const createCollectionSchema = collectionBaseSchema.extend({
+  description: collectionBaseSchema.shape.description
+    .unwrap()
     .transform((value) => (isRichTextEmpty(value) ? '' : sanitizeRichText(value)))
     .optional(),
-  imageUrl: imageUrlSchema().optional().or(z.literal('')),
-  active: z.boolean().default(true),
   /**
    * Productos elegidos en el drawer antes de que la colección exista. Se
    * asocian en el mismo create para que no quede una colección a medias si
@@ -294,42 +287,9 @@ export async function getCollectionProducts(
   if (denied) return denied
 
   try {
-    const products = await db.product.findMany({
-      where: {
-        deletedAt: null,
-        collections: { some: { collectionId } },
-      },
-      select: {
-        id: true,
-        name: true,
-        sku: true,
-        price: true,
-        status: true,
-        images: {
-          select: { url: true },
-          orderBy: { position: 'asc' },
-          take: 1,
-        },
-        category: { select: { name: true } },
-        brand: { select: { name: true } },
-        inventory: { select: { availableStock: true } },
-      },
-      orderBy: { name: 'asc' },
-    })
-
     return {
       success: true,
-      data: products.map((p) => ({
-        id: p.id,
-        name: p.name,
-        sku: p.sku,
-        price: Number(p.price),
-        status: p.status,
-        imageUrl: p.images[0]?.url ?? null,
-        category: p.category.name,
-        brand: p.brand.name,
-        stock: p.inventory?.availableStock ?? 0,
-      })),
+      data: await findDrawerProducts({ where: { collections: { some: { collectionId } } } }),
     }
   } catch {
     return { success: false, error: 'Error al cargar productos', code: 500 }

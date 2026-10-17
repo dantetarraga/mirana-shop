@@ -285,6 +285,41 @@ async function main() {
     `Categories: ${catFiguras.name}, ${catLego.name}, ${catModelos.name}, ${catAnime.name}`,
   )
 
+  // ── Orden y menú de las raíces + subcategorías ─────────────────────────────
+  // docs/NAVEGACION-CATALOGO.md: máximo 2 niveles; las raíces entran al menú.
+  const rootOrder = [catFiguras, catAnime, catLego, catModelos]
+  for (const [position, cat] of rootOrder.entries()) {
+    await prisma.category.update({
+      where: { id: cat.id },
+      data: { position, showInMenu: true, isVisible: true },
+    })
+  }
+
+  const SUBCATEGORIES: { parentId: string; name: string; slug: string; description: string }[] = [
+    { parentId: catLego.id, name: 'Star Wars', slug: 'lego-star-wars', description: 'Naves, escenas y minifiguras de la galaxia muy, muy lejana.' },
+    { parentId: catLego.id, name: 'Technic', slug: 'lego-technic', description: 'Mecánica real: engranajes, suspensiones y motores para armar.' },
+    { parentId: catLego.id, name: 'Harry Potter', slug: 'lego-harry-potter', description: 'Hogwarts, el callejón Diagon y el mundo mágico pieza a pieza.' },
+    { parentId: catAnime.id, name: 'Dragon Ball', slug: 'dragon-ball', description: 'Goku, Vegeta y compañía en todas sus transformaciones.' },
+    { parentId: catAnime.id, name: 'One Piece', slug: 'one-piece', description: 'La tripulación del Sombrero de Paja y sus rivales.' },
+    { parentId: catAnime.id, name: 'Demon Slayer', slug: 'demon-slayer', description: 'Cazadores de demonios de Kimetsu no Yaiba.' },
+    { parentId: catFiguras.id, name: 'Marvel', slug: 'figuras-marvel', description: 'Vengadores, X-Men y villanos del universo Marvel.' },
+    { parentId: catFiguras.id, name: 'DC', slug: 'figuras-dc', description: 'Batman, Superman y la Liga de la Justicia.' },
+  ]
+
+  const subBySlug = new Map<string, string>()
+  const subPositions = new Map<string, number>()
+  for (const sub of SUBCATEGORIES) {
+    const position = subPositions.get(sub.parentId) ?? 0
+    subPositions.set(sub.parentId, position + 1)
+    const created = await prisma.category.upsert({
+      where: { slug: sub.slug },
+      update: { name: sub.name, parentId: sub.parentId, description: sub.description, position, showInMenu: false },
+      create: { ...sub, position, showInMenu: false },
+    })
+    subBySlug.set(sub.slug, created.id)
+  }
+  console.log(`Subcategories: ${SUBCATEGORIES.map((s) => s.name).join(', ')}`)
+
   // ── Brands ─────────────────────────────────────────────────────────────────
   const hasbro = await prisma.brand.upsert({
     where: { slug: 'hasbro' },
@@ -376,6 +411,15 @@ async function main() {
       imageUrl: img(IMGS.brandHotWheels, 400, 400),
     },
   })
+
+  // Orden de la tienda y logos destacados del mega-menú (máx. 8).
+  const brandOrder = [bandai, legoGroup, goodSmile, kotobukiya, hasbro, funko, hotWheels]
+  for (const [position, brand] of brandOrder.entries()) {
+    await prisma.brand.update({
+      where: { id: brand.id },
+      data: { position, isVisible: true, featured: position < 6 },
+    })
+  }
 
   console.log(
     `Brands: ${bandai.name}, ${legoGroup.name}, ${goodSmile.name}, ${kotobukiya.name}, ${hasbro.name}, ${funko.name}, ${hotWheels.name}`,
@@ -1177,6 +1221,24 @@ async function main() {
   })
   console.log('Promotions: envío gratis seeded')
 
+  // ── Productos → subcategorías ────────────────────────────────────────────
+  // Los upserts de productos no tocan categoryId en el update, así que la
+  // asignación se hace aparte (idempotente).
+  const PRODUCT_SUBCATEGORY: Record<string, string> = {
+    'LGO-SW-FALCON-001': 'lego-star-wars',
+    'LGO-TCH-BUGATTI-001': 'lego-technic',
+    'LGO-HGW-CASTLE-001': 'lego-harry-potter',
+    'BND-DBZ-GOKU-001': 'dragon-ball',
+    'FNK-OP-LUFFY-001': 'one-piece',
+    'KOT-DEM-TANJIRO-001': 'demon-slayer',
+    'HAS-MAR-IRONMAN-001': 'figuras-marvel',
+  }
+  for (const [sku, subSlug] of Object.entries(PRODUCT_SUBCATEGORY)) {
+    const categoryId = subBySlug.get(subSlug)
+    if (categoryId) await prisma.product.updateMany({ where: { sku }, data: { categoryId } })
+  }
+  console.log(`Products → subcategories: ${Object.keys(PRODUCT_SUBCATEGORY).length}`)
+
   // ── Galerías de producto ─────────────────────────────────────────────────
   // Se reescribe la galería de TODOS los productos de la base (incluidos los
   // creados a mano en el admin de desarrollo) para que cada ficha tenga 5 fotos.
@@ -1185,7 +1247,7 @@ async function main() {
     select: {
       id: true,
       name: true,
-      category: { select: { slug: true } },
+      category: { select: { slug: true, parent: { select: { slug: true } } } },
       images: { orderBy: { position: 'asc' }, take: 1, select: { url: true } },
     },
     orderBy: { createdAt: 'asc' },
@@ -1194,7 +1256,11 @@ async function main() {
 
   for (const [index, product] of allProducts.entries()) {
     const coverId = product.images[0]?.url.match(/photo-([w-]+)?/)?.[1]
-    const pool = GALLERY_POOLS[product.category.slug] ?? fallbackPool
+    // Las subcategorías heredan el pool de fotos de su categoría padre.
+    const pool =
+      GALLERY_POOLS[product.category.slug] ??
+      (product.category.parent ? GALLERY_POOLS[product.category.parent.slug] : undefined) ??
+      fallbackPool
     const ids = galleryFor(coverId, pool, index)
 
     await prisma.$transaction([

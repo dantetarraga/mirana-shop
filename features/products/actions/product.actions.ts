@@ -9,7 +9,9 @@ import {
   findTrashedConflict,
   trashedConflictError,
 } from '@/features/trash/lib/trashed-conflict'
+import { findDrawerProducts } from '@/features/products/queries/drawer-product.queries'
 import { db } from '@/shared/lib/db'
+import { slugify, uniqueSlug } from '@/shared/lib/slug'
 import { importProductRowSchema, productDbBaseSchema, productDbSchema } from '@/features/products/schemas/product.schema'
 import { requireAdmin } from '@/shared/lib/require-admin'
 import type { ActionResult } from '@/shared/types/action-result.types'
@@ -20,16 +22,6 @@ import { z } from 'zod'
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-}
 
 function invalidateProductCaches() {
   revalidatePath('/admin/products')
@@ -51,15 +43,6 @@ interface CatalogRef {
   id: string
   name: string
   slug: string
-}
-
-function uniqueSlug(name: string, taken: Set<string>): string {
-  const base = slugify(name) || 'item'
-  let candidate = base
-  let i = 2
-  while (taken.has(candidate)) candidate = `${base}-${i++}`
-  taken.add(candidate)
-  return candidate
 }
 
 async function resolveOrCreateCatalogRef(
@@ -308,8 +291,10 @@ export async function importProducts(
     // agrega a la lista para que filas siguientes del mismo archivo la reusen
     // en vez de crear duplicados.
     const [categories, brands] = await Promise.all([
-      getCategories({ perPage: 100 }),
-      getBrands({ perPage: 100 }),
+      // Sin el tope de 100 de antes: con más categorías/marcas el match no
+      // las veía y la importación creaba duplicados.
+      getCategories({ perPage: 5000 }),
+      getBrands({ perPage: 5000 }),
     ])
     categoryRefs = categories.map((c) => ({ id: c.id, name: c.name, slug: c.slug }))
     brandRefs = brands.map((b) => ({ id: b.id, name: b.name, slug: b.slug }))
@@ -318,8 +303,20 @@ export async function importProducts(
     return { success: false, error: message, code: 500 }
   }
 
-  const takenCategorySlugs = new Set(categoryRefs.map((c) => c.slug))
-  const takenBrandSlugs = new Set(brandRefs.map((b) => b.slug))
+  // Slugs ocupados, incluidos los de la papelera (siguen reservando el índice
+  // único): sin esto una categoría/marca nueva podía chocar con una borrada.
+  let takenCategorySlugs: Set<string>
+  let takenBrandSlugs: Set<string>
+  try {
+    const [categorySlugs, brandSlugs] = await Promise.all([
+      db.category.findMany({ select: { slug: true } }),
+      db.brand.findMany({ select: { slug: true } }),
+    ])
+    takenCategorySlugs = new Set(categorySlugs.map((c) => c.slug))
+    takenBrandSlugs = new Set(brandSlugs.map((b) => b.slug))
+  } catch {
+    return { success: false, error: 'No se pudo cargar categorías/marcas', code: 500 }
+  }
 
   for (const row of rows) {
     try {
@@ -565,48 +562,14 @@ export async function searchAvailableProducts(
   }
 
   try {
-    const products = await db.product.findMany({
+    const data = await findDrawerProducts({
       where: {
-        deletedAt: null,
         id: excludeIds.length > 0 ? { notIn: excludeIds } : undefined,
-        OR: [
-          { name: { contains: query.trim() } },
-          { sku: { contains: query.trim() } },
-        ],
+        OR: [{ name: { contains: query.trim() } }, { sku: { contains: query.trim() } }],
       },
-      select: {
-        id: true,
-        name: true,
-        sku: true,
-        price: true,
-        status: true,
-        images: {
-          select: { url: true },
-          orderBy: { position: 'asc' },
-          take: 1,
-        },
-        category: { select: { name: true } },
-        brand: { select: { name: true } },
-        inventory: { select: { availableStock: true } },
-      },
-      orderBy: { name: 'asc' },
       take: 20,
     })
-
-    return {
-      success: true,
-      data: products.map((p) => ({
-        id: p.id,
-        name: p.name,
-        sku: p.sku,
-        price: Number(p.price),
-        status: p.status,
-        imageUrl: p.images[0]?.url ?? null,
-        category: p.category.name,
-        brand: p.brand.name,
-        stock: p.inventory?.availableStock ?? 0,
-      })),
-    }
+    return { success: true, data }
   } catch {
     return { success: false, error: 'Error al buscar productos', code: 500 }
   }

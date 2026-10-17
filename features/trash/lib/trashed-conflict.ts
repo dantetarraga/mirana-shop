@@ -21,11 +21,15 @@ export type UniqueFields = {
   sku?: string
 }
 
-/** Campos con índice único por modelo — `name` no lo es en Product. */
+/**
+ * Campos con índice único global por modelo — `name` no lo es en Product ni en
+ * Category (en Category es único entre hermanas: lo valida
+ * findSiblingNameConflict en las actions de categorías).
+ */
 const UNIQUE_FIELDS: Record<TrashConflictType, Array<keyof UniqueFields>> = {
   product: ['slug', 'sku'],
   collection: ['name', 'slug'],
-  category: ['name', 'slug'],
+  category: ['slug'],
   brand: ['name', 'slug'],
 }
 

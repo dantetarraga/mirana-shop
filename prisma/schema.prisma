@@ -195,11 +195,19 @@ model VerificationToken {
 
 model Category {
   id          String  @id @default(cuid())
-  name        String  @unique
+  /// Único entre hermanas (ver @@unique). Ojo: en MariaDB los NULL no chocan
+  /// en un índice único, así que la unicidad entre raíces la valida la action.
+  name        String
   slug        String  @unique
   parentId    String?
   description String? @db.Text
   imageUrl    String?
+  /// Orden entre hermanas (menú, árbol del admin, chips de subcategorías).
+  position    Int     @default(0)
+  /// false = oculta en toda la tienda (menú, filtros, páginas). El admin la ve.
+  isVisible   Boolean @default(true)
+  /// Solo aplica a raíces: la categoría entra al mega-menú de la tienda.
+  showInMenu  Boolean @default(false)
 
   parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
   children Category[] @relation("CategoryTree")
@@ -208,6 +216,8 @@ model Category {
   createdAt DateTime  @default(now())
   deletedAt DateTime?
 
+  @@unique([parentId, name])
+  @@index([parentId, position])
   @@index([slug])
 }
 
@@ -217,13 +227,23 @@ model Brand {
   slug        String  @unique
   tagline     String? /// Subtítulo corto para el carrusel: "TAMASHII NATIONS", "ARTFX SERIES"
   description String? @db.Text
+  /// Logo de la marca.
   imageUrl    String?
+  /// Imagen ancha de cabecera para /marcas/[slug].
+  heroUrl     String?
+  /// Orden manual (índice de marcas, mega-menú).
+  position    Int     @default(0)
+  /// false = oculta en toda la tienda. El admin la ve.
+  isVisible   Boolean @default(true)
+  /// Aparece entre los logos del mega-menú (máx. MENU_MAX_FEATURED_BRANDS).
+  featured    Boolean @default(false)
 
   products Product[]
 
   createdAt DateTime  @default(now())
   deletedAt DateTime?
 
+  @@index([featured, position])
   @@index([slug])
 }
 
