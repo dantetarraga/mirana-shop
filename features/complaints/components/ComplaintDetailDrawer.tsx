@@ -34,7 +34,7 @@ function EmailStatus({
 }) {
   return (
     <div className="flex items-center justify-between gap-3 text-[12px]">
-      <span className={sentAt ? 'text-muted' : 'text-[#ff6644]'}>
+      <span className={sentAt ? 'text-muted' : 'text-danger'}>
         <Mail size={12} className="inline-block mr-1.5 -mt-0.5" aria-hidden="true" />
         {label}: {sentAt ? `enviada el ${formatDate(sentAt, DATE_TIME)}` : 'NO enviada'}
       </span>
@@ -183,7 +183,9 @@ export function ComplaintDetailDrawer({
               <Button
                 variant="accent"
                 size="sm"
-                disabled={isPending || response.trim().length < 3}
+                disabled={response.trim().length < 3}
+                loading={isPending}
+                loadingText="Registrando respuesta…"
                 onClick={() => onRespond(complaint.id, response.trim(), providerActions.trim())}
               >
                 <Send size={13} className="mr-1.5" aria-hidden="true" />

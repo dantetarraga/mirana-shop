@@ -8,6 +8,7 @@ import { cn } from '@/shared/lib/utils'
 import useEmblaCarousel from 'embla-carousel-react'
 import { ChevronLeft, ChevronRight, Expand, X, ZoomIn, ZoomOut } from 'lucide-react'
 import Image from 'next/image'
+import { FadeImage } from '@/shared/components/ui/FadeImage'
 import { type KeyboardEvent, type ReactNode, useCallback, useEffect, useId, useState } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -222,7 +223,7 @@ export function ProductImageCarousel({
               )}
             >
               {/* alt="" — el nombre accesible lo da el aria-label del botón */}
-              <Image src={img.url} alt="" fill sizes="64px" className="object-cover" />
+              <FadeImage src={img.url} alt="" fill sizes="64px" className="object-cover" />
             </button>
           ))}
         </div>

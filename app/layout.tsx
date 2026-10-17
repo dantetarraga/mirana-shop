@@ -1,5 +1,6 @@
 import { Providers } from '@/shared/components/Providers'
 import { ThemedToaster } from '@/shared/components/ThemedToaster'
+import { NavigationProgress } from '@/shared/components/layout/NavigationProgress'
 import { getSiteUrl } from '@/shared/lib/env'
 import type { Metadata, Viewport } from 'next'
 import { Barlow_Condensed, Plus_Jakarta_Sans } from 'next/font/google'
@@ -81,6 +82,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Saltar al contenido
         </a>
+        <NavigationProgress />
         <Providers>
           {children}
           <ThemedToaster />

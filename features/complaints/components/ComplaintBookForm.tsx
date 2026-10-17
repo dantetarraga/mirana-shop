@@ -71,7 +71,7 @@ function FormRow({
       <label htmlFor={id} className="block text-[10px] tracking-[2px] uppercase text-accent-ink mb-1.5">
         {label}
         {required && (
-          <span aria-hidden="true" className="text-red-500 ml-0.5">
+          <span aria-hidden="true" className="text-danger ml-0.5">
             *
           </span>
         )}
@@ -83,7 +83,7 @@ function FormRow({
         </p>
       )}
       {error && (
-        <p id={`${id}-error`} role="alert" className="text-red-500 text-[12px] mt-1">
+        <p id={`${id}-error`} role="alert" className="text-danger text-[12px] mt-1">
           {error}
         </p>
       )}
@@ -269,7 +269,7 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
           </div>
         </dl>
         <p id="lr-required-legend" className="text-[12px] text-muted mt-4">
-          Los campos marcados con <span className="text-red-500" aria-hidden="true">*</span>
+          Los campos marcados con <span className="text-danger" aria-hidden="true">*</span>
           <span className="sr-only">asterisco</span> son obligatorios.
         </p>
       </section>
@@ -351,7 +351,7 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
 
           <div className="sm:col-span-2">
             <label className="flex items-center gap-2 text-[13px] cursor-pointer">
-              <input {...register('isMinor')} id={fieldId('isMinor')} type="checkbox" className="accent-(--gold)" />
+              <input {...register('isMinor')} id={fieldId('isMinor')} type="checkbox" className="accent-accent-ink" />
               Soy menor de edad
             </label>
           </div>
@@ -427,20 +427,20 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
           >
             <legend className="block text-[10px] tracking-[2px] uppercase text-accent-ink mb-1.5">
               Bien contratado
-              <span aria-hidden="true" className="text-red-500 ml-0.5">
+              <span aria-hidden="true" className="text-danger ml-0.5">
                 *
               </span>
             </legend>
             <div className="flex gap-5 flex-wrap">
               {(['PRODUCTO', 'SERVICIO'] as const).map((v) => (
                 <label key={v} className="flex items-center gap-2 text-[13px] cursor-pointer">
-                  <input {...register('goodType')} type="radio" value={v} className="accent-(--gold)" />
+                  <input {...register('goodType')} type="radio" value={v} className="accent-accent-ink" />
                   {v === 'PRODUCTO' ? 'Producto' : 'Servicio'}
                 </label>
               ))}
             </div>
             {errors.goodType && (
-              <p id="lr-goodType-error" role="alert" className="text-red-500 text-[12px] mt-1">
+              <p id="lr-goodType-error" role="alert" className="text-danger text-[12px] mt-1">
                 {errors.goodType.message}
               </p>
             )}
@@ -509,7 +509,7 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
           >
             <legend className="block text-[10px] tracking-[2px] uppercase text-accent-ink mb-1.5">
               Tipo
-              <span aria-hidden="true" className="text-red-500 ml-0.5">
+              <span aria-hidden="true" className="text-danger ml-0.5">
                 *
               </span>
             </legend>
@@ -520,7 +520,7 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
                     {...register('type')}
                     type="radio"
                     value={v}
-                    className="accent-(--gold) mt-1"
+                    className="accent-accent-ink mt-1"
                     aria-describedby={`lr-type-def-${v}`}
                   />
                   <span>
@@ -533,7 +533,7 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
               ))}
             </div>
             {errors.type && (
-              <p id="lr-type-error" role="alert" className="text-red-500 text-[12px] mt-1">
+              <p id="lr-type-error" role="alert" className="text-danger text-[12px] mt-1">
                 {errors.type.message}
               </p>
             )}
@@ -568,17 +568,17 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
               {...register('truthDeclarationAccepted')}
               {...a11y('truthDeclarationAccepted', { required: true })}
               type="checkbox"
-              className="accent-(--gold) mt-1"
+              className="accent-accent-ink mt-1"
             />
             <span>
               Declaro que la información proporcionada es verdadera.
-              <span aria-hidden="true" className="text-red-500 ml-0.5">
+              <span aria-hidden="true" className="text-danger ml-0.5">
                 *
               </span>
             </span>
           </label>
           {errors.truthDeclarationAccepted && (
-            <p id="lr-truthDeclarationAccepted-error" role="alert" className="text-red-500 text-[12px] mt-1">
+            <p id="lr-truthDeclarationAccepted-error" role="alert" className="text-danger text-[12px] mt-1">
               {errors.truthDeclarationAccepted.message}
             </p>
           )}
@@ -590,7 +590,7 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
               {...register('privacyAccepted')}
               {...a11y('privacyAccepted', { required: true })}
               type="checkbox"
-              className="accent-(--gold) mt-1"
+              className="accent-accent-ink mt-1"
             />
             <span>
               Autorizo el tratamiento de mis datos personales para registrar y atender esta hoja,
@@ -599,13 +599,13 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
                 Política de Privacidad
               </Link>
               .
-              <span aria-hidden="true" className="text-red-500 ml-0.5">
+              <span aria-hidden="true" className="text-danger ml-0.5">
                 *
               </span>
             </span>
           </label>
           {errors.privacyAccepted && (
-            <p id="lr-privacyAccepted-error" role="alert" className="text-red-500 text-[12px] mt-1">
+            <p id="lr-privacyAccepted-error" role="alert" className="text-danger text-[12px] mt-1">
               {errors.privacyAccepted.message}
             </p>
           )}
@@ -624,14 +624,21 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
       </div>
 
       {serverError && (
-        <div role="alert" className="border border-red-500/40 bg-red-500/5 text-red-500 text-[13px] px-4 py-3">
+        <div role="alert" className="border border-danger/40 bg-danger/5 text-danger text-[13px] px-4 py-3">
           {serverError}
         </div>
       )}
 
-      <Button variant="accent" size="lg" full type="submit" disabled={isSubmitting}>
+      <Button
+        variant="accent"
+        size="lg"
+        full
+        type="submit"
+        loading={isSubmitting}
+        loadingText="Enviando hoja de reclamación…"
+      >
         <Send size={15} className="mr-2" aria-hidden="true" />
-        {isSubmitting ? 'Enviando...' : 'Enviar hoja de reclamación'}
+        Enviar hoja de reclamación
       </Button>
     </form>
   )

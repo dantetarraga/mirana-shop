@@ -49,7 +49,7 @@ export function PaymentSection({ register, errors, accounts, whatsappPhone }: Pr
               type="radio"
               value={value}
               disabled={!available}
-              className="mt-0.5 accent-(--gold) w-4 h-4 shrink-0"
+              className="mt-0.5 accent-accent-ink w-4 h-4 shrink-0"
             />
             <Icon size={18} className="mt-0.5 shrink-0 text-accent-ink" />
             <div className="flex-1 min-w-0">

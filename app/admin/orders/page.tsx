@@ -69,8 +69,8 @@ export default async function OrdersPage({ searchParams }: PageProps) {
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <KpiCard label="Total pedidos" value={stats.total} valueClass="text-text" />
-        <KpiCard label="Por procesar" value={stats.pending} valueClass="text-[#ffb84a]" />
-        <KpiCard label="En tránsito" value={stats.shipped} valueClass="text-[#8b7cff]" />
+        <KpiCard label="Por procesar" value={stats.pending} valueClass="text-warning" />
+        <KpiCard label="En tránsito" value={stats.shipped} valueClass="text-info" />
         <KpiCard
           label="Ingresos"
           value={`S/ ${(Number(stats.revenue) / 1000).toFixed(1)}K`}
@@ -100,7 +100,7 @@ export default async function OrdersPage({ searchParams }: PageProps) {
                 className={cn(
                   "px-3.5 py-2 text-[11px] tracking-[1px] uppercase font-display font-extrabold border transition-colors",
                   isActive
-                    ? "bg-(--gold) border-(--gold) text-black"
+                    ? "bg-(--gold) border-(--gold) text-on-accent"
                     : "border-(--bd) text-muted hover:text-text hover:border-(--bd)",
                 )}
               >

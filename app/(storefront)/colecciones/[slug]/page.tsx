@@ -134,7 +134,7 @@ export default async function CollectionDetailPage({ params }: PageProps) {
             ) : (
               <Layers size={48} className="text-muted" aria-hidden />
             )}
-            <div className="z-1 absolute top-4 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-3 py-1.5 bg-(--gold) text-black">
+            <div className="z-1 absolute top-4 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-3 py-1.5 bg-(--gold) text-on-accent">
               COLECCIÓN
             </div>
           </div>

@@ -7,6 +7,7 @@ import { buildCatalogUrl } from '@/features/products/lib/catalog-url'
 import { Check, ChevronDown, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { startNavigationProgress } from '@/shared/components/layout/NavigationProgress'
 
 const PRICE_PRESETS: [number | undefined, number | undefined, string][] = [
   [undefined, 150, 'Hasta S/150'],
@@ -73,6 +74,7 @@ export function CatalogFilters({
       priceMax?: number
     }>,
   ) {
+    startNavigationProgress()
     router.push(
       buildCatalogUrl({
         q: currentQ,
@@ -94,6 +96,7 @@ export function CatalogFilters({
   }
 
   function clearAll() {
+    startNavigationProgress()
     router.push(buildCatalogUrl({ q: currentQ, sort: currentSort }))
   }
 
@@ -183,7 +186,7 @@ export function CatalogFilters({
             {chips.map((chip) => (
               <div
                 key={chip.key}
-                className="flex items-center gap-1.5 bg-(--gd) border border-[rgba(0,200,255,.25)] text-accent-ink text-[11px] px-2.5 py-1"
+                className="flex items-center gap-1.5 bg-(--gd) border border-(--bdh) text-accent-ink text-[11px] px-2.5 py-1"
               >
                 {chip.label}
                 <button
@@ -223,7 +226,7 @@ export function CatalogFilters({
             onChange={(e) => setBrandSearch(e.target.value)}
             placeholder="Buscar marca…"
             aria-label="Buscar marca"
-            className="w-full bg-card border border-(--bd) text-text text-[12px] px-2.5 py-2 mb-2.5 outline-none focus:border-(--gold) placeholder:text-muted"
+            className="w-full bg-card border border-field text-text text-[12px] px-2.5 py-2 mb-2.5 outline-none focus:border-accent-ink placeholder:text-muted/75"
           />
           {filteredBrands.map((brand) => (
             <FilterCheckbox
@@ -261,7 +264,7 @@ export function CatalogFilters({
                 placeholder="Mín"
                 value={priceDraft.min}
                 onChange={(e) => setPriceDraft((d) => ({ ...d, min: e.target.value }))}
-                className="w-full bg-card border border-(--bd) text-text font-display text-[14px] font-bold pl-7 pr-2 py-2 outline-none focus:border-(--gold)"
+                className="w-full bg-card border border-field text-text font-display text-[14px] font-bold pl-7 pr-2 py-2 outline-none focus:border-accent-ink"
               />
             </div>
             <div className="relative">
@@ -281,7 +284,7 @@ export function CatalogFilters({
                 placeholder="Máx"
                 value={priceDraft.max}
                 onChange={(e) => setPriceDraft((d) => ({ ...d, max: e.target.value }))}
-                className="w-full bg-card border border-(--bd) text-text font-display text-[14px] font-bold pl-7 pr-2 py-2 outline-none focus:border-(--gold)"
+                className="w-full bg-card border border-field text-text font-display text-[14px] font-bold pl-7 pr-2 py-2 outline-none focus:border-accent-ink"
               />
             </div>
           </div>
@@ -385,7 +388,7 @@ function FilterCheckbox({
     <label className="flex items-center gap-2.5 py-1.5 cursor-pointer group">
       <input type="checkbox" checked={checked} onChange={onClick} className="sr-only peer" />
       <span
-        className={`w-4 h-4 shrink-0 border flex items-center justify-center transition-colors peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--gold) ${
+        className={`w-4 h-4 shrink-0 border flex items-center justify-center transition-colors peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ring ${
           checked ? 'bg-(--gold) border-(--gold)' : 'border-(--bd) bg-transparent'
         }`}
       >

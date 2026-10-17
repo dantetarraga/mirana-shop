@@ -12,11 +12,12 @@ import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
 import { useEntityCrud } from '@/shared/hooks/admin/useEntityCrud'
 import { useServerAction } from '@/shared/hooks/admin/useServerAction'
 import { cls } from '@/shared/lib/admin/admin-classes'
-import { FileSpreadsheet, Pencil, Plus, Trash2 } from 'lucide-react'
+import { FileSpreadsheet, Pencil, Plus, Tags, Trash2 } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { EmptyState } from '@/shared/components/ui/EmptyState'
 
 // xlsx (~300 KB) solo hace falta al abrir el import: carga diferida.
 const EntityImportDrawer = dynamic(
@@ -168,7 +169,7 @@ export function BrandsTableClient({ brands, total, allBrands }: BrandsTableClien
       />
 
       {brands.length === 0 ? (
-        <div className="text-center py-16 text-muted text-sm">No se encontraron marcas.</div>
+        <EmptyState icon={Tags} title="No se encontraron marcas" description="Prueba con otra búsqueda o crea una nueva." />
       ) : (
         <AdminTable
           columns={columns}

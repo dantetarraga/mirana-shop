@@ -33,7 +33,7 @@ export function ProductPrice({ price, salePrice, className }: ProductPriceProps)
       </div>
       {hasDiscount && (
         <div className="flex items-center gap-2.5 flex-wrap">
-          <span className="bg-danger text-white text-[12px] font-extrabold tracking-[1px] uppercase px-2 py-0.5">
+          <span className="bg-danger text-on-danger text-[12px] font-extrabold tracking-[1px] uppercase px-2 py-0.5">
             -{percent}%
           </span>
           <span className="text-[14px] font-semibold text-danger">

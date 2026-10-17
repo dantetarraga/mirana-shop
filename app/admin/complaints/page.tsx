@@ -70,12 +70,12 @@ export default async function ComplaintsPage({ searchParams }: PageProps) {
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <KpiCard label="Total reclamos" value={stats.total} valueClass="text-text" />
-        <KpiCard label="Pendientes" value={stats.pending} valueClass="text-[#ffb84a]" />
-        <KpiCard label="Respondidos" value={stats.answered} valueClass="text-[#3fcf7f]" />
+        <KpiCard label="Pendientes" value={stats.pending} valueClass="text-warning" />
+        <KpiCard label="Respondidos" value={stats.answered} valueClass="text-success" />
         <KpiCard
           label="Vencidos sin respuesta"
           value={stats.overdue}
-          valueClass={stats.overdue > 0 ? 'text-[#ff6644]' : 'text-text'}
+          valueClass={stats.overdue > 0 ? 'text-danger' : 'text-text'}
         />
       </div>
 
@@ -98,7 +98,7 @@ export default async function ComplaintsPage({ searchParams }: PageProps) {
                 className={cn(
                   'px-3.5 py-2 text-[11px] tracking-[1px] uppercase font-display font-extrabold border transition-colors',
                   isActive
-                    ? 'bg-(--gold) border-(--gold) text-black'
+                    ? 'bg-(--gold) border-(--gold) text-on-accent'
                     : 'border-(--bd) text-muted hover:text-text hover:border-(--bd)',
                 )}
               >

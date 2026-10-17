@@ -137,8 +137,8 @@ export function HomeSectionDrawer({ section, isNew, onClose }: HomeSectionDrawer
         </p>
 
         <div className="flex gap-2.5 pt-1">
-          <Button type="submit" variant="accent" size="md" full disabled={isPending}>
-            {isPending ? 'Guardando...' : isNew ? 'Crear sección' : 'Guardar cambios'}
+          <Button type="submit" variant="accent" size="md" full loading={isPending} loadingText="Guardando…">
+            {isNew ? 'Crear sección' : 'Guardar cambios'}
           </Button>
           <Button type="button" variant="outline" size="md" full onClick={onClose}>
             Cancelar

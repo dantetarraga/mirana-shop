@@ -16,12 +16,12 @@ export const cls = {
   td: 'px-2.5 sm:px-4 py-[13px] border-b border-(--bd) text-[14px] align-middle',
 
   // Tipografía
-  label: 'text-[10px] tracking-[2px] uppercase text-(--gold) mb-1.5',
+  label: 'text-[10px] tracking-[2px] uppercase text-accent-ink mb-1.5',
   title: 'font-display text-[22px] font-black uppercase tracking-tight',
   mono: 'font-mono text-[12px] text-muted',
-  monoGold: 'font-mono text-[12px] text-(--gold)',
+  monoGold: 'font-mono text-[12px] text-accent-ink',
   val: 'font-display font-extrabold text-[16px]',
-  valGold: 'font-display font-extrabold text-[16px] text-(--gold)',
+  valGold: 'font-display font-extrabold text-[16px] text-accent-ink',
   rowName: 'font-display font-extrabold text-[15px] uppercase',
   rowSub: 'text-[11px] text-muted uppercase tracking-[1px]',
 

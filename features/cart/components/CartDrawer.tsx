@@ -13,7 +13,7 @@ import { useScrollLock } from '@/shared/hooks/useScrollLock'
 import { useFocusTrap } from '@/shared/hooks/useFocusTrap'
 import { formatCurrency } from '@/shared/lib/utils'
 import { ArrowRight, Minus, Plus, ShoppingCart, X } from 'lucide-react'
-import Image from 'next/image'
+import { FadeImage } from '@/shared/components/ui/FadeImage'
 import Link from 'next/link'
 import { useEffect, useId } from 'react'
 
@@ -181,12 +181,12 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
                   <Link
                     href={`/catalogo/${item.product.slug}`}
                     onClick={() => setCartOpen(false)}
-                    className="relative w-17.5 h-17.5 shrink-0 overflow-hidden block"
+                    className="relative w-17.5 h-17.5 shrink-0 overflow-hidden block bg-skeleton"
                     tabIndex={-1}
                     aria-hidden
                   >
                     {item.product.imageUrl ? (
-                      <Image
+                      <FadeImage
                         src={item.product.imageUrl}
                         alt=""
                         fill

@@ -223,9 +223,9 @@ export function EntityImportDrawer({
               {/* Resumen */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="flex-1 bg-card border border-(--bd) p-4 flex items-center gap-3">
-                  <CheckCircle2 size={20} className="text-emerald-400 shrink-0" />
+                  <CheckCircle2 size={20} className="text-success shrink-0" />
                   <div>
-                    <div className="font-display font-black text-[22px] text-emerald-400">
+                    <div className="font-display font-black text-[22px] text-success">
                       {validRows.length}
                     </div>
                     <div className="text-[11px] text-muted uppercase tracking-widest">Válidos</div>
@@ -234,13 +234,13 @@ export function EntityImportDrawer({
                 <div className="flex-1 bg-card border border-(--bd) p-4 flex items-center gap-3">
                   <AlertCircle
                     size={20}
-                    className={cn('shrink-0', errorRows.length ? 'text-red-400' : 'text-muted')}
+                    className={cn('shrink-0', errorRows.length ? 'text-danger' : 'text-muted')}
                   />
                   <div>
                     <div
                       className={cn(
                         'font-display font-black text-[22px]',
-                        errorRows.length ? 'text-red-400' : 'text-muted',
+                        errorRows.length ? 'text-danger' : 'text-muted',
                       )}
                     >
                       {errorRows.length}
@@ -284,9 +284,9 @@ export function EntityImportDrawer({
                           ))}
                           <td className={cls.td}>
                             {r.errors.length === 0 ? (
-                              <CheckCircle2 size={14} className="text-emerald-400" />
+                              <CheckCircle2 size={14} className="text-success" />
                             ) : (
-                              <span className="text-[11px] text-red-400">
+                              <span className="text-[11px] text-danger">
                                 {r.errors.join(' · ')}
                               </span>
                             )}
@@ -325,7 +325,7 @@ export function EntityImportDrawer({
               </div>
 
               {errorRows.length > 0 && (
-                <p className="text-[12px] text-red-400">
+                <p className="text-[12px] text-danger">
                   Las {errorRows.length} fila(s) con errores no se importarán. Corrige el archivo y
                   vuelve a subirlo.
                 </p>

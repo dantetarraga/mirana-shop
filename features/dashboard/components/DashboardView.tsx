@@ -8,7 +8,7 @@ import {
 import { KpiCard } from '@/features/dashboard/components/KpiCard'
 import {
   ORDER_STATUS_CFG,
-  PIE_COLORS,
+  PIE_COLOR_VARS,
   getCategoryStripe,
   orderCustomer,
   type SerializedOrder,
@@ -79,28 +79,28 @@ export function DashboardView({
       value: `S/ ${(revenueNum / 1000).toFixed(1)}K`,
       delta: 'acumulado sin cancelados',
       data: sparkRevenue.length ? sparkRevenue : [0],
-      color: '#00c8ff',
+      color: '--accent-ink',
     },
     {
       label: 'Pedidos',
       value: String(orderStats.total),
       delta: `${orderStats.pending} pendientes`,
       data: sparkOrders.length ? sparkOrders : [0],
-      color: '#8b7cff',
+      color: '--c-blue',
     },
     {
       label: 'Clientes',
       value: String(userCount),
       delta: 'Total registrados',
       data: [userCount],
-      color: '#c77cff',
+      color: '--c-violet',
     },
     {
       label: 'Inventario',
       value: `S/ ${(inventoryStats.totalValue / 1000).toFixed(1)}K`,
       delta: `${inventoryStats.lowStockCount} en stock bajo`,
       data: [inventoryStats.totalValue / 1000],
-      color: '#3fcf7f',
+      color: '--c-green',
     },
   ]
 
@@ -111,7 +111,7 @@ export function DashboardView({
         {kpis.map((k) => (
           <KpiCard key={k.label} label={k.label} value={k.value}>
             <div className="flex justify-between items-center mb-2.5 min-w-0">
-              <span className="font-display font-extrabold text-[12px] text-[#3fcf7f] truncate">
+              <span className="font-display font-extrabold text-[12px] text-success truncate">
                 {k.delta}
               </span>
             </div>
@@ -150,7 +150,7 @@ export function DashboardView({
                 <div key={d.name} className="flex items-center gap-2.5">
                   <span
                     className="w-2.5 h-2.5 shrink-0 rounded-full"
-                    style={{ background: PIE_COLORS[i % PIE_COLORS.length] }}
+                    style={{ background: `var(${PIE_COLOR_VARS[i % PIE_COLOR_VARS.length]})` }}
                   />
                   <span className="text-[13px] flex-1">{d.name}</span>
                   <span className="font-display font-extrabold text-[16px]">{d.value}%</span>

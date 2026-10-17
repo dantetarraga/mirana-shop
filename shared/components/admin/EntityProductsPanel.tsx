@@ -329,7 +329,7 @@ export function EntityProductsPanel({
                   type="button"
                   disabled={actionId === p.id}
                   onClick={() => handleRemove(p)}
-                  className="p-1.5 text-muted hover:text-red-400 hover:bg-red-400/10 transition-colors disabled:opacity-50"
+                  className="p-1.5 text-muted hover:text-danger hover:bg-danger/10 transition-colors disabled:opacity-50"
                   title="Quitar de la colección"
                 >
                   {actionId === p.id ? (

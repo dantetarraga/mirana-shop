@@ -25,7 +25,7 @@ export default function AdminError({
 
   return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center gap-5 px-6 text-center">
-      <AlertTriangle size={56} strokeWidth={1} className="text-red-400/70" />
+      <AlertTriangle size={56} strokeWidth={1} className="text-danger" />
       <div>
         <h1 className="font-display text-[22px] font-black uppercase tracking-tight">
           Ocurrió un error inesperado
@@ -35,7 +35,7 @@ export default function AdminError({
           archivo o los datos que estás usando.
         </p>
         {error.message && (
-          <p className="text-[12px] text-red-400/80 font-mono mt-3 max-w-120 wrap-break-word">
+          <p className="text-[12px] text-danger font-mono mt-3 max-w-120 wrap-break-word">
             {error.message}
           </p>
         )}

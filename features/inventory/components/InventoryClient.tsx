@@ -168,12 +168,12 @@ export function InventoryClient({
         <KpiCard
           label="Stock bajo"
           value={initialStats.lowStockCount}
-          valueClass="text-[#ffb84a]"
+          valueClass="text-warning"
         />
         <KpiCard
           label="Agotados"
           value={initialStats.outOfStockCount}
-          valueClass="text-[#ff6644]"
+          valueClass="text-danger"
         />
       </div>
 
@@ -188,7 +188,7 @@ export function InventoryClient({
               className={cn(
                 'px-3.5 py-2 text-[11px] tracking-[1px] uppercase font-display font-extrabold border transition-colors',
                 isActive
-                  ? 'bg-(--gold) border-(--gold) text-black'
+                  ? 'bg-(--gold) border-(--gold) text-on-accent'
                   : 'border-(--bd) text-muted hover:text-text',
               )}
             >

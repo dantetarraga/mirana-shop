@@ -5,7 +5,7 @@ import { isCouponEligible } from '@/features/checkout/lib/pricing'
 import { applyCoupon } from '@/features/coupons/actions/apply-coupon.actions'
 import { Button } from '@/shared/components/ui/Button'
 import { cn, formatCurrency } from '@/shared/lib/utils'
-import { Check, Loader2, Ticket, X } from 'lucide-react'
+import { Check, Ticket, X } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { input } from './ui'
@@ -112,10 +112,12 @@ export function CouponField({ coupon, onApply, onRemove, subtotal, disabled }: P
             variant="outline"
             size="sm"
             onClick={submit}
-            disabled={disabled || checking || !code.trim()}
+            disabled={disabled || !code.trim()}
+            loading={checking}
+            loadingText="Validando cupón…"
             className="shrink-0"
           >
-            {checking ? <Loader2 size={14} className="animate-spin" /> : 'Aplicar'}
+            Aplicar
           </Button>
         </div>
       )}

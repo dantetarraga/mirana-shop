@@ -14,4 +14,4 @@
  * (`features/checkout/components/ui.tsx`): va sobre `--surf`, no sobre `--card`.
  */
 export const inputCls =
-  'w-full bg-card border border-(--bd) text-text font-sans text-[14px] px-[13px] py-[11px] outline-none placeholder:text-muted/50 transition-colors duration-200 focus:border-(--bdh)'
+  'w-full bg-card border border-field text-text font-sans text-[14px] px-[13px] py-[11px] outline-none placeholder:text-muted/75 transition-colors duration-200 focus:border-accent-ink aria-[invalid=true]:border-danger'

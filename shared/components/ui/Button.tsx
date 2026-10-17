@@ -1,5 +1,6 @@
+import { Spinner } from '@/shared/components/ui/Spinner'
 import { cn } from '@/shared/lib/utils'
-import type { ButtonHTMLAttributes, Ref } from 'react'
+import type { ButtonHTMLAttributes, ReactNode, Ref } from 'react'
 
 export type ButtonVariant =
   | 'accent'
@@ -21,6 +22,15 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   full?: boolean
   clip?: boolean
   destructive?: boolean
+  /**
+   * Acción en curso (server action, envío de formulario). Deshabilita el botón,
+   * marca `aria-busy` y superpone un spinner SIN cambiar el ancho: la etiqueta
+   * sigue ocupando su lugar, invisible. No cambiar el texto a "Guardando..."
+   * — eso hace saltar el layout; usar `loadingText` para el lector de pantalla.
+   */
+  loading?: boolean
+  /** Lo que anuncia el lector de pantalla mientras `loading` (def. la etiqueta). */
+  loadingText?: string
   ref?: Ref<HTMLButtonElement>
 }
 
@@ -72,18 +82,49 @@ export function Button({
   full = false,
   clip = false,
   destructive = false,
+  loading = false,
+  loadingText,
   className,
   children,
+  disabled,
   ref,
   ...props
 }: ButtonProps) {
   return (
     <button
       ref={ref}
-      className={buttonClass({ variant, size, active, full, clip, destructive, className })}
+      className={buttonClass({
+        variant,
+        size,
+        active,
+        full,
+        clip,
+        destructive,
+        className: cn(loading && 'relative', className),
+      })}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
       {...props}
     >
-      {children}
+      {loading ? <LoadingContent label={loadingText}>{children}</LoadingContent> : children}
     </button>
+  )
+}
+
+/**
+ * Mientras carga: la etiqueta queda en el flujo con `visibility: hidden`
+ * (`display: contents` conserva el `gap` del botón entre icono y texto), así el
+ * ancho no cambia; el spinner va centrado encima. Como lo invisible sale del
+ * árbol de accesibilidad, el nombre del botón se repite en un sr-only.
+ */
+function LoadingContent({ label, children }: { label?: string; children: ReactNode }) {
+  return (
+    <>
+      <span className="contents invisible">{children}</span>
+      <span className="absolute inset-0 flex items-center justify-center">
+        <Spinner size={16} />
+      </span>
+      <span className="sr-only">{label ?? (typeof children === 'string' ? children : 'Procesando…')}</span>
+    </>
   )
 }

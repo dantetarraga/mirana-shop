@@ -182,8 +182,8 @@ export function BannerFormDrawer({
         </div>
 
         <div className="flex gap-2.5">
-          <Button type="submit" variant="accent" size="md" full disabled={isPending}>
-            {isPending ? 'Guardando...' : 'Guardar banner'}
+          <Button type="submit" variant="accent" size="md" full loading={isPending} loadingText="Guardando…">
+            {'Guardar banner'}
           </Button>
           <Button type="button" variant="outline" size="md" full onClick={onClose}>
             Cancelar

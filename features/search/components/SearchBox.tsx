@@ -9,6 +9,7 @@ import { cn } from '@/shared/lib/utils'
 import { ArrowRight, Clock, History, Search, SearchX, X } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { startNavigationProgress } from '@/shared/components/layout/NavigationProgress'
 import { useEffect, useId, useRef, useState } from 'react'
 
 const EMPTY_SUGGESTIONS: SearchSuggestions = { query: '', products: [], categories: [], total: 0 }
@@ -98,6 +99,7 @@ export function SearchBox({
     addTerm(clean)
     close()
     onNavigate?.()
+    startNavigationProgress()
     router.push(`/catalogo?q=${encodeURIComponent(clean)}`)
   }
 
@@ -105,6 +107,7 @@ export function SearchBox({
     if (term.trim()) addTerm(term.trim())
     close()
     onNavigate?.()
+    startNavigationProgress()
     router.push(`/catalogo/${slug}`)
   }
 
@@ -112,6 +115,7 @@ export function SearchBox({
     if (term.trim()) addTerm(term.trim())
     close()
     onNavigate?.()
+    startNavigationProgress()
     router.push(`/catalogo?cat=${slug}`)
   }
 

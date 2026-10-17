@@ -43,9 +43,9 @@ export function getProductBadge(p: {
   isOutOfStock: boolean
 }): ProductBadge | null {
   const { percent } = getDiscount(p)
-  if (p.isOutOfStock) return { label: 'Agotado', className: 'bg-surface-700 text-white' }
-  if (p.status === 'PREORDER') return { label: 'Preventa', className: 'bg-info text-white' }
-  if (percent > 0) return { label: `-${percent}%`, className: 'bg-danger text-white' }
+  if (p.isOutOfStock) return { label: 'Agotado', className: 'bg-surface-700 text-surface-0' }
+  if (p.status === 'PREORDER') return { label: 'Preventa', className: 'bg-info text-on-info' }
+  if (percent > 0) return { label: `-${percent}%`, className: 'bg-danger text-on-danger' }
   if (p.isNewArrival) return { label: 'Nuevo', className: 'bg-success text-on-success' }
   if (p.featured) return { label: 'Destacado', className: 'bg-(--gold) text-on-accent' }
   return null

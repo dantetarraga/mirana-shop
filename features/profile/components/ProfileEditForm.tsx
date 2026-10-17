@@ -2,12 +2,12 @@
 
 import { updateMyProfile, type ProfileData } from '@/features/profile/actions/account-profile.actions'
 import { Button } from '@/shared/components/ui/Button'
-import { Loader2, Save } from 'lucide-react'
+import { Save } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
 const inputCls =
-  'w-full bg-surf border border-(--bd) text-text font-sans text-[14px] px-[13px] py-[10px] outline-none focus:border-(--gold)/50 transition-colors duration-150'
+  'w-full bg-surf border border-field text-text font-sans text-[14px] px-[13px] py-[10px] outline-none focus:border-accent-ink transition-colors duration-150 placeholder:text-muted/75'
 
 export function ProfileEditForm({
   profile,
@@ -71,7 +71,7 @@ export function ProfileEditForm({
               onClick={() => setHasKids(val)}
               className={`px-5 py-2 text-[13px] font-semibold border transition-colors duration-150 ${
                 hasKids === val
-                  ? 'bg-(--gold) text-black border-(--gold)'
+                  ? 'bg-(--gold) text-on-accent border-(--gold)'
                   : 'bg-surf border-(--bd) text-muted hover:border-(--gold)/40'
               }`}
             >
@@ -102,14 +102,11 @@ export function ProfileEditForm({
         variant="accent"
         size="md"
         onClick={handleSave}
-        disabled={saving}
+        loading={saving}
+        loadingText="Guardando cambios…"
         className="self-start"
       >
-        {saving ? (
-          <Loader2 size={14} className="mr-2 animate-spin" />
-        ) : (
-          <Save size={14} className="mr-2" />
-        )}
+        <Save size={14} className="mr-2" />
         Guardar cambios
       </Button>
     </div>

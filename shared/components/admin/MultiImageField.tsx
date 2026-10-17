@@ -292,7 +292,7 @@ export function MultiImageField({
                   ) : null}
 
                   {i === 0 && (
-                    <span className="absolute top-0 left-0 text-[9px] font-extrabold tracking-[1.5px] uppercase px-2 py-1 bg-(--gold) text-black">
+                    <span className="absolute top-0 left-0 text-[9px] font-extrabold tracking-[1.5px] uppercase px-2 py-1 bg-(--gold) text-on-accent">
                       Principal
                     </span>
                   )}

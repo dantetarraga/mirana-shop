@@ -1,8 +1,8 @@
-import { Skeleton } from '@/shared/components/ui/Skeleton'
+import { Skeleton, SkeletonRegion } from '@/shared/components/ui/Skeleton'
 
 export function OrdersSkeleton() {
   return (
-    <div className="max-w-275 mx-auto px-4 sm:px-6 pt-[calc(var(--nh)+48px)] pb-16">
+    <SkeletonRegion label="Cargando tus pedidos…" className="max-w-275 mx-auto px-4 sm:px-6 pt-[calc(var(--nh)+48px)] pb-16">
       <div className="mb-8">
         <Skeleton className="w-12 h-3 mb-2" />
         <Skeleton className="w-40 h-8" />
@@ -20,6 +20,6 @@ export function OrdersSkeleton() {
           </div>
         ))}
       </div>
-    </div>
+    </SkeletonRegion>
   )
 }

@@ -47,7 +47,7 @@ export default async function TrashPage({ searchParams }: PageProps) {
               className={cn(
                 'px-3.5 py-2 text-[11px] tracking-[1px] uppercase font-display font-extrabold border transition-colors',
                 isActive
-                  ? 'bg-(--gold) border-(--gold) text-black'
+                  ? 'bg-(--gold) border-(--gold) text-on-accent'
                   : 'border-(--bd) text-muted hover:text-text',
               )}
             >

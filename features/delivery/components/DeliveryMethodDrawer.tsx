@@ -126,7 +126,7 @@ export function DeliveryMethodDrawer({ method, isNew, onClose }: Props) {
             <input
               type="checkbox"
               {...register('requiresAddress')}
-              className="mt-0.5 accent-(--gold)"
+              className="mt-0.5 accent-accent-ink"
             />
             <span>
               <span className="block font-semibold">Pedir dirección de entrega</span>
@@ -141,7 +141,7 @@ export function DeliveryMethodDrawer({ method, isNew, onClose }: Props) {
             <input
               type="checkbox"
               {...register('requiresLocation')}
-              className="mt-0.5 accent-(--gold)"
+              className="mt-0.5 accent-accent-ink"
             />
             <span>
               <span className="block font-semibold">El cliente elige la sede</span>
@@ -170,7 +170,7 @@ export function DeliveryMethodDrawer({ method, isNew, onClose }: Props) {
           </div>
 
           {typeof errors.locations?.message === 'string' && (
-            <p className="text-[11px] text-[#ff6644]">{errors.locations.message}</p>
+            <p className="text-[11px] text-danger">{errors.locations.message}</p>
           )}
 
           {fields.length === 0 ? (
@@ -232,13 +232,13 @@ export function DeliveryMethodDrawer({ method, isNew, onClose }: Props) {
         </div>
 
         <label className="flex items-center gap-2.5 cursor-pointer text-[13px] select-none">
-          <input type="checkbox" {...register('active')} className="accent-(--gold)" />
+          <input type="checkbox" {...register('active')} className="accent-accent-ink" />
           Visible en el checkout
         </label>
 
         <div className="flex gap-2.5 pt-1">
-          <Button type="submit" variant="accent" size="md" full disabled={isPending}>
-            {isPending ? 'Guardando...' : isNew ? 'Crear forma de entrega' : 'Guardar cambios'}
+          <Button type="submit" variant="accent" size="md" full loading={isPending} loadingText="Guardando…">
+            {isNew ? 'Crear forma de entrega' : 'Guardar cambios'}
           </Button>
           <Button type="button" variant="outline" size="md" full onClick={onClose}>
             Cancelar

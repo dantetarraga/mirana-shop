@@ -153,7 +153,7 @@ export function PromotionFormDrawer({ promotion, isNew, onClose, onSubmit, isPen
           <input
             type="checkbox"
             {...register('requiresCoupon')}
-            className="mt-0.5 accent-(--gold)"
+            className="mt-0.5 accent-accent-ink"
           />
           <span>
             <span className="block font-semibold">Solo con cupón</span>
@@ -179,7 +179,7 @@ export function PromotionFormDrawer({ promotion, isNew, onClose, onSubmit, isPen
             id="promo-active"
             type="checkbox"
             {...register('active')}
-            className="w-4 h-4 accent-(--gold)"
+            className="w-4 h-4 accent-accent-ink"
           />
           <label htmlFor="promo-active" className={cls.label}>
             Promoción activa
@@ -187,8 +187,8 @@ export function PromotionFormDrawer({ promotion, isNew, onClose, onSubmit, isPen
         </div>
 
         <div className="flex flex-wrap gap-3 pt-2">
-          <Button type="submit" variant="accent" size="md" full disabled={isPending}>
-            {isPending ? 'Guardando...' : isNew ? 'Crear promoción' : 'Guardar cambios'}
+          <Button type="submit" variant="accent" size="md" full loading={isPending} loadingText="Guardando…">
+            {isNew ? 'Crear promoción' : 'Guardar cambios'}
           </Button>
           <Button type="button" variant="outline" size="md" onClick={onClose} disabled={isPending}>
             Cancelar

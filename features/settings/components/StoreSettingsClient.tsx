@@ -79,7 +79,7 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
               type="checkbox"
               checked={form.showOutOfStock}
               onChange={(e) => setForm({ ...form, showOutOfStock: e.target.checked })}
-              className="mt-1 accent-(--gold)"
+              className="mt-1 accent-accent-ink"
             />
             <span>
               <span className="block text-[14px] font-semibold">
@@ -187,9 +187,10 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
           </p>
 
           <div>
-            <Button variant="accent" size="md" onClick={saveGeneral} disabled={general.isPending}>
+            <Button variant="accent" size="md" onClick={saveGeneral} loading={general.isPending}
+          loadingText="Guardando…">
               <Save size={15} className="mr-1.5" />
-              {general.isPending ? 'Guardando…' : 'Guardar cambios'}
+              Guardar cambios
             </Button>
           </div>
         </div>
@@ -252,9 +253,10 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
           </div>
 
           <div>
-            <Button variant="accent" size="md" onClick={saveGeneral} disabled={general.isPending}>
+            <Button variant="accent" size="md" onClick={saveGeneral} loading={general.isPending}
+          loadingText="Guardando…">
               <Save size={15} className="mr-1.5" />
-              {general.isPending ? 'Guardando…' : 'Guardar cambios'}
+              Guardar cambios
             </Button>
           </div>
         </div>
@@ -331,9 +333,10 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
           </div>
 
           <div>
-            <Button variant="accent" size="md" onClick={saveGeneral} disabled={general.isPending}>
+            <Button variant="accent" size="md" onClick={saveGeneral} loading={general.isPending}
+          loadingText="Guardando…">
               <Save size={15} className="mr-1.5" />
-              {general.isPending ? 'Guardando…' : 'Guardar cambios'}
+              Guardar cambios
             </Button>
           </div>
         </div>
@@ -545,9 +548,10 @@ function HomeSectionBlocksPanel({
       </ul>
 
       <div>
-        <Button variant="accent" size="md" onClick={onSave} disabled={isPending}>
+        <Button variant="accent" size="md" onClick={onSave} loading={isPending}
+          loadingText="Guardando…">
           <Save size={15} className="mr-1.5" />
-          {isPending ? 'Guardando…' : 'Guardar cambios'}
+          Guardar cambios
         </Button>
       </div>
     </div>

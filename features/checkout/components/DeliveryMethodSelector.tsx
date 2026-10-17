@@ -60,7 +60,7 @@ export function DeliveryMethodSelector({
                   value={method.id}
                   checked={isSelected}
                   onChange={() => onSelect(method)}
-                  className="mt-1 accent-(--gold) w-4 h-4 shrink-0"
+                  className="mt-1 accent-accent-ink w-4 h-4 shrink-0"
                 />
                 <Icon size={17} className="mt-0.5 shrink-0 text-accent-ink" aria-hidden />
 
@@ -98,7 +98,7 @@ export function DeliveryMethodSelector({
                                 value={loc.id}
                                 checked={loc.id === selectedLocationId}
                                 onChange={() => onSelectLocation(loc.id)}
-                                className="mt-0.5 accent-(--gold) w-3.5 h-3.5 shrink-0"
+                                className="mt-0.5 accent-accent-ink w-3.5 h-3.5 shrink-0"
                               />
                               <span>
                                 <span className="font-semibold tracking-[0.5px]">{loc.label}:</span>{' '}

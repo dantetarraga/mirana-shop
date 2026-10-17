@@ -12,6 +12,7 @@ import { cn, formatDate } from '@/shared/lib/utils'
 import { Copy, Eye, EyeOff, Pencil, Plus, Ticket, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { EmptyState } from '@/shared/components/ui/EmptyState'
 
 const PROMO_TYPE_LABELS: Record<string, string> = {
   FREE_SHIPPING: 'Envío gratis',
@@ -68,13 +69,17 @@ export function CouponsClient({ coupons, promotions }: Props) {
           </Link>
         </div>
       ) : coupons.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 text-muted gap-3 border border-dashed border-(--bd)">
-          <Ticket size={48} strokeWidth={1} aria-hidden />
-          <p className="text-[14px]">No hay cupones creados todavía.</p>
-          <Button variant="accent" size="sm" onClick={crud.openNew}>
-            <Plus size={13} className="mr-1.5" /> Crear el primero
-          </Button>
-        </div>
+        <EmptyState
+          icon={Ticket}
+          title="Aún no hay cupones"
+          description="Un cupón aplica una de tus promociones con un código."
+          className="border border-dashed border-(--bd)"
+          action={
+            <Button variant="accent" size="sm" onClick={crud.openNew}>
+              <Plus size={13} className="mr-1.5" /> Crear el primero
+            </Button>
+          }
+        />
       ) : (
         <div className={cls.panelTable}>
           <div className="overflow-x-auto">

@@ -60,9 +60,11 @@ function DocPanel({ doc, hidden }: { doc: LegalDoc; hidden: boolean }) {
       <RichTextEditor content={doc.content} onChange={setContent} />
 
       <div className="flex items-center gap-2.5 flex-wrap">
-        <Button variant="accent" size="md" onClick={save} disabled={isPending || !title.trim()}>
+        <Button variant="accent" size="md" onClick={save} disabled={!title.trim()}
+          loading={isPending}
+          loadingText="Guardando…">
           <Save size={15} className="mr-1.5" />
-          {isPending ? 'Guardando…' : 'Guardar cambios'}
+          Guardar cambios
         </Button>
         <a
           href={`/${doc.slug}`}

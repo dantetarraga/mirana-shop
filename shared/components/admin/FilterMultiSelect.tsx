@@ -50,7 +50,7 @@ export function FilterMultiSelect({
         className={cn(
           'w-full flex items-center gap-1.5 px-3.5 py-2 text-[11px] tracking-[1px] uppercase font-display font-extrabold border transition-colors',
           isActive
-            ? 'bg-(--gold) border-(--gold) text-black'
+            ? 'bg-(--gold) border-(--gold) text-on-accent'
             : 'border-(--bd) text-muted hover:text-text',
         )}
       >
@@ -61,7 +61,7 @@ export function FilterMultiSelect({
           <span
             className={cn(
               'flex items-center justify-center min-w-4 h-4 px-1 text-[9px] font-black shrink-0',
-              isActive ? 'bg-black/25 text-black' : 'bg-(--sub) text-muted',
+              isActive ? 'bg-on-accent/15 text-on-accent' : 'bg-(--sub) text-muted',
             )}
           >
             {selected.length}
@@ -83,7 +83,7 @@ export function FilterMultiSelect({
                 type={singleSelect ? 'radio' : 'checkbox'}
                 checked={selected.includes(opt.value)}
                 onChange={() => handleToggle(opt.value)}
-                className="accent-(--gold) w-3.5 h-3.5 shrink-0"
+                className="accent-accent-ink w-3.5 h-3.5 shrink-0"
               />
               <span className="text-[13px] text-text leading-none">{opt.label}</span>
             </label>

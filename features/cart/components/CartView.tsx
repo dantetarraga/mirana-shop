@@ -19,9 +19,10 @@ import { getCategoryLabel, getCategoryStripe } from '@/features/products/types/c
 import { buttonClass } from '@/shared/components/ui/Button'
 import { formatCurrency } from '@/shared/lib/utils'
 import { ArrowLeft, CreditCard, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
-import Image from 'next/image'
+import { FadeImage } from '@/shared/components/ui/FadeImage'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { EmptyState } from '@/shared/components/ui/EmptyState'
 
 interface CartViewProps {
   /** Reglas de precios (envío y promociones activas) calculadas en el server */
@@ -59,22 +60,18 @@ export function CartView({ pricingRules }: CartViewProps) {
   /* ── Empty state ─────────────────────────────────── */
   if (cart.length === 0) {
     return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-6 px-4 sm:px-6 pt-9">
-        <div className="opacity-20 select-none" aria-hidden>
-          <ShoppingBag size={96} strokeWidth={1} />
-        </div>
-        <div className="text-center">
-          <h1 className="font-display text-[32px] font-black uppercase tracking-tight mb-2">
-            Tu carrito está vacío
-          </h1>
-          <p className="text-muted text-[14px]">
-            Explora el catálogo y agrega productos para continuar.
-          </p>
-        </div>
-        <Link href="/catalogo" className={buttonClass({ variant: 'accent', size: 'lg' })}>
-          Ver catálogo
-        </Link>
-      </div>
+      <EmptyState
+        size="page"
+        icon={ShoppingBag}
+        title="Tu carrito está vacío"
+        description="Explora el catálogo y agrega productos para continuar."
+        className="min-h-[70vh] justify-center pt-9"
+        action={
+          <Link href="/catalogo" className={buttonClass({ variant: 'accent', size: 'lg' })}>
+            Ver catálogo
+          </Link>
+        }
+      />
     )
   }
 
@@ -123,12 +120,12 @@ export function CartView({ pricingRules }: CartViewProps) {
                     {/* Image / stripe */}
                     <Link
                       href={`/catalogo/${item.product.slug}`}
-                      className="relative shrink-0 block w-20 h-20 sm:w-24 sm:h-24 overflow-hidden"
+                      className="relative shrink-0 block w-20 h-20 sm:w-24 sm:h-24 overflow-hidden bg-skeleton"
                       tabIndex={-1}
                       aria-hidden
                     >
                       {item.product.imageUrl ? (
-                        <Image
+                        <FadeImage
                           src={item.product.imageUrl}
                           alt=""
                           fill

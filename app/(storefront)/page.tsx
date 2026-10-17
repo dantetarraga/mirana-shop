@@ -96,7 +96,7 @@ export default async function HomePage() {
         <CTABand />
       </Suspense>
       <CategoryStrips categories={categories} />
-      <Suspense fallback={<HomeSectionSkeleton cards={3} />}>
+      <Suspense fallback={<HomeSectionSkeleton cards={3} grid="auto" />}>
         <PreorderSection />
       </Suspense>
     </>

@@ -1,29 +1,27 @@
 'use client'
 
+import { ORDER_STATUS_LABELS, orderStatusGroup } from '@/features/orders/lib/order-status'
 import type { OrderListItem } from '@/features/orders/types'
-import { Button } from '@/shared/components/ui/Button'
+import { ORDER_STATUS } from '@/shared/lib/admin/admin-constants'
+import { buttonClass } from '@/shared/components/ui/Button'
 import { formatCurrency, formatDate } from '@/shared/lib/utils'
 import { ChevronDown, ChevronUp, Package, ShoppingCart } from 'lucide-react'
 import Link from 'next/link'
 import { use, useState } from 'react'
+import { EmptyState } from '@/shared/components/ui/EmptyState'
 
 // ---------------------------------------------------------------------------
 // Mapas de estado
 // ---------------------------------------------------------------------------
-const STATUS_LABEL: Record<string, string> = {
-  PENDING: 'Pendiente',
-  SHIPPED: 'Enviado',
-  DELIVERED: 'Entregado',
-  CANCELLED: 'Cancelado',
-  REFUNDED: 'Reembolsado',
-}
-
-const STATUS_CLS: Record<string, string> = {
-  PENDING: 'badge-amber',
-  SHIPPED: 'badge-blue',
-  DELIVERED: 'badge-green',
-  CANCELLED: 'badge-red',
-  REFUNDED: 'badge-red',
+// Etiqueta y color salen de la misma fuente que el admin: el color es el del
+// grupo (pendiente/enviado/entregado/cancelado), así un pedido "Pagado" o
+// "Preparando" ya no cae al ámbar por defecto con el código crudo de la BD.
+function statusBadge(status: string) {
+  const group = ORDER_STATUS[orderStatusGroup(status)] ?? ORDER_STATUS.pendiente
+  return {
+    label: ORDER_STATUS_LABELS[status as keyof typeof ORDER_STATUS_LABELS] ?? group.label,
+    cls: group.cls,
+  }
 }
 
 const PAY_LABEL: Record<string, string> = {
@@ -66,9 +64,9 @@ function OrderRow({ order }: { order: OrderListItem }) {
 
           {/* Estado */}
           <span
-            className={`badge ${STATUS_CLS[order.status] ?? 'badge-amber'} text-[11px] self-start sm:self-center`}
+            className={`badge ${statusBadge(order.status).cls} text-[11px] self-start sm:self-center`}
           >
-            {STATUS_LABEL[order.status] ?? order.status}
+            {statusBadge(order.status).label}
           </span>
         </div>
 
@@ -132,7 +130,7 @@ function OrderRow({ order }: { order: OrderListItem }) {
               <span className="text-muted">Envío</span>
               <span>
                 {Number(order.shippingCost) === 0 ? (
-                  <span className="text-emerald-400 text-[12px] font-semibold uppercase">
+                  <span className="text-success text-[12px] font-semibold uppercase">
                     Gratis
                   </span>
                 ) : (
@@ -153,7 +151,7 @@ function OrderRow({ order }: { order: OrderListItem }) {
                   {order.duePaidAt ? 'Saldo cobrado' : 'Saldo pendiente'}
                 </span>
                 <span
-                  className={`font-semibold ${order.duePaidAt ? 'text-emerald-400' : 'text-info'}`}
+                  className={`font-semibold ${order.duePaidAt ? 'text-success' : 'text-info'}`}
                 >
                   {formatCurrency(dueTotal)}
                 </span>
@@ -183,16 +181,20 @@ export function OrdersContent({ ordersPromise }: { ordersPromise: Promise<OrderL
       </div>
 
       {orders.length === 0 ? (
-        <div className="flex flex-col items-center gap-6 py-20">
-          <Package size={72} strokeWidth={1} className="opacity-15" />
-          <p className="text-[15px] text-muted">Aún no tienes pedidos.</p>
-          <Link href="/catalogo">
-            <Button variant="accent" size="md">
-              <ShoppingCart size={15} className="mr-2" />
+        <EmptyState
+          as="h2"
+          icon={Package}
+          title="Aún no tienes pedidos"
+          description="Cuando compres algo, aquí verás su estado y el detalle del pago."
+          action={
+            // Enlace con estilo de botón: <Link><Button/></Link> anidaba un
+            // <button> dentro de un <a> (HTML inválido, dos paradas de Tab).
+            <Link href="/catalogo" className={buttonClass({ variant: 'accent', size: 'md' })}>
+              <ShoppingCart size={15} aria-hidden />
               Ver catálogo
-            </Button>
-          </Link>
-        </div>
+            </Link>
+          }
+        />
       ) : (
         <div className="flex flex-col gap-3">
           {orders.map((order) => (

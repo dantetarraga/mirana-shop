@@ -15,6 +15,10 @@ import {
 import { getHideOutOfStock } from "@/features/settings/queries/store-settings.queries";
 import type { ProductSort } from "@/features/products/types";
 import type { Metadata } from "next";
+import { EmptyState } from '@/shared/components/ui/EmptyState'
+import { buttonClass } from "@/shared/components/ui/Button";
+import Link from "next/link";
+import { SearchX } from 'lucide-react'
 
 const PAGE_SIZE = 24;
 const VALID_SORTS: ProductSort[] = ["relevance", "price_asc", "price_desc", "newest"];
@@ -170,10 +174,18 @@ export default async function CatalogPage({ searchParams }: PageProps) {
           </div>
 
           {items.length === 0 && collections.length === 0 ? (
-            <div className="text-center py-20 px-5 text-muted">
-              <div className="font-display text-[28px] font-black uppercase mb-2">Sin resultados</div>
-              <div className="text-[14px]">Prueba ajustando los filtros</div>
-            </div>
+            <EmptyState
+              as="h2"
+              size="page"
+              icon={SearchX}
+              title={q ? `Sin resultados para “${q}”` : "Sin resultados"}
+              description="Prueba con menos filtros o con otra búsqueda."
+              action={
+                <Link href="/catalogo" className={buttonClass({ variant: "outline", size: "md" })}>
+                  Ver todo el catálogo
+                </Link>
+              }
+            />
           ) : (
             <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
               {collections.map((c) => (

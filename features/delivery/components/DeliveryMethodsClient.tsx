@@ -13,6 +13,7 @@ import { useEntityCrud } from '@/shared/hooks/admin/useEntityCrud'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { cn, formatCurrency } from '@/shared/lib/utils'
 import { Eye, EyeOff, MapPin, Pencil, Plus, Store, Timer, Trash2, Truck } from 'lucide-react'
+import { EmptyState } from '@/shared/components/ui/EmptyState'
 
 const KIND_ICON = {
   PICKUP: Store,
@@ -58,17 +59,17 @@ export function DeliveryMethodsClient({ methods }: Props) {
 
       <div className="max-w-200 flex flex-col gap-4">
         {methods.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-muted gap-3 border border-dashed border-(--bd)">
-            <Truck size={48} strokeWidth={1} aria-hidden />
-            <p className="text-[14px]">Todavía no hay formas de entrega.</p>
-            <p className="text-[12px] max-w-100 text-center">
-              Mientras no crees ninguna, el checkout usa el costo de envío base de la
-              configuración de la tienda.
-            </p>
-            <Button variant="accent" size="sm" onClick={crud.openNew}>
-              <Plus size={13} className="mr-1.5" /> Crear la primera
-            </Button>
-          </div>
+          <EmptyState
+            icon={Truck}
+            title="Aún no hay formas de entrega"
+            description="Mientras no crees ninguna, el checkout usa el costo de envío base de la configuración de la tienda."
+            className="border border-dashed border-(--bd)"
+            action={
+              <Button variant="accent" size="sm" onClick={crud.openNew}>
+                <Plus size={13} className="mr-1.5" /> Crear la primera
+              </Button>
+            }
+          />
         ) : (
           <ul className="flex flex-col gap-3">
             {methods.map((m) => {

@@ -7,7 +7,7 @@ import { useId, type ReactNode } from 'react'
  * iOS hace zoom al enfocar el input y descoloca todo el formulario.
  */
 export const input =
-  'w-full bg-surf border border-(--bd) text-text font-sans text-base sm:text-[14px] px-[13px] py-[11px] outline-none focus:border-(--gold)/50 aria-[invalid=true]:border-danger transition-colors duration-150'
+  'w-full bg-surf border border-field text-text font-sans text-base sm:text-[14px] px-[13px] py-[11px] outline-none placeholder:text-muted/75 focus:border-accent-ink aria-[invalid=true]:border-danger transition-colors duration-150'
 
 /** Props de accesibilidad que Field entrega al control. */
 export interface FieldControlProps {

@@ -4,7 +4,7 @@ import { depositUnitPrice, type PreorderMode } from '@/features/checkout/lib/pre
 import { effectivePrice } from '@/features/checkout/lib/pricing'
 import { Button } from '@/shared/components/ui/Button'
 import { formatCurrency } from '@/shared/lib/utils'
-import { ArrowLeft, ArrowRight, Loader2, Truck } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Truck } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
@@ -211,7 +211,7 @@ export function OrderSummary({
             {...registerTerms}
             aria-invalid={termsError ? true : undefined}
             aria-describedby={termsError ? 'checkout-terms-error' : undefined}
-            className="mt-0.5 accent-(--gold) w-4 h-4 shrink-0"
+            className="mt-0.5 accent-accent-ink w-4 h-4 shrink-0"
           />
           <span className="text-[12px] leading-snug">
             He leído y acepto los{' '}
@@ -242,18 +242,16 @@ export function OrderSummary({
 
       {/* CTA — solo el último paso confirma; los anteriores avanzan */}
       {isLastStep ? (
-        <Button type="submit" variant="accent" size="lg" full disabled={loading}>
-          {loading ? (
-            <>
-              <Loader2 size={16} className="mr-2 animate-spin" />
-              Procesando...
-            </>
-          ) : (
-            <>
-              <Truck size={16} className="mr-2" />
-              Confirmar pedido
-            </>
-          )}
+        <Button
+          type="submit"
+          variant="accent"
+          size="lg"
+          full
+          loading={loading}
+          loadingText="Confirmando pedido…"
+        >
+          <Truck size={16} className="mr-2" />
+          Confirmar pedido
         </Button>
       ) : (
         <Button type="button" variant="accent" size="lg" full onClick={onNext}>

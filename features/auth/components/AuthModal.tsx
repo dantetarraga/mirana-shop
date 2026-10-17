@@ -229,7 +229,7 @@ function AuthForm({ mode, onClose }: { mode: AuthMode; onClose: () => void }) {
           </div>
         )}
 
-        <Button type="submit" variant="accent" size="lg" full disabled={isSubmitting}>
+        <Button type="submit" variant="accent" size="lg" full loading={isSubmitting}>
           {mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
         </Button>
 

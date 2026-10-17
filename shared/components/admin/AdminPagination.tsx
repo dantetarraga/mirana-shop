@@ -88,7 +88,7 @@ export function AdminPagination({
             className={cn(
               linkBase,
               p === page
-                ? 'bg-(--gold) border-(--gold) text-black font-bold'
+                ? 'bg-(--gold) border-(--gold) text-on-accent font-bold'
                 : 'border-(--bd) text-muted hover:text-text',
             )}
           >

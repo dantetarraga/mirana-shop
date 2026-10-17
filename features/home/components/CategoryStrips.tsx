@@ -1,6 +1,6 @@
 import type { CategoryRow } from '@/features/categories/types'
 import { ArrowRight } from 'lucide-react'
-import Image from 'next/image'
+import { FadeImage } from '@/shared/components/ui/FadeImage'
 import Link from 'next/link'
 
 const STRIPE_MAP: Record<string, string> = {
@@ -28,10 +28,10 @@ export function CategoryStrips({ categories }: CategoryStripsProps) {
           className="no-underline cursor-pointer block"
         >
           <div
-            className={`${cat.imageUrl ? '' : (STRIPE_MAP[cat.slug] ?? 'stripe-fig')} h-36 sm:h-40 lg:h-45 flex items-end px-5 sm:px-6 pb-5 sm:pb-6 relative overflow-hidden border border-(--bd) transition-[border-color] duration-[.25s]`}
+            className={`${cat.imageUrl ? 'bg-skeleton' : (STRIPE_MAP[cat.slug] ?? 'stripe-fig')} h-36 sm:h-40 lg:h-45 flex items-end px-5 sm:px-6 pb-5 sm:pb-6 relative overflow-hidden border border-(--bd) transition-[border-color] duration-[.25s]`}
           >
             {cat.imageUrl && (
-              <Image
+              <FadeImage
                 src={cat.imageUrl}
                 alt={cat.name}
                 fill

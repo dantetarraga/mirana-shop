@@ -11,8 +11,9 @@ import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
 import { useEntityCrud } from '@/shared/hooks/admin/useEntityCrud'
 import { cls } from '@/shared/lib/admin/admin-classes'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { Layers, Pencil, Plus, Trash2 } from 'lucide-react'
 import Image from 'next/image'
+import { EmptyState } from '@/shared/components/ui/EmptyState'
 
 interface CollectionsTableClientProps {
   collections: CollectionRow[]
@@ -120,7 +121,7 @@ export function CollectionsTableClient({ collections, total }: CollectionsTableC
       />
 
       {collections.length === 0 ? (
-        <div className="text-center py-16 text-muted text-sm">No se encontraron colecciones.</div>
+        <EmptyState icon={Layers} title="No se encontraron colecciones" description="Prueba con otra búsqueda o crea una nueva." />
       ) : (
         <AdminTable
           columns={columns}

@@ -138,13 +138,13 @@ export function PaymentAccountDrawer({ account, isNew, onClose }: PaymentAccount
         </p>
 
         <label className="flex items-center gap-2.5 cursor-pointer text-[13px] select-none">
-          <input type="checkbox" {...register('active')} className="accent-(--gold)" />
+          <input type="checkbox" {...register('active')} className="accent-accent-ink" />
           Visible en el checkout
         </label>
 
         <div className="flex gap-2.5 pt-1">
-          <Button type="submit" variant="accent" size="md" full disabled={isPending}>
-            {isPending ? 'Guardando...' : isNew ? 'Crear método' : 'Guardar cambios'}
+          <Button type="submit" variant="accent" size="md" full loading={isPending} loadingText="Guardando…">
+            {isNew ? 'Crear método' : 'Guardar cambios'}
           </Button>
           <Button type="button" variant="outline" size="md" full onClick={onClose}>
             Cancelar

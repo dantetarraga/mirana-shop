@@ -1,6 +1,7 @@
 'use client'
 
 import { ChartTooltip } from '@/features/dashboard/components/charts/ChartTooltip'
+import { useChartColors } from '@/features/dashboard/lib/use-chart-colors'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 interface OrdersBarChartProps {
@@ -8,10 +9,12 @@ interface OrdersBarChartProps {
 }
 
 export function OrdersBarChart({ data }: OrdersBarChartProps) {
+  // Línea/relleno activo en --accent-ink: el cyan da 1.96:1 sobre blanco
+  const [ink, grid] = useChartColors(['--accent-ink', '--bd'] as const)
   return (
     <ResponsiveContainer width="100%" height={180}>
       <BarChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,200,255,.1)" vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke={grid} vertical={false} />
         <XAxis
           dataKey="d"
           tick={{
@@ -29,8 +32,8 @@ export function OrdersBarChart({ data }: OrdersBarChartProps) {
           fill="var(--card-h)"
           radius={[2, 2, 0, 0]}
           activeBar={{
-            fill: '#00c8ff',
-            stroke: '#00c8ff',
+            fill: ink,
+            stroke: ink,
             strokeWidth: 1,
           }}
         />

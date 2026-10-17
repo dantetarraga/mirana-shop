@@ -464,9 +464,9 @@ export function ExcelImportDrawer({ categories, brands, existingSkus, onClose, o
               {/* Resumen */}
               <div className="flex flex-wrap gap-3">
                 <div className="flex-1 bg-card border border-(--bd) p-4 flex items-center gap-3">
-                  <CheckCircle2 size={20} className="text-emerald-400 shrink-0" />
+                  <CheckCircle2 size={20} className="text-success shrink-0" />
                   <div>
-                    <div className="font-display font-black text-[22px] text-emerald-400">
+                    <div className="font-display font-black text-[22px] text-success">
                       {validRows.length}
                     </div>
                     <div className="text-[11px] text-muted uppercase tracking-widest">Válidos</div>
@@ -475,13 +475,13 @@ export function ExcelImportDrawer({ categories, brands, existingSkus, onClose, o
                 <div className="flex-1 bg-card border border-(--bd) p-4 flex items-center gap-3">
                   <AlertCircle
                     size={20}
-                    className={cn('shrink-0', errorRows.length ? 'text-red-400' : 'text-muted')}
+                    className={cn('shrink-0', errorRows.length ? 'text-danger' : 'text-muted')}
                   />
                   <div>
                     <div
                       className={cn(
                         'font-display font-black text-[22px]',
-                        errorRows.length ? 'text-red-400' : 'text-muted',
+                        errorRows.length ? 'text-danger' : 'text-muted',
                       )}
                     >
                       {errorRows.length}
@@ -526,7 +526,7 @@ export function ExcelImportDrawer({ categories, brands, existingSkus, onClose, o
                           key={r.row}
                           className={cn(
                             r.errors.length
-                              ? 'bg-red-950/20'
+                              ? 'bg-danger/8'
                               : r.warnings.length
                                 ? 'bg-(--gold)/5'
                                 : 'hover:bg-hover-tint',
@@ -558,7 +558,7 @@ export function ExcelImportDrawer({ categories, brands, existingSkus, onClose, o
                           <td className={cn(cls.td, 'max-w-20 truncate')}>{r.data.brand ?? '—'}</td>
                           <td className={cls.td}>
                             {r.errors.length > 0 ? (
-                              <span className="text-[11px] text-red-400">
+                              <span className="text-[11px] text-danger">
                                 {r.errors.join(' · ')}
                               </span>
                             ) : r.warnings.length > 0 ? (
@@ -570,7 +570,7 @@ export function ExcelImportDrawer({ categories, brands, existingSkus, onClose, o
                                 {r.warnings.join(' · ')}
                               </span>
                             ) : (
-                              <CheckCircle2 size={14} className="text-emerald-400" />
+                              <CheckCircle2 size={14} className="text-success" />
                             )}
                           </td>
                         </tr>
@@ -586,14 +586,14 @@ export function ExcelImportDrawer({ categories, brands, existingSkus, onClose, o
                 <ul className="flex flex-col gap-2 text-[13px]">
                   {toCreateCount > 0 && (
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
+                      <CheckCircle2 size={14} className="text-success shrink-0" />
                       {toCreateCount} producto{toCreateCount !== 1 ? 's' : ''} nuevo
                       {toCreateCount !== 1 ? 's' : ''} se crearán
                     </li>
                   )}
                   {toUpdateCount > 0 && (
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
+                      <CheckCircle2 size={14} className="text-success shrink-0" />
                       {toUpdateCount} producto{toUpdateCount !== 1 ? 's' : ''} existente
                       {toUpdateCount !== 1 ? 's' : ''} (mismo SKU) se actualizará
                       {toUpdateCount !== 1 ? 'n' : ''}
@@ -621,13 +621,13 @@ export function ExcelImportDrawer({ categories, brands, existingSkus, onClose, o
                   )}
                   {errorRows.length > 0 && (
                     <li className="flex items-start gap-2">
-                      <AlertCircle size={14} className="text-red-400 shrink-0 mt-0.5" />
+                      <AlertCircle size={14} className="text-danger shrink-0 mt-0.5" />
                       <span>
                         {errorRows.length} fila{errorRows.length !== 1 ? 's' : ''} con errores no se
                         importará{errorRows.length !== 1 ? 'n' : ''} — corrígelas y vuelve a subir el
                         archivo:
                         <br />
-                        <span className="text-red-400/80">{uniqueErrors.join(' · ')}</span>
+                        <span className="text-danger">{uniqueErrors.join(' · ')}</span>
                       </span>
                     </li>
                   )}

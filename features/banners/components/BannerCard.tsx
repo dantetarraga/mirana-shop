@@ -27,8 +27,8 @@ export function BannerCard({ banner }: BannerCardProps) {
           }
           className={`absolute inset-0 flex flex-col justify-center pl-6 bg-cover bg-center ${
             previewImage
-              ? 'bg-[linear-gradient(to_right,rgba(0,0,0,.55),rgba(0,0,0,.15)),var(--banner-img)]'
-              : 'bg-[linear-gradient(to_right,rgba(0,0,0,.55),rgba(0,0,0,.15))]'
+              ? 'bg-[linear-gradient(to_right,var(--media-scrim),color-mix(in_srgb,var(--media-scrim)_20%,transparent)),var(--banner-img)]'
+              : 'bg-[linear-gradient(to_right,var(--media-scrim),color-mix(in_srgb,var(--media-scrim)_20%,transparent))]'
           }`}
         >
           {/* El preview siempre lleva velo oscuro sobre la imagen: el texto usa
@@ -47,7 +47,7 @@ export function BannerCard({ banner }: BannerCardProps) {
             </div>
           )}
         </div>
-        <span className="absolute top-3 right-3 bg-black/60">
+        <span className="absolute top-3 right-3 bg-media-scrim/75">
           <StatusBadge config={BANNER_STATUS[uiStatus]} variant="filled" />
         </span>
       </div>

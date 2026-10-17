@@ -1,6 +1,6 @@
 import type { CatalogCollection } from '@/features/collections/types'
 import { Layers, ArrowRight } from 'lucide-react'
-import Image from 'next/image'
+import { FadeImage } from '@/shared/components/ui/FadeImage'
 import Link from 'next/link'
 
 // ---------------------------------------------------------------------------
@@ -15,16 +15,20 @@ interface CollectionCardProps {
   noAnimation?: boolean
 }
 
-export function CollectionCard({ collection: c, noAnimation = false }: CollectionCardProps) {
+export function CollectionCard({ collection: c }: CollectionCardProps) {
   const href = `/colecciones/${c.slug}`
 
   return (
-    <div className={`pcard flex flex-col${noAnimation ? '' : ' animate-fade-up'}`}>
+    // Sin fade-up de entrada: en un grid cada card animando por separado se lee
+    // genérico (ProductCard ya lo quitó). `noAnimation` queda por compatibilidad.
+    <div className="pcard flex flex-col">
       <Link href={href} className="block">
         <div className="relative">
-          <div className="stripe-lego h-55 flex items-center justify-center relative overflow-hidden">
+          {/* 4:5 como ProductCard: comparten grid en /catalogo y con h-55 la
+              colección quedaba más baja que los productos de su fila. */}
+          <div className="stripe-lego aspect-[4/5] flex items-center justify-center relative overflow-hidden">
             {c.imageUrl ? (
-              <Image
+              <FadeImage
                 src={c.imageUrl}
                 alt={c.name}
                 fill
@@ -35,7 +39,7 @@ export function CollectionCard({ collection: c, noAnimation = false }: Collectio
               <Layers size={32} className="text-muted" aria-hidden />
             )}
           </div>
-          <div className="absolute top-3 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-2.5 py-1.25 bg-(--gold) text-black">
+          <div className="absolute top-3 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-2.5 py-1.25 bg-(--gold) text-on-accent">
             COLECCIÓN
           </div>
         </div>

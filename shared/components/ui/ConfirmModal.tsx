@@ -37,11 +37,11 @@ export function ConfirmModal({
           variant="accent"
           size="md"
           full
-          disabled={isPending}
+          loading={isPending}
           onClick={onConfirm}
-          className="bg-danger hover:bg-danger/85 text-white border-transparent"
+          className="bg-danger hover:bg-danger/85 text-on-danger border-transparent"
         >
-          {isPending ? 'Eliminando...' : confirmLabel}
+          {confirmLabel}
         </Button>
         <Button variant="outline" size="md" full onClick={onClose} disabled={isPending}>
           {cancelLabel}

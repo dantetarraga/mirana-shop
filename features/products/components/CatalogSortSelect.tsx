@@ -4,6 +4,7 @@ import { buildCatalogUrl } from '@/features/products/lib/catalog-url'
 import type { ProductSort } from '@/features/products/types'
 import { Select } from '@/shared/components/ui/Select'
 import { useRouter } from 'next/navigation'
+import { startNavigationProgress } from '@/shared/components/layout/NavigationProgress'
 
 const SORT_OPTIONS: { value: ProductSort; label: string }[] = [
   { value: 'relevance', label: 'Relevancia' },
@@ -29,12 +30,13 @@ export function CatalogSortSelect({ value, q, cat, brand, avail, oferta, priceMi
   return (
     <Select
       value={value}
-      onChange={(e) =>
+      onChange={(e) => {
+        startNavigationProgress()
         router.push(
           buildCatalogUrl({ q, cat, brand, avail, oferta, priceMin, priceMax, sort: e.target.value }),
         )
-      }
-      className="font-display text-[14px] font-bold uppercase tracking-[0.5px] px-3.5 py-2.25 focus:border-(--gold)"
+      }}
+      className="font-display text-[14px] font-bold uppercase tracking-[0.5px] px-3.5 py-2.25 focus:border-accent-ink"
     >
       {SORT_OPTIONS.map((opt) => (
         <option key={opt.value} value={opt.value}>

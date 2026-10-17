@@ -248,7 +248,7 @@ export function ProductCrudDrawer({
               />
             </FormField>
             {discount !== null && (
-              <p className="text-[11px] font-semibold text-[#3fcf7f]">−{discount}% de descuento</p>
+              <p className="text-[11px] font-semibold text-success">−{discount}% de descuento</p>
             )}
           </div>
         </div>
@@ -309,7 +309,7 @@ export function ProductCrudDrawer({
                       type="checkbox"
                       checked={checked}
                       onChange={() => toggleCollection(col.id)}
-                      className="accent-(--gold) w-3.5 h-3.5 shrink-0"
+                      className="accent-accent-ink w-3.5 h-3.5 shrink-0"
                     />
                     <div className="min-w-0">
                       <div className="text-[13px] font-semibold truncate">{col.name}</div>
@@ -349,7 +349,7 @@ export function ProductCrudDrawer({
                     type="checkbox"
                     checked={selectedSectionIds.includes(sec.id)}
                     onChange={() => toggleSection(sec.id)}
-                    className="accent-(--gold) w-3.5 h-3.5 shrink-0"
+                    className="accent-accent-ink w-3.5 h-3.5 shrink-0"
                   />
                   <div className="text-[13px] font-semibold truncate">{sec.title}</div>
                   {!sec.active && (
@@ -471,8 +471,8 @@ export function ProductCrudDrawer({
         </FormField>
 
         <div className="flex gap-2.5">
-          <Button type="submit" variant="accent" size="md" full disabled={isPending}>
-            {isPending ? 'Guardando...' : 'Guardar'}
+          <Button type="submit" variant="accent" size="md" full loading={isPending} loadingText="Guardando…">
+            {'Guardar'}
           </Button>
           <Button type="button" variant="outline" size="md" full onClick={onClose}>
             Cancelar

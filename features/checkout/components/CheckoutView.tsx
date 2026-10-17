@@ -47,6 +47,7 @@ import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useForm, type FieldErrors, type Resolver } from 'react-hook-form'
 import { toast } from 'sonner'
+import { EmptyState } from '@/shared/components/ui/EmptyState'
 
 // ---------------------------------------------------------------------------
 // Pasos
@@ -97,14 +98,19 @@ interface CheckoutViewProps {
 /** Sin carrito no hay nada que pagar: se invita a volver al catálogo. */
 function EmptyCheckout() {
   return (
-    <div className="min-h-[70vh] flex flex-col items-center justify-center gap-6 px-6 pt-9">
-      <ShoppingBag size={80} strokeWidth={1} className="opacity-15" aria-hidden />
-      <p className="text-[15px] text-muted">Tu carrito está vacío.</p>
-      <Link href="/catalogo" className={buttonClass({ variant: 'accent', size: 'md' })}>
-        <ShoppingCart size={15} aria-hidden />
-        Ver catálogo
-      </Link>
-    </div>
+    <EmptyState
+      size="page"
+      icon={ShoppingBag}
+      title="Tu carrito está vacío"
+      description="Agrega productos desde el catálogo para finalizar una compra."
+      className="min-h-[70vh] justify-center pt-9"
+      action={
+        <Link href="/catalogo" className={buttonClass({ variant: 'accent', size: 'md' })}>
+          <ShoppingCart size={15} aria-hidden />
+          Ver catálogo
+        </Link>
+      }
+    />
   )
 }
 

@@ -1,5 +1,6 @@
 'use client'
 
+import { Skeleton } from '@/shared/components/ui/Skeleton'
 import { cn } from '@/shared/lib/utils'
 import { EditorContent, useEditor, type Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
@@ -168,7 +169,7 @@ export function RichTextEditor({
   }, [content, editor])
 
   if (!editor) {
-    return <div className="bg-card border border-(--bd) min-h-100 animate-pulse" />
+    return <Skeleton className="border border-(--bd) min-h-100" />
   }
 
   return (

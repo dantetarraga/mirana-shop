@@ -16,6 +16,7 @@ import { Button } from '@/shared/components/ui/Button'
 import { InfoTooltip } from '@/shared/components/ui/InfoTooltip'
 import { ORDER_STATUS, fmt } from '@/shared/lib/admin/admin-constants'
 import { formatDate } from '@/shared/lib/utils'
+import { useState } from 'react'
 
 // ---------------------------------------------------------------------------
 // Tipo serializado exportado
@@ -56,6 +57,8 @@ export function OrderDetailDrawer({
   onBalanceChange,
   isPending,
 }: OrderDetailDrawerProps) {
+  // Solo el botón de estado pulsado muestra el spinner (los demás quedan deshabilitados)
+  const [clickedStatus, setClickedStatus] = useState<string | null>(null)
   const hasBalance = order.dueTotal > 0
   const balancePaid = order.duePaidAt != null
 
@@ -187,7 +190,7 @@ export function OrderDetailDrawer({
                 variant="accent"
                 size="sm"
                 full
-                disabled={isPending}
+                loading={isPending}
                 onClick={() => onBalanceChange(order.id, true)}
               >
                 Marcar saldo como cobrado
@@ -215,7 +218,11 @@ export function OrderDetailDrawer({
                 variant="outline"
                 size="sm"
                 disabled={isPending || order.status === s || !allowed}
-                onClick={() => onStatusChange(order.id, s)}
+                loading={isPending && clickedStatus === s}
+                onClick={() => {
+                  setClickedStatus(s)
+                  onStatusChange(order.id, s)
+                }}
                 className={order.status === s ? config.btnCls : 'text-muted'}
               >
                 {ORDER_STATUS_LABELS[s]}

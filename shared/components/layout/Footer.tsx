@@ -96,7 +96,7 @@ export async function Footer() {
       name: 'TikTok',
       url: settings.tiktokUrl,
       Icon: TikTokIcon,
-      color: 'text-text dark:text-white',
+      color: 'text-text',
     },
     { name: 'YouTube', url: settings.youtubeUrl, Icon: YouTubeIcon, color: 'text-[#FF0000]' },
     { name: 'Facebook', url: settings.facebookUrl, Icon: FacebookIcon, color: 'text-[#1877F2]' },
@@ -104,7 +104,7 @@ export async function Footer() {
       name: 'WhatsApp',
       url: settings.whatsappNumber ? `https://wa.me/${settings.whatsappNumber}` : '',
       Icon: WhatsAppIcon,
-      color: 'text-[#25D366]',
+      color: 'text-[#128C7E] dark:text-whatsapp',
     },
   ]
     .map((social) => ({ ...social, url: safeHref(social.url) }))

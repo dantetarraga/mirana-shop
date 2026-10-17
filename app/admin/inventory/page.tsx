@@ -149,8 +149,8 @@ export default async function InventoryPage({ searchParams }: PageProps) {
           value={`S/ ${(stats.totalValue / 1000).toFixed(1)}K`}
           valueClass="text-accent-ink"
         />
-        <KpiCard label="Stock bajo" value={stats.lowStockCount} valueClass="text-[#ffb84a]" />
-        <KpiCard label="Agotados" value={stats.outOfStockCount} valueClass="text-[#ff6644]" />
+        <KpiCard label="Stock bajo" value={stats.lowStockCount} valueClass="text-warning" />
+        <KpiCard label="Agotados" value={stats.outOfStockCount} valueClass="text-danger" />
       </div>
 
       {/* Búsqueda y tabs — GET navigation, sin estado cliente */}
@@ -172,7 +172,7 @@ export default async function InventoryPage({ searchParams }: PageProps) {
               className={cn(
                 'px-3.5 py-2 text-[11px] tracking-[1px] uppercase font-display font-extrabold border transition-colors',
                 key === stockFilter
-                  ? 'bg-(--gold) border-(--gold) text-black'
+                  ? 'bg-(--gold) border-(--gold) text-on-accent'
                   : 'border-(--bd) text-muted hover:text-text',
               )}
             >

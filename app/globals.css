@@ -66,6 +66,11 @@
   --color-subtle: var(--sub);
   --color-border: var(--bd);
   --color-border-gold: var(--bdh);
+  /* Borde de campos de formulario: ≥3:1 contra el fondo (WCAG 1.4.11).
+     --bd (12-15 % de alfa) queda en ~1.2:1 y el campo no se distingue. */
+  --color-field: var(--bd-field);
+  /* Anillo de foco por teclado — mismo color en todo el sitio */
+  --color-ring: var(--ring);
   --color-gold-glow: var(--gd);
 
   /* ── Roles semánticos ──────────────────────────────────────
@@ -80,6 +85,9 @@
   --color-accent-ink: var(--accent-ink);
   --color-on-accent: var(--on-accent);
   --color-on-success: var(--on-success);
+  --color-on-warning: var(--on-warning);
+  --color-on-danger: var(--on-danger);
+  --color-on-info: var(--on-info);
   --color-whatsapp: var(--wa);
   --color-on-whatsapp: var(--on-wa);
   --color-promo: var(--promo-bg);
@@ -89,12 +97,15 @@
   --color-scrim: var(--scrim);
   --color-hover-tint: var(--hover-tint);
   --color-skeleton: var(--skeleton);
+  --color-skeleton-shine: var(--skeleton-shine);
 
   /* ── Estados ── Genera: bg-success, text-danger, etc. */
   --color-success: var(--c-green);
   --color-warning: var(--c-amber);
   --color-danger: var(--c-red);
   --color-info: var(--c-blue);
+  /* Serie extra de gráficos (violeta) — antes #c77cff suelto */
+  --color-chart-violet: var(--c-violet);
 
   /* ── Sombras ── Genera: shadow-premium, shadow-card, shadow-gold, shadow-pop */
   --shadow-premium: var(--sh-premium);
@@ -124,6 +135,7 @@
   --animate-slide-left: slide-left 0.28s cubic-bezier(0.4, 0, 0.2, 1) both;
   --animate-pulse-dot: pulse-dot 2s infinite;
   --animate-fade-up: fade-up 0.5s ease both;
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
 
   @keyframes marquee {
     from {
@@ -176,6 +188,14 @@
       opacity: 0.4;
     }
   }
+  @keyframes shimmer {
+    from {
+      background-position: 150% 0;
+    }
+    to {
+      background-position: -50% 0;
+    }
+  }
   @keyframes fade-up {
     from {
       opacity: 0;
@@ -219,13 +239,17 @@
   --gold: #00c8ff; /* fills, botones, barras — NO usar como texto en claro */
   --gl: #33d4ff; /* hover del acento */
   --gd: rgba(0, 200, 255, 0.14); /* glow / fondo de pills */
-  --accent-ink: #0077b6; /* 4.7:1 sobre blanco — precios, links, texto acento */
+  /* 5.8:1 sobre blanco y 5.3:1 sobre --card-h (hover de tarjeta). El #0077b6
+     anterior bajaba a 4.48:1 en el hover y reprobaba AA. */
+  --accent-ink: #006ba3;
   --on-accent: #00131c; /* texto sobre el acento cyan */
 
   /* Bordes */
   --bd: rgba(0, 119, 182, 0.15);
   --bdh: rgba(0, 119, 182, 0.45);
   --sub: rgba(0, 200, 255, 0.08);
+  --bd-field: #7f92a6; /* 3.2:1 sobre blanco · 3.05:1 sobre --surf */
+  --ring: var(--accent-ink);
 
   /* Sobre fotografía — idénticos en ambos temas: la imagen no cambia */
   --on-media: #ffffff;
@@ -234,16 +258,23 @@
   /* Capas de interacción */
   --scrim: rgba(9, 20, 33, 0.45);
   --hover-tint: rgba(13, 27, 42, 0.04);
-  --skeleton: rgba(13, 27, 42, 0.08);
+  --skeleton: rgba(13, 27, 42, 0.07);
+  --skeleton-shine: rgba(255, 255, 255, 0.7);
 
   /* Estados — re-derivados: el ámbar y el verde del tema oscuro
-     reprueban contraste sobre blanco */
-  --c-green: #15803d;
-  --c-amber: #b45309;
-  --c-red: #c2321b;
+     reprueban contraste sobre blanco. Calibrados para ≥4.5:1 también sobre su
+     propio tinte al 12 % (badges) y sobre --surf: con #15803d / #b45309 el
+     texto de un badge quedaba en 4.25:1. */
+  --c-green: #127436;
+  --c-amber: #a64b08;
+  --c-red: #b42d18;
   --c-blue: #5b4bd6;
-  /* Texto sobre --c-green (botón "Agregado", badge "Nuevo"): blanco da 5:1 */
+  --c-violet: #8e3fd1;
+  /* Texto sobre el color pleno de cada estado — blanco ≥5.8:1 en claro */
   --on-success: #ffffff;
+  --on-warning: #ffffff;
+  --on-danger: #ffffff;
+  --on-info: #ffffff;
 
   /* WhatsApp — verde de marca con texto oscuro: el blanco sobre #25d366 da
      1,98:1 y reprueba; #05301a da ~9:1. Igual en ambos temas. */
@@ -293,20 +324,27 @@
   --bd: rgba(0, 200, 255, 0.12);
   --bdh: rgba(0, 200, 255, 0.48);
   --sub: rgba(0, 200, 255, 0.06);
+  --bd-field: #52709a; /* 3.5:1 sobre --bg · 3.2:1 sobre --card */
+  --ring: var(--accent-ink);
 
   --on-media: #ffffff;
   --media-scrim: rgba(3, 4, 9, 0.85);
 
   --scrim: rgba(3, 4, 9, 0.78);
   --hover-tint: rgba(255, 255, 255, 0.03);
-  --skeleton: rgba(255, 255, 255, 0.05);
+  --skeleton: rgba(255, 255, 255, 0.06);
+  --skeleton-shine: rgba(0, 200, 255, 0.07);
 
   --c-green: #3fcf7f;
   --c-amber: #ffb84a;
   --c-red: #ff6644;
   --c-blue: #8b7cff;
-  /* El verde claro del tema oscuro con texto blanco daba ~1.9:1 */
+  --c-violet: #c77cff;
+  /* Sobre los tonos claros del tema oscuro el blanco da ~1.9:1: texto navy */
   --on-success: #00131c;
+  --on-warning: #00131c;
+  --on-danger: #00131c;
+  --on-info: #00131c;
 
   --wa: #25d366;
   --on-wa: #05301a;
@@ -368,6 +406,12 @@
   h4 {
     @apply font-display;
   }
+
+  /* Selección de texto con el acento de marca (antes: azul del sistema) */
+  ::selection {
+    background: color-mix(in srgb, var(--gold) 32%, transparent);
+    color: var(--text);
+  }
   button {
     @apply cursor-pointer;
   }
@@ -413,8 +457,8 @@ select:focus-visible,
 textarea:focus-visible,
 [tabindex]:focus-visible,
 [role='button']:focus-visible {
-  /* --accent-ink, no --gold: el cyan puro sobre blanco no se distingue */
-  outline: 2px solid var(--accent-ink);
+  /* --ring (= --accent-ink), no --gold: el cyan puro sobre blanco da 1.96:1 */
+  outline: 2px solid var(--ring);
   outline-offset: 2px;
   border-radius: 1px;
 }
@@ -496,11 +540,11 @@ textarea:focus-visible,
 
   /* dark: fondo negro, texto acento — para CTAs sobre fondos dorados */
   .ui-btn--dark {
-    background: #000;
+    background: var(--on-accent);
     color: var(--gold);
   }
   .ui-btn--dark:hover:not(:disabled) {
-    background: #111;
+    background: color-mix(in srgb, var(--on-accent) 85%, var(--gold));
   }
 
   /* tab: filtro activo/inactivo */
@@ -588,6 +632,12 @@ textarea:focus-visible,
     cursor: not-allowed;
     transform: none !important;
   }
+  /* En curso (prop `loading` de <Button>): sigue deshabilitado pero no se
+     "apaga" — un botón al 40 % parece roto, no ocupado. */
+  .ui-btn[aria-busy='true']:disabled {
+    opacity: 0.85;
+    cursor: progress;
+  }
 
   /* ── Botones legacy (mantener retrocompatibilidad) ── */
   .btn-gold {
@@ -623,7 +673,7 @@ textarea:focus-visible,
   }
 
   .btn-dark {
-    @apply bg-black text-gold-500 font-display font-extrabold uppercase
+    @apply bg-on-accent text-gold-500 font-display font-extrabold uppercase
            cursor-pointer transition-colors duration-200 whitespace-nowrap shrink-0;
     font-size: 15px;
     letter-spacing: 2px;
@@ -631,7 +681,7 @@ textarea:focus-visible,
     border: none;
   }
   .btn-dark:hover {
-    @apply bg-[#111];
+    background: color-mix(in srgb, var(--on-accent) 85%, var(--gold));
   }
 
   /* ── Product card ── */
@@ -887,7 +937,7 @@ textarea:focus-visible,
     background: var(--c-blue);
   }
   .pie-dot-2 {
-    background: #c77cff;
+    background: var(--c-violet);
   }
 
   /* El estilo de campo (antes `.adm-input`) vive ahora en
@@ -919,6 +969,59 @@ textarea:focus-visible,
   .ui-date:focus {
     border-color: var(--bdh);
   }
+}
+
+/* =============================================================
+   Skeleton — placeholder de carga (ver shared/components/ui/Skeleton.tsx)
+   Base --skeleton + un brillo que barre de izquierda a derecha. Con
+   movimiento reducido el brillo desaparece y queda el bloque estático (la
+   regla global de reduced-motion solo acorta la animación; aquí se quita).
+   ============================================================= */
+.skeleton {
+  background-color: var(--skeleton);
+  background-image: linear-gradient(
+    100deg,
+    transparent 30%,
+    var(--skeleton-shine) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: var(--animate-shimmer);
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    background-image: none;
+    animation: none;
+  }
+}
+
+/* =============================================================
+   Imagen con fundido (shared/components/ui/FadeImage.tsx) — el contenedor
+   pinta su placeholder y la foto entra con opacidad al decodificar.
+   ============================================================= */
+.img-fade {
+  opacity: 0;
+  transition: opacity 0.35s ease-out;
+}
+.img-fade[data-loaded='true'] {
+  opacity: 1;
+}
+
+/* =============================================================
+   Barra de progreso de navegación
+   (shared/components/layout/NavigationProgress.tsx) — el único momento de
+   movimiento "de marca" en la carga: una línea cyan bajo el borde superior.
+   ============================================================= */
+.nav-progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 2px;
+  z-index: 1000;
+  pointer-events: none;
+  transform-origin: 0 50%;
+  background: var(--gold);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--gold) 70%, transparent);
 }
 
 /* ── Contenido enriquecido (editor TipTap y páginas públicas) ── */

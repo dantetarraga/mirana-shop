@@ -1,86 +1,58 @@
-function Bone({ className }: { className?: string }) {
-  return <div className={`animate-pulse bg-(--sub) ${className ?? ''}`} />
-}
+import {
+  CTABandSkeleton,
+  HomeSectionSkeleton,
+} from '@/features/home/components/HomeSectionSkeleton'
+import { Skeleton, SkeletonRegion } from '@/shared/components/ui/Skeleton'
 
-function ProductCardSkeleton() {
-  return (
-    <div className="border border-(--bd) bg-surf">
-      <Bone className="h-55 w-full" />
-      <div className="px-4 pt-4 pb-5 flex flex-col gap-3">
-        <Bone className="h-2.5 w-16" />
-        <Bone className="h-5 w-3/4" />
-        <Bone className="h-4 w-1/3" />
-        <Bone className="h-9 w-full mt-1" />
-      </div>
-    </div>
-  )
-}
-
-function SectionHeader({ wide }: { wide?: boolean }) {
-  return (
-    <div className="flex flex-col gap-2 mb-7">
-      <Bone className={`h-2.5 ${wide ? 'w-28' : 'w-20'}`} />
-      <Bone className="h-8 w-72" />
-    </div>
-  )
-}
+// ---------------------------------------------------------------------------
+// Esqueleto del INICIO. Ojo: un loading.tsx de grupo cubre también las rutas
+// hijas que no tienen el suyo, por eso carrito, checkout, reclamaciones y las
+// páginas legales llevan loading propio (antes mostraban este hero al entrar).
+//
+// Copia el orden y las medidas de app/(storefront)/page.tsx con el layout de
+// banners por defecto (CARD): filtros rápidos → marcas → carrusel de banners →
+// franja promo → secciones de productos.
+// ---------------------------------------------------------------------------
 
 export default function StorefrontLoading() {
   return (
-    <div className="overflow-hidden">
-      {/* Hero */}
-      <Bone className="w-full h-screen" />
-
-      {/* Promo strip */}
-      <Bone className="w-full h-12" />
-
-      {/* New Arrivals */}
-      <section className="px-6 py-16">
-        <SectionHeader />
-        <div className="flex gap-5 overflow-hidden">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="shrink-0 w-64">
-              <ProductCardSkeleton />
-            </div>
+    <SkeletonRegion label="Cargando la tienda…">
+      {/* QuickFiltersBar: bg-surf + borde, pills py-3.5 de 12px (~47px) */}
+      <div className="bg-surf border-b border-(--bd)">
+        <div className="shell flex items-center justify-start sm:justify-center gap-1 overflow-hidden h-[47px]">
+          {Array.from({ length: 7 }, (_, i) => (
+            <Skeleton key={i} className="h-2.5 w-20 mx-4 shrink-0" />
           ))}
         </div>
-      </section>
+      </div>
 
-      {/* Featured Products */}
-      <section className="px-6 pb-16">
-        <SectionHeader wide />
-        <div className="grid grid-cols-4 gap-5">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <ProductCardSkeleton key={i} />
-          ))}
-        </div>
-      </section>
+      {/* BrandsCarousel: celdas w-32 h-14 / sm:w-44 sm:h-18 */}
+      <div className="bg-surf border-b border-(--bd) h-14 sm:h-18 flex items-center overflow-hidden px-10">
+        {Array.from({ length: 9 }, (_, i) => (
+          <div key={i} className="shrink-0 w-32 sm:w-44 flex justify-center">
+            <Skeleton className="h-4 w-20" />
+          </div>
+        ))}
+      </div>
 
-      {/* CTA Band */}
-      <Bone className="w-full h-32" />
+      {/* HeroBannerCarousel: 1 banner en móvil, 3 desde md, gap-1 px-1 pt-1 */}
+      <div className="flex gap-1 px-1 pt-1 overflow-hidden">
+        {Array.from({ length: 3 }, (_, i) => (
+          <Skeleton
+            key={i}
+            className={`flex-none w-full md:w-[calc((100%-8px)/3)] h-[220px] sm:h-[280px] md:h-[clamp(300px,38vw,500px)] ${
+              i > 0 ? 'max-md:hidden' : ''
+            }`}
+          />
+        ))}
+      </div>
 
-      {/* Category Strips */}
-      <section className="px-6 py-16">
-        <SectionHeader />
-        <div className="grid grid-cols-3 gap-5">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Bone key={i} className="h-60 w-full" />
-          ))}
-        </div>
-      </section>
+      {/* PromoBanner: py-2.75 + línea de 13px ≈ 42px */}
+      <Skeleton className="h-10.5 w-full" />
 
-      {/* Preorder Section */}
-      <section className="px-6 pb-16">
-        <SectionHeader />
-        <div className="grid grid-cols-3 gap-5">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <ProductCardSkeleton key={i} />
-          ))}
-        </div>
-      </section>
-
-      {/* Brands strip */}
-      <Bone className="w-full h-20" />
-    </div>
+      <HomeSectionSkeleton />
+      <HomeSectionSkeleton />
+      <CTABandSkeleton />
+    </SkeletonRegion>
   )
 }

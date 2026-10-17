@@ -90,7 +90,7 @@ export function PaymentAccountsPanel({ accounts, className }: Props) {
                   href={acc.qrImageUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block border border-(--bd) bg-white p-1.5 shrink-0"
+                  className="block border border-(--bd) bg-surface-0 p-1.5 shrink-0"
                   title={`Ver el QR de ${acc.name} en grande`}
                 >
                   <Image
