@@ -7,7 +7,7 @@ import {
   ORDER_STATUS_GROUPS,
   ORDER_STATUS_LABELS,
   ORDER_STATUS_TRANSITIONS,
-  orderStatusGroup,
+  getOrderStatusMeta,
 } from '@/features/orders/lib/order-status'
 import type { OrderListItem, OrderStatusGroup } from '@/features/orders/types'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
@@ -210,7 +210,7 @@ export function OrderDetailDrawer({
       >
         <div className="flex flex-wrap gap-2">
           {ORDER_STATUS_FLOW.map((s) => {
-            const config = ORDER_STATUS[orderStatusGroup(s)] ?? ORDER_STATUS.pendiente
+            const meta = getOrderStatusMeta(s)
             const allowed = ORDER_STATUS_TRANSITIONS[order.status].includes(s)
             return (
               <Button
@@ -223,9 +223,9 @@ export function OrderDetailDrawer({
                   setClickedStatus(s)
                   onStatusChange(order.id, s)
                 }}
-                className={order.status === s ? config.btnCls : 'text-muted'}
+                className={order.status === s ? meta.tone.btnCls : 'text-muted'}
               >
-                {ORDER_STATUS_LABELS[s]}
+                {meta.label}
               </Button>
             )
           })}

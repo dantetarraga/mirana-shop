@@ -24,6 +24,7 @@ import {
 } from '@/features/complaints/schemas/complaint.schema'
 import { input } from '@/features/checkout/components/ui'
 import { Button } from '@/shared/components/ui/Button'
+import { Field } from '@/shared/components/ui/Field'
 import { cn } from '@/shared/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { BadgeCheck, Printer, Send } from 'lucide-react'
@@ -48,6 +49,11 @@ const DOC_HINTS: Record<string, string> = {
 
 const fieldId = (name: string) => `lr-${name}`
 
+/**
+ * Fila del formulario sobre el primitivo `Field`: el control hijo recibe
+ * id (`lr-<name>`), aria-invalid/required/describedby. El hint se mantiene
+ * visible aunque haya error: describe el formato esperado para corregirlo.
+ */
 function FormRow({
   name,
   label,
@@ -63,31 +69,20 @@ function FormRow({
   error?: string
   hint?: string
   span?: 2
-  children: React.ReactNode
+  children: React.ReactElement
 }) {
-  const id = fieldId(name)
   return (
-    <div className={span === 2 ? 'sm:col-span-2' : undefined}>
-      <label htmlFor={id} className="block text-[10px] tracking-[2px] uppercase text-accent-ink mb-1.5">
-        {label}
-        {required && (
-          <span aria-hidden="true" className="text-danger ml-0.5">
-            *
-          </span>
-        )}
-      </label>
+    <Field
+      id={fieldId(name)}
+      label={label}
+      required={required}
+      error={error}
+      hint={hint}
+      persistentHint
+      className={span === 2 ? 'sm:col-span-2' : undefined}
+    >
       {children}
-      {hint && (
-        <p id={`${id}-hint`} className="text-muted text-[11px] mt-1">
-          {hint}
-        </p>
-      )}
-      {error && (
-        <p id={`${id}-error`} role="alert" className="text-danger text-[12px] mt-1">
-          {error}
-        </p>
-      )}
-    </div>
+    </Field>
   )
 }
 
@@ -282,7 +277,6 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
           <FormRow name="fullName" label="Nombre completo" required error={errors.fullName?.message} span={2}>
             <input
               {...register('fullName')}
-              {...a11y('fullName', { required: true })}
               autoComplete="name"
               className={input}
               placeholder="Juan García Pérez"
@@ -290,7 +284,7 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
           </FormRow>
 
           <FormRow name="docType" label="Tipo de documento" required error={errors.docType?.message}>
-            <select {...register('docType')} {...a11y('docType', { required: true })} className={input}>
+            <select {...register('docType')} className={input}>
               {DOC_TYPES.map((t) => (
                 <option key={t} value={t}>
                   {DOC_TYPE_LABELS[t]}
@@ -308,7 +302,6 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
           >
             <input
               {...register('docNumber')}
-              {...a11y('docNumber', { required: true, hint: Boolean(docHint) })}
               inputMode={docType === 'DNI' ? 'numeric' : 'text'}
               maxLength={12}
               autoComplete="off"
@@ -320,7 +313,6 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
           <FormRow name="address" label="Domicilio" required error={errors.address?.message} span={2}>
             <input
               {...register('address')}
-              {...a11y('address', { required: true })}
               autoComplete="street-address"
               className={input}
               placeholder="Av. Principal 123, Dpto. 4B, Arequipa"
@@ -330,7 +322,6 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
           <FormRow name="phone" label="Teléfono" required error={errors.phone?.message}>
             <input
               {...register('phone')}
-              {...a11y('phone', { required: true })}
               type="tel"
               autoComplete="tel"
               className={input}
@@ -341,7 +332,6 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
           <FormRow name="email" label="Correo electrónico" required error={errors.email?.message}>
             <input
               {...register('email')}
-              {...a11y('email', { required: true })}
               type="email"
               autoComplete="email"
               className={input}
@@ -370,7 +360,6 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
               >
                 <input
                   {...register('guardianName')}
-                  {...a11y('guardianName', { required: true })}
                   className={input}
                 />
               </FormRow>
@@ -382,7 +371,6 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
               >
                 <select
                   {...register('guardianDocType', { setValueAs: (v) => (v === '' ? undefined : v) })}
-                  {...a11y('guardianDocType', { required: true })}
                   className={input}
                   defaultValue=""
                 >
@@ -405,7 +393,6 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
               >
                 <input
                   {...register('guardianDocNumber')}
-                  {...a11y('guardianDocNumber', { required: true, hint: Boolean(guardianHint) })}
                   maxLength={12}
                   className={input}
                 />
@@ -454,7 +441,6 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
           >
             <input
               {...register('orderCode', { setValueAs: (v: string) => (v ? v : undefined) })}
-              {...a11y('orderCode', { hint: true })}
               maxLength={40}
               autoComplete="off"
               className={input}
@@ -470,7 +456,6 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
           >
             <input
               {...register('claimedAmount')}
-              {...a11y('claimedAmount', { hint: true })}
               type="number"
               min={0}
               max={MAX_CLAIMED_AMOUNT}
@@ -490,7 +475,6 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
           >
             <input
               {...register('productDescription')}
-              {...a11y('productDescription', { required: true })}
               className={input}
               placeholder="Ej. Figura de colección LEGO Star Wars 75375"
             />
@@ -542,7 +526,6 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
           <FormRow name="detail" label="Detalle" required error={errors.detail?.message}>
             <textarea
               {...register('detail')}
-              {...a11y('detail', { required: true })}
               rows={5}
               className={input}
               placeholder="Describe lo ocurrido con el mayor detalle posible..."
@@ -552,7 +535,6 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
           <FormRow name="request" label="Pedido del consumidor" required error={errors.request?.message}>
             <textarea
               {...register('request')}
-              {...a11y('request', { required: true })}
               rows={3}
               className={input}
               placeholder="Ej. Solicito el cambio del producto / la devolución de mi dinero..."

@@ -1,8 +1,7 @@
 'use client'
 
-import { ORDER_STATUS_LABELS, orderStatusGroup } from '@/features/orders/lib/order-status'
+import { getOrderStatusMeta } from '@/features/orders/lib/order-status'
 import type { OrderListItem } from '@/features/orders/types'
-import { ORDER_STATUS } from '@/shared/lib/admin/admin-constants'
 import { buttonClass } from '@/shared/components/ui/Button'
 import { formatCurrency, formatDate } from '@/shared/lib/utils'
 import { ChevronDown, ChevronUp, Package, ShoppingCart } from 'lucide-react'
@@ -13,17 +12,8 @@ import { EmptyState } from '@/shared/components/ui/EmptyState'
 // ---------------------------------------------------------------------------
 // Mapas de estado
 // ---------------------------------------------------------------------------
-// Etiqueta y color salen de la misma fuente que el admin: el color es el del
-// grupo (pendiente/enviado/entregado/cancelado), así un pedido "Pagado" o
-// "Preparando" ya no cae al ámbar por defecto con el código crudo de la BD.
-function statusBadge(status: string) {
-  const group = ORDER_STATUS[orderStatusGroup(status)] ?? ORDER_STATUS.pendiente
-  return {
-    label: ORDER_STATUS_LABELS[status as keyof typeof ORDER_STATUS_LABELS] ?? group.label,
-    cls: group.cls,
-  }
-}
-
+// La etiqueta y el color del estado salen de getOrderStatusMeta (misma fuente
+// que el admin). Aquí quedan solo los mapas propios de esta vista.
 const PAY_LABEL: Record<string, string> = {
   UNPAID: 'Sin pagar',
   PAID: 'Pagado',
@@ -40,6 +30,7 @@ const METHOD_LABEL: Record<string, string> = {
 function OrderRow({ order }: { order: OrderListItem }) {
   const [open, setOpen] = useState(false)
   const dueTotal = Number(order.dueTotal)
+  const status = getOrderStatusMeta(order.status)
 
   return (
     <div className="bg-card border border-(--bd) overflow-hidden">
@@ -63,10 +54,8 @@ function OrderRow({ order }: { order: OrderListItem }) {
           <p className="font-semibold text-[14px]">{formatCurrency(Number(order.total))}</p>
 
           {/* Estado */}
-          <span
-            className={`badge ${statusBadge(order.status).cls} text-[11px] self-start sm:self-center`}
-          >
-            {statusBadge(order.status).label}
+          <span className={`badge ${status.tone.cls} text-[11px] self-start sm:self-center`}>
+            {status.label}
           </span>
         </div>
 
@@ -130,9 +119,7 @@ function OrderRow({ order }: { order: OrderListItem }) {
               <span className="text-muted">Envío</span>
               <span>
                 {Number(order.shippingCost) === 0 ? (
-                  <span className="text-success text-[12px] font-semibold uppercase">
-                    Gratis
-                  </span>
+                  <span className="text-success text-[12px] font-semibold uppercase">Gratis</span>
                 ) : (
                   formatCurrency(Number(order.shippingCost))
                 )}
@@ -150,9 +137,7 @@ function OrderRow({ order }: { order: OrderListItem }) {
                 <span className="text-muted text-[12px]">
                   {order.duePaidAt ? 'Saldo cobrado' : 'Saldo pendiente'}
                 </span>
-                <span
-                  className={`font-semibold ${order.duePaidAt ? 'text-success' : 'text-info'}`}
-                >
+                <span className={`font-semibold ${order.duePaidAt ? 'text-success' : 'text-info'}`}>
                   {formatCurrency(dueTotal)}
                 </span>
               </div>

@@ -45,7 +45,12 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useForm, type FieldErrors, type Resolver } from 'react-hook-form'
+import {
+  useForm,
+  type FieldErrors,
+  type Resolver,
+  type UseFormRegisterReturn,
+} from 'react-hook-form'
 import { toast } from 'sonner'
 import { EmptyState } from '@/shared/components/ui/EmptyState'
 
@@ -527,26 +532,21 @@ export function CheckoutView({
 
           {/* ── Right column ───────────────────────────────── */}
           <OrderSummary
-            cart={cart}
-            subtotal={subtotal}
-            payableNow={payableNow}
-            dueTotal={dueTotal}
-            depositPercent={pricingRules.preorderDepositPercent}
-            shippingCost={shippingCost}
-            shippingFree={shippingFree}
-            discount={discount}
-            discountName={discountName}
-            couponCode={couponCode}
-            total={total}
-            loading={loading}
-            shippingThreshold={pricingRules.freeShippingThreshold}
-            deliveryLabel={selectedMethod?.name ?? null}
-            registerTerms={register('acceptTerms')}
-            termsError={errors.acceptTerms?.message}
-            isFirstStep={isFirstStep}
-            isLastStep={isLastStep}
-            onNext={() => void goToStep(current + 1)}
-            onBack={() => void goToStep(current - 1)}
+            summary={{
+              lines: cart,
+              subtotal,
+              payableNow,
+              dueTotal,
+              depositPercent: pricingRules.preorderDepositPercent,
+              shippingCost,
+              shippingFree,
+              discount,
+              discountName,
+              couponCode,
+              total,
+              shippingThreshold: pricingRules.freeShippingThreshold,
+              deliveryLabel: selectedMethod?.name ?? null,
+            }}
             couponSlot={
               <CouponField
                 coupon={coupon}
@@ -556,9 +556,133 @@ export function CheckoutView({
                 disabled={loading}
               />
             }
+            footer={
+              <>
+                {/* Términos y condiciones — solo en el último paso, junto al
+                    botón que confirma: es lo que se está aceptando al pulsarlo.
+                    Se oculta con CSS (no se desmonta) para que el registro del
+                    campo y su error sigan vivos entre pasos. */}
+                <TermsCheckbox
+                  hidden={!isLastStep}
+                  registration={register('acceptTerms')}
+                  error={errors.acceptTerms?.message}
+                />
+                {/* goToStep valida los campos del paso actual antes de avanzar;
+                    "Confirmar" es type="submit" y pasa por handleSubmit/zod. */}
+                <StepActions
+                  isFirstStep={isFirstStep}
+                  isLastStep={isLastStep}
+                  loading={loading}
+                  onNext={() => void goToStep(current + 1)}
+                  onBack={() => void goToStep(current - 1)}
+                />
+              </>
+            }
           />
         </div>
       </form>
     </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Pie del resumen — términos y navegación entre pasos
+// ---------------------------------------------------------------------------
+
+function TermsCheckbox({
+  hidden,
+  registration,
+  error,
+}: {
+  hidden: boolean
+  registration: UseFormRegisterReturn
+  error?: string
+}) {
+  return (
+    <div className={`bg-card border border-(--bd) px-4 py-3.5 ${hidden ? 'hidden' : ''}`}>
+      <label className="flex items-start gap-3 cursor-pointer select-none">
+        <input
+          type="checkbox"
+          {...registration}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? 'checkout-terms-error' : undefined}
+          className="mt-0.5 accent-accent-ink w-4 h-4 shrink-0"
+        />
+        <span className="text-[12px] leading-snug">
+          He leído y acepto los{' '}
+          <Link
+            href="/terminos-y-condiciones"
+            target="_blank"
+            className="text-accent-ink underline"
+          >
+            Términos y Condiciones
+          </Link>{' '}
+          y la{' '}
+          <Link
+            href="/politica-de-privacidad"
+            target="_blank"
+            className="text-accent-ink underline"
+          >
+            Política de Privacidad
+          </Link>
+          .
+        </span>
+      </label>
+      {error && (
+        <p id="checkout-terms-error" role="alert" className="text-danger text-[12px] mt-2">
+          {error}
+        </p>
+      )}
+    </div>
+  )
+}
+
+/** CTA — solo el último paso confirma; los anteriores avanzan. */
+function StepActions({
+  isFirstStep,
+  isLastStep,
+  loading,
+  onNext,
+  onBack,
+}: {
+  isFirstStep: boolean
+  isLastStep: boolean
+  loading: boolean
+  onNext: () => void
+  onBack: () => void
+}) {
+  return (
+    <>
+      {isLastStep ? (
+        <Button
+          type="submit"
+          variant="accent"
+          size="lg"
+          full
+          loading={loading}
+          loadingText="Confirmando pedido…"
+        >
+          <Truck size={16} className="mr-2" />
+          Confirmar pedido
+        </Button>
+      ) : (
+        <Button type="button" variant="accent" size="lg" full onClick={onNext}>
+          Continuar
+          <ArrowRight size={16} className="ml-2" />
+        </Button>
+      )}
+
+      <Button
+        type="button"
+        variant="outline"
+        size="md"
+        full
+        onClick={() => (isFirstStep ? window.history.back() : onBack())}
+        disabled={loading}
+      >
+        <ArrowLeft size={14} className="mr-1.5" />
+        {isFirstStep ? 'Volver al carrito' : 'Paso anterior'}
+      </Button>
+    </>
   )
 }

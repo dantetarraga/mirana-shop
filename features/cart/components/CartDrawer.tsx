@@ -1,19 +1,16 @@
 'use client'
 
+import { CartLineItem } from '@/features/cart/components/CartLineItem'
 import { cartKindOf } from '@/features/cart/lib/cart-kind'
-import { removeWithUndo } from '@/features/cart/lib/remove-with-undo'
 import { useCartStore } from '@/features/cart/stores/cart.store'
 import { eligibleDeliveryMethods } from '@/features/checkout/lib/delivery-eligibility'
-import { depositUnitPrice, splitPreorderTotals } from '@/features/checkout/lib/preorder'
-import { computeTotals, effectivePrice, type PricingRules } from '@/features/checkout/lib/pricing'
-import { maxPurchasable } from '@/features/products/lib/stock'
-import { getCategoryStripe } from '@/features/products/types/catalog.types'
+import { splitPreorderTotals } from '@/features/checkout/lib/preorder'
+import { computeTotals, type PricingRules } from '@/features/checkout/lib/pricing'
 import { Button } from '@/shared/components/ui/Button'
 import { useScrollLock } from '@/shared/hooks/useScrollLock'
 import { useFocusTrap } from '@/shared/hooks/useFocusTrap'
 import { formatCurrency } from '@/shared/lib/utils'
-import { ArrowRight, Minus, Plus, ShoppingCart, X } from 'lucide-react'
-import { FadeImage } from '@/shared/components/ui/FadeImage'
+import { ArrowRight, ShoppingCart, X } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useId } from 'react'
 
@@ -40,7 +37,6 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
   const cart = useCartStore((s) => s.cart)
   const cartCount = useCartStore((s) => s.cartCount)
   const setCartOpen = useCartStore((s) => s.setCartOpen)
-  const updateQty = useCartStore((s) => s.updateQty)
   const refreshCart = useCartStore((s) => s.refreshCart)
   const busy = useCartStore((s) => s.pendingWrites > 0)
   // `payableNow` es lo que se cobra hoy: en las líneas de preventa parcial solo
@@ -150,7 +146,12 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
             <div className="text-center py-16 px-5 text-muted">
               {/* Icono de lucide, no emoji: el emoji lo dibuja el sistema
                   operativo y cambia de estilo y color entre plataformas. */}
-              <ShoppingCart size={52} strokeWidth={1} className="mx-auto mb-4 opacity-25" aria-hidden />
+              <ShoppingCart
+                size={52}
+                strokeWidth={1}
+                className="mx-auto mb-4 opacity-25"
+                aria-hidden
+              />
               <div className="font-display text-[22px] font-black uppercase mb-2">
                 Carrito vacío
               </div>
@@ -164,103 +165,15 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
               </Link>
             </div>
           ) : (
-            cart.map((item) => {
-              const max = maxPurchasable(item.product)
-              const atLimit = max !== null && item.qty >= max
-              const unavailable = max === 0
-              const isPartial = item.preorderMode === 'PARTIAL'
-              const deposit = isPartial
-                ? depositUnitPrice(item.product, pricingRules.preorderDepositPercent)
-                : null
-
-              return (
-                <div
-                  key={item.product.id}
-                  className="flex gap-3.5 items-center pb-3.5 border-b border-(--bd)"
-                >
-                  <Link
-                    href={`/catalogo/${item.product.slug}`}
-                    onClick={() => setCartOpen(false)}
-                    className="relative w-17.5 h-17.5 shrink-0 overflow-hidden block bg-skeleton"
-                    tabIndex={-1}
-                    aria-hidden
-                  >
-                    {item.product.imageUrl ? (
-                      <FadeImage
-                        src={item.product.imageUrl}
-                        alt=""
-                        fill
-                        sizes="70px"
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div
-                        className={`${getCategoryStripe(item.product.category.slug)} w-full h-full`}
-                      />
-                    )}
-                  </Link>
-                  <div className="flex-1 min-w-0">
-                    <Link
-                      href={`/catalogo/${item.product.slug}`}
-                      onClick={() => setCartOpen(false)}
-                      className="font-display text-[17px] font-extrabold uppercase whitespace-nowrap overflow-hidden text-ellipsis block hover:text-accent-ink transition-colors duration-150"
-                    >
-                      {item.product.name}
-                    </Link>
-                    <div className="text-accent-ink font-display text-[20px] font-extrabold mt-px">
-                      {formatCurrency(deposit ?? effectivePrice(item.product))}
-                    </div>
-                    {deposit !== null && (
-                      <div className="text-[11px] text-muted">
-                        <span className="text-info font-semibold">Preventa parcial</span> · de{' '}
-                        {formatCurrency(effectivePrice(item.product))}
-                      </div>
-                    )}
-                    {/* Un producto puede agotarse mientras está en el carrito. */}
-                    {unavailable && (
-                      <div className="text-[11px] text-danger font-semibold mt-0.5">
-                        Sin stock — quitalo para continuar
-                      </div>
-                    )}
-                    <div className="flex items-center gap-1 mt-1.5 -ml-1">
-                      <Button
-                        variant="icon"
-                        size="md"
-                        className="border-transparent"
-                        disabled={item.qty <= 1}
-                        aria-label={`Quitar una unidad de "${item.product.name}"`}
-                        onClick={() => updateQty(item.product.id, -1)}
-                      >
-                        <Minus size={14} aria-hidden />
-                      </Button>
-                      <span className="font-display font-extrabold min-w-6 text-center">
-                        {item.qty}
-                      </span>
-                      <Button
-                        variant="icon"
-                        size="md"
-                        className="border-transparent"
-                        disabled={atLimit}
-                        aria-label={`Agregar una unidad de "${item.product.name}"`}
-                        onClick={() => updateQty(item.product.id, 1)}
-                      >
-                        <Plus size={14} aria-hidden />
-                      </Button>
-                    </div>
-                  </div>
-                  <Button
-                    variant="icon"
-                    size="md"
-                    destructive
-                    aria-label={`Eliminar "${item.product.name}" del carrito`}
-                    onClick={() => removeWithUndo(item)}
-                    className="self-start border-transparent -mr-2"
-                  >
-                    <X size={16} aria-hidden />
-                  </Button>
-                </div>
-              )
-            })
+            cart.map((item) => (
+              <CartLineItem
+                key={item.product.id}
+                item={item}
+                depositPercent={pricingRules.preorderDepositPercent}
+                variant="compact"
+                onNavigate={() => setCartOpen(false)}
+              />
+            ))
           )}
         </div>
 

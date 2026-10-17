@@ -6,6 +6,7 @@ import { MediaImageGrid } from '@/shared/components/admin/MediaImageGrid'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
+import { useServerAction } from '@/shared/hooks/useServerAction'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Skeleton, SkeletonRegion } from '@/shared/components/ui/Skeleton'
@@ -22,9 +23,12 @@ export function MediaLibraryClient() {
     images: MediaImage[]
     cursor: string | null
   }>({ folder: null, images: [], cursor: null })
-  const [loadingMore, setLoadingMore] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<MediaImage | null>(null)
-  const [deleting, setDeleting] = useState(false)
+  // Una instancia por acción: "Cargar más" y "Eliminar" tienen su propio spinner.
+  const loadMoreAction = useServerAction()
+  const deleteAction = useServerAction()
+  const loadingMore = loadMoreAction.isPending
+  const deleting = deleteAction.isPending
 
   useEffect(() => {
     let cancelled = false
@@ -49,35 +53,31 @@ export function MediaLibraryClient() {
 
   const loadMore = async () => {
     if (!cursor) return
-    setLoadingMore(true)
-    const result = await listImages(folder, cursor)
-    setLoadingMore(false)
-    if (result.success) {
-      setLoaded((prev) => ({
-        folder,
-        images: [...prev.images, ...result.data.images],
-        cursor: result.data.nextCursor,
-      }))
-    } else {
-      toast.error(result.error)
-    }
+    await loadMoreAction.runAsync(() => listImages(folder, cursor), {
+      errorMessage: 'No se pudieron cargar más imágenes',
+      onSuccess: (data) =>
+        setLoaded((prev) => ({
+          folder,
+          images: [...prev.images, ...data.images],
+          cursor: data.nextCursor,
+        })),
+    })
   }
 
   const handleDelete = async () => {
     if (!pendingDelete) return
-    setDeleting(true)
-    const result = await deleteImage(pendingDelete.publicId)
-    setDeleting(false)
-    if (result.success) {
-      setLoaded((prev) => ({
-        ...prev,
-        images: prev.images.filter((i) => i.publicId !== pendingDelete.publicId),
-      }))
-      toast.success('Imagen eliminada')
-      setPendingDelete(null)
-    } else {
-      toast.error(result.error)
-    }
+    const { publicId } = pendingDelete
+    await deleteAction.runAsync(() => deleteImage(publicId), {
+      successMessage: 'Imagen eliminada',
+      errorMessage: 'No se pudo eliminar la imagen',
+      onSuccess: () => {
+        setLoaded((prev) => ({
+          ...prev,
+          images: prev.images.filter((i) => i.publicId !== publicId),
+        }))
+        setPendingDelete(null)
+      },
+    })
   }
 
   return (

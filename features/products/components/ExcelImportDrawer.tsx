@@ -1,13 +1,15 @@
 'use client'
 
-import { Button } from '@/shared/components/ui/Button'
-import { cls } from '@/shared/lib/admin/admin-classes'
 import { findBestMatch } from '@/features/products/lib/catalog-match'
 import type { ImportProductRow } from '@/features/products/schemas/product.schema'
-import { cn } from '@/shared/lib/utils'
-import { AlertCircle, AlertTriangle, CheckCircle2, FileSpreadsheet, Star, Upload, X } from 'lucide-react'
-import { useRef, useState } from 'react'
-import * as XLSX from 'xlsx'
+import {
+  SpreadsheetImportDrawer,
+  type SpreadsheetColumn,
+  type SpreadsheetImportContext,
+} from '@/shared/components/admin/SpreadsheetImportDrawer'
+import { cls } from '@/shared/lib/admin/admin-classes'
+import { formatCurrency } from '@/shared/lib/utils'
+import { AlertCircle, AlertTriangle, CheckCircle2, Star } from 'lucide-react'
 
 // ---------------------------------------------------------------------------
 // Column mapping — acepta variaciones en español e inglés, case-insensitive
@@ -43,9 +45,9 @@ const COL_ALIASES: Record<string, keyof ExcelRow> = {
   'imagen url': 'imageUrl',
   'image url': 'imageUrl',
   imageurl: 'imageUrl',
-  'imagenes': 'imageUrl',
+  imagenes: 'imageUrl',
   'imagenes url': 'imageUrl',
-  'images': 'imageUrl',
+  images: 'imageUrl',
   'image urls': 'imageUrl',
   'imagenes separadas por |': 'imageUrl',
   // Preventa parcial — columnas opcionales
@@ -73,7 +75,7 @@ const STATUS_MAP: Record<string, StatusKey> = {
   comingsoon: 'COMING_SOON',
   'coming soon': 'COMING_SOON',
   proximamente: 'COMING_SOON',
-  'próximamente': 'COMING_SOON',
+  próximamente: 'COMING_SOON',
   archived: 'ARCHIVED',
   archivado: 'ARCHIVED',
 }
@@ -124,14 +126,11 @@ interface Props {
 // ---------------------------------------------------------------------------
 // Parser
 // ---------------------------------------------------------------------------
-function parseSheet(
-  workbook: XLSX.WorkBook,
+function parseRows(
+  raw: Record<string, unknown>[],
   categories: CatalogOption[],
   brands: CatalogOption[],
 ): ParsedRow[] {
-  const sheet = workbook.Sheets[workbook.SheetNames[0]]
-  const raw = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: '' })
-
   return raw.map((rawRow, i) => {
     const normalized: Partial<ExcelRow> = {}
 
@@ -287,43 +286,65 @@ function parseSheet(
 }
 
 // ---------------------------------------------------------------------------
-// Component
+// Preview y resumen
 // ---------------------------------------------------------------------------
-export function ExcelImportDrawer({ categories, brands, existingSkus, onClose, onImport }: Props) {
-  const inputRef = useRef<HTMLInputElement>(null)
-  const [dragging, setDragging] = useState(false)
-  const [rows, setRows] = useState<ParsedRow[] | null>(null)
-  const [fileName, setFileName] = useState('')
+const COLUMNS: SpreadsheetColumn<ParsedRow>[] = [
+  { key: 'sku', header: 'SKU', className: cls.mono, cell: (r) => r.data.sku ?? '—' },
+  {
+    key: 'name',
+    header: 'Nombre',
+    className: 'max-w-30 truncate',
+    cell: (r) => r.data.name ?? '—',
+  },
+  { key: 'cat', header: 'Cat.', className: cls.mono, cell: (r) => r.data.cat ?? '—' },
+  {
+    key: 'price',
+    header: 'Precio',
+    className: cls.valGold,
+    cell: (r) => (typeof r.data.price === 'number' ? formatCurrency(r.data.price) : '—'),
+  },
+  {
+    key: 'salePrice',
+    header: 'Oferta',
+    className: cls.valGold,
+    cell: (r) => (typeof r.data.salePrice === 'number' ? formatCurrency(r.data.salePrice) : '—'),
+  },
+  { key: 'status', header: 'Estado', className: 'text-[11px]', cell: (r) => r.data.status ?? '—' },
+  {
+    key: 'featured',
+    header: 'Dest.',
+    className: 'text-center',
+    cell: (r) =>
+      r.data.featured ? (
+        <Star
+          size={12}
+          className="inline text-accent-ink"
+          fill="currentColor"
+          aria-label="Destacado"
+        />
+      ) : (
+        '—'
+      ),
+  },
+  { key: 'stock', header: 'Cant.', cell: (r) => r.data.stock ?? '—' },
+  {
+    key: 'brand',
+    header: 'Marca',
+    className: 'max-w-20 truncate',
+    cell: (r) => r.data.brand ?? '—',
+  },
+]
 
-  const processFile = (file: File) => {
-    setFileName(file.name)
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const data = new Uint8Array(e.target!.result as ArrayBuffer)
-      // cellDates: sin esto una fecha de Excel llega como número de serie
-      // (ej. 46477) y "entrega estimada" se parsearía mal.
-      const wb = XLSX.read(data, { type: 'array', cellDates: true })
-      setRows(parseSheet(wb, categories, brands))
-    }
-    reader.readAsArrayBuffer(file)
-  }
+function plural(count: number, suffix = 's') {
+  return count !== 1 ? suffix : ''
+}
 
-  // Función normal y no useCallback: se pasa a un elemento DOM (memorizarla no
-  // ahorra nada) y con deps [] capturaba el `processFile` del primer render,
-  // es decir, las props (catálogo/campos) de cuando se abrió el drawer.
-  const onDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setDragging(false)
-    const file = e.dataTransfer.files[0]
-    if (file) processFile(file)
-  }
-
-  const validRows = rows?.filter((r) => r.errors.length === 0) ?? []
-  const errorRows = rows?.filter((r) => r.errors.length > 0) ?? []
-  const warningRows = validRows.filter((r) => r.warnings.length > 0)
-
-  // Resumen de lo que va a ocurrir al confirmar — el usuario debe poder
-  // anticipar el resultado antes de importar, no solo enterarse después.
+/** Qué va a pasar exactamente al confirmar — anticipar el resultado, no enterarse después. */
+function ImportSummary({
+  validRows,
+  errorRows,
+  existingSkus,
+}: SpreadsheetImportContext<ParsedRow> & { existingSkus: string[] }) {
   const existingSkuSet = new Set(existingSkus)
   const toUpdateCount = validRows.filter((r) => existingSkuSet.has(r.data.sku!)).length
   const toCreateCount = validRows.length - toUpdateCount
@@ -335,336 +356,113 @@ export function ExcelImportDrawer({ categories, brands, existingSkus, onClose, o
   )
   const uniqueErrors = Array.from(new Set(errorRows.flatMap((r) => r.errors)))
 
-  const handleImport = () => {
-    const products: ImportProductRow[] = validRows.map((r) => ({
-      sku: r.data.sku!,
-      name: r.data.name!,
-      desc: r.data.desc ?? '',
-      price: r.data.price!,
-      salePrice: r.data.salePrice || undefined,
-      stock: r.data.stock!,
-      brand: r.data.brand!,
-      cat: r.data.cat!,
-      status: r.data.status ?? 'AVAILABLE',
-      featured: r.data.featured ?? false,
-      allowPartialPreorder: r.data.allowPartialPreorder ?? false,
-      depositPercent: r.data.depositPercent ?? null,
-      estimatedArrival: r.data.estimatedArrival ?? null,
-      imageUrls: r.data.imageUrl
-        ? String(r.data.imageUrl)
-            .split('|')
-            .map((u) => u.trim())
-            .filter(Boolean)
-        : [],
-    }))
-    onImport(products)
-    onClose()
-  }
-
   return (
-    <div
-      onClick={onClose}
-      className="fixed inset-0 z-200 bg-scrim backdrop-blur-sm flex justify-end"
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="w-175 max-w-full h-screen overflow-y-auto bg-surf border-l border-(--bd) flex flex-col"
-      >
-        {/* Header */}
-        <div className="px-5 sm:px-7 py-6 flex justify-between items-start sticky top-0 z-5 bg-surf border-b border-(--bd)">
-          <div>
-            <div className={cls.label}>Importar productos</div>
-            <div className="font-display text-[26px] font-black tracking-[-0.5px]">Subir Excel</div>
-          </div>
-          <Button variant="icon" size="md" onClick={onClose}>
-            <X size={16} />
-          </Button>
-        </div>
-
-        <div className="px-5 sm:px-7 pt-6 pb-10 flex flex-col gap-5 flex-1">
-          {/* Columnas esperadas */}
-          <div className="bg-card border border-(--bd) p-4">
-            <div className={cn(cls.label, 'mb-2')}>Columnas requeridas</div>
-            <div className="flex flex-wrap gap-2">
-              {['SKU', 'Nombre', 'Precio', 'Cantidad', 'Categoria', 'Marca'].map(
-                (c) => (
-                  <span
-                    key={c}
-                    className="font-mono text-[11px] bg-hover-tint border border-(--bd) px-2 py-0.5 text-muted"
-                  >
-                    {c}
-                  </span>
-                ),
-              )}
-            </div>
-            <div className={cn(cls.label, 'mb-2 mt-3')}>Columnas opcionales</div>
-            <div className="flex flex-wrap gap-2">
-              {['Descripcion', 'Precio Oferta', 'Estado', 'Destacado', 'URL Imagen'].map(
-                (c) => (
-                  <span
-                    key={c}
-                    className="font-mono text-[11px] bg-hover-tint border border-(--bd) px-2 py-0.5 text-muted/70"
-                  >
-                    {c}
-                  </span>
-                ),
-              )}
-            </div>
-            <p className="text-[12px] text-muted mt-2">
-              Los encabezados aceptan variaciones en español o inglés. Categoría y Marca aceptan el
-              nombre, el slug, o una variante cercana (tildes, mayúsculas, typos leves): si no
-              coincide con ninguna existente se creará una nueva automáticamente. Soporta .xlsx,
-              .xls y .csv.
-            </p>
-            <a
-              href="/plantillas/plantilla-importar-productos.xlsx"
-              download
-              className="inline-flex items-center gap-1.5 text-[12px] text-accent-ink no-underline mt-2 hover:underline"
-            >
-              <FileSpreadsheet size={13} /> Descargar plantilla de ejemplo
-            </a>
-          </div>
-
-          {/* Dropzone */}
-          <div
-            onDragOver={(e) => {
-              e.preventDefault()
-              setDragging(true)
-            }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={onDrop}
-            onClick={() => inputRef.current?.click()}
-            className={cn(
-              'border-2 border-dashed p-6 sm:p-10 flex flex-col items-center gap-3 cursor-pointer transition-colors',
-              dragging ? 'border-(--gold) bg-(--gold)/5' : 'border-(--bd) hover:border-(--gold)/50',
-            )}
-          >
-            <FileSpreadsheet size={36} className="text-muted" />
-            <div className="text-center">
-              <div className="font-display font-bold text-[15px]">
-                {fileName ? fileName : 'Arrastra tu archivo o haz clic para seleccionar'}
-              </div>
-              {!fileName && <div className="text-[12px] text-muted mt-1">.xlsx · .xls · .csv</div>}
-            </div>
-            <input
-              ref={inputRef}
-              type="file"
-              accept=".xlsx,.xls,.csv"
-              className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0]
-                if (f) processFile(f)
-              }}
-            />
-          </div>
-
-          {/* Resultados del parse */}
-          {rows !== null && (
-            <>
-              {/* Resumen */}
-              <div className="flex flex-wrap gap-3">
-                <div className="flex-1 bg-card border border-(--bd) p-4 flex items-center gap-3">
-                  <CheckCircle2 size={20} className="text-success shrink-0" />
-                  <div>
-                    <div className="font-display font-black text-[22px] text-success">
-                      {validRows.length}
-                    </div>
-                    <div className="text-[11px] text-muted uppercase tracking-widest">Válidos</div>
-                  </div>
-                </div>
-                <div className="flex-1 bg-card border border-(--bd) p-4 flex items-center gap-3">
-                  <AlertCircle
-                    size={20}
-                    className={cn('shrink-0', errorRows.length ? 'text-danger' : 'text-muted')}
-                  />
-                  <div>
-                    <div
-                      className={cn(
-                        'font-display font-black text-[22px]',
-                        errorRows.length ? 'text-danger' : 'text-muted',
-                      )}
-                    >
-                      {errorRows.length}
-                    </div>
-                    <div className="text-[11px] text-muted uppercase tracking-widest">
-                      Con errores
-                    </div>
-                  </div>
-                </div>
-                {warningRows.length > 0 && (
-                  <div className="flex-1 bg-card border border-(--bd) p-4 flex items-center gap-3">
-                    <AlertTriangle size={20} className="text-accent-ink shrink-0" />
-                    <div>
-                      <div className="font-display font-black text-[22px] text-accent-ink">
-                        {warningRows.length}
-                      </div>
-                      <div className="text-[11px] text-muted uppercase tracking-widest">
-                        Categoría/marca nueva
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Tabla preview */}
-              <div className="border border-(--bd) overflow-hidden">
-                <div className="overflow-x-auto max-h-85 overflow-y-auto">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr>
-                        {['Fila', 'SKU', 'Nombre', 'Cat.', 'Precio', 'Oferta', 'Estado', 'Dest.', 'Cant.', 'Marca'].map((h) => (
-                          <th key={h} className={cn(cls.th, 'whitespace-nowrap')}>
-                            {h}
-                          </th>
-                        ))}
-                        <th className={cls.th}>Estado</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rows.map((r) => (
-                        <tr
-                          key={r.row}
-                          className={cn(
-                            r.errors.length
-                              ? 'bg-danger/8'
-                              : r.warnings.length
-                                ? 'bg-(--gold)/5'
-                                : 'hover:bg-hover-tint',
-                          )}
-                        >
-                          <td className={cn(cls.td, cls.mono)}>{r.row}</td>
-                          <td className={cn(cls.td, cls.mono)}>{r.data.sku ?? '—'}</td>
-                          <td className={cn(cls.td, 'max-w-30 truncate')}>
-                            {r.data.name ?? '—'}
-                          </td>
-                          <td className={cn(cls.td, cls.mono)}>{r.data.cat ?? '—'}</td>
-                          <td className={cn(cls.td, cls.valGold)}>
-                            {typeof r.data.price === 'number' ? `S/ ${r.data.price.toFixed(2)}` : '—'}
-                          </td>
-                          <td className={cn(cls.td, cls.valGold)}>
-                            {typeof r.data.salePrice === 'number'
-                              ? `S/ ${r.data.salePrice.toFixed(2)}`
-                              : '—'}
-                          </td>
-                          <td className={cn(cls.td, 'text-[11px]')}>{r.data.status ?? '—'}</td>
-                          <td className={cn(cls.td, 'text-center')}>
-                            {r.data.featured ? (
-                              <Star size={12} className="inline text-accent-ink" fill="currentColor" />
-                            ) : (
-                              '—'
-                            )}
-                          </td>
-                          <td className={cls.td}>{r.data.stock ?? '—'}</td>
-                          <td className={cn(cls.td, 'max-w-20 truncate')}>{r.data.brand ?? '—'}</td>
-                          <td className={cls.td}>
-                            {r.errors.length > 0 ? (
-                              <span className="text-[11px] text-danger">
-                                {r.errors.join(' · ')}
-                              </span>
-                            ) : r.warnings.length > 0 ? (
-                              <span
-                                className="inline-flex items-center gap-1 text-[11px] text-accent-ink"
-                                title={r.warnings.join(' · ')}
-                              >
-                                <AlertTriangle size={12} />
-                                {r.warnings.join(' · ')}
-                              </span>
-                            ) : (
-                              <CheckCircle2 size={14} className="text-success" />
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Resumen antes de importar — qué va a pasar exactamente al confirmar */}
-              <div className="bg-card border border-(--bd) p-4 flex flex-col gap-2.5">
-                <div className={cls.label}>Resumen antes de importar</div>
-                <ul className="flex flex-col gap-2 text-[13px]">
-                  {toCreateCount > 0 && (
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 size={14} className="text-success shrink-0" />
-                      {toCreateCount} producto{toCreateCount !== 1 ? 's' : ''} nuevo
-                      {toCreateCount !== 1 ? 's' : ''} se crearán
-                    </li>
-                  )}
-                  {toUpdateCount > 0 && (
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 size={14} className="text-success shrink-0" />
-                      {toUpdateCount} producto{toUpdateCount !== 1 ? 's' : ''} existente
-                      {toUpdateCount !== 1 ? 's' : ''} (mismo SKU) se actualizará
-                      {toUpdateCount !== 1 ? 'n' : ''}
-                    </li>
-                  )}
-                  {newCategoryNames.length > 0 && (
-                    <li className="flex items-start gap-2">
-                      <AlertTriangle size={14} className="text-accent-ink shrink-0 mt-0.5" />
-                      <span>
-                        Categoría{newCategoryNames.length !== 1 ? 's' : ''} nueva
-                        {newCategoryNames.length !== 1 ? 's' : ''} a crear:{' '}
-                        <span className="text-accent-ink">{newCategoryNames.join(', ')}</span>
-                      </span>
-                    </li>
-                  )}
-                  {newBrandNames.length > 0 && (
-                    <li className="flex items-start gap-2">
-                      <AlertTriangle size={14} className="text-accent-ink shrink-0 mt-0.5" />
-                      <span>
-                        Marca{newBrandNames.length !== 1 ? 's' : ''} nueva
-                        {newBrandNames.length !== 1 ? 's' : ''} a crear:{' '}
-                        <span className="text-accent-ink">{newBrandNames.join(', ')}</span>
-                      </span>
-                    </li>
-                  )}
-                  {errorRows.length > 0 && (
-                    <li className="flex items-start gap-2">
-                      <AlertCircle size={14} className="text-danger shrink-0 mt-0.5" />
-                      <span>
-                        {errorRows.length} fila{errorRows.length !== 1 ? 's' : ''} con errores no se
-                        importará{errorRows.length !== 1 ? 'n' : ''} — corrígelas y vuelve a subir el
-                        archivo:
-                        <br />
-                        <span className="text-danger">{uniqueErrors.join(' · ')}</span>
-                      </span>
-                    </li>
-                  )}
-                  {validRows.length === 0 && errorRows.length === 0 && (
-                    <li className="text-muted">No hay filas para importar.</li>
-                  )}
-                </ul>
-              </div>
-
-              {/* Acciones */}
-              <div className="flex flex-wrap gap-2.5">
-                <Button
-                  variant="accent"
-                  size="md"
-                  full
-                  onClick={handleImport}
-                  disabled={validRows.length === 0}
-                >
-                  <Upload size={15} />
-                  Importar {validRows.length} producto{validRows.length !== 1 ? 's' : ''}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="md"
-                  full
-                  onClick={() => {
-                    setRows(null)
-                    setFileName('')
-                  }}
-                >
-                  Limpiar
-                </Button>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
+    <div className="bg-card border border-(--bd) p-4 flex flex-col gap-2.5">
+      <div className={cls.label}>Resumen antes de importar</div>
+      <ul className="flex flex-col gap-2 text-[13px]">
+        {toCreateCount > 0 && (
+          <li className="flex items-center gap-2">
+            <CheckCircle2 size={14} className="text-success shrink-0" />
+            {toCreateCount} producto{plural(toCreateCount)} nuevo{plural(toCreateCount)} se crearán
+          </li>
+        )}
+        {toUpdateCount > 0 && (
+          <li className="flex items-center gap-2">
+            <CheckCircle2 size={14} className="text-success shrink-0" />
+            {toUpdateCount} producto{plural(toUpdateCount)} existente{plural(toUpdateCount)} (mismo
+            SKU) se actualizará{plural(toUpdateCount, 'n')}
+          </li>
+        )}
+        {newCategoryNames.length > 0 && (
+          <li className="flex items-start gap-2">
+            <AlertTriangle size={14} className="text-accent-ink shrink-0 mt-0.5" />
+            <span>
+              Categoría{plural(newCategoryNames.length)} nueva{plural(newCategoryNames.length)} a
+              crear: <span className="text-accent-ink">{newCategoryNames.join(', ')}</span>
+            </span>
+          </li>
+        )}
+        {newBrandNames.length > 0 && (
+          <li className="flex items-start gap-2">
+            <AlertTriangle size={14} className="text-accent-ink shrink-0 mt-0.5" />
+            <span>
+              Marca{plural(newBrandNames.length)} nueva{plural(newBrandNames.length)} a crear:{' '}
+              <span className="text-accent-ink">{newBrandNames.join(', ')}</span>
+            </span>
+          </li>
+        )}
+        {errorRows.length > 0 && (
+          <li className="flex items-start gap-2">
+            <AlertCircle size={14} className="text-danger shrink-0 mt-0.5" />
+            <span>
+              {errorRows.length} fila{plural(errorRows.length)} con errores no se importará
+              {plural(errorRows.length, 'n')} — corrígelas y vuelve a subir el archivo:
+              <br />
+              <span className="text-danger">{uniqueErrors.join(' · ')}</span>
+            </span>
+          </li>
+        )}
+        {validRows.length === 0 && errorRows.length === 0 && (
+          <li className="text-muted">No hay filas para importar.</li>
+        )}
+      </ul>
     </div>
+  )
+}
+
+function toImportProduct(r: ParsedRow): ImportProductRow {
+  return {
+    sku: r.data.sku!,
+    name: r.data.name!,
+    desc: r.data.desc ?? '',
+    price: r.data.price!,
+    salePrice: r.data.salePrice || undefined,
+    stock: r.data.stock!,
+    brand: r.data.brand!,
+    cat: r.data.cat!,
+    status: r.data.status ?? 'AVAILABLE',
+    featured: r.data.featured ?? false,
+    allowPartialPreorder: r.data.allowPartialPreorder ?? false,
+    depositPercent: r.data.depositPercent ?? null,
+    estimatedArrival: r.data.estimatedArrival ?? null,
+    imageUrls: r.data.imageUrl
+      ? String(r.data.imageUrl)
+          .split('|')
+          .map((u) => u.trim())
+          .filter(Boolean)
+      : [],
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Component — envoltorio de SpreadsheetImportDrawer con las reglas de producto
+// ---------------------------------------------------------------------------
+export function ExcelImportDrawer({ categories, brands, existingSkus, onClose, onImport }: Props) {
+  return (
+    <SpreadsheetImportDrawer<ParsedRow>
+      title="Importar productos"
+      requiredColumns={['SKU', 'Nombre', 'Precio', 'Cantidad', 'Categoria', 'Marca']}
+      optionalColumns={['Descripcion', 'Precio Oferta', 'Estado', 'Destacado', 'URL Imagen']}
+      hint={
+        <>
+          Los encabezados aceptan variaciones en español o inglés. Categoría y Marca aceptan el
+          nombre, el slug, o una variante cercana (tildes, mayúsculas, typos leves): si no coincide
+          con ninguna existente se creará una nueva automáticamente. Soporta .xlsx, .xls y .csv.
+        </>
+      }
+      templateHref="/plantillas/plantilla-importar-productos.xlsx"
+      // "Entrega estimada" es una fecha: sin cellDates llegaría como número de serie.
+      cellDates
+      parseRows={(raw) => parseRows(raw, categories, brands)}
+      columns={COLUMNS}
+      warningLabel="Categoría/marca nueva"
+      importLabel={(count) => `Importar ${count} producto${plural(count)}`}
+      summary={(ctx) => <ImportSummary {...ctx} existingSkus={existingSkus} />}
+      onClose={onClose}
+      onImport={(validRows) => {
+        onImport(validRows.map(toImportProduct))
+        onClose()
+      }}
+    />
   )
 }

@@ -1,10 +1,6 @@
 'use client'
 
-import {
-  deleteBanner,
-  saveBanner,
-  toggleBanner,
-} from '@/features/banners/actions/banner.actions'
+import { deleteBanner, saveBanner, toggleBanner } from '@/features/banners/actions/banner.actions'
 import { BannerFormDrawer } from '@/features/banners/components/BannerFormDrawer'
 import { bannerDbSchema } from '@/features/banners/schemas/banner.schema'
 import type { BannerRow } from '@/features/banners/types'
@@ -32,22 +28,17 @@ export function useBannerCrud() {
 }
 
 export function BannerCrudProvider({ children }: { children: ReactNode }) {
-  const crud = useEntityCrud<BannerRow>(deleteBanner, (b) => `"${b.title}" eliminado`)
-
-  const onSubmit = (data: BannerFormValues) => {
-    crud.run(() => saveBanner(crud.editing?.id ?? null, data), {
-      successMsg: crud.isNew ? 'Banner creado' : 'Banner actualizado',
-      onSuccess: () => crud.closeDrawer(),
-      refresh: true,
-    })
-  }
-
-  const toggle = (b: BannerRow) => {
-    crud.run(() => toggleBanner(b.id, b.active), {
-      successMsg: b.active ? `"${b.title}" pausado` : `"${b.title}" activado`,
-      refresh: true,
-    })
-  }
+  const crud = useEntityCrud<BannerRow, BannerFormValues>(
+    deleteBanner,
+    (b) => `"${b.title}" eliminado`,
+    {
+      save: { action: saveBanner, createdMsg: 'Banner creado', updatedMsg: 'Banner actualizado' },
+      toggle: {
+        action: (b) => toggleBanner(b.id, b.active),
+        message: (b) => (b.active ? `"${b.title}" pausado` : `"${b.title}" activado`),
+      },
+    },
+  )
 
   return (
     <BannerCrudContext.Provider
@@ -55,7 +46,7 @@ export function BannerCrudProvider({ children }: { children: ReactNode }) {
         openNew: crud.openNew,
         openEdit: crud.openEdit,
         openDelete: crud.openDelete,
-        toggle,
+        toggle: crud.handleToggle,
         isPending: crud.isPending,
       }}
     >
@@ -75,7 +66,7 @@ export function BannerCrudProvider({ children }: { children: ReactNode }) {
           banner={crud.editing}
           isNew={crud.isNew}
           onClose={crud.closeDrawer}
-          onSubmit={onSubmit}
+          onSubmit={crud.handleSave}
           isPending={crud.isPending}
         />
       )}

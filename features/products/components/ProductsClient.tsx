@@ -24,6 +24,7 @@ import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
 import { useCrudState } from '@/shared/hooks/admin/useCrudState'
 import { useServerAction } from '@/shared/hooks/admin/useServerAction'
 import { cls } from '@/shared/lib/admin/admin-classes'
+import { formatCurrency } from '@/shared/lib/utils'
 import { PRODUCT_STATUS_LABELS } from '@/features/products/lib/product-status'
 import type { ImportProductRow } from '@/features/products/schemas/product.schema'
 import { productDbSchema } from '@/features/products/schemas/product.schema'
@@ -287,7 +288,7 @@ export function ProductsClient({
       { header: 'SKU', className: cls.mono, render: (p) => p.sku },
       { header: 'Categoría', render: (p) => p.category.name },
       { header: 'Marca', render: (p) => p.brand.name },
-      { header: 'Precio', className: cls.valGold, render: (p) => `S/ ${p.price.toFixed(2)}` },
+      { header: 'Precio', className: cls.valGold, render: (p) => formatCurrency(p.price) },
       { header: 'Stock', render: (p) => <StockBadge s={p.inventory?.availableStock ?? 0} /> },
       {
         header: 'Colecciones',

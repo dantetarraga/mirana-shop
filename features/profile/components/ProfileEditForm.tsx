@@ -1,10 +1,13 @@
 'use client'
 
-import { updateMyProfile, type ProfileData } from '@/features/profile/actions/account-profile.actions'
+import {
+  updateMyProfile,
+  type ProfileData,
+} from '@/features/profile/actions/account-profile.actions'
 import { Button } from '@/shared/components/ui/Button'
+import { useServerAction } from '@/shared/hooks/useServerAction'
 import { Save } from 'lucide-react'
 import { useState } from 'react'
-import { toast } from 'sonner'
 
 const inputCls =
   'w-full bg-surf border border-field text-text font-sans text-[14px] px-[13px] py-[10px] outline-none focus:border-accent-ink transition-colors duration-150 placeholder:text-muted/75'
@@ -19,26 +22,19 @@ export function ProfileEditForm({
   const [phone, setPhone] = useState(profile.phone ?? '')
   const [hasKids, setHasKids] = useState(profile.hasKids)
   const [kidsCount, setKidsCount] = useState(String(profile.kidsCount ?? ''))
-  const [saving, setSaving] = useState(false)
+  const { isPending: saving, runAsync } = useServerAction()
 
   const handleSave = async () => {
-    setSaving(true)
-    const result = await updateMyProfile({
-      phone: phone.trim() || undefined,
+    const changes = {
+      phone: phone.trim() || null,
       hasKids,
       kidsCount: hasKids && kidsCount ? Number(kidsCount) : null,
-    })
-    setSaving(false)
-    if (result.success) {
-      toast.success('Perfil actualizado')
-      onSaved({
-        phone: phone.trim() || null,
-        hasKids,
-        kidsCount: hasKids && kidsCount ? Number(kidsCount) : null,
-      })
-    } else {
-      toast.error(result.error ?? 'Error al guardar')
     }
+    await runAsync(() => updateMyProfile({ ...changes, phone: changes.phone ?? undefined }), {
+      successMessage: 'Perfil actualizado',
+      errorMessage: 'Error al guardar',
+      onSuccess: () => onSaved(changes),
+    })
   }
 
   return (

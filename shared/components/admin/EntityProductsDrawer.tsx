@@ -1,28 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
-import { toast } from "sonner";
-import { X, Search, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { X, Search, Loader2, AlertCircle } from "lucide-react";
 import { AdminDrawer } from "@/shared/components/admin/AdminDrawer";
 import { Button } from "@/shared/components/ui/Button";
 import { Select } from "@/shared/components/ui/Select";
 import { StockBadge } from "@/features/inventory/components/StockBadge";
+import { PRODUCT_STATUS_LABELS } from "@/features/products/lib/product-status";
+import { useEntityProducts, type EntityType } from "@/shared/hooks/admin/useEntityProducts";
 import { cls } from "@/shared/lib/admin/admin-classes";
-import type { DrawerProduct } from "@/shared/types/entity-products.types";
-import {
-  getCollectionProducts,
-  addProductToCollection,
-  removeProductFromCollection,
-} from "@/features/collections/actions/collection.actions";
-import {
-  getBrandProducts,
-  reassignProductBrand,
-} from "@/features/brands/actions/brand.actions";
-import {
-  getCategoryProducts,
-  reassignProductCategory,
-} from "@/features/categories/actions/category.actions";
-import { searchAvailableProducts } from "@/features/products/actions/product.actions";
+import { formatCurrency } from "@/shared/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Tipos
@@ -31,22 +18,14 @@ import { searchAvailableProducts } from "@/features/products/actions/product.act
 interface EntityProductsDrawerProps {
   entityId: string;
   entityName: string;
-  entityType: "collection" | "brand" | "category";
+  entityType: EntityType;
   allBrands?: { id: string; name: string }[];
   allCategories?: { id: string; name: string }[];
   onClose: () => void;
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  AVAILABLE:   "Disponible",
-  PREORDER:    "Preventa",
-  SOLD_OUT:    "Agotado",
-  COMING_SOON: "Próximamente",
-  ARCHIVED:    "Archivado",
-};
-
 // ---------------------------------------------------------------------------
-// Componente
+// Componente — vista; estado y acciones viven en useEntityProducts
 // ---------------------------------------------------------------------------
 
 export function EntityProductsDrawer({
@@ -57,140 +36,26 @@ export function EntityProductsDrawer({
   allCategories = [],
   onClose,
 }: EntityProductsDrawerProps) {
-  const [products, setProducts] = useState<DrawerProduct[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isPending, startTransition] = useTransition();
+  const {
+    products,
+    loading,
+    loadError,
+    reload,
+    isPending,
+    add,
+    remove,
+    reassign,
+    search,
+  } = useEntityProducts({ entityType, entityId, searchDebounceMs: 350 });
 
-  // Búsqueda
+  // Búsqueda: abrir/cerrar el buscador es puramente de esta vista
   const [showSearch, setShowSearch] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<DrawerProduct[]>([]);
-  const [searching, setSearching] = useState(false);
-  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Reasignación inline (brands / categories)
   const [reassigningId, setReassigningId] = useState<string | null>(null);
 
-  // ---------------------------------------------------------------------------
-  // Carga inicial
-  // ---------------------------------------------------------------------------
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      let result: { success: true; data: DrawerProduct[] } | { success: false; error: string };
-
-      if (entityType === "collection") {
-        result = await getCollectionProducts(entityId);
-      } else if (entityType === "brand") {
-        result = await getBrandProducts(entityId);
-      } else {
-        result = await getCategoryProducts(entityId);
-      }
-
-      if (cancelled) return;
-
-      if (result.success) {
-        setProducts(result.data);
-      } else {
-        toast.error(result.error);
-      }
-      setLoading(false);
-    }
-
-    load();
-    return () => { cancelled = true; };
-  }, [entityId, entityType]);
-
-  // ---------------------------------------------------------------------------
-  // Búsqueda con debounce
-  // ---------------------------------------------------------------------------
-
-  useEffect(() => {
-    if (searchTimer.current) clearTimeout(searchTimer.current);
-
-    // Query demasiado corta: no se busca. No se resetea aquí (evita setState
-    // síncrono en el efecto) — el render ya oculta resultados por longitud.
-    if (searchQuery.trim().length < 2) return;
-
-    // Todos los setState viven dentro del callback async del setTimeout.
-    searchTimer.current = setTimeout(async () => {
-      setSearching(true);
-      const currentIds = products.map((p) => p.id);
-      const result = await searchAvailableProducts(searchQuery.trim(), currentIds);
-      setSearching(false);
-      if (result.success) {
-        setSearchResults(result.data);
-      }
-    }, 350);
-
-    return () => {
-      if (searchTimer.current) clearTimeout(searchTimer.current);
-    };
-  }, [searchQuery, products]);
-
-  // ---------------------------------------------------------------------------
-  // Handlers
-  // ---------------------------------------------------------------------------
-
-  const handleRemove = (product: DrawerProduct) => {
-    if (entityType !== "collection") return;
-    startTransition(async () => {
-      const result = await removeProductFromCollection(entityId, product.id);
-      if (result.success) {
-        setProducts((prev) => prev.filter((p) => p.id !== product.id));
-        toast.success(`"${product.name}" eliminado de la colección`);
-      } else {
-        toast.error(result.error);
-      }
-    });
-  };
-
-  const handleReassign = (productId: string, newEntityId: string) => {
-    startTransition(async () => {
-      let result: { success: boolean; error?: string };
-
-      if (entityType === "brand") {
-        result = await reassignProductBrand(productId, newEntityId);
-      } else {
-        result = await reassignProductCategory(productId, newEntityId);
-      }
-
-      if (result.success) {
-        setProducts((prev) => prev.filter((p) => p.id !== productId));
-        setReassigningId(null);
-        toast.success("Producto reasignado");
-      } else {
-        toast.error(result.error ?? "Error al reasignar");
-      }
-    });
-  };
-
-  const handleAddFromSearch = (product: DrawerProduct) => {
-    startTransition(async () => {
-      let result: { success: boolean; error?: string };
-
-      if (entityType === "collection") {
-        result = await addProductToCollection(entityId, product.id);
-      } else if (entityType === "brand") {
-        result = await reassignProductBrand(product.id, entityId);
-      } else {
-        result = await reassignProductCategory(product.id, entityId);
-      }
-
-      if (result.success) {
-        setProducts((prev) => {
-          if (prev.some((p) => p.id === product.id)) return prev;
-          return [...prev, product];
-        });
-        setSearchResults((prev) => prev.filter((p) => p.id !== product.id));
-        toast.success(`"${product.name}" agregado`);
-      } else {
-        toast.error(result.error ?? "Error al agregar");
-      }
-    });
+  const handleReassign = async (productId: string, newEntityId: string) => {
+    if (await reassign(productId, newEntityId)) setReassigningId(null);
   };
 
   // ---------------------------------------------------------------------------
@@ -224,8 +89,19 @@ export function EntityProductsDrawer({
         </div>
       )}
 
+      {/* Error de carga — visible, no se confunde con "sin productos" */}
+      {!loading && loadError && (
+        <div role="alert" className="flex flex-col items-center gap-3 py-10 text-center text-danger text-[13px]">
+          <AlertCircle size={18} />
+          {loadError}
+          <Button variant="outline" size="sm" onClick={reload}>
+            Reintentar
+          </Button>
+        </div>
+      )}
+
       {/* Lista de productos */}
-      {!loading && (
+      {!loading && !loadError && (
         <>
           {products.length === 0 ? (
             <div className="py-10 text-center text-muted text-[13px]">
@@ -256,13 +132,13 @@ export function EntityProductsDrawer({
                       {p.name}
                     </div>
                     <div className="text-[11px] text-muted tracking-[1px] font-mono">
-                      {p.sku} · {STATUS_LABELS[p.status] ?? p.status}
+                      {p.sku} · {PRODUCT_STATUS_LABELS[p.status as keyof typeof PRODUCT_STATUS_LABELS] ?? p.status}
                     </div>
                   </div>
 
                   {/* Precio */}
                   <span className="font-display font-extrabold text-[13px] text-accent-ink whitespace-nowrap">
-                    S/ {p.price.toFixed(2)}
+                    {formatCurrency(p.price)}
                   </span>
 
                   {/* Stock */}
@@ -276,7 +152,7 @@ export function EntityProductsDrawer({
                         size="sm"
                         destructive
                         disabled={isPending}
-                        onClick={() => handleRemove(p)}
+                        onClick={() => remove(p)}
                         title="Quitar de la colección"
                       >
                         <X size={13} />
@@ -343,25 +219,25 @@ export function EntityProductsDrawer({
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
                   <input
                     autoFocus
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    value={search.query}
+                    onChange={(e) => search.setQuery(e.target.value)}
                     placeholder="Buscar por nombre o SKU..."
                     className={cls.input + " pl-9 text-[13px]"}
                   />
-                  {searching && (
+                  {search.searching && (
                     <Loader2 size={13} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted animate-spin" />
                   )}
                 </div>
 
                 {/* Resultados */}
-                {searchQuery.trim().length >= 2 && searchResults.length > 0 && (
+                {search.active && search.results.length > 0 && (
                   <div className="border border-(--bd) overflow-hidden">
-                    {searchResults.map((r) => (
+                    {search.results.map((r) => (
                       <button
                         key={r.id}
                         type="button"
                         disabled={isPending}
-                        onClick={() => handleAddFromSearch(r)}
+                        onClick={() => add(r)}
                         className="w-full flex items-center justify-between gap-3 px-4 py-2.5 border-b border-(--bd) last:border-b-0 text-left hover:bg-(--card-h) transition-colors disabled:opacity-50"
                       >
                         <div className="min-w-0">
@@ -378,7 +254,7 @@ export function EntityProductsDrawer({
                   </div>
                 )}
 
-                {searchQuery.trim().length >= 2 && !searching && searchResults.length === 0 && (
+                {search.active && search.hasResults && !search.searching && search.results.length === 0 && (
                   <p className="text-[12px] text-muted text-center py-2">
                     No se encontraron productos disponibles.
                   </p>
@@ -387,7 +263,7 @@ export function EntityProductsDrawer({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => { setShowSearch(false); setSearchQuery(""); setSearchResults([]); }}
+                  onClick={() => { setShowSearch(false); search.clear(); }}
                 >
                   Cancelar búsqueda
                 </Button>

@@ -3,7 +3,7 @@ import type { ProductListItem, StockFilter } from '@/features/products/types'
 import { countProducts, getProducts } from '@/features/products/queries/product.queries'
 import { getInventoryStats } from '@/features/inventory/queries/inventory.queries'
 import { AdminPagination } from '@/shared/components/admin/AdminPagination'
-import { ADMIN_PER_PAGE } from '@/shared/lib/admin/pagination'
+import { ADMIN_PER_PAGE, parsePage } from '@/shared/lib/admin/pagination'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
 import { ServerSearchForm } from '@/shared/components/admin/ServerSearchForm'
 import { KpiCard } from '@/features/dashboard/components/KpiCard'
@@ -111,7 +111,7 @@ export default async function InventoryPage({ searchParams }: PageProps) {
   const { filter: rawFilter, q, page: rawPage } = await searchParams
   const stockFilter: StockFilter =
     rawFilter && VALID_FILTERS.has(rawFilter as StockFilter) ? (rawFilter as StockFilter) : 'all'
-  const page = Math.max(1, Number(rawPage ?? 1))
+  const page = parsePage(rawPage)
   const currentQ = q ?? ''
 
   // Un COUNT por pestaña (respetando la búsqueda) — antes cada pestaña mostraba

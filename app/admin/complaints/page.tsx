@@ -4,7 +4,7 @@ import { complaintDueStatus } from '@/features/complaints/lib/business-days'
 import type { ComplaintFilters } from '@/features/complaints/types'
 import { KpiCard } from '@/features/dashboard/components/KpiCard'
 import { AdminPagination } from '@/shared/components/admin/AdminPagination'
-import { ADMIN_PER_PAGE } from '@/shared/lib/admin/pagination'
+import { ADMIN_PER_PAGE, parsePage } from '@/shared/lib/admin/pagination'
 import { ServerSearchForm } from '@/shared/components/admin/ServerSearchForm'
 import { verifyAdmin } from '@/shared/lib/require-admin'
 import { cn } from '@/shared/lib/utils'
@@ -44,7 +44,7 @@ export default async function ComplaintsPage({ searchParams }: PageProps) {
   const { q, status: rawStatus, page: rawPage } = await searchParams
   const status = toStatus(rawStatus)
   const overdue = rawStatus === OVERDUE_KEY
-  const page = Math.max(1, Number(rawPage ?? 1))
+  const page = parsePage(rawPage)
   const skip = (page - 1) * PER_PAGE
 
   const [complaints, stats, total] = await Promise.all([

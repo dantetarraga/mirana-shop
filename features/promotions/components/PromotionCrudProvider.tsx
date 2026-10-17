@@ -32,22 +32,21 @@ export function usePromotionCrud() {
 }
 
 export function PromotionCrudProvider({ children }: { children: ReactNode }) {
-  const crud = useEntityCrud<PromotionRow>(deletePromotion, (p) => `"${p.name}" eliminada`)
-
-  const onSubmit = (data: PromotionFormValues) => {
-    crud.run(() => savePromotion(crud.editing?.id ?? null, data), {
-      successMsg: crud.isNew ? 'Promoción creada' : 'Promoción actualizada',
-      onSuccess: () => crud.closeDrawer(),
-      refresh: true,
-    })
-  }
-
-  const toggle = (p: PromotionRow) => {
-    crud.run(() => togglePromotion(p.id, p.active), {
-      successMsg: p.active ? `"${p.name}" pausada` : `"${p.name}" activada`,
-      refresh: true,
-    })
-  }
+  const crud = useEntityCrud<PromotionRow, PromotionFormValues>(
+    deletePromotion,
+    (p) => `"${p.name}" eliminada`,
+    {
+      save: {
+        action: savePromotion,
+        createdMsg: 'Promoción creada',
+        updatedMsg: 'Promoción actualizada',
+      },
+      toggle: {
+        action: (p) => togglePromotion(p.id, p.active),
+        message: (p) => (p.active ? `"${p.name}" pausada` : `"${p.name}" activada`),
+      },
+    },
+  )
 
   return (
     <PromotionCrudContext.Provider
@@ -55,7 +54,7 @@ export function PromotionCrudProvider({ children }: { children: ReactNode }) {
         openNew: crud.openNew,
         openEdit: crud.openEdit,
         openDelete: crud.openDelete,
-        toggle,
+        toggle: crud.handleToggle,
         isPending: crud.isPending,
       }}
     >
@@ -75,7 +74,7 @@ export function PromotionCrudProvider({ children }: { children: ReactNode }) {
           promotion={crud.editing ?? null}
           isNew={crud.isNew}
           onClose={crud.closeDrawer}
-          onSubmit={onSubmit}
+          onSubmit={crud.handleSave}
           isPending={crud.isPending}
         />
       )}

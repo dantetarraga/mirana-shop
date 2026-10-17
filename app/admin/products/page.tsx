@@ -9,7 +9,7 @@ import { PRODUCT_STATUS_LABELS, parseProductStatuses } from '@/features/products
 import { countProducts, getAdminProducts } from '@/features/products/queries/product.queries'
 import { getPreorderDepositPercent } from '@/features/settings/queries/store-settings.queries'
 import { AdminPagination } from '@/shared/components/admin/AdminPagination'
-import { ADMIN_PER_PAGE } from '@/shared/lib/admin/pagination'
+import { ADMIN_PER_PAGE, parsePage } from '@/shared/lib/admin/pagination'
 import { ServerSearchForm } from '@/shared/components/admin/ServerSearchForm'
 import { verifyAdmin } from '@/shared/lib/require-admin'
 import { X } from 'lucide-react'
@@ -44,7 +44,7 @@ const chipCls =
 export default async function ProductsPage({ searchParams }: PageProps) {
   await verifyAdmin()
   const { q, cat, brand, collection, status, page: rawPage } = await searchParams
-  const page = Math.max(1, Number(rawPage ?? 1))
+  const page = parsePage(rawPage)
   const skip = (page - 1) * PER_PAGE
 
   const categorySlugs = cat ? cat.split(',').filter(Boolean) : []

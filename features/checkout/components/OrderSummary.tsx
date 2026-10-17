@@ -2,13 +2,9 @@
 
 import { depositUnitPrice, type PreorderMode } from '@/features/checkout/lib/preorder'
 import { effectivePrice } from '@/features/checkout/lib/pricing'
-import { Button } from '@/shared/components/ui/Button'
 import { formatCurrency } from '@/shared/lib/utils'
-import { ArrowLeft, ArrowRight, Truck } from 'lucide-react'
 import Image from 'next/image'
-import Link from 'next/link'
 import type { ReactNode } from 'react'
-import type { UseFormRegisterReturn } from 'react-hook-form'
 
 type CartItem = {
   product: {
@@ -25,8 +21,9 @@ type CartItem = {
   preorderMode: PreorderMode
 }
 
-type Props = {
-  cart: CartItem[]
+/** Números del resumen: lo que se muestra, ya calculado por quien lo usa. */
+export type OrderSummaryData = {
+  lines: CartItem[]
   /** Valor completo del pedido */
   subtotal: number
   /** Lo que se cobra hoy, antes de envío y descuentos */
@@ -42,49 +39,40 @@ type Props = {
   /** Código del cupón que produjo el beneficio; null si fue una promo automática */
   couponCode: string | null
   total: number
-  loading: boolean
   /** null = no hay promoción de envío gratis activa */
   shippingThreshold: number | null
   /** Nombre de la forma de entrega elegida, para el desglose */
   deliveryLabel: string | null
-  /** Casilla de Términos y Condiciones — obligatoria para comprar */
-  registerTerms: UseFormRegisterReturn
-  termsError?: string
-  /** Campo de cupón — se canjea acá, junto al total que modifica */
-  couponSlot?: ReactNode
-  /** El paso visible es el último: recién ahí se confirma el pedido */
-  isLastStep: boolean
-  /** El paso visible es el primero: el botón secundario vuelve al carrito */
-  isFirstStep: boolean
-  /** Avanzar al siguiente paso (valida el actual) */
-  onNext: () => void
-  /** Retroceder un paso */
-  onBack: () => void
 }
 
-export function OrderSummary({
-  cart,
-  subtotal,
-  payableNow,
-  dueTotal,
-  depositPercent,
-  shippingCost,
-  shippingFree,
-  discount,
-  discountName,
-  couponCode,
-  total,
-  loading,
-  shippingThreshold,
-  deliveryLabel,
-  registerTerms,
-  termsError,
-  couponSlot,
-  isLastStep,
-  isFirstStep,
-  onNext,
-  onBack,
-}: Props) {
+type Props = {
+  summary: OrderSummaryData
+  /** Campo de cupón — se canjea acá, junto al total que modifica */
+  couponSlot?: ReactNode
+  /** Lo que va bajo la tarjeta (términos, navegación entre pasos, confirmar) */
+  footer?: ReactNode
+}
+
+/**
+ * Resumen del pedido: solo presenta líneas y totales. Lo que depende del paso
+ * (términos, avanzar, confirmar) lo decide CheckoutView y entra por `footer`.
+ */
+export function OrderSummary({ summary, couponSlot, footer }: Props) {
+  const {
+    lines: cart,
+    subtotal,
+    payableNow,
+    dueTotal,
+    depositPercent,
+    shippingCost,
+    shippingFree,
+    discount,
+    discountName,
+    couponCode,
+    total,
+    shippingThreshold,
+    deliveryLabel,
+  } = summary
   // Un método de retiro cuesta 0 sin que exista promoción de envío gratis: en
   // ambos casos al cliente hay que decirle "Gratis", no "S/ 0.00".
   const shippingIsFree = shippingFree || shippingCost === 0
@@ -202,75 +190,7 @@ export function OrderSummary({
         </div>
       </div>
 
-      {/* Términos y condiciones — solo en el último paso, junto al botón que
-          confirma: es lo que se está aceptando al pulsarlo. */}
-      <div className={`bg-card border border-(--bd) px-4 py-3.5 ${isLastStep ? '' : 'hidden'}`}>
-        <label className="flex items-start gap-3 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            {...registerTerms}
-            aria-invalid={termsError ? true : undefined}
-            aria-describedby={termsError ? 'checkout-terms-error' : undefined}
-            className="mt-0.5 accent-accent-ink w-4 h-4 shrink-0"
-          />
-          <span className="text-[12px] leading-snug">
-            He leído y acepto los{' '}
-            <Link
-              href="/terminos-y-condiciones"
-              target="_blank"
-              className="text-accent-ink underline"
-            >
-              Términos y Condiciones
-            </Link>{' '}
-            y la{' '}
-            <Link
-              href="/politica-de-privacidad"
-              target="_blank"
-              className="text-accent-ink underline"
-            >
-              Política de Privacidad
-            </Link>
-            .
-          </span>
-        </label>
-        {termsError && (
-          <p id="checkout-terms-error" role="alert" className="text-danger text-[12px] mt-2">
-            {termsError}
-          </p>
-        )}
-      </div>
-
-      {/* CTA — solo el último paso confirma; los anteriores avanzan */}
-      {isLastStep ? (
-        <Button
-          type="submit"
-          variant="accent"
-          size="lg"
-          full
-          loading={loading}
-          loadingText="Confirmando pedido…"
-        >
-          <Truck size={16} className="mr-2" />
-          Confirmar pedido
-        </Button>
-      ) : (
-        <Button type="button" variant="accent" size="lg" full onClick={onNext}>
-          Continuar
-          <ArrowRight size={16} className="ml-2" />
-        </Button>
-      )}
-
-      <Button
-        type="button"
-        variant="outline"
-        size="md"
-        full
-        onClick={() => (isFirstStep ? window.history.back() : onBack())}
-        disabled={loading}
-      >
-        <ArrowLeft size={14} className="mr-1.5" />
-        {isFirstStep ? 'Volver al carrito' : 'Paso anterior'}
-      </Button>
+      {footer}
     </div>
   )
 }

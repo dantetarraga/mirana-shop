@@ -5,7 +5,7 @@ import { useRecentSearchesStore } from '@/features/search/stores/recent-searches
 import { effectivePrice } from '@/features/checkout/lib/pricing'
 import { getCategoryStripe, type CatalogProduct } from '@/features/products/types/catalog.types'
 import { useDebounce } from '@/shared/hooks/useDebounce'
-import { cn } from '@/shared/lib/utils'
+import { cn, formatCurrency } from '@/shared/lib/utils'
 import { ArrowRight, Clock, History, Search, SearchX, X } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -406,7 +406,7 @@ export function SearchBox({
                             </div>
                           </div>
                           <div className="font-display text-[16px] font-black text-accent-ink shrink-0">
-                            S/ {effectivePrice(p).toFixed(2)}
+                            {formatCurrency(effectivePrice(p))}
                           </div>
                         </li>
                       )

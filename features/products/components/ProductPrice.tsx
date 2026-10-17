@@ -1,5 +1,5 @@
 import { getDiscount } from '@/features/products/lib/product-badge'
-import { cn } from '@/shared/lib/utils'
+import { cn, formatCurrency } from '@/shared/lib/utils'
 
 interface ProductPriceProps {
   price: number
@@ -23,11 +23,12 @@ export function ProductPrice({ price, salePrice, className }: ProductPriceProps)
       <div className="flex items-baseline gap-x-4 gap-y-1 flex-wrap">
         <div className="font-display font-black text-accent-ink leading-none text-[40px] sm:text-[56px]">
           {hasDiscount && <span className="sr-only">Precio de oferta: </span>}
-          S/ {current.toFixed(2)}
+          {formatCurrency(current)}
         </div>
         {hasDiscount && (
           <del className="font-display font-bold text-muted leading-none text-[22px] sm:text-[28px]">
-            <span className="sr-only">Precio anterior: </span>S/ {price.toFixed(2)}
+            <span className="sr-only">Precio anterior: </span>
+            {formatCurrency(price)}
           </del>
         )}
       </div>
@@ -37,7 +38,7 @@ export function ProductPrice({ price, salePrice, className }: ProductPriceProps)
             -{percent}%
           </span>
           <span className="text-[14px] font-semibold text-danger">
-            Ahorras S/ {savings.toFixed(2)}
+            Ahorras {formatCurrency(savings)}
           </span>
         </div>
       )}

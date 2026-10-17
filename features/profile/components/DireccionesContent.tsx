@@ -13,10 +13,10 @@ import {
   type AddressFormValues,
 } from '@/features/profile/components/AddressFormPanel'
 import { Button } from '@/shared/components/ui/Button'
+import { useServerAction } from '@/shared/hooks/useServerAction'
 import { cn } from '@/shared/lib/utils'
 import { Home, MapPin, Pencil, Plus, Star, Trash2 } from 'lucide-react'
 import { use, useState } from 'react'
-import { toast } from 'sonner'
 import { EmptyState } from '@/shared/components/ui/EmptyState'
 
 // ---------------------------------------------------------------------------
@@ -118,46 +118,44 @@ export function DireccionesContent({
     setAddresses(await getMyAddresses())
   }
 
+  const { runAsync } = useServerAction()
+
   const handleCreate = async (data: AddressFormValues) => {
-    const result = await createAddress(data)
-    if (result.success) {
-      toast.success('Direccion guardada')
-      setShowForm(false)
-      await reload()
-    } else {
-      toast.error(result.error ?? 'Error al guardar')
-    }
+    await runAsync(() => createAddress(data), {
+      successMessage: 'Direccion guardada',
+      errorMessage: 'Error al guardar',
+      onSuccess: async () => {
+        setShowForm(false)
+        await reload()
+      },
+    })
   }
 
   const handleUpdate = async (id: string, data: AddressFormValues) => {
-    const result = await updateAddress(id, data)
-    if (result.success) {
-      toast.success('Direccion actualizada')
-      setEditingId(null)
-      await reload()
-    } else {
-      toast.error(result.error ?? 'Error al actualizar')
-    }
+    await runAsync(() => updateAddress(id, data), {
+      successMessage: 'Direccion actualizada',
+      errorMessage: 'Error al actualizar',
+      onSuccess: async () => {
+        setEditingId(null)
+        await reload()
+      },
+    })
   }
 
   const handleDelete = async (id: string) => {
-    const result = await deleteAddress(id)
-    if (result.success) {
-      toast.success('Direccion eliminada')
-      setAddresses((prev) => prev.filter((a) => a.id !== id))
-    } else {
-      toast.error(result.error ?? 'Error al eliminar')
-    }
+    await runAsync(() => deleteAddress(id), {
+      successMessage: 'Direccion eliminada',
+      errorMessage: 'Error al eliminar',
+      onSuccess: () => setAddresses((prev) => prev.filter((a) => a.id !== id)),
+    })
   }
 
   const handleSetDefault = async (id: string) => {
-    const result = await setDefaultAddress(id)
-    if (result.success) {
-      toast.success('Direccion predeterminada actualizada')
-      await reload()
-    } else {
-      toast.error(result.error ?? 'Error')
-    }
+    await runAsync(() => setDefaultAddress(id), {
+      successMessage: 'Direccion predeterminada actualizada',
+      errorMessage: 'Error',
+      onSuccess: reload,
+    })
   }
 
   return (

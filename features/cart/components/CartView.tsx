@@ -1,25 +1,14 @@
 'use client'
 
+import { CartLineItem } from '@/features/cart/components/CartLineItem'
 import { cartKindOf } from '@/features/cart/lib/cart-kind'
-import { removeWithUndo } from '@/features/cart/lib/remove-with-undo'
 import { useCartStore } from '@/features/cart/stores/cart.store'
 import { eligibleDeliveryMethods } from '@/features/checkout/lib/delivery-eligibility'
-import {
-  computeTotals,
-  effectivePrice,
-  type PricingRules,
-} from '@/features/checkout/lib/pricing'
-import {
-  canPartialPreorder,
-  depositUnitPrice,
-  splitPreorderTotals,
-} from '@/features/checkout/lib/preorder'
-import { maxPurchasable } from '@/features/products/lib/stock'
-import { getCategoryLabel, getCategoryStripe } from '@/features/products/types/catalog.types'
+import { computeTotals, type PricingRules } from '@/features/checkout/lib/pricing'
+import { splitPreorderTotals } from '@/features/checkout/lib/preorder'
 import { buttonClass } from '@/shared/components/ui/Button'
 import { formatCurrency } from '@/shared/lib/utils'
-import { ArrowLeft, CreditCard, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
-import { FadeImage } from '@/shared/components/ui/FadeImage'
+import { ArrowLeft, CreditCard, ShoppingBag } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { EmptyState } from '@/shared/components/ui/EmptyState'
@@ -31,8 +20,6 @@ interface CartViewProps {
 
 export function CartView({ pricingRules }: CartViewProps) {
   const cart = useCartStore((s) => s.cart)
-  const updateQty = useCartStore((s) => s.updateQty)
-  const setLineMode = useCartStore((s) => s.setLineMode)
   const router = useRouter()
 
   const { subtotal, payableNow, dueTotal } = splitPreorderTotals(
@@ -96,147 +83,14 @@ export function CartView({ pricingRules }: CartViewProps) {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 lg:gap-8 items-start">
           {/* ── Items list ──────────────────────────────── */}
           <div className="flex flex-col gap-4">
-            {cart.map((item) => {
-              const stripe = getCategoryStripe(item.product.category.slug)
-              const catLabel = getCategoryLabel(item.product.category.slug)
-              const fullUnit = effectivePrice(item.product)
-              const canPartial = canPartialPreorder(item.product)
-              const isPartial = item.preorderMode === 'PARTIAL'
-              const depositUnit = canPartial
-                ? depositUnitPrice(item.product, pricingRules.preorderDepositPercent)
-                : fullUnit
-              // La línea muestra lo que se cobra hoy: el adelanto si es parcial.
-              const unitPrice = isPartial ? depositUnit : fullUnit
-              const lineTotal = unitPrice * item.qty
-              const max = maxPurchasable(item.product)
-              const atLimit = max !== null && item.qty >= max
-
-              return (
-                <div
-                  key={item.product.id}
-                  className="flex flex-col sm:flex-row gap-4 sm:gap-5 p-4 sm:p-5 bg-(--surf) border border-(--bd) sm:items-center"
-                >
-                  <div className="flex gap-4 sm:gap-5 sm:flex-1 min-w-0">
-                    {/* Image / stripe */}
-                    <Link
-                      href={`/catalogo/${item.product.slug}`}
-                      className="relative shrink-0 block w-20 h-20 sm:w-24 sm:h-24 overflow-hidden bg-skeleton"
-                      tabIndex={-1}
-                      aria-hidden
-                    >
-                      {item.product.imageUrl ? (
-                        <FadeImage
-                          src={item.product.imageUrl}
-                          alt=""
-                          fill
-                          sizes="96px"
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className={`${stripe} w-full h-full`} />
-                      )}
-                    </Link>
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[11px] tracking-[2px] uppercase text-muted mb-1">
-                        {catLabel} · {item.product.brand.name}
-                      </div>
-                      <Link
-                        href={`/catalogo/${item.product.slug}`}
-                        className="block font-display text-[16px] sm:text-[18px] font-black uppercase leading-tight hover:text-accent-ink transition-colors duration-150 truncate"
-                      >
-                        {item.product.name}
-                      </Link>
-                      <div className="text-accent-ink font-display text-[15px] font-bold mt-0.5">
-                        {formatCurrency(unitPrice)} c/u
-                      </div>
-
-                      {/* Preventa: se puede alternar entre pagar todo y pagar
-                          solo el adelanto sin volver a la ficha del producto. */}
-                      {canPartial && (
-                        <div className="flex items-center border border-(--bd) w-fit mt-2">
-                          {(
-                            [
-                              { mode: 'FULL' as const, label: 'Pago total', amount: fullUnit },
-                              {
-                                mode: 'PARTIAL' as const,
-                                label: 'Adelanto',
-                                amount: depositUnit,
-                              },
-                            ]
-                          ).map((opt) => (
-                            <button
-                              key={opt.mode}
-                              type="button"
-                              onClick={() => setLineMode(item.product.id, opt.mode)}
-                              aria-pressed={item.preorderMode === opt.mode}
-                              className={`px-3 min-h-11 text-[11px] tracking-[1px] uppercase font-display font-extrabold transition-colors duration-150 ${
-                                item.preorderMode === opt.mode
-                                  ? 'bg-(--gold) text-on-accent'
-                                  : 'text-muted hover:text-text'
-                              }`}
-                            >
-                              {opt.label} · {formatCurrency(opt.amount)}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Qty controls */}
-                      <div className="flex items-center gap-3 mt-3">
-                        <div className="flex items-center border border-(--bd) bg-bg">
-                          <button
-                            type="button"
-                            onClick={() => updateQty(item.product.id, -1)}
-                            disabled={item.qty <= 1}
-                            className="w-11 h-11 flex items-center justify-center text-muted hover:text-text disabled:opacity-30 transition-colors duration-150"
-                            aria-label={`Quitar una unidad de "${item.product.name}"`}
-                          >
-                            <Minus size={13} aria-hidden />
-                          </button>
-                          <span
-                            className="font-display font-extrabold text-[15px] min-w-8 text-center"
-                            aria-live="polite"
-                          >
-                            {item.qty}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => updateQty(item.product.id, 1)}
-                            disabled={atLimit}
-                            className="w-11 h-11 flex items-center justify-center text-muted hover:text-text disabled:opacity-30 transition-colors duration-150"
-                            aria-label={`Agregar una unidad de "${item.product.name}"`}
-                          >
-                            <Plus size={13} aria-hidden />
-                          </button>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeWithUndo(item)}
-                          className="w-11 h-11 flex items-center justify-center text-muted hover:text-danger transition-colors duration-200"
-                          aria-label={`Eliminar "${item.product.name}" del carrito`}
-                        >
-                          <Trash2 size={15} aria-hidden />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Line total */}
-                  <div className="flex items-center justify-between sm:flex-col sm:items-end sm:justify-center shrink-0 pt-3 sm:pt-0 border-t border-(--bd) sm:border-t-0">
-                    <div className="font-display text-[20px] sm:text-[22px] font-black text-accent-ink">
-                      {formatCurrency(lineTotal)}
-                    </div>
-                    {item.qty > 1 && (
-                      <div className="text-[11px] text-muted sm:mt-0.5">
-                        {item.qty} × {formatCurrency(unitPrice)}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
+            {cart.map((item) => (
+              <CartLineItem
+                key={item.product.id}
+                item={item}
+                depositPercent={pricingRules.preorderDepositPercent}
+                variant="full"
+              />
+            ))}
           </div>
 
           {/* ── Order summary ────────────────────────────── */}
@@ -318,18 +172,23 @@ export function CartView({ pricingRules }: CartViewProps) {
             </div>
 
             {/* Navegación = enlaces (Ctrl+click, prefetch), con estilo de botón */}
-            <Link href="/checkout" className={buttonClass({ variant: 'accent', size: 'lg', full: true })}>
+            <Link
+              href="/checkout"
+              className={buttonClass({ variant: 'accent', size: 'lg', full: true })}
+            >
               <CreditCard size={16} aria-hidden />
               Proceder al pago
             </Link>
 
-            <Link href="/catalogo" className={buttonClass({ variant: 'outline', size: 'md', full: true })}>
+            <Link
+              href="/catalogo"
+              className={buttonClass({ variant: 'outline', size: 'md', full: true })}
+            >
               <ArrowLeft size={15} aria-hidden /> Seguir comprando
             </Link>
           </div>
         </div>
       </div>
-
     </>
   )
 }
