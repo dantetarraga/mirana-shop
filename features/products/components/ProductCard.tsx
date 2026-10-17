@@ -5,14 +5,12 @@ import { useCartLine } from '@/features/cart/hooks/useCartLine'
 import { removeWithUndo } from '@/features/cart/lib/remove-with-undo'
 import { useCartStore } from '@/features/cart/stores/cart.store'
 import { getProductBadge } from '@/features/products/lib/product-badge'
-import { useProductModalStore } from '@/features/products/stores/product-modal.store'
 import type { CatalogProduct } from '@/features/products/types/catalog.types'
 import { getCategoryLabel, getCategoryStripe } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
 import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import type { MouseEvent } from 'react'
 import { toast } from 'sonner'
 
 /**
@@ -36,10 +34,9 @@ export function ProductCard({ product, showBadge = true, sizes = DEFAULT_SIZES }
   // Selectores atómicos: con `useCartStore()` CADA card de la página se
   // re-renderizaba ante cualquier cambio del carrito. Las acciones son
   // referencias estables, así que estas suscripciones no disparan nunca.
-  const openProductModal = useProductModalStore((s) => s.openProductModal)
   const addToCart = useCartStore((s) => s.addToCart)
   const updateQty = useCartStore((s) => s.updateQty)
-  // Disponibilidad, tope y precio salen del mismo hook que el modal y el PDP.
+  // Disponibilidad, tope y precio salen del mismo hook que el PDP.
   const {
     product: p,
     qtyInCart,
@@ -55,22 +52,21 @@ export function ProductCard({ product, showBadge = true, sizes = DEFAULT_SIZES }
   const stripe = getCategoryStripe(p.category.slug)
   const catLabel = getCategoryLabel(p.category.slug)
 
-  // Una sola badge por card, misma regla que el modal y la ficha.
+  // Una sola badge por card, misma regla que la ficha.
   const badge = getProductBadge({ ...p, isOutOfStock })
-
-  // Click normal → abre el modal (preventDefault). Click con modificador, botón
-  // central o teclado → deja navegar al enlace real /catalogo/[slug].
-  const handleNavClick = (e: MouseEvent) => {
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return
-    e.preventDefault()
-    openProductModal(p)
-  }
 
   return (
     // Sin `animate-fade-up`: un fade por card en cada grid se leía genérico y
     // retrasaba la primera imagen visible.
     <div className="pcard">
-      <Link href={`/catalogo/${p.slug}`} onClick={handleNavClick} className="block">
+      {/* Navegación directa al PDP (ya no hay vista rápida). El `::after`
+          absoluto estira el área clicable del enlace a toda la card (`.pcard`
+          es `relative`), así el precio también lleva a la ficha sin anidar los
+          botones del carrito dentro del <a>, que sería HTML inválido. */}
+      <Link
+        href={`/catalogo/${p.slug}`}
+        className="block after:absolute after:inset-0 after:content-['']"
+      >
         <div className="relative">
           {/* 4:5 en vez de un alto fijo: las figuras son verticales y con
               `h-55 object-cover` se les cortaba la cabeza o la base. */}
@@ -102,6 +98,8 @@ export function ProductCard({ product, showBadge = true, sizes = DEFAULT_SIZES }
         </div>
       </Link>
 
+      {/* El precio queda bajo el `::after` (clic → ficha); los controles del
+          carrito llevan `relative z-10` para quedar encima y no navegar. */}
       <div className="px-4 pb-3.5">
         <div className="flex items-baseline gap-1.5 min-w-0 flex-wrap mb-3">
           <span className="font-display text-[20px] sm:text-[26px] font-black text-accent-ink whitespace-nowrap">
@@ -118,7 +116,7 @@ export function ProductCard({ product, showBadge = true, sizes = DEFAULT_SIZES }
         {loading ? (
           <CartCtaSkeleton size="md" />
         ) : ctaState === 'in-cart' && !isOutOfStock ? (
-          <div className="flex items-center border border-(--bd) w-full">
+          <div className="relative z-10 flex items-center border border-(--bd) w-full">
             {qtyInCart === 1 ? (
               <Button
                 variant="icon"
@@ -177,7 +175,7 @@ export function ProductCard({ product, showBadge = true, sizes = DEFAULT_SIZES }
           <Button
             variant="accent"
             size="md"
-            className="add-btn w-full min-h-11"
+            className="add-btn relative z-10 w-full min-h-11"
             disabled={ctaState !== 'idle'}
             onClick={(e) => {
               e.stopPropagation()

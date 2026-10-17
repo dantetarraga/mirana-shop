@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Oferta y badge de producto — una sola regla para card, modal y ficha.
+// Oferta y badge de producto — una sola regla para card y ficha.
 //
 // Antes la ficha mostraba "DESTACADO"/"AGOTADO en rojo" y la card "TOP"/"AGOTADO
 // en gris" y "-20%": el mismo producto se presentaba distinto según dónde se

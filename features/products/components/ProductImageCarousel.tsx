@@ -271,8 +271,8 @@ function Lightbox({
     setIndex((i) => (i + delta + total) % total)
   }
 
-  // Escape se maneja aquí y NO se propaga: si la galería vive dentro del
-  // ProductModal, su listener de `window` cerraría también el modal.
+  // Escape se maneja aquí y NO se propaga: si la galería vive dentro de otro
+  // diálogo, su listener de `window` lo cerraría también.
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Escape') {
       e.stopPropagation()

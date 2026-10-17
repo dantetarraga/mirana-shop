@@ -97,14 +97,14 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const descriptionHtml = toRichHtml(raw.description)
   const stripe = getCategoryStripe(product.category.slug)
   const catLabel = getCategoryLabel(product.category.slug)
-  // Misma regla que la card y el modal: la preventa se reserva sin stock, así
+  // Misma regla que la card: la preventa se reserva sin stock, así
   // que no cuenta como agotada (antes esta página la marcaba AGOTADO y PREVENTA
   // a la vez, y su panel de compra la daba por no comprable).
   const isPreorder = product.status === 'PREORDER'
   const isOutOfStock = product.status === 'SOLD_OUT' || (!isPreorder && product.stock === 0)
   const displayPrice = effectivePrice(product)
 
-  // Misma badge que la card y el modal (features/products/lib/product-badge.ts).
+  // Misma badge que la card (features/products/lib/product-badge.ts).
   const badge = getProductBadge({ ...product, isOutOfStock })
 
   const productJsonLd = {
@@ -234,7 +234,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
               SKU: {product.sku}
             </div>
 
-            {/* Price — mismo bloque que el modal: %, tachado y "Ahorras S/ X" */}
+            {/* Price — %, tachado y "Ahorras S/ X" */}
             <ProductPrice price={product.price} salePrice={product.salePrice} />
 
             {/* El aviso de "últimas unidades" vive ahora en AddToCartPanel: aquí

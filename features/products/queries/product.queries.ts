@@ -28,7 +28,7 @@ export const PRODUCT_LIST_SELECT = {
   status: true,
   featured: true,
   createdAt: true,
-  // Preventa parcial: las cards, el modal y el PDP necesitan poder calcular el
+  // Preventa parcial: las cards y el PDP necesitan poder calcular el
   // adelanto sin una consulta extra (ver features/checkout/lib/preorder.ts).
   allowPartialPreorder: true,
   preorderDepositPercent: true,
