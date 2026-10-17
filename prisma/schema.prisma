@@ -387,6 +387,10 @@ model Order {
   /// Cuándo el cliente marcó la casilla de Términos y Condiciones al comprar.
   termsAcceptedAt DateTime?
 
+  /// Mientras el pedido espera comprobante, el stock queda reservado hasta
+  /// esta fecha. El cron de órdenes cancela y libera las reservas vencidas.
+  reservationExpiresAt DateTime?
+
   items     OrderItem[]
   payment   Payment?
   shipping  ShippingAddress?
@@ -406,6 +410,22 @@ model Order {
   @@index([createdAt])
   @@index([deliveryMethodId])
   @@index([couponId])
+  @@index([status, reservationExpiresAt])
+}
+
+// ---------------------------------------------------------------------------
+// Rate limiting persistente para endpoints públicos sensibles.
+// La key es un HMAC: nunca guarda IPs ni correos en claro.
+// ---------------------------------------------------------------------------
+
+model RateLimitBucket {
+  key       String   @id @db.VarChar(64)
+  count     Int      @default(1)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([expiresAt])
 }
 
 model OrderItem {
@@ -838,6 +858,12 @@ model StoreSettings {
   youtubeUrl       String @default("")
   facebookUrl      String @default("")
 
+  /// Datos del proveedor exigidos en la Hoja de Reclamación (Anexo I del
+  /// D.S. 011-2011-PCM) y visibles en el footer. null = aún sin configurar.
+  legalName     String? /// Razón social
+  ruc           String? @db.VarChar(11)
+  fiscalAddress String? @db.VarChar(300) /// Domicilio fiscal
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -876,6 +902,8 @@ enum AdminAlertType {
   PENDING_ORDERS
   PROMO_EXPIRING
   DAILY_SUMMARY
+  /// Reclamos vencidos o por vencer (plazo legal de 15 días hábiles)
+  COMPLAINT_DUE
 }
 
 model AdminAlert {
@@ -901,14 +929,34 @@ enum ComplaintType {
   QUEJA
 }
 
+/// Bien contratado según el Anexo I: producto o servicio.
+enum ComplaintGoodType {
+  PRODUCTO
+  SERVICIO
+}
+
 enum ComplaintStatus {
   PENDING
   ANSWERED
 }
 
+/// Hoja del Libro de Reclamaciones Virtual (Ley 29571, D.S. 011-2011-PCM y
+/// modificatorias D.S. 006-2014-PCM y D.S. 101-2022-PCM).
+///
+/// RETENCIÓN: el proveedor debe conservar las hojas y sus respuestas al menos
+/// 2 años desde su registro. Por eso Complaint NO tiene `deletedAt`, NO aparece
+/// en /admin/trash y NUNCA debe incluirse en purgas, borrados en cascada ni
+/// limpiezas automáticas. Tampoco se edita: el consumidor no puede modificarla
+/// y la respuesta del proveedor es de solo inserción (ComplaintResponse).
 model Complaint {
   id   String @id @default(cuid())
+  /// Código visible "LR-2026-000123". El orden real lo dan `year` + `seq`
+  /// (numéricos), nunca el texto del código.
   code String @unique
+  /// Año del registro en zona America/Lima
+  year Int
+  /// Correlativo dentro del año (1, 2, 3...)
+  seq  Int
 
   // Datos del consumidor reclamante
   fullName  String
@@ -918,22 +966,67 @@ model Complaint {
   phone     String
   email     String
 
+  // Menor de edad: datos del padre, madre o apoderado
+  isMinor           Boolean @default(false)
+  guardianName      String?
+  guardianDocType   String?
+  guardianDocNumber String?
+
   // Datos del bien contratado
-  productDescription String   @db.Text
-  claimedAmount      Decimal? @db.Decimal(10, 2)
+  goodType           ComplaintGoodType @default(PRODUCTO)
+  /// Nº de pedido de la tienda, si lo hay (snapshot de texto, sin FK)
+  orderCode          String?
+  productDescription String            @db.Text
+  claimedAmount      Decimal?          @db.Decimal(10, 2)
 
   // Detalle de la reclamación
   type    ComplaintType
   detail  String        @db.Text
   request String        @db.Text
 
-  // Gestión del proveedor (admin)
-  status      ComplaintStatus @default(PENDING)
-  response    String?         @db.Text
-  respondedAt DateTime?
+  // Declaraciones del consumidor al registrar la hoja
+  truthDeclarationAccepted Boolean @default(false)
+  /// Consentimiento para el tratamiento de datos personales (Ley 29733)
+  privacyAccepted          Boolean @default(false)
+
+  // Gestión del proveedor (admin). `response`, `providerActions` y
+  // `respondedAt` son una copia de la única ComplaintResponse, escrita en la
+  // misma transacción; no se vuelven a modificar.
+  status          ComplaintStatus @default(PENDING)
+  response        String?         @db.Text
+  /// Observaciones y acciones adoptadas por el proveedor (Anexo I)
+  providerActions String?         @db.Text
+  respondedAt     DateTime?
+
+  /// Vence el plazo legal de respuesta: 15 días hábiles (fin del día, Lima)
+  dueAt               DateTime
+  /// Constancia enviada al consumidor (null = no se pudo enviar)
+  consumerEmailSentAt DateTime?
+  /// Respuesta enviada al consumidor (null = no se pudo enviar)
+  responseEmailSentAt DateTime?
+
+  /// Respuesta inmutable (1:1). Ver ComplaintResponse.
+  answer ComplaintResponse?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([year, seq])
   @@index([status, createdAt])
+  @@index([status, dueAt])
+}
+
+/// Respuesta del proveedor a una hoja. Tabla de SOLO INSERCIÓN: la app nunca
+/// hace update/delete sobre ella y `complaintId` es único, así que una hoja
+/// tiene a lo sumo una respuesta y no se puede reescribir. Se conserva junto
+/// con la hoja (≥ 2 años); onDelete Restrict impide borrarla en cascada.
+model ComplaintResponse {
+  id              String    @id @default(cuid())
+  complaintId     String    @unique
+  complaint       Complaint @relation(fields: [complaintId], references: [id], onDelete: Restrict)
+  body            String    @db.Text
+  providerActions String?   @db.Text
+  /// Email del admin que respondió (snapshot)
+  respondedBy     String?
+  createdAt       DateTime  @default(now())
 }

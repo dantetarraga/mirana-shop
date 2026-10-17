@@ -5,6 +5,7 @@ import { toProductCards } from '@/features/products/lib/product-card'
 import { getHideOutOfStock } from '@/features/settings/queries/store-settings.queries'
 import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
+import { safeHref } from '@/shared/schemas/safe-url.schema'
 
 // ---------------------------------------------------------------------------
 // Secciones creadas en /admin/sections. Se pintan con la misma cabecera y la
@@ -13,7 +14,10 @@ import Link from 'next/link'
 // ---------------------------------------------------------------------------
 
 export async function HomeSections() {
-  const sections = await getActiveHomeSections(await getHideOutOfStock())
+  // El filtro de stock depende de los ajustes: es una dependencia real, no un
+  // waterfall evitable (y los ajustes ya están en caché por request).
+  const hideOutOfStock = await getHideOutOfStock()
+  const sections = await getActiveHomeSections(hideOutOfStock)
 
   if (sections.length === 0) return null
 
@@ -36,7 +40,7 @@ export async function HomeSections() {
                 </h2>
               </div>
               <Link
-                href={section.ctaHref || HOME_SECTION_DEFAULT_HREF}
+                href={safeHref(section.ctaHref, HOME_SECTION_DEFAULT_HREF)}
                 className="font-display text-[15px] font-bold tracking-[1px] uppercase pb-0.5 text-muted hover:text-accent-ink transition-colors duration-300 inline-flex items-center"
               >
                 Ver todos

@@ -1,5 +1,6 @@
 import 'server-only'
 import { db } from '@/shared/lib/db'
+import { verifyAdmin } from '@/shared/lib/require-admin'
 
 export interface AdminAlertItem {
   id: string
@@ -15,6 +16,7 @@ export async function getAdminAlerts(take = 15): Promise<{
   alerts: AdminAlertItem[]
   unreadCount: number
 }> {
+  await verifyAdmin()
   const [rows, unreadCount] = await Promise.all([
     db.adminAlert.findMany({
       orderBy: { createdAt: 'desc' },

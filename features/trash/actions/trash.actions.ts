@@ -135,10 +135,9 @@ export async function restoreTrashItem(rawType: string, id: string): Promise<Act
     }
 
     if (type === 'product') {
-      // deleteProduct borra el inventario y los carritos al mandar el producto
-      // a la papelera, así que restaurarlo tal cual lo dejaría sin fila de
-      // inventario y fuera de /admin/inventory. Se recrea en cero: el stock
-      // real hay que volver a cargarlo a mano, porque el que tenía se perdió.
+      // Conserva todos los contadores y la versión del inventario archivado.
+      // Solo los productos antiguos que perdieron su fila se recrean en cero;
+      // sus existencias deben reconciliarse manualmente.
       await db.$transaction([
         db.productInventory.upsert({
           where: { productId: id },

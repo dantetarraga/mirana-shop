@@ -82,7 +82,7 @@ export function PaymentSection({ register, errors, accounts, whatsappPhone }: Pr
       <PaymentAccountsPanel accounts={accounts} className="mt-4 bg-surf" />
 
       {errors.paymentMethod && (
-        <p className="text-red-500 text-[12px] mt-2">{errors.paymentMethod.message}</p>
+        <p role="alert" className="text-danger text-[12px] mt-2">{errors.paymentMethod.message}</p>
       )}
     </section>
   )

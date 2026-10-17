@@ -1,10 +1,13 @@
 'use client'
 
 import type { PaymentAccountData } from '@/features/settings/queries/payment-accounts.queries'
-import { Button } from '@/shared/components/ui/Button'
+import { Button, buttonClass } from '@/shared/components/ui/Button'
+import { useUser } from '@/shared/hooks/useUser'
 import { formatCurrency } from '@/shared/lib/utils'
-import { BadgeCheck, Home, MessageCircle, ShoppingCart } from 'lucide-react'
+import { BadgeCheck, Check, Copy, MessageCircle, Package, ShoppingCart } from 'lucide-react'
 import Link from 'next/link'
+import { useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
 import { buildWhatsappOrderUrl, formatPhoneDisplay } from '../lib/whatsapp'
 import type { SuccessData } from '../types'
 import { PaymentAccountsPanel } from './PaymentAccountsPanel'
@@ -21,44 +24,123 @@ export function SuccessScreen({
 }) {
   const whatsappUrl = buildWhatsappOrderUrl(data, whatsappPhone)
   const phoneDisplay = formatPhoneDisplay(whatsappPhone)
+  const { user } = useUser()
+  const [copied, setCopied] = useState(false)
+  const headingRef = useRef<HTMLHeadingElement>(null)
+
+  // El formulario desaparece y el foco quedaría en <body> a mitad de página:
+  // se sube al inicio y se enfoca el título para que el lector anuncie el éxito.
+  useEffect(() => {
+    window.scrollTo({ top: 0 })
+    headingRef.current?.focus()
+  }, [])
+
+  const copyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(data.code)
+      setCopied(true)
+      toast.success('Código copiado')
+      window.setTimeout(() => setCopied(false), 2000)
+    } catch {
+      toast.error('No se pudo copiar. Selecciona el código y cópialo manualmente.')
+    }
+  }
 
   return (
-    <div className="min-h-[70vh] flex flex-col items-center justify-center px-4 pt-[calc(var(--nh)+36px)] pb-16">
+    <div className="min-h-[70vh] flex flex-col items-center justify-center px-4 pt-9 pb-16">
       <div className="max-w-130 w-full flex flex-col items-center gap-6">
         {/* Icon */}
         <div className="w-20 h-20 bg-(--gold)/10 border border-(--gold)/30 flex items-center justify-center">
-          <BadgeCheck size={44} className="text-accent-ink" />
+          <BadgeCheck size={44} className="text-accent-ink" aria-hidden />
         </div>
 
         {/* Title */}
         <div className="text-center">
-          <p className="text-[10px] tracking-[3px] uppercase text-accent-ink mb-1">
+          <p className="text-[11px] tracking-[3px] uppercase text-accent-ink mb-1">
             ¡Pedido recibido!
           </p>
-          <h1 className="font-display font-black uppercase text-[30px] tracking-tight leading-none">
+          <h1
+            ref={headingRef}
+            tabIndex={-1}
+            className="font-display font-black uppercase text-[30px] tracking-tight leading-none outline-none"
+          >
             Gracias por tu compra
           </h1>
         </div>
 
         {/* Order code */}
         <div className="bg-card border border-(--bd) w-full px-6 py-5 text-center">
-          <p className="text-[10px] tracking-[3px] uppercase text-muted mb-2">Número de pedido</p>
-          <p className="font-display font-black text-[28px] tracking-[3px] text-accent-ink">
-            {data.code}
-          </p>
+          <p className="text-[11px] tracking-[3px] uppercase text-muted mb-2">Número de pedido</p>
+          <div className="flex items-center justify-center gap-2">
+            <p className="font-display font-black text-[28px] tracking-[3px] text-accent-ink select-all">
+              {data.code}
+            </p>
+            <Button
+              type="button"
+              variant="icon"
+              size="md"
+              onClick={copyCode}
+              aria-label={copied ? 'Código copiado' : `Copiar código de pedido ${data.code}`}
+            >
+              {copied ? (
+                <Check size={16} className="text-success" aria-hidden />
+              ) : (
+                <Copy size={16} aria-hidden />
+              )}
+            </Button>
+          </div>
           <p className="text-[12px] text-muted mt-1">
             Guarda este código para hacer seguimiento de tu pedido.
           </p>
         </div>
 
+        {/* Próximos pasos — pago manual por WhatsApp */}
+        <div className="bg-surf border border-(--bd) w-full px-6 py-5">
+          <h2 className="text-[11px] tracking-[3px] uppercase text-accent-ink mb-3 font-sans font-normal">
+            Próximos pasos
+          </h2>
+          <div className="flex flex-col gap-2.5 text-[13px] leading-snug mb-5">
+            <Step n={1}>Realiza tu transferencia o depósito al número de cuenta indicado.</Step>
+            <Step n={2}>
+              Envía tu comprobante de pago por WhatsApp
+              {phoneDisplay ? (
+                <>
+                  {' '}
+                  al <span className="font-semibold text-text">{phoneDisplay}</span>
+                </>
+              ) : null}{' '}
+              junto con tu código <span className="font-mono text-accent-ink">{data.code}</span>.
+            </Step>
+            <Step n={3}>Una vez confirmado el pago, prepararemos y enviaremos tu pedido.</Step>
+          </div>
+
+          <PaymentAccountsPanel accounts={accounts} className="mb-5 bg-card" />
+
+          {/* CTA dominante de la pantalla: sin el comprobante el pedido no avanza. */}
+          {whatsappPhone && (
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={buttonClass({ variant: 'whatsapp', size: 'lg', full: true })}
+            >
+              <MessageCircle size={18} aria-hidden />
+              Enviar comprobante por WhatsApp
+              <span className="sr-only"> (se abre en una pestaña nueva)</span>
+            </a>
+          )}
+        </div>
+
         {/* Resumen de productos */}
         <div className="bg-card border border-(--bd) w-full">
           <div className="px-6 py-4 border-b border-(--bd)">
-            <p className="text-[10px] tracking-[3px] uppercase text-accent-ink">Resumen del pedido</p>
+            <h2 className="text-[11px] tracking-[3px] uppercase text-accent-ink font-sans font-normal">
+              Resumen del pedido
+            </h2>
           </div>
           <ul className="flex flex-col divide-y divide-(--bd)">
             {data.items.map((item, i) => (
-              <li key={i} className="flex justify-between items-center px-6 py-3 gap-4">
+              <li key={`${item.name}-${i}`} className="flex justify-between items-center px-6 py-3 gap-4">
                 <div className="flex-1 min-w-0">
                   <p className="font-display font-bold text-[13px] uppercase leading-tight truncate">
                     {item.name}
@@ -97,7 +179,7 @@ export function SuccessScreen({
                     </span>
                   )}
                 </span>
-                <span className="text-emerald-400 font-semibold shrink-0">
+                <span className="text-success font-semibold shrink-0">
                   −{formatCurrency(data.discount)}
                 </span>
               </div>
@@ -105,7 +187,7 @@ export function SuccessScreen({
             <div className="flex justify-between text-[13px] gap-3">
               <span className="text-muted min-w-0 truncate">{data.deliveryLabel ?? 'Envío'}</span>
               {data.shippingCost === 0 ? (
-                <span className="text-emerald-400 font-semibold text-[12px] uppercase shrink-0">
+                <span className="text-success font-semibold text-[12px] uppercase shrink-0">
                   Gratis
                 </span>
               ) : (
@@ -130,51 +212,23 @@ export function SuccessScreen({
           </div>
         </div>
 
-        {/* Próximos pasos — pago manual por WhatsApp */}
-        <div className="bg-surf border border-(--bd) w-full px-6 py-5">
-          <p className="text-[10px] tracking-[3px] uppercase text-accent-ink mb-3">
-            Próximos pasos
-          </p>
-          <div className="flex flex-col gap-2.5 text-[13px] leading-snug mb-5">
-            <Step n={1}>Realiza tu transferencia o depósito al número de cuenta indicado.</Step>
-            <Step n={2}>
-              Envía tu comprobante de pago por WhatsApp
-              {phoneDisplay ? (
-                <>
-                  {' '}
-                  al <span className="font-semibold text-text">{phoneDisplay}</span>
-                </>
-              ) : null}{' '}
-              junto con tu código <span className="font-mono text-accent-ink">{data.code}</span>.
-            </Step>
-            <Step n={3}>Una vez confirmado el pago, prepararemos y enviaremos tu pedido.</Step>
-          </div>
-
-          <PaymentAccountsPanel accounts={accounts} className="mb-5 bg-card" />
-
-          {whatsappPhone && (
-            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="block">
-              <Button variant="accent" size="md" full>
-                <MessageCircle size={15} className="mr-2" />
-                Enviar comprobante por WhatsApp
-              </Button>
-            </a>
-          )}
-        </div>
-
-        {/* Actions */}
+        {/* Acciones secundarias — no compiten con el CTA de WhatsApp */}
         <div className="flex flex-col sm:flex-row gap-3 w-full">
-          <Link href="/catalogo" className="flex-1">
-            <Button variant="accent" size="md" full>
-              <ShoppingCart size={15} className="mr-2" />
-              Seguir comprando
-            </Button>
-          </Link>
-          <Link href="/" className="flex-1">
-            <Button variant="outline" size="md" full>
-              <Home size={14} className="mr-2" />
-              Ir al inicio
-            </Button>
+          {user && (
+            <Link
+              href="/cuenta/pedidos"
+              className={buttonClass({ variant: 'outline', size: 'md', className: 'flex-1' })}
+            >
+              <Package size={15} aria-hidden />
+              Ver mis pedidos
+            </Link>
+          )}
+          <Link
+            href="/catalogo"
+            className={buttonClass({ variant: 'ghost', size: 'md', className: 'flex-1' })}
+          >
+            <ShoppingCart size={15} aria-hidden />
+            Seguir comprando
           </Link>
         </div>
       </div>

@@ -109,7 +109,7 @@ export const importProductRowSchema = z.object({
     },
     z.boolean().default(false),
   ),
-  imageUrls: z.array(z.string().url('URL de imagen inválida')).optional().default([]),
+  imageUrls: z.array(imageUrlSchema()).max(20).optional().default([]),
   // Columnas opcionales de preventa parcial (ver COL_ALIASES en ExcelImportDrawer).
   allowPartialPreorder: z.preprocess(
     (v) => {

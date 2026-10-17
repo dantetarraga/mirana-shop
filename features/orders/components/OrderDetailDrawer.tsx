@@ -6,6 +6,7 @@ import {
   ORDER_STATUS_FLOW,
   ORDER_STATUS_GROUPS,
   ORDER_STATUS_LABELS,
+  ORDER_STATUS_TRANSITIONS,
   orderStatusGroup,
 } from '@/features/orders/lib/order-status'
 import type { OrderListItem, OrderStatusGroup } from '@/features/orders/types'
@@ -207,12 +208,13 @@ export function OrderDetailDrawer({
         <div className="flex flex-wrap gap-2">
           {ORDER_STATUS_FLOW.map((s) => {
             const config = ORDER_STATUS[orderStatusGroup(s)] ?? ORDER_STATUS.pendiente
+            const allowed = ORDER_STATUS_TRANSITIONS[order.status].includes(s)
             return (
               <Button
                 key={s}
                 variant="outline"
                 size="sm"
-                disabled={isPending || order.status === s}
+                disabled={isPending || order.status === s || !allowed}
                 onClick={() => onStatusChange(order.id, s)}
                 className={order.status === s ? config.btnCls : 'text-muted'}
               >

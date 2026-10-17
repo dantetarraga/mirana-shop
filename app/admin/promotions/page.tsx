@@ -3,11 +3,13 @@ import { PromotionCard } from '@/features/promotions/components/PromotionCard'
 import { PromotionCrudProvider } from '@/features/promotions/components/PromotionCrudProvider'
 import { getPromotions } from '@/features/promotions/queries/promotion.queries'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
+import { verifyAdmin } from '@/shared/lib/require-admin'
 import { Tag } from 'lucide-react'
 
 export const metadata = { title: 'Promociones | Mirana Admin' }
 
 export default async function PromotionsPage() {
+  await verifyAdmin()
   const promotions = await getPromotions()
   const activeCount = promotions.filter((p) => p.active).length
 

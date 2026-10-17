@@ -24,9 +24,9 @@ export function CartCtaSkeleton({ size = 'lg', withQuantity = false }: Props) {
         <div>
           {/* Etiqueta "Cantidad" */}
           <Skeleton className="h-3 w-16 mb-2.5" />
-          {/* Alto y ancho del stepper real: dos botones icon md (36px) + el
-              valor (w-13 = 52px) + los bordes = 128px de ancho, 42px de alto. */}
-          <Skeleton className="h-10.5 w-32" />
+          {/* Alto y ancho del stepper real: dos botones icon md (44px) + el
+              valor (w-13 = 52px) + los bordes = 142px de ancho, 44px de alto. */}
+          <Skeleton className="h-11 w-35.5" />
         </div>
       )}
 

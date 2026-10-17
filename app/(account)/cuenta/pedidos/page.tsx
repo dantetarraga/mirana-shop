@@ -1,4 +1,4 @@
-import { getMyOrders } from '@/features/orders/actions/account-orders.actions'
+import { getMyOrders } from '@/features/orders/queries/account-orders.queries'
 import { OrdersContent } from '@/features/orders/components/OrdersContent'
 import { OrdersSkeleton } from '@/features/orders/components/OrdersSkeleton'
 import { getAccountUser } from '@/shared/lib/get-account-user'

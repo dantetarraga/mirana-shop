@@ -1,0 +1,35 @@
+# MariaDB local para desarrollo (mismo motor que el hosting de producción). Nunca apuntes `pnpm db:seed` ni `next dev` a la
+# base de producción: usa esta instancia (ver README → "Desarrollo con Docker").
+services:
+  mysql:
+    image: mariadb:11.4
+    container_name: mirana-mysql
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: mirana_dev
+      MARIADB_USER: mirana
+      MARIADB_PASSWORD: mirana
+    ports:
+      - '3306:3306'
+    volumes:
+      - mirana-mysql-data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Servidor SMTP de pruebas: captura todos los correos (constancias y respuestas del Libro de
+  # Reclamaciones) sin enviarlos a nadie. UI en http://localhost:8025, SMTP en 127.0.0.1:1025.
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mirana-mailpit
+    restart: unless-stopped
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+
+volumes:
+  mirana-mysql-data:

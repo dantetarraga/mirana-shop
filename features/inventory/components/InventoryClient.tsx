@@ -6,11 +6,11 @@ import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
 import { KpiCard } from '@/features/dashboard/components/KpiCard'
 import { StockBadge } from '@/features/inventory/components/StockBadge'
 import { Button } from '@/shared/components/ui/Button'
-import { useServerAction } from '@/shared/hooks/admin'
+import { useServerAction } from '@/shared/hooks/admin/useServerAction'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { cn } from '@/shared/lib/utils'
 import { Minus, Plus } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 
 // ---------------------------------------------------------------------------
 // Tipos serializados
@@ -63,6 +63,14 @@ export function InventoryClient({
   currentFilter,
 }: InventoryClientProps) {
   const [products, setProducts] = useState<SerializedProduct[]>(initialProducts)
+  // Las pestañas navegan por GET y el componente no se remonta: sin esto la
+  // tabla seguía mostrando la lista anterior. Patrón "ajustar estado al cambiar
+  // una prop" (en render, sin efecto).
+  const [prevInitialProducts, setPrevInitialProducts] = useState(initialProducts)
+  if (prevInitialProducts !== initialProducts) {
+    setPrevInitialProducts(initialProducts)
+    setProducts(initialProducts)
+  }
   const { isPending, run } = useServerAction()
 
   const adjust = (p: SerializedProduct, next: number) => {
@@ -79,73 +87,73 @@ export function InventoryClient({
     })
   }
 
-  const columns = useMemo<Column<SerializedProduct>[]>(
-    () => [
-      {
-        header: 'Producto',
-        render: (p) => (
-          <div className="flex items-center gap-3">
-            <div className={`${getCategoryStripe(p.category.slug)} w-10.5 h-10.5`} />
-            <div>
-              <div className={cls.rowName}>{p.name}</div>
-              <div className={cls.rowSub}>{p.brand.name}</div>
-            </div>
+  // Sin useMemo: antes se memorizaba solo por [isPending] (con el lint
+  // silenciado) y las celdas capturaban un `adjust`/`run` viejo. Construir
+  // cinco columnas por render no cuesta nada.
+  const columns: Column<SerializedProduct>[] = [
+    {
+      header: 'Producto',
+      render: (p) => (
+        <div className="flex items-center gap-3">
+          <div className={`${getCategoryStripe(p.category.slug)} w-10.5 h-10.5`} />
+          <div>
+            <div className={cls.rowName}>{p.name}</div>
+            <div className={cls.rowSub}>{p.brand.name}</div>
           </div>
-        ),
+        </div>
+      ),
+    },
+    { header: 'SKU', className: cls.mono, render: (p) => p.sku },
+    { header: 'Stock', render: (p) => <StockBadge s={p.inventory?.availableStock ?? 0} /> },
+    {
+      header: 'Valor',
+      className: cls.valGold,
+      render: (p) => `S/ ${((p.inventory?.availableStock ?? 0) * p.price).toFixed(2)}`,
+    },
+    {
+      header: 'Ajustar inventario',
+      render: (p) => {
+        const stock = p.inventory?.availableStock ?? 0
+        return (
+          <div className="flex gap-1.5 items-center">
+            <Button
+              variant="icon"
+              size="sm"
+              onClick={() => adjust(p, Math.max(0, stock - 1))}
+              disabled={isPending}
+            >
+              <Minus size={14} />
+            </Button>
+            <input
+              type="number"
+              value={stock}
+              min="0"
+              onChange={(e) => adjust(p, Math.max(0, parseInt(e.target.value) || 0))}
+              className="w-14.5 text-center font-display font-extrabold text-[15px] p-1.5 bg-surf border border-(--bd) text-text"
+              disabled={isPending}
+            />
+            <Button
+              variant="icon"
+              size="sm"
+              onClick={() => adjust(p, stock + 1)}
+              disabled={isPending}
+            >
+              <Plus size={14} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => adjust(p, stock + 50)}
+              className="ml-2"
+              disabled={isPending}
+            >
+              +50
+            </Button>
+          </div>
+        )
       },
-      { header: 'SKU', className: cls.mono, render: (p) => p.sku },
-      { header: 'Stock', render: (p) => <StockBadge s={p.inventory?.availableStock ?? 0} /> },
-      {
-        header: 'Valor',
-        className: cls.valGold,
-        render: (p) => `S/ ${((p.inventory?.availableStock ?? 0) * p.price).toFixed(2)}`,
-      },
-      {
-        header: 'Ajustar inventario',
-        render: (p) => {
-          const stock = p.inventory?.availableStock ?? 0
-          return (
-            <div className="flex gap-1.5 items-center">
-              <Button
-                variant="icon"
-                size="sm"
-                onClick={() => adjust(p, Math.max(0, stock - 1))}
-                disabled={isPending}
-              >
-                <Minus size={14} />
-              </Button>
-              <input
-                type="number"
-                value={stock}
-                min="0"
-                onChange={(e) => adjust(p, Math.max(0, parseInt(e.target.value) || 0))}
-                className="w-14.5 text-center font-display font-extrabold text-[15px] p-1.5 bg-surf border border-(--bd) text-text"
-                disabled={isPending}
-              />
-              <Button
-                variant="icon"
-                size="sm"
-                onClick={() => adjust(p, stock + 1)}
-                disabled={isPending}
-              >
-                <Plus size={14} />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => adjust(p, stock + 50)}
-                className="ml-2"
-                disabled={isPending}
-              >
-                +50
-              </Button>
-            </div>
-          )
-        },
-      },
-    ],
-    [isPending],
-  ) // eslint-disable-line react-hooks/exhaustive-deps
+    },
+  ]
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 pt-5 lg:pt-7 pb-12">

@@ -14,17 +14,24 @@ import {
   type RegisterInput,
 } from '@/features/auth/schemas/auth.schema'
 import { inputCls } from '@/shared/lib/ui-classes'
+import { cn } from '@/shared/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { signIn } from 'next-auth/react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 
+// 16px en móvil: con 14px Safari iOS hace zoom al enfocar el campo.
+const fieldCls = cn(inputCls, 'text-base sm:text-[14px]')
+
 type AuthMode = 'login' | 'register'
 type FormValues = LoginInput & Partial<Pick<RegisterInput, 'name' | 'confirm'>>
 
 export function AuthModal() {
-  const { authOpen, authMode, closeAuth, openAuth } = useAuthModalStore()
+  const authOpen = useAuthModalStore((s) => s.authOpen)
+  const authMode = useAuthModalStore((s) => s.authMode)
+  const closeAuth = useAuthModalStore((s) => s.closeAuth)
+  const openAuth = useAuthModalStore((s) => s.openAuth)
 
   return (
     <Modal open={authOpen} onClose={closeAuth} size="md" hideClose={true}>
@@ -122,35 +129,47 @@ function AuthForm({ mode, onClose }: { mode: AuthMode; onClose: () => void }) {
       {/* Formulario */}
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-3.5">
         {mode === 'register' && (
-          <FormField label="Nombre completo" error={errors.name?.message}>
-            <input {...register('name')} className={inputCls} placeholder="Tu nombre" />
+          <FormField label="Nombre completo" error={errors.name?.message} required>
+            <input
+              {...register('name')}
+              className={fieldCls}
+              placeholder="Tu nombre"
+              autoComplete="name"
+              autoCapitalize="words"
+            />
           </FormField>
         )}
 
-        <FormField label="Correo electrónico" error={errors.email?.message}>
+        <FormField label="Correo electrónico" error={errors.email?.message} required>
           <input
             {...register('email')}
             type="email"
-            className={inputCls}
+            inputMode="email"
+            autoComplete="email"
+            autoCapitalize="none"
+            spellCheck={false}
+            className={fieldCls}
             placeholder="tucorreo@ejemplo.com"
           />
         </FormField>
 
-        <FormField label="Contraseña" error={errors.password?.message}>
+        <FormField label="Contraseña" error={errors.password?.message} required>
           <input
             {...register('password')}
             type="password"
-            className={inputCls}
+            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+            className={fieldCls}
             placeholder="••••••••"
           />
         </FormField>
 
         {mode === 'register' && (
-          <FormField label="Confirmar contraseña" error={errors.confirm?.message}>
+          <FormField label="Confirmar contraseña" error={errors.confirm?.message} required>
             <input
               {...register('confirm')}
               type="password"
-              className={inputCls}
+              autoComplete="new-password"
+              className={fieldCls}
               placeholder="••••••••"
             />
           </FormField>
@@ -178,7 +197,9 @@ function AuthForm({ mode, onClose }: { mode: AuthMode; onClose: () => void }) {
                   setTermsAccepted(e.target.checked)
                   if (e.target.checked) setTermsError(false)
                 }}
-                className="mt-0.5 shrink-0 accent-(--gold)"
+                aria-invalid={termsError || undefined}
+                aria-describedby={termsError ? 'auth-terms-error' : undefined}
+                className="mt-0.5 w-4 h-4 shrink-0 accent-(--gold)"
               />
               <span>
                 He leído y acepto los{' '}
@@ -201,7 +222,7 @@ function AuthForm({ mode, onClose }: { mode: AuthMode; onClose: () => void }) {
               </span>
             </label>
             {termsError && (
-              <p className="mt-1.5 text-[11px] text-[#ff6644]">
+              <p id="auth-terms-error" role="alert" className="mt-1.5 text-[12px] text-danger">
                 Debes aceptar los Términos y Condiciones para continuar.
               </p>
             )}

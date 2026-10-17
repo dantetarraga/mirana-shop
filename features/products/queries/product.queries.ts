@@ -5,7 +5,15 @@ import type {
   ProductListItem,
 } from '@/features/products/types'
 import { DEFAULT_CATALOG_STATUSES } from '@/features/products/lib/availability'
+import {
+  cachedQuery,
+  CACHE_TAGS,
+  REVALIDATE_SHORT,
+  reviveDate,
+  reviveDecimal,
+} from '@/shared/lib/data-cache'
 import { db } from '@/shared/lib/db'
+import { cache } from 'react'
 import 'server-only'
 
 const LOW_STOCK_THRESHOLD = 8
@@ -168,7 +176,57 @@ function buildOrderBy(sort: ProductFilters['sort']) {
   }
 }
 
-export async function getProducts(filters: ProductFilters = {}): Promise<ProductListItem[]> {
+// ---------------------------------------------------------------------------
+// Lecturas
+//
+// Las versiones "a secas" (getProducts, countProducts, getAdminProducts,
+// getProductById) solo se deduplican por request con `cache()`: las usan el
+// admin, el buscador y las actions, que necesitan el dato fresco. Las de la
+// tienda (getCatalogProducts, countCatalogProducts, getNewProducts,
+// getFeaturedProducts, getProductBySlug) además van a la caché de datos entre
+// requests con los tags 'products' y 'catalog', que invalidan las actions de
+// productos, colecciones, secciones del inicio y papelera.
+//
+// `cache()` compara argumentos por identidad, así que las variantes que
+// reciben un objeto de filtros se deduplican por su JSON.
+// ---------------------------------------------------------------------------
+
+const PRODUCT_CACHE_OPTIONS = {
+  tags: [CACHE_TAGS.products, CACHE_TAGS.catalog],
+  revalidate: REVALIDATE_SHORT,
+}
+
+/** Reconstruye Decimal y Date de un producto que pasó por la caché (JSON). */
+function reviveProduct<T extends ProductListItem>(p: T): T {
+  const revived: T = {
+    ...p,
+    price: reviveDecimal(p.price),
+    salePrice: reviveDecimal(p.salePrice),
+    createdAt: reviveDate(p.createdAt),
+    estimatedArrival: reviveDate(p.estimatedArrival),
+  }
+  if ('updatedAt' in p) {
+    ;(revived as T & { updatedAt: Date }).updatedAt = reviveDate(
+      (p as T & { updatedAt: Date | string }).updatedAt,
+    )
+  }
+  return revived
+}
+
+export function reviveProducts<T extends ProductListItem>(products: T[]): T[] {
+  return products.map(reviveProduct)
+}
+
+/**
+ * ¿Se puede cachear este listado entre requests? La búsqueda libre y los
+ * rangos de precio vienen del usuario sin acotar: cachearlos llenaría la caché
+ * con una entrada por cada combinación tecleada.
+ */
+function isCacheableFilter(filters: ProductFilters): boolean {
+  return !filters.search && filters.priceMin == null && filters.priceMax == null
+}
+
+async function fetchProducts(filters: ProductFilters = {}): Promise<ProductListItem[]> {
   const { take = 50, skip = 0, sort } = filters
 
   return db.product.findMany({
@@ -178,6 +236,54 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Product
     take,
     skip,
   }) as Promise<ProductListItem[]>
+}
+
+async function fetchProductCount(
+  filters: Omit<ProductFilters, 'take' | 'skip'> = {},
+): Promise<number> {
+  return db.product.count({ where: buildWhere(filters) })
+}
+
+const getProductsByKey = cache((key: string) => fetchProducts(JSON.parse(key) as ProductFilters))
+const countProductsByKey = cache((key: string) =>
+  fetchProductCount(JSON.parse(key) as ProductFilters),
+)
+
+export function getProducts(filters: ProductFilters = {}): Promise<ProductListItem[]> {
+  return getProductsByKey(JSON.stringify(filters))
+}
+
+export function countProducts(filters: Omit<ProductFilters, 'take' | 'skip'> = {}): Promise<number> {
+  return countProductsByKey(JSON.stringify(filters))
+}
+
+const fetchCatalogProductsCached = cachedQuery(fetchProducts, ['catalog-products'], {
+  ...PRODUCT_CACHE_OPTIONS,
+  revive: reviveProducts,
+})
+const countCatalogProductsCached = cachedQuery(fetchProductCount, ['catalog-products-count'], {
+  ...PRODUCT_CACHE_OPTIONS,
+})
+
+const getCatalogProductsByKey = cache((key: string) => {
+  const filters = JSON.parse(key) as ProductFilters
+  return isCacheableFilter(filters) ? fetchCatalogProductsCached(filters) : fetchProducts(filters)
+})
+const countCatalogProductsByKey = cache((key: string) => {
+  const filters = JSON.parse(key) as ProductFilters
+  return isCacheableFilter(filters) ? countCatalogProductsCached(filters) : fetchProductCount(filters)
+})
+
+/** Listado público (catálogo, relacionados, inicio) — cacheado entre requests. */
+export function getCatalogProducts(filters: ProductFilters = {}): Promise<ProductListItem[]> {
+  return getCatalogProductsByKey(JSON.stringify(filters))
+}
+
+/** Conteo público del catálogo — cacheado entre requests. */
+export function countCatalogProducts(
+  filters: Omit<ProductFilters, 'take' | 'skip'> = {},
+): Promise<number> {
+  return countCatalogProductsByKey(JSON.stringify(filters))
 }
 
 /** Igual que getProducts pero incluyendo la descripción — solo para el admin. */
@@ -195,7 +301,7 @@ export async function getAdminProducts(
   }) as Promise<ProductAdminListItem[]>
 }
 
-export async function getFeaturedProducts(take = 8): Promise<ProductListItem[]> {
+async function fetchFeaturedProducts(take = 8): Promise<ProductListItem[]> {
   return db.product.findMany({
     where: {
       deletedAt: null,
@@ -209,10 +315,14 @@ export async function getFeaturedProducts(take = 8): Promise<ProductListItem[]> 
   }) as Promise<ProductListItem[]>
 }
 
-export async function getNewProducts(
-  take = 6,
-  hideOutOfStock = false,
-): Promise<ProductListItem[]> {
+export const getFeaturedProducts = cache(
+  cachedQuery(fetchFeaturedProducts, ['featured-products'], {
+    ...PRODUCT_CACHE_OPTIONS,
+    revive: reviveProducts,
+  }),
+)
+
+async function fetchNewProducts(take = 6, hideOutOfStock = false): Promise<ProductListItem[]> {
   return db.product.findMany({
     where: {
       deletedAt: null,
@@ -225,22 +335,36 @@ export async function getNewProducts(
   }) as Promise<ProductListItem[]>
 }
 
-export async function getProductBySlug(slug: string): Promise<ProductDetail | null> {
+export const getNewProducts = cache(
+  cachedQuery(fetchNewProducts, ['new-products'], {
+    ...PRODUCT_CACHE_OPTIONS,
+    revive: reviveProducts,
+  }),
+)
+
+async function fetchProductBySlug(slug: string): Promise<ProductDetail | null> {
   return db.product.findFirst({
     where: { slug, deletedAt: null },
     select: PRODUCT_DETAIL_SELECT,
   }) as Promise<ProductDetail | null>
 }
 
-export async function getProductById(id: string): Promise<ProductDetail | null> {
+/**
+ * Ficha pública. La leen generateMetadata y la página: `cache()` evita la
+ * segunda consulta y `unstable_cache` las de requests siguientes.
+ */
+export const getProductBySlug = cache(
+  cachedQuery(fetchProductBySlug, ['product-by-slug'], {
+    ...PRODUCT_CACHE_OPTIONS,
+    revive: (p) => (p ? reviveProduct(p) : null),
+  }),
+)
+
+async function fetchProductById(id: string): Promise<ProductDetail | null> {
   return db.product.findFirst({
     where: { id, deletedAt: null },
     select: PRODUCT_DETAIL_SELECT,
   }) as Promise<ProductDetail | null>
 }
 
-export async function countProducts(
-  filters: Omit<ProductFilters, 'take' | 'skip'> = {},
-): Promise<number> {
-  return db.product.count({ where: buildWhere(filters) })
-}
+export const getProductById = cache(fetchProductById)

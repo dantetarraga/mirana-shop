@@ -1,9 +1,11 @@
 import { LegalPagesClient } from '@/features/legal/components/LegalPagesClient'
 import { LEGAL_SLUGS, getLegalPage } from '@/features/legal/queries/legal.queries'
+import { verifyAdmin } from '@/shared/lib/require-admin'
 
 export const metadata = { title: 'Páginas legales — Admin' }
 
 export default async function AdminLegalPage() {
+  await verifyAdmin()
   const [terms, privacy] = await Promise.all([
     getLegalPage(LEGAL_SLUGS.terms),
     getLegalPage(LEGAL_SLUGS.privacy),

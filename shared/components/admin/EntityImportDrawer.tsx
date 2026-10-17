@@ -4,7 +4,7 @@ import { Button } from '@/shared/components/ui/Button'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { cn } from '@/shared/lib/utils'
 import { AlertCircle, CheckCircle2, FileSpreadsheet, Upload, X } from 'lucide-react'
-import { useCallback, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import * as XLSX from 'xlsx'
 
 // ---------------------------------------------------------------------------
@@ -105,12 +105,15 @@ export function EntityImportDrawer({
     reader.readAsArrayBuffer(file)
   }
 
-  const onDrop = useCallback((e: React.DragEvent) => {
+  // Función normal y no useCallback: se pasa a un elemento DOM (memorizarla no
+  // ahorra nada) y con deps [] capturaba el `processFile` del primer render,
+  // es decir, las props (catálogo/campos) de cuando se abrió el drawer.
+  const onDrop = (e: React.DragEvent) => {
     e.preventDefault()
     setDragging(false)
     const file = e.dataTransfer.files[0]
     if (file) processFile(file)
-  }, [])
+  }
 
   const validRows = rows?.filter((r) => r.errors.length === 0) ?? []
   const errorRows = rows?.filter((r) => r.errors.length > 0) ?? []

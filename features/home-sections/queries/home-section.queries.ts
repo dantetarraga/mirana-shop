@@ -7,9 +7,11 @@ import type {
 } from '@/features/home-sections/types'
 import { HOME_SECTION_MAX_ITEMS } from '@/features/home-sections/types'
 import { DEFAULT_CATALOG_STATUSES } from '@/features/products/lib/availability'
-import { PRODUCT_LIST_SELECT } from '@/features/products/queries/product.queries'
+import { PRODUCT_LIST_SELECT, reviveProducts } from '@/features/products/queries/product.queries'
 import type { ProductListItem } from '@/features/products/types'
+import { cachedQuery, CACHE_TAGS, REVALIDATE_SHORT } from '@/shared/lib/data-cache'
 import { db } from '@/shared/lib/db'
+import { cache } from 'react'
 
 // ---------------------------------------------------------------------------
 // Secciones del inicio. El admin las lista todas (necesita ver las ocultas para
@@ -60,7 +62,7 @@ export async function getHomeSectionOptions(): Promise<HomeSectionOption[]> {
  * públicos y el ajuste "mostrar productos sin stock"), así que enlazar un
  * archivado no lo saca a la portada.
  */
-export async function getActiveHomeSections(
+async function fetchActiveHomeSections(
   hideOutOfStock: boolean,
 ): Promise<HomeSectionWithProducts[]> {
   const sections = await db.homeSection.findMany({
@@ -110,3 +112,15 @@ export async function getActiveHomeSections(
     .map((s) => ({ ...s, products: bySection.get(s.id) ?? [] }))
     .filter((s) => s.products.length > 0)
 }
+
+/**
+ * Cacheada entre requests. Las actions de secciones disparan 'products' (y
+ * `revalidatePath('/')`); las de productos, 'products' y 'catalog'.
+ */
+export const getActiveHomeSections = cache(
+  cachedQuery(fetchActiveHomeSections, ['active-home-sections'], {
+    tags: [CACHE_TAGS.products, CACHE_TAGS.catalog],
+    revalidate: REVALIDATE_SHORT,
+    revive: (sections) => sections.map((s) => ({ ...s, products: reviveProducts(s.products) })),
+  }),
+)

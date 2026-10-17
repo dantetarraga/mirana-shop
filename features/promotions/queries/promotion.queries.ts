@@ -1,6 +1,7 @@
 import 'server-only'
 import { db } from '@/shared/lib/db'
 import type { PromotionRow } from '@/features/promotions/types'
+import { cache } from 'react'
 
 export function serializePromotion(row: {
   id: string
@@ -44,7 +45,7 @@ export async function getPromotions(): Promise<PromotionRow[]> {
   return rows.map(serializePromotion)
 }
 
-export async function getActivePromotions(): Promise<PromotionRow[]> {
+async function getActivePromotionsImpl(): Promise<PromotionRow[]> {
   const now = new Date()
   const rows = await db.promotion.findMany({
     where: {
@@ -65,3 +66,6 @@ export async function getPromotionById(id: string): Promise<PromotionRow | null>
   })
   return row ? serializePromotion(row) : null
 }
+
+/** Deduplicada por request con `cache()`. */
+export const getActivePromotions = cache(getActivePromotionsImpl)

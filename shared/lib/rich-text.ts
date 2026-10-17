@@ -1,11 +1,14 @@
 // ---------------------------------------------------------------------------
 // Utilidades para el contenido HTML que produce el RichTextEditor (TipTap).
 // El HTML se guarda tal cual en BD y se pinta con dangerouslySetInnerHTML, así
-// que se sanea SIEMPRE antes de persistirlo (ver sanitizeRichText).
+// que se sanea SIEMPRE antes de persistirlo y otra vez al renderizarlo (ver
+// sanitizeRichText / toRichHtml).
 // ---------------------------------------------------------------------------
 
-/** Etiquetas que puede emitir el editor y que se conservan al sanear. */
-const ALLOWED_TAGS = new Set([
+import sanitizeHtml from 'sanitize-html'
+
+/** Etiquetas que puede emitir el editor (TipTap StarterKit) y que se conservan al sanear. */
+const ALLOWED_TAGS = [
   'p',
   'br',
   'strong',
@@ -28,30 +31,56 @@ const ALLOWED_TAGS = new Set([
   'blockquote',
   'hr',
   'a',
-])
+]
 
 /** Elementos que se eliminan enteros — etiqueta y contenido. */
 const DANGEROUS_BLOCK = /<(script|style|iframe|object|embed|template|noscript)\b[\s\S]*?<\/\1\s*>/gi
 
-const TAG = /<\/?([a-zA-Z][a-zA-Z0-9-]*)\b([^>]*)>/g
+const DROP_WITH_CONTENT = [
+  'script',
+  'style',
+  'iframe',
+  'object',
+  'embed',
+  'template',
+  'noscript',
+  'textarea',
+  'option',
+  'select',
+  'svg',
+  'math',
+  'title',
+  'xmp',
+  'noembed',
+  'noframes',
+]
 
-const HREF = /\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i
+// Relativas (`/ruta`, `#ancla`) o con protocolo seguro. `//host` (protocol-
+// relative) se rechaza: saldría del sitio sin que el admin lo vea en el editor.
+const SAFE_HREF = /^(?:https?:\/\/|mailto:|tel:|\/(?!\/)|#)/i
 
-const SAFE_HREF = /^(?:https?:\/\/|mailto:|tel:|\/|#)/i
-
-function escapeAttr(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-}
-
-function safeHref(attrs: string): string | null {
-  const match = HREF.exec(attrs)
-  if (!match) return null
-  const raw = (match[1] ?? match[2] ?? match[3] ?? '').trim()
-  return raw && SAFE_HREF.test(raw) ? raw : null
+const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
+  allowedTags: ALLOWED_TAGS,
+  allowedAttributes: { a: ['href', 'target', 'rel'] },
+  allowedSchemes: ['http', 'https', 'mailto', 'tel'],
+  allowedSchemesAppliedToAttributes: ['href'],
+  allowProtocolRelative: false,
+  allowedClasses: {},
+  allowedStyles: {},
+  disallowedTagsMode: 'discard',
+  nonTextTags: DROP_WITH_CONTENT,
+  // Se fuerzan target/rel en los enlaces válidos; uno con href inseguro (o sin
+  // href) queda como `<a>` pelado, que no navega.
+  transformTags: {
+    a: (_tagName, attribs): sanitizeHtml.Tag => {
+      const href = (attribs.href ?? '').trim()
+      if (!href || !SAFE_HREF.test(href)) return { tagName: 'a', attribs: {} }
+      return {
+        tagName: 'a',
+        attribs: { href, target: '_blank', rel: 'noopener noreferrer' },
+      }
+    },
+  },
 }
 
 /**
@@ -59,24 +88,14 @@ function safeHref(attrs: string): string | null {
  * `href` con protocolo seguro en `<a>`). Lo que no está permitido pierde el
  * markup pero conserva el texto — nunca se pierde contenido del admin.
  *
- * No es un parser completo de HTML: asume el markup acotado que genera TipTap.
- * Es la última línea de defensa, no un permiso para aceptar HTML de terceros.
+ * Usa un parser real de HTML (htmlparser2 vía sanitize-html): el saneador
+ * anterior por regex se evadía con etiquetas anidadas (`<<x>img onerror=…>`),
+ * porque al quitar la etiqueta interna se recomponía la externa. Se aplica al
+ * guardar y otra vez al renderizar.
  */
 export function sanitizeRichText(html: string): string {
   if (!html) return ''
-
-  return html.replace(DANGEROUS_BLOCK, '').replace(TAG, (match, rawName: string, attrs: string) => {
-    const name = rawName.toLowerCase()
-    if (!ALLOWED_TAGS.has(name)) return ''
-    if (match.startsWith('</')) return `</${name}>`
-    if (name === 'a') {
-      const href = safeHref(attrs)
-      return href
-        ? `<a href="${escapeAttr(href)}" target="_blank" rel="noopener noreferrer">`
-        : '<a>'
-    }
-    return `<${name}>`
-  })
+  return sanitizeHtml(html, SANITIZE_OPTIONS)
 }
 
 const ENTITIES: Record<string, string> = {
@@ -160,5 +179,5 @@ export function plainTextToHtml(text: string): string {
 
 /** Descripción lista para renderizar, venga del editor o de una carga antigua. */
 export function toRichHtml(value: string): string {
-  return isHtmlContent(value) ? value : plainTextToHtml(value)
+  return isHtmlContent(value) ? sanitizeRichText(value) : plainTextToHtml(value)
 }

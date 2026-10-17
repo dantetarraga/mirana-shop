@@ -4,21 +4,25 @@ import { deleteCategory, importCategories } from '@/features/categories/actions/
 import { CategoryCrudDrawer } from '@/features/categories/components/CategoryCrudDrawer'
 import type { CategoryRow } from '@/features/categories/types'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
-import {
-  EntityImportDrawer,
-  type ImportField,
-  type ImportedRow,
-} from '@/shared/components/admin/EntityImportDrawer'
+import type { ImportField, ImportedRow } from '@/shared/components/admin/EntityImportDrawer'
 import { EntityProductsDrawer } from '@/shared/components/admin/EntityProductsDrawer'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
-import { useEntityCrud, useServerAction } from '@/shared/hooks/admin'
+import { useEntityCrud } from '@/shared/hooks/admin/useEntityCrud'
+import { useServerAction } from '@/shared/hooks/admin/useServerAction'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { FileSpreadsheet, Pencil, Plus, Trash2 } from 'lucide-react'
+import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import { useState } from 'react'
 import { toast } from 'sonner'
+
+// xlsx (~300 KB) solo hace falta al abrir el import: carga diferida.
+const EntityImportDrawer = dynamic(
+  () => import('@/shared/components/admin/EntityImportDrawer').then((m) => m.EntityImportDrawer),
+  { ssr: false },
+)
 
 const IMPORT_FIELDS: ImportField[] = [
   { key: 'name', label: 'Nombre', aliases: ['nombre', 'categoria', 'categoría', 'category'], required: true },

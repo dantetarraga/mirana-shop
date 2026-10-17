@@ -34,6 +34,33 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
 /** Los 8 estados en el orden en que avanza un pedido — orden de los botones. */
 export const ORDER_STATUS_FLOW: OrderStatus[] = Object.values(ORDER_STATUS_GROUPS).flat()
 
+/**
+ * Transiciones válidas del flujo. CANCELLED y REFUNDED son terminales.
+ * Un reembolso no repone inventario automáticamente: una devolución física se
+ * registra como ajuste/retorno explícito para no inventar stock.
+ */
+export const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  PENDING: ['AWAITING_PROOF', 'CANCELLED'],
+  AWAITING_PROOF: ['PAID', 'CANCELLED'],
+  PAID: ['PREPARING', 'REFUNDED'],
+  PREPARING: ['SHIPPED', 'REFUNDED'],
+  SHIPPED: ['DELIVERED', 'REFUNDED'],
+  DELIVERED: ['REFUNDED'],
+  CANCELLED: [],
+  REFUNDED: [],
+}
+
+export function canTransitionOrder(from: OrderStatus, to: OrderStatus): boolean {
+  return from === to || ORDER_STATUS_TRANSITIONS[from].includes(to)
+}
+
+export class OrderStatusConflictError extends Error {
+  constructor() {
+    super('El pedido fue modificado concurrentemente. Actualiza la página e intenta de nuevo.')
+    this.name = 'OrderStatusConflictError'
+  }
+}
+
 const GROUP_BY_STATUS = Object.fromEntries(
   Object.entries(ORDER_STATUS_GROUPS).flatMap(([group, statuses]) =>
     statuses.map((s) => [s, group as OrderStatusGroup]),

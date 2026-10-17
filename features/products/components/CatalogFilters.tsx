@@ -158,7 +158,7 @@ export function CatalogFilters({
         >
           Filtros
           {hasActiveFilters && (
-            <span className="text-[11px] font-display font-bold px-1.5 py-0.5 bg-(--gold) text-black">
+            <span className="text-[11px] font-display font-bold px-1.5 py-0.5 bg-(--gold) text-on-accent">
               {chips.length}
             </span>
           )}
@@ -389,7 +389,7 @@ function FilterCheckbox({
           checked ? 'bg-(--gold) border-(--gold)' : 'border-(--bd) bg-transparent'
         }`}
       >
-        {checked && <Check size={10} className="text-black" strokeWidth={3} />}
+        {checked && <Check size={10} className="text-on-accent" strokeWidth={3} />}
       </span>
       <span
         className={`flex-1 text-[13px] transition-colors ${checked ? 'text-text' : 'text-muted group-hover:text-text'}`}

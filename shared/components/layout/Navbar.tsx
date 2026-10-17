@@ -4,24 +4,59 @@ import { logout } from '@/features/auth/lib/logout'
 import { useAuthModalStore } from '@/features/auth/stores/auth-modal.store'
 import { useCartStore } from '@/features/cart/stores/cart.store'
 import { SearchBox } from '@/features/search/components/SearchBox'
+import { MobileNavDrawer } from '@/shared/components/layout/MobileNavDrawer'
+import { ACCOUNT_LINKS, type NavLinkItem } from '@/shared/components/layout/nav-links'
 import { Button } from '@/shared/components/ui/Button'
 import { ThemeToggle } from '@/shared/components/ui/ThemeToggle'
-import { useUser } from '@/shared/hooks'
+import { useUser } from '@/shared/hooks/useUser'
 import { cn } from '@/shared/lib/utils'
-import { LayoutGrid, LogOut, MapPin, Package, ShoppingBag, User } from 'lucide-react'
+import {
+  ArrowLeft,
+  LayoutGrid,
+  LogOut,
+  Menu,
+  Search,
+  ShoppingBag,
+  User,
+} from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
-export function Navbar({ logoUrl = '/logo.svg' }: { logoUrl?: string }) {
-  const { cartCount, setCartOpen, hydrated } = useCartStore()
-  const { openAuth } = useAuthModalStore()
+export type { NavLinkItem }
+
+interface NavbarProps {
+  logoUrl?: string
+  /** Categorías raíz para el menú móvil (ya recortadas en el layout). */
+  categories?: NavLinkItem[]
+  collections?: NavLinkItem[]
+}
+
+export function Navbar({ logoUrl = '/logo.svg', categories = [], collections = [] }: NavbarProps) {
+  // Selectores atómicos: con `useCartStore()` el navbar se re-renderizaba con
+  // cualquier cambio del carrito (líneas, escrituras en vuelo…), no solo el contador.
+  const cartCount = useCartStore((s) => s.cartCount)
+  const hydrated = useCartStore((s) => s.hydrated)
+  const setCartOpen = useCartStore((s) => s.setCartOpen)
+  const openAuth = useAuthModalStore((s) => s.openAuth)
   const { user } = useUser()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
+  const searchButtonRef = useRef<HTMLButtonElement>(null)
   const pathname = usePathname()
+
+  // Al cambiar de ruta se cierran el drawer y la búsqueda móvil. Patrón de
+  // "estado derivado del render anterior" (sin efecto → sin render extra).
+  const [prevPath, setPrevPath] = useState(pathname)
+  if (prevPath !== pathname) {
+    setPrevPath(pathname)
+    setDrawerOpen(false)
+    setMobileSearchOpen(false)
+  }
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -44,6 +79,12 @@ export function Navbar({ logoUrl = '/logo.svg' }: { logoUrl?: string }) {
     return () => document.removeEventListener('keydown', handler)
   }, [menuOpen])
 
+  const closeMobileSearch = () => {
+    setMobileSearchOpen(false)
+    // Al desmontarse la fila de búsqueda el foco quedaría en <body>.
+    requestAnimationFrame(() => searchButtonRef.current?.focus())
+  }
+
   const initials = user
     ? user.name
         .split(' ')
@@ -54,161 +95,238 @@ export function Navbar({ logoUrl = '/logo.svg' }: { logoUrl?: string }) {
     : ''
 
   return (
-    <nav className="fixed top-(--ab) left-0 right-0 z-200 flex items-center gap-3 sm:gap-5 md:gap-8 shell transition-[background] duration-300 h-(--nav-h) bg-surf/92 backdrop-blur-[28px] border-b border-(--bd)">
-      <div className="flex items-center gap-4 md:gap-7 shrink-0">
-        <Link href="/" className="flex items-center shrink-0">
-          {/* El logo es un PNG rasterizado dentro del SVG (el color está horneado
-              en un feColorMatrix, no hay `fill` editable), así que el tema claro
-              se resuelve con un filtro CSS.
+    <>
+      <nav
+        aria-label="Principal"
+        className="fixed top-(--ab) left-0 right-0 z-200 flex items-center gap-2 sm:gap-5 md:gap-8 shell transition-[background-color] duration-300 h-(--nav-h) bg-surf/92 backdrop-blur-[28px] border-b border-(--bd)"
+      >
+        <div className="flex items-center gap-1 sm:gap-4 md:gap-7 shrink-0">
+          {/* Menú móvil: debajo de `md` no hay espacio para Catálogo ni el
+              buscador completo, así que todo eso vive en el drawer. */}
+          <Button
+            variant="icon"
+            size="md"
+            className="md:hidden -ml-2 border-transparent"
+            aria-label="Abrir menú"
+            aria-haspopup="dialog"
+            aria-expanded={drawerOpen}
+            onClick={() => setDrawerOpen(true)}
+          >
+            <Menu size={20} aria-hidden />
+          </Button>
 
-              Antes era `brightness(0)`: pintaba de negro TODO lo opaco, y el
-              emblema deja de leerse — sus garras están dibujadas en claro sobre
-              el navy, así que al aplanarlas a un solo color se funden en una
-              mancha y el cyan de "MIRA" desaparece.
-
-              `invert(1) hue-rotate(180deg)` conserva la estructura clara/oscura
-              (la invierte, que es justo lo que hace falta sobre blanco) y el
-              hue-rotate devuelve el tono: sin él, invert manda el cyan al
-              naranja. El `saturate` compensa el lavado del invert. */}
-          <Image
-            src={logoUrl}
-            alt="Mirana"
-            width={150}
-            height={90}
-            priority
-            className="h-8 sm:h-9 md:h-10 w-auto [filter:invert(1)_hue-rotate(180deg)_saturate(1.4)] dark:[filter:none]"
-          />
-        </Link>
-        {/* Sin padding inferior: el `items-center` del nav centra la caja del
-            enlace, así que cualquier relleno abajo empuja el texto hacia arriba
-            y lo desalinea del logo y de los botones de la derecha. */}
-        <Link
-          href="/catalogo"
-          className="hidden sm:block text-[12px] font-semibold tracking-[1px] no-underline uppercase transition-[color] duration-200 text-muted hover:text-text"
-        >
-          Catálogo
-        </Link>
-      </div>
-
-      <div className="flex-1 min-w-0 max-w-2xl mx-auto">
-        <SearchBox />
-      </div>
-
-      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        <ThemeToggle />
-
-        {/* Cart */}
-        <Button
-          variant="icon"
-          size="md"
-          onClick={() => setCartOpen(true)}
-          // Hasta que CartHydrator siembra el carrito del servidor no se sabe
-          // cuántos artículos hay: el HTML del SSR sale siempre con 0 y afirmar
-          // "vacío" sería mentira durante el primer pintado.
-          aria-label={
-            !hydrated
-              ? 'Carrito'
-              : cartCount > 0
-                ? `Carrito, ${cartCount} artículos`
-                : 'Carrito, vacío'
-          }
-          className="relative"
-        >
-          <ShoppingBag size={17} />
-          {hydrated && cartCount > 0 && (
-            <span
-              aria-hidden
-              className="absolute top-1.5 -right-1.5 w-4.5 h-4.5 rounded-full flex items-center justify-center text-[10px] font-bold font-display bg-(--gold) text-black"
-            >
-              {cartCount}
-            </span>
-          )}
-        </Button>
-
-        {/* User */}
-        <div className="relative" ref={menuRef}>
-          {user ? (
-            <Button
-              ref={menuButtonRef}
-              variant="accent"
-              className="w-10 h-10 p-0"
-              aria-label={`Menú de ${user.name}`}
-              aria-haspopup="menu"
-              aria-expanded={menuOpen}
-              onClick={() => setMenuOpen((o) => !o)}
-            >
-              {initials}
-            </Button>
-          ) : (
-            <Button variant="accent" size="md" onClick={() => openAuth('login')}>
-              Ingresar
-            </Button>
-          )}
-
-          {/* Dropdown */}
-          {menuOpen && user && (
-            <div className="absolute top-[calc(100%+8px)] right-0 min-w-55 z-250 bg-surf border border-(--bd) shadow-pop">
-              <div className="px-4.5 py-4 border-b border-(--bd)">
-                <div className="font-display text-[16px] font-extrabold uppercase tracking-[0.5px]">
-                  {user.name}
-                </div>
-                <div className="text-[11px] mt-0.5 text-muted">{user.email}</div>
-              </div>
-
-              {[
-                { label: 'Mi perfil', icon: User, href: '/cuenta/perfil' },
-                { label: 'Mis pedidos', icon: Package, href: '/cuenta/pedidos' },
-                { label: 'Mis direcciones', icon: MapPin, href: '/cuenta/direcciones' },
-              ].map(({ label, icon: Icon, href }) => {
-                const isActive = pathname === href
-                return (
-                  <Link
-                    key={label}
-                    href={href}
-                    onClick={() => setMenuOpen(false)}
-                    className={cn(
-                      'flex items-center gap-2.5 px-4.5 py-2.75 text-[13px] no-underline font-sans font-semibold transition-colors duration-150',
-                      isActive ? 'text-accent-ink bg-card' : 'text-text hover:bg-card',
-                    )}
-                  >
-                    <Icon
-                      size={14}
-                      className={cn('shrink-0', isActive ? 'text-accent-ink' : 'text-muted')}
-                    />
-                    {label}
-                    {isActive && <span className="ml-auto w-1 h-1 rounded-full bg-(--gold)" />}
-                  </Link>
-                )
-              })}
-
-              {user.role === 'admin' && (
-                <Link
-                  href="/admin/dashboard"
-                  onClick={() => setMenuOpen(false)}
-                  className="px-4.5 py-2.75 flex items-center gap-2.5 text-[13px] no-underline font-sans font-semibold text-accent-ink border-t border-(--bd)"
-                >
-                  <LayoutGrid size={14} />
-                  Panel Admin
-                </Link>
-              )}
-
-              <Button
-                variant="ghost"
-                size="sm"
-                full
-                onClick={() => {
-                  setMenuOpen(false)
-                  logout()
-                }}
-                className="justify-start px-4.5 border-t border-(--bd)"
-              >
-                <LogOut size={14} />
-                Cerrar sesión
-              </Button>
-            </div>
-          )}
+          <Link href="/" className="flex items-center shrink-0" aria-label="Mirana — inicio">
+            {/* El logo es un PNG rasterizado dentro del SVG (el color está horneado
+                en un feColorMatrix, no hay `fill` editable), así que el tema claro
+                se resuelve con un filtro CSS: `invert(1) hue-rotate(180deg)`
+                conserva la estructura clara/oscura y devuelve el tono del cyan. */}
+            <Image
+              src={logoUrl}
+              alt=""
+              width={150}
+              height={90}
+              priority
+              className="h-8 sm:h-9 md:h-10 w-auto [filter:invert(1)_hue-rotate(180deg)_saturate(1.4)] dark:[filter:none]"
+            />
+          </Link>
+          {/* Sin padding inferior: el `items-center` del nav centra la caja del
+              enlace, así que cualquier relleno abajo empuja el texto hacia arriba. */}
+          <Link
+            href="/catalogo"
+            aria-current={pathname === '/catalogo' ? 'page' : undefined}
+            className="hidden md:block text-[12px] font-semibold tracking-[1px] no-underline uppercase transition-[color] duration-200 text-muted hover:text-text"
+          >
+            Catálogo
+          </Link>
         </div>
-      </div>
-    </nav>
+
+        <div className="hidden md:block flex-1 min-w-0 max-w-2xl mx-auto">
+          <SearchBox />
+        </div>
+        <div className="flex-1 md:hidden" />
+
+        <div className="flex items-center gap-1 sm:gap-3 shrink-0">
+          {/* Buscador móvil: icono que despliega una fila a todo el ancho */}
+          <Button
+            ref={searchButtonRef}
+            variant="icon"
+            size="md"
+            className="md:hidden border-transparent"
+            aria-label="Buscar productos"
+            aria-expanded={mobileSearchOpen}
+            onClick={() => setMobileSearchOpen(true)}
+          >
+            <Search size={19} aria-hidden />
+          </Button>
+
+          <ThemeToggle className="hidden sm:inline-flex" />
+
+          {/* Cart */}
+          <Button
+            variant="icon"
+            size="md"
+            onClick={() => setCartOpen(true)}
+            // Hasta que CartHydrator siembra el carrito del servidor no se sabe
+            // cuántos artículos hay: el HTML del SSR sale siempre con 0.
+            aria-label={
+              !hydrated
+                ? 'Carrito'
+                : cartCount > 0
+                  ? `Carrito, ${cartCount} artículos`
+                  : 'Carrito, vacío'
+            }
+            className="relative max-sm:border-transparent"
+          >
+            <ShoppingBag size={18} aria-hidden />
+            {hydrated && cartCount > 0 && (
+              <span
+                aria-hidden
+                className="absolute top-1 right-0.5 min-w-4.5 h-4.5 px-1 rounded-full flex items-center justify-center text-[11px] font-bold font-display bg-(--gold) text-on-accent"
+              >
+                {cartCount}
+              </span>
+            )}
+          </Button>
+
+          {/* User */}
+          <div className="relative" ref={menuRef}>
+            {user ? (
+              <Button
+                ref={menuButtonRef}
+                variant="accent"
+                className="w-11 h-11 p-0"
+                aria-label={`Menú de ${user.name}`}
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                onClick={() => setMenuOpen((o) => !o)}
+              >
+                {initials}
+              </Button>
+            ) : (
+              <>
+                {/* En móvil "Ingresar" es un icono: el texto no entra junto al
+                    resto de controles a 390px. */}
+                <Button
+                  variant="icon"
+                  size="md"
+                  className="sm:hidden border-transparent"
+                  aria-label="Ingresar"
+                  onClick={() => openAuth('login')}
+                >
+                  <User size={19} aria-hidden />
+                </Button>
+                <Button
+                  variant="accent"
+                  size="md"
+                  className="hidden sm:inline-flex"
+                  onClick={() => openAuth('login')}
+                >
+                  Ingresar
+                </Button>
+              </>
+            )}
+
+            {/* Dropdown */}
+            {menuOpen && user && (
+              <div className="absolute top-[calc(100%+8px)] right-0 min-w-55 z-250 bg-surf border border-(--bd) shadow-pop">
+                <div className="px-4.5 py-4 border-b border-(--bd)">
+                  <div className="font-display text-[16px] font-extrabold uppercase tracking-[0.5px]">
+                    {user.name}
+                  </div>
+                  <div className="text-[11px] mt-0.5 text-muted">{user.email}</div>
+                </div>
+
+                {ACCOUNT_LINKS.map(({ label, icon: Icon, href }) => {
+                  const isActive = pathname === href
+                  return (
+                    <Link
+                      key={label}
+                      href={href}
+                      onClick={() => setMenuOpen(false)}
+                      aria-current={isActive ? 'page' : undefined}
+                      className={cn(
+                        'flex items-center gap-2.5 px-4.5 py-3 text-[13px] no-underline font-sans font-semibold transition-colors duration-150',
+                        isActive ? 'text-accent-ink bg-card' : 'text-text hover:bg-card',
+                      )}
+                    >
+                      <Icon
+                        size={14}
+                        aria-hidden
+                        className={cn('shrink-0', isActive ? 'text-accent-ink' : 'text-muted')}
+                      />
+                      {label}
+                      {isActive && <span aria-hidden className="ml-auto w-1 h-1 rounded-full bg-(--gold)" />}
+                    </Link>
+                  )
+                })}
+
+                {user.role === 'admin' && (
+                  <Link
+                    href="/admin/dashboard"
+                    onClick={() => setMenuOpen(false)}
+                    className="px-4.5 py-3 flex items-center gap-2.5 text-[13px] no-underline font-sans font-semibold text-accent-ink border-t border-(--bd)"
+                  >
+                    <LayoutGrid size={14} aria-hidden />
+                    Panel Admin
+                  </Link>
+                )}
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  full
+                  onClick={() => {
+                    setMenuOpen(false)
+                    logout()
+                  }}
+                  className="justify-start px-4.5 py-3 border-t border-(--bd)"
+                >
+                  <LogOut size={14} aria-hidden />
+                  Cerrar sesión
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Fila de búsqueda móvil: tapa la barra entera mientras está abierta. */}
+        {mobileSearchOpen && (
+          <div className="md:hidden absolute inset-0 z-10 flex items-center gap-1 shell bg-surf">
+            <Button
+              variant="icon"
+              size="md"
+              className="-ml-2 border-transparent"
+              aria-label="Cerrar búsqueda"
+              onClick={closeMobileSearch}
+            >
+              <ArrowLeft size={19} aria-hidden />
+            </Button>
+            <SearchBox
+              focusOnMount
+              onDismiss={closeMobileSearch}
+              onNavigate={() => setMobileSearchOpen(false)}
+              className="flex-1 min-w-0"
+            />
+          </div>
+        )}
+      </nav>
+
+      <MobileNavDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        pathname={pathname}
+        categories={categories}
+        collections={collections}
+        user={user}
+        onLogin={() => {
+          setDrawerOpen(false)
+          openAuth('login')
+        }}
+        onRegister={() => {
+          setDrawerOpen(false)
+          openAuth('register')
+        }}
+      />
+    </>
   )
 }

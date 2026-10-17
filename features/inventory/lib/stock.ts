@@ -27,6 +27,50 @@ export class OptimisticLockError extends Error {
   }
 }
 
+/** Se llama después de bloquear el producto mediante su actualización en la transacción. */
+export async function assertProductCanBeArchived(tx: TransactionClient, productId: string) {
+  const inventory = await tx.productInventory.findUnique({
+    where: { productId },
+    select: { reservedStock: true, preorderedStock: true },
+  })
+  const activeOrder = await tx.orderItem.findFirst({
+    where: {
+      productId,
+      order: { status: { notIn: ['DELIVERED', 'CANCELLED', 'REFUNDED'] } },
+    },
+    select: { id: true },
+  })
+  const activePreorder = await tx.preorder.findFirst({
+    where: { productId, status: { in: ['PENDING', 'CONFIRMED', 'READY'] } },
+    select: { id: true },
+  })
+  if (
+    (inventory?.reservedStock ?? 0) > 0 ||
+    (inventory?.preorderedStock ?? 0) > 0 ||
+    activeOrder ||
+    activePreorder
+  ) {
+    throw new Error('No se puede archivar el producto: tiene reservas, preventas o pedidos activos.')
+  }
+}
+
+/** Un ajuste absoluto solo se aplica si nadie cambió el inventario leído. */
+export async function setAvailableStock(tx: TransactionClient, productId: string, stock: number) {
+  const current = await tx.productInventory.findUnique({
+    where: { productId },
+    select: { version: true },
+  })
+  if (!current) {
+    await tx.productInventory.create({ data: { productId, availableStock: stock } })
+    return
+  }
+  const updated = await tx.productInventory.updateMany({
+    where: { productId, version: current.version },
+    data: { availableStock: stock, version: { increment: 1 } },
+  })
+  if (updated.count === 0) throw new OptimisticLockError()
+}
+
 /** Entrada común: `isPreorder` decide qué contador se mueve. */
 interface StockOp {
   productId: string
@@ -39,9 +83,23 @@ interface StockOp {
 export async function reserveStockForOrder(tx: TransactionClient, input: StockOp): Promise<void> {
   const { productId, quantity, orderId, isPreorder = false, reason } = input
 
+  // Serializa la reserva con el archivado y vuelve a validar el producto,
+  // aunque el checkout lo haya leído antes de que fuera enviado a la papelera.
+  const products = await tx.$queryRaw<{ id: string }[]>`
+    SELECT id FROM Product
+    WHERE id = ${productId} AND deletedAt IS NULL AND status <> 'ARCHIVED'
+    FOR UPDATE
+  `
+  if (products.length === 0) throw new Error('El producto ya no está disponible')
+
   const current = await tx.productInventory.findUnique({
     where: { productId },
-    select: { availableStock: true, preorderedStock: true, version: true },
+    select: {
+      availableStock: true,
+      reservedStock: true,
+      preorderedStock: true,
+      version: true,
+    },
   })
   if (!current) {
     throw new Error(`No existe inventario para el producto ${productId}`)
@@ -109,7 +167,11 @@ export async function releaseReservedStock(tx: TransactionClient, input: StockOp
 
   if (isPreorder) {
     const released = await tx.productInventory.updateMany({
-      where: { productId, version: current.version },
+      where: {
+        productId,
+        version: current.version,
+        preorderedStock: { gte: quantity },
+      },
       data: { preorderedStock: { decrement: quantity }, version: { increment: 1 } },
     })
     if (released.count === 0) throw new OptimisticLockError()
@@ -129,7 +191,11 @@ export async function releaseReservedStock(tx: TransactionClient, input: StockOp
   }
 
   const updated = await tx.productInventory.updateMany({
-    where: { productId, version: current.version },
+    where: {
+      productId,
+      version: current.version,
+      reservedStock: { gte: quantity },
+    },
     data: {
       availableStock: { increment: quantity },
       reservedStock: { decrement: quantity },
@@ -158,7 +224,12 @@ export async function finalizeReservedStock(tx: TransactionClient, input: StockO
 
   const current = await tx.productInventory.findUnique({
     where: { productId },
-    select: { availableStock: true, preorderedStock: true, version: true },
+    select: {
+      availableStock: true,
+      reservedStock: true,
+      preorderedStock: true,
+      version: true,
+    },
   })
   if (!current) return
 
@@ -166,7 +237,11 @@ export async function finalizeReservedStock(tx: TransactionClient, input: StockO
     // La preventa cobrada deja de estar comprometida; no hay unidades físicas
     // que descontar, esas entran cuando llegue la mercadería.
     const done = await tx.productInventory.updateMany({
-      where: { productId, version: current.version },
+      where: {
+        productId,
+        version: current.version,
+        preorderedStock: { gte: quantity },
+      },
       data: { preorderedStock: { decrement: quantity }, version: { increment: 1 } },
     })
     if (done.count === 0) throw new OptimisticLockError()
@@ -186,7 +261,11 @@ export async function finalizeReservedStock(tx: TransactionClient, input: StockO
   }
 
   const updated = await tx.productInventory.updateMany({
-    where: { productId, version: current.version },
+    where: {
+      productId,
+      version: current.version,
+      reservedStock: { gte: quantity },
+    },
     data: {
       reservedStock: { decrement: quantity },
       version: { increment: 1 },

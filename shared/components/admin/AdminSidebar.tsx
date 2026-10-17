@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useAdminSidebarStore } from '@/shared/stores/admin-sidebar.store'
 import { cn } from '@/shared/lib/utils'
@@ -26,7 +26,18 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import React from 'react'
+import React, { useEffect, useRef, useSyncExternalStore } from 'react'
+
+// El sidebar es un drawer solo debajo de `lg`; en desktop siempre está visible.
+const DESKTOP_QUERY = '(min-width: 1024px)'
+function subscribeDesktop(onChange: () => void) {
+  const mql = window.matchMedia(DESKTOP_QUERY)
+  mql.addEventListener('change', onChange)
+  return () => mql.removeEventListener('change', onChange)
+}
+const getDesktop = () => window.matchMedia(DESKTOP_QUERY).matches
+// En servidor se asume desktop: así el HTML nunca sale `inert`.
+const getServerDesktop = () => true
 
 type NavSection = { section: string }
 type NavLink = {
@@ -65,14 +76,43 @@ const NAV_ITEMS: NavItem[] = [
 
 export function AdminSidebar() {
   const pathname = usePathname()
-  const { isOpen, close } = useAdminSidebarStore()
+  const isOpen = useAdminSidebarStore((s) => s.isOpen)
+  const close = useAdminSidebarStore((s) => s.close)
+  const isDesktop = useSyncExternalStore(subscribeDesktop, getDesktop, getServerDesktop)
+  const asideRef = useRef<HTMLElement>(null)
+  // Cerrado en móvil está fuera de pantalla: sin `inert` el Tab seguía
+  // recorriendo sus ~20 enlaces invisibles antes de llegar al contenido.
+  const hiddenOnMobile = !isDesktop && !isOpen
+  const isDrawer = !isDesktop && isOpen
+
+  useEffect(() => {
+    if (!isDrawer) return
+    // Al abrir el drawer el foco entra en él…
+    asideRef.current?.querySelector<HTMLElement>('a[href]')?.focus()
+    // …y Escape lo cierra.
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') close()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isDrawer, close])
 
   return (
     <>
       {isOpen && (
-        <div className="fixed inset-0 z-40 bg-scrim lg:hidden" onClick={close} />
+        <button
+          type="button"
+          tabIndex={-1}
+          aria-label="Cerrar menú"
+          className="fixed inset-0 z-40 w-full h-full bg-scrim lg:hidden cursor-default"
+          onClick={close}
+        />
       )}
       <aside
+        ref={asideRef}
+        inert={hiddenOnMobile}
+        aria-hidden={hiddenOnMobile || undefined}
+        aria-label="Menú de administración"
         className={cn(
           'w-62 fixed top-0 bottom-0 left-0 flex flex-col z-50 bg-surf border-r border-(--bd) transition-transform duration-300 lg:translate-x-0',
           isOpen ? 'translate-x-0' : '-translate-x-full',
@@ -83,7 +123,7 @@ export function AdminSidebar() {
         <span className="font-display font-black text-[26px] tracking-[4px] uppercase">
           MIRA<span className="text-accent-ink">NA</span>
         </span>
-        <span className="text-[9px] tracking-[2px] uppercase ml-auto px-1.75 py-0.75 text-muted border border-(--bd)">
+        <span className="text-[11px] tracking-[2px] uppercase ml-auto px-1.75 py-0.75 text-muted border border-(--bd)">
           Admin
         </span>
       </div>
@@ -95,7 +135,7 @@ export function AdminSidebar() {
             return (
               <div
                 key={i}
-                className="text-[9px] tracking-[2px] uppercase px-3 pt-3.5 pb-2 text-muted"
+                className="text-[11px] tracking-[2px] uppercase px-3 pt-3.5 pb-2 text-muted"
               >
                 {(n as NavSection).section}
               </div>
@@ -117,9 +157,9 @@ export function AdminSidebar() {
               )}
             >
               {isActive && (
-                <span className="absolute left-0 top-2 bottom-2 w-0.75 bg-(--gold)" />
+                <span aria-hidden className="absolute left-0 top-2 bottom-2 w-0.75 bg-(--gold)" />
               )}
-              <link.icon size={17} className="shrink-0" />
+              <link.icon size={17} className="shrink-0" aria-hidden />
               {link.label}
             </Link>
           )
@@ -132,16 +172,16 @@ export function AdminSidebar() {
           href="/"
           className="flex items-center gap-3 px-3 py-2.75 no-underline font-sans text-sm text-muted"
         >
-          <ArrowLeft size={17} />
+          <ArrowLeft size={17} aria-hidden />
           Volver a la tienda
         </Link>
         <div className="flex items-center gap-2.5 px-3 py-2.5">
-          <div className="w-8.5 h-8.5 flex items-center justify-center font-display font-black text-[14px] shrink-0 bg-(--gold) text-black">
+          <div className="w-8.5 h-8.5 flex items-center justify-center font-display font-black text-[14px] shrink-0 bg-(--gold) text-on-accent">
             AD
           </div>
           <div>
             <div className="text-[13px] font-semibold">Admin Mirana</div>
-            <div className="text-[10px] tracking-[1px] uppercase text-muted">Administrador</div>
+            <div className="text-[11px] tracking-[1px] uppercase text-muted">Administrador</div>
           </div>
         </div>
       </div>

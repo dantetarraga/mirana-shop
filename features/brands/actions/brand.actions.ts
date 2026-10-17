@@ -271,7 +271,7 @@ const importBrandRowSchema = z.object({
   slug: slugSchema.optional().or(z.literal('')).default(''),
   tagline: z.string().max(80).optional().default(''),
   description: z.string().max(500).optional().default(''),
-  imageUrl: z.string().url('URL de imagen inválida').optional().or(z.literal('')).default(''),
+  imageUrl: imageUrlSchema().optional().or(z.literal('')).default(''),
 })
 
 export type ImportBrandRow = z.infer<typeof importBrandRowSchema>

@@ -1,7 +1,9 @@
 import 'server-only'
+import { cachedQuery, CACHE_TAGS, REVALIDATE_SHORT, reviveDate } from '@/shared/lib/data-cache'
 import { db } from '@/shared/lib/db'
 import { DEFAULT_CATALOG_STATUSES } from '@/features/products/lib/availability'
-import { PRODUCT_LIST_SELECT } from '@/features/products/queries/product.queries'
+import { PRODUCT_LIST_SELECT, reviveProducts } from '@/features/products/queries/product.queries'
+import { cache } from 'react'
 import type { ProductListItem } from '@/features/products/types'
 import type {
   CatalogCollection,
@@ -51,7 +53,7 @@ export function mapCollectionRow(c: {
   }
 }
 
-export async function getCollections(filters: CollectionFilters = {}): Promise<CollectionRow[]> {
+async function fetchCollections(filters: CollectionFilters = {}): Promise<CollectionRow[]> {
   const { search, active, page = 1, perPage = 50 } = filters
   const skip = (page - 1) * perPage
 
@@ -76,6 +78,37 @@ export async function getCollections(filters: CollectionFilters = {}): Promise<C
 
   return rows.map(mapCollectionRow)
 }
+
+// Las colecciones públicas mezclan datos de la colección y de sus productos
+// (precio "desde", conteo, stock), así que se invalidan con los tres tags:
+// las actions de enlazar productos solo disparan 'products'.
+const COLLECTION_CACHE_OPTIONS = {
+  tags: [CACHE_TAGS.collections, CACHE_TAGS.products, CACHE_TAGS.catalog],
+  revalidate: REVALIDATE_SHORT,
+}
+
+/** Forma exacta del listado público: la piden la home y el layout de la tienda. */
+const PUBLIC_COLLECTIONS_FILTERS: CollectionFilters = { active: true, perPage: 50 }
+const PUBLIC_COLLECTIONS_KEY = JSON.stringify(PUBLIC_COLLECTIONS_FILTERS)
+
+const getCollectionsByKey = cache((key: string) =>
+  // El listado público va a la caché entre requests; cualquier otro (admin,
+  // búsqueda, actions) se lee fresco.
+  key === PUBLIC_COLLECTIONS_KEY ? getPublicCollectionRows() : fetchCollections(JSON.parse(key) as CollectionFilters),
+)
+
+/** Listado del admin y las actions: solo deduplicado por request. */
+export function getCollections(filters: CollectionFilters = {}): Promise<CollectionRow[]> {
+  return getCollectionsByKey(JSON.stringify(filters))
+}
+
+/** Colecciones activas para los filtros rápidos del inicio — cacheado entre requests. */
+export const getPublicCollectionRows = cache(
+  cachedQuery(() => fetchCollections(PUBLIC_COLLECTIONS_FILTERS), ['public-collection-rows'], {
+    ...COLLECTION_CACHE_OPTIONS,
+    revive: (rows) => rows.map((c) => ({ ...c, createdAt: reviveDate(c.createdAt) })),
+  }),
+)
 
 export async function countCollections(
   filters: Pick<CollectionFilters, 'search' | 'active'> = {},
@@ -183,7 +216,7 @@ function effectivePrice(price: unknown, salePrice: unknown): number {
  * Colecciones activas para el catálogo. Trae de cada producto solo lo mínimo
  * para calcular el conteo, el precio "desde" y la imagen de respaldo.
  */
-export async function getPublicCollections(hideOutOfStock = false): Promise<CatalogCollection[]> {
+async function fetchPublicCollections(hideOutOfStock = false): Promise<CatalogCollection[]> {
   const rows = await db.collection.findMany({
     where: { deletedAt: null, active: true },
     select: {
@@ -224,12 +257,17 @@ export async function getPublicCollections(hideOutOfStock = false): Promise<Cata
     })
 }
 
+/** Solo primitivos: se cachea sin revividor. */
+export const getPublicCollections = cache(
+  cachedQuery(fetchPublicCollections, ['public-collections'], COLLECTION_CACHE_OPTIONS),
+)
+
 export type PublicCollectionDetail = CatalogCollection & {
   products: ProductListItem[]
 }
 
 /** Colección + sus productos visibles, para la página pública. */
-export async function getPublicCollectionBySlug(
+async function fetchPublicCollectionBySlug(
   slug: string,
   hideOutOfStock = false,
 ): Promise<PublicCollectionDetail | null> {
@@ -264,3 +302,14 @@ export async function getPublicCollectionBySlug(
     products,
   }
 }
+
+/**
+ * La leen generateMetadata y la página: `cache()` evita la segunda consulta
+ * del mismo request y `unstable_cache` las de requests siguientes.
+ */
+export const getPublicCollectionBySlug = cache(
+  cachedQuery(fetchPublicCollectionBySlug, ['public-collection-by-slug'], {
+    ...COLLECTION_CACHE_OPTIONS,
+    revive: (c) => (c ? { ...c, products: reviveProducts(c.products) } : null),
+  }),
+)

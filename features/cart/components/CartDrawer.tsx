@@ -1,6 +1,7 @@
 'use client'
 
 import { cartKindOf } from '@/features/cart/lib/cart-kind'
+import { removeWithUndo } from '@/features/cart/lib/remove-with-undo'
 import { useCartStore } from '@/features/cart/stores/cart.store'
 import { eligibleDeliveryMethods } from '@/features/checkout/lib/delivery-eligibility'
 import { depositUnitPrice, splitPreorderTotals } from '@/features/checkout/lib/preorder'
@@ -8,15 +9,13 @@ import { computeTotals, effectivePrice, type PricingRules } from '@/features/che
 import { maxPurchasable } from '@/features/products/lib/stock'
 import { getCategoryStripe } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
-import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
-import { useScrollLock } from '@/shared/hooks'
+import { useScrollLock } from '@/shared/hooks/useScrollLock'
 import { useFocusTrap } from '@/shared/hooks/useFocusTrap'
 import { formatCurrency } from '@/shared/lib/utils'
 import { ArrowRight, Minus, Plus, ShoppingCart, X } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useEffect, useId, useState } from 'react'
-import { toast } from 'sonner'
+import { useEffect, useId } from 'react'
 
 interface CartDrawerProps {
   pricingRules: PricingRules
@@ -36,7 +35,13 @@ export function CartDrawer({ pricingRules }: CartDrawerProps) {
 const BACKGROUND_SELECTOR = 'nav, #main, footer'
 
 function CartDrawerContent({ pricingRules }: CartDrawerProps) {
-  const { cart, cartCount, setCartOpen, updateQty, removeItem, refreshCart } = useCartStore()
+  // Selectores por campo: desestructurar `useCartStore()` suscribe a TODO el
+  // store y re-renderiza el drawer con cualquier cambio (p. ej. pendingWrites).
+  const cart = useCartStore((s) => s.cart)
+  const cartCount = useCartStore((s) => s.cartCount)
+  const setCartOpen = useCartStore((s) => s.setCartOpen)
+  const updateQty = useCartStore((s) => s.updateQty)
+  const refreshCart = useCartStore((s) => s.refreshCart)
   const busy = useCartStore((s) => s.pendingWrites > 0)
   // `payableNow` es lo que se cobra hoy: en las líneas de preventa parcial solo
   // el adelanto. Sin líneas parciales coincide con el subtotal y todo el cálculo
@@ -57,7 +62,6 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
     pricingRules,
     { shippingCost: deliveryMethods[0]?.cost },
   )
-  const [pendingRemove, setPendingRemove] = useState<{ id: string; name: string } | null>(null)
   const panelRef = useFocusTrap<HTMLDivElement>(true)
   const titleId = useId()
 
@@ -77,13 +81,11 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
-      // El ConfirmModal de borrado también escucha Escape en `window`: sin este
-      // guardia una sola pulsación cerraba la confirmación Y el drawer entero.
-      if (e.key === 'Escape' && pendingRemove === null) setCartOpen(false)
+      if (e.key === 'Escape') setCartOpen(false)
     }
     window.addEventListener('keydown', h)
     return () => window.removeEventListener('keydown', h)
-  }, [setCartOpen, pendingRemove])
+  }, [setCartOpen])
 
   // El fondo queda inerte para el lector de pantalla y para el tabulador; antes
   // el foco estaba atrapado pero el cursor virtual seguía recorriendo la página.
@@ -97,9 +99,14 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
 
   return (
     <>
-      <div
+      {/* Overlay como <button>: clicable y con semántica, sin entrar al
+          orden de Tab (el cierre por teclado es Escape o la X). */}
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-label="Cerrar carrito"
         onClick={() => setCartOpen(false)}
-        className="fixed inset-0 z-400 bg-scrim backdrop-blur-[6px]"
+        className="fixed inset-0 z-400 w-full h-full bg-scrim backdrop-blur-[6px] cursor-default"
       />
       <div
         ref={panelRef}
@@ -132,7 +139,7 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
               aria-label="Cerrar carrito"
               onClick={() => setCartOpen(false)}
             >
-              <X size={16} />
+              <X size={18} aria-hidden />
             </Button>
           </div>
         </div>
@@ -143,7 +150,7 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
             <div className="text-center py-16 px-5 text-muted">
               {/* Icono de lucide, no emoji: el emoji lo dibuja el sistema
                   operativo y cambia de estilo y color entre plataformas. */}
-              <ShoppingCart size={52} strokeWidth={1} className="mx-auto mb-4 opacity-25" />
+              <ShoppingCart size={52} strokeWidth={1} className="mx-auto mb-4 opacity-25" aria-hidden />
               <div className="font-display text-[22px] font-black uppercase mb-2">
                 Carrito vacío
               </div>
@@ -175,11 +182,13 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
                     href={`/catalogo/${item.product.slug}`}
                     onClick={() => setCartOpen(false)}
                     className="relative w-17.5 h-17.5 shrink-0 overflow-hidden block"
+                    tabIndex={-1}
+                    aria-hidden
                   >
                     {item.product.imageUrl ? (
                       <Image
                         src={item.product.imageUrl}
-                        alt={item.product.name}
+                        alt=""
                         fill
                         sizes="70px"
                         className="object-cover"
@@ -213,64 +222,47 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
                         Sin stock — quitalo para continuar
                       </div>
                     )}
-                    <div className="flex items-center gap-2 mt-2">
+                    <div className="flex items-center gap-1 mt-1.5 -ml-1">
                       <Button
                         variant="icon"
-                        size="sm"
+                        size="md"
+                        className="border-transparent"
                         disabled={item.qty <= 1}
                         aria-label={`Quitar una unidad de "${item.product.name}"`}
                         onClick={() => updateQty(item.product.id, -1)}
                       >
-                        <Minus size={14} />
+                        <Minus size={14} aria-hidden />
                       </Button>
                       <span className="font-display font-extrabold min-w-6 text-center">
                         {item.qty}
                       </span>
                       <Button
                         variant="icon"
-                        size="sm"
+                        size="md"
+                        className="border-transparent"
                         disabled={atLimit}
                         aria-label={`Agregar una unidad de "${item.product.name}"`}
                         onClick={() => updateQty(item.product.id, 1)}
                       >
-                        <Plus size={14} />
+                        <Plus size={14} aria-hidden />
                       </Button>
                     </div>
                   </div>
                   <Button
                     variant="icon"
-                    size="sm"
+                    size="md"
                     destructive
                     aria-label={`Eliminar "${item.product.name}" del carrito`}
-                    onClick={() =>
-                      setPendingRemove({ id: item.product.id, name: item.product.name })
-                    }
-                    className="self-start"
+                    onClick={() => removeWithUndo(item)}
+                    className="self-start border-transparent -mr-2"
                   >
-                    <X size={14} />
+                    <X size={16} aria-hidden />
                   </Button>
                 </div>
               )
             })
           )}
         </div>
-
-        <ConfirmModal
-          open={pendingRemove !== null}
-          onClose={() => setPendingRemove(null)}
-          onConfirm={() => {
-            if (!pendingRemove) return
-            removeItem(pendingRemove.id)
-            toast.success(`"${pendingRemove.name}" eliminado del carrito`)
-            setPendingRemove(null)
-          }}
-          title="¿Eliminar producto?"
-          description={
-            pendingRemove ? `"${pendingRemove.name}" será eliminado de tu carrito.` : undefined
-          }
-          confirmLabel="Eliminar"
-          cancelLabel="Cancelar"
-        />
 
         {/* Footer */}
         {cart.length > 0 && (
@@ -296,13 +288,13 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
                   <span className="text-muted">
                     Descuento{discountName ? ` — ${discountName}` : ''}
                   </span>
-                  <span className="text-green-400 font-semibold">−{formatCurrency(discount)}</span>
+                  <span className="text-success font-semibold">−{formatCurrency(discount)}</span>
                 </div>
               )}
               <div className="flex justify-between items-baseline">
                 <span className="text-muted">Envío</span>
                 {shippingFree || shippingCost === 0 ? (
-                  <span className="text-green-400 font-semibold">Gratis</span>
+                  <span className="text-success font-semibold">Gratis</span>
                 ) : (
                   <span className="font-semibold">{formatCurrency(shippingCost)}</span>
                 )}
@@ -334,7 +326,7 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
               className="ui-btn ui-btn--accent ui-btn--lg ui-btn--full"
             >
               Ver carrito y pagar
-              <ArrowRight size={14} className="ml-1" strokeWidth={3} />
+              <ArrowRight size={14} className="ml-1" strokeWidth={3} aria-hidden />
             </Link>
             {pricingRules.freeShippingThreshold != null && (
               <div className="text-center mt-3 text-[12px] text-muted">

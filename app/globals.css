@@ -79,6 +79,11 @@
      skeleton  : placeholder de carga. */
   --color-accent-ink: var(--accent-ink);
   --color-on-accent: var(--on-accent);
+  --color-on-success: var(--on-success);
+  --color-whatsapp: var(--wa);
+  --color-on-whatsapp: var(--on-wa);
+  --color-promo: var(--promo-bg);
+  --color-on-promo: var(--on-promo);
   --color-on-media: var(--on-media);
   --color-media-scrim: var(--media-scrim);
   --color-scrim: var(--scrim);
@@ -116,6 +121,7 @@
   --animate-fade-in: fade-in 0.2s ease both;
   --animate-slide-up: slide-up 0.25s cubic-bezier(0.4, 0, 0.2, 1) both;
   --animate-slide-right: slide-right 0.28s cubic-bezier(0.4, 0, 0.2, 1) both;
+  --animate-slide-left: slide-left 0.28s cubic-bezier(0.4, 0, 0.2, 1) both;
   --animate-pulse-dot: pulse-dot 2s infinite;
   --animate-fade-up: fade-up 0.5s ease both;
 
@@ -148,6 +154,14 @@
   @keyframes slide-right {
     from {
       transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+  @keyframes slide-left {
+    from {
+      transform: translateX(-100%);
     }
     to {
       transform: translateX(0);
@@ -228,6 +242,18 @@
   --c-amber: #b45309;
   --c-red: #c2321b;
   --c-blue: #5b4bd6;
+  /* Texto sobre --c-green (botón "Agregado", badge "Nuevo"): blanco da 5:1 */
+  --on-success: #ffffff;
+
+  /* WhatsApp — verde de marca con texto oscuro: el blanco sobre #25d366 da
+     1,98:1 y reprueba; #05301a da ~9:1. Igual en ambos temas. */
+  --wa: #25d366;
+  --on-wa: #05301a;
+
+  /* Barra de promociones — paleta de marca (antes bg-emerald-600, fuera de
+     paleta). Azul profundo + blanco = 4.7:1 (AA). */
+  --promo-bg: #0077b6;
+  --on-promo: #ffffff;
 
   /* Sombras — sobre blanco el negro al 40-50% resulta brutal */
   --sh-premium: 0 24px 48px -12px rgba(13, 27, 42, 0.18);
@@ -279,6 +305,15 @@
   --c-amber: #ffb84a;
   --c-red: #ff6644;
   --c-blue: #8b7cff;
+  /* El verde claro del tema oscuro con texto blanco daba ~1.9:1 */
+  --on-success: #00131c;
+
+  --wa: #25d366;
+  --on-wa: #05301a;
+
+  /* Cyan de marca + texto navy profundo (~11:1) */
+  --promo-bg: #00c8ff;
+  --on-promo: #00131c;
 
   --sh-premium: 0 25px 50px -12px oklch(0% 0 0 / 0.5);
   --sh-card: 0 4px 24px -4px oklch(0% 0 0 / 0.4);
@@ -397,8 +432,9 @@ textarea:focus-visible,
   /* Base */
   .ui-btn {
     @apply font-display font-bold uppercase cursor-pointer inline-flex
-           items-center justify-center gap-2 transition-all duration-200
-           outline-none select-none shrink-0;
+           items-center justify-center gap-2 duration-200
+           outline-none select-none shrink-0 no-underline;
+    transition-property: background-color, color, border-color, box-shadow, transform, opacity;
     letter-spacing: 1.5px;
     border: none;
   }
@@ -420,10 +456,20 @@ textarea:focus-visible,
      Verde en vez del acento cyan para que el cambio se lea de un vistazo. */
   .ui-btn--success {
     background: var(--c-green);
-    color: #fff;
+    color: var(--on-success);
   }
   .ui-btn--success:hover:not(:disabled) {
     background: var(--c-green);
+  }
+
+  /* whatsapp: CTA dominante de la pantalla de éxito del pedido */
+  .ui-btn--whatsapp {
+    background: var(--wa);
+    color: var(--on-wa);
+  }
+  .ui-btn--whatsapp:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--wa) 88%, #fff);
+    transform: translateY(-1px);
   }
 
   /* outline: borde sutil, fondo transparente */
@@ -511,9 +557,10 @@ textarea:focus-visible,
     height: 28px;
     font-size: 13px;
   }
+  /* 44px: mínimo de área táctil (WCAG 2.5.5 / guías iOS) */
   .ui-btn--icon.ui-btn--md {
-    width: 36px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
     font-size: 15px;
   }
   .ui-btn--icon.ui-btn--lg {
@@ -544,8 +591,9 @@ textarea:focus-visible,
 
   /* ── Botones legacy (mantener retrocompatibilidad) ── */
   .btn-gold {
-    @apply bg-gold-500 text-black font-display font-extrabold uppercase
-           cursor-pointer inline-block transition-all duration-200;
+    @apply bg-gold-500 text-on-accent font-display font-extrabold uppercase
+           cursor-pointer inline-block duration-200;
+    transition-property: background-color, transform, box-shadow;
     font-size: 15px;
     letter-spacing: 2px;
     padding: 14px 36px;
@@ -565,7 +613,7 @@ textarea:focus-visible,
 
   .btn-outline-mirana {
     @apply bg-transparent border border-border text-text font-display font-bold
-           uppercase cursor-pointer inline-block transition-all duration-200;
+           uppercase cursor-pointer inline-block transition-colors duration-200;
     font-size: 15px;
     letter-spacing: 2px;
     padding: 13px 32px;
@@ -589,7 +637,8 @@ textarea:focus-visible,
   /* ── Product card ── */
   .pcard {
     @apply bg-card border border-border cursor-pointer relative
-           transition-all duration-300 ease-out;
+           duration-300 ease-out;
+    transition-property: background-color, border-color, box-shadow, transform;
   }
   .pcard:hover {
     @apply bg-card-hover -translate-y-1.5;
@@ -600,7 +649,8 @@ textarea:focus-visible,
   }
   .pcard .add-btn {
     @apply w-full border-none font-display font-extrabold
-           uppercase cursor-pointer transition-all duration-200;
+           uppercase cursor-pointer duration-200;
+    transition-property: background-color, color;
     font-size: 14px;
     letter-spacing: 1.5px;
     padding: 10px;
@@ -649,7 +699,7 @@ textarea:focus-visible,
   /* ── Filter pills ── */
   .filt {
     @apply bg-transparent border border-border text-muted font-display font-bold
-           uppercase cursor-pointer transition-all duration-200;
+           uppercase cursor-pointer transition-colors duration-200;
     font-size: 14px;
     letter-spacing: 1px;
     padding: 8px 20px;
@@ -658,16 +708,18 @@ textarea:focus-visible,
     @apply border-muted text-text;
   }
   .filt.active {
-    @apply bg-gold-500 text-black border-gold-500;
+    @apply bg-gold-500 text-on-accent border-gold-500;
   }
 
   /* ── Footer links ── */
+  /* Antes opacity .55 sobre --text: en claro quedaba ~3.4:1. --mt cumple AA
+     en ambos temas y el hover sube a --text. */
   .footer-link {
-    @apply transition-opacity duration-200;
-    opacity: 0.55;
+    @apply transition-colors duration-200;
+    color: var(--mt);
   }
   .footer-link:hover {
-    opacity: 1;
+    color: var(--text);
   }
 
   /* ── Brand carousel item ── */
@@ -957,4 +1009,46 @@ textarea:focus-visible,
 }
 .rich-prose--compact hr {
   margin: 16px 0;
+}
+
+/* =============================================================
+   Barra de promociones — cierre sin salto de layout.
+   Un script inline (PromoAnnouncementBarClient) marca <html> con
+   `promo-dismissed` ANTES del primer pintado si el cliente ya la cerró, así
+   el navbar y el contenido nacen sin el hueco de la barra en vez de
+   saltar al hidratar. (0,1,1) le gana al `:root { --ab }` del SSR.
+   ============================================================= */
+html.promo-dismissed {
+  --ab: 0px;
+}
+html.promo-dismissed [data-promo-bar] {
+  display: none;
+}
+/* Marquee: se detiene con hover/foco (WCAG 2.2.2) */
+[data-promo-bar]:hover .animate-marquee,
+[data-promo-bar]:focus-within .animate-marquee {
+  animation-play-state: paused;
+}
+
+/* =============================================================
+   FAB de WhatsApp — respeta el área segura (iPhone) y sube por
+   encima de la barra de compra fija de la ficha en móvil.
+   ============================================================= */
+.wa-fab {
+  bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  right: calc(1rem + env(safe-area-inset-right, 0px));
+}
+@media (max-width: 1023.98px) {
+  body:has([data-sticky-cta]) .wa-fab {
+    bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+  }
+  /* Que la barra fija no tape el final del footer */
+  body:has([data-sticky-cta]) footer {
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Barra fija de compra (ficha de producto, móvil) */
+.sticky-cta {
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
 }

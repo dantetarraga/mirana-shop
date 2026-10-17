@@ -3,6 +3,7 @@
 import { db } from '@/shared/lib/db'
 import { requireUser } from '@/shared/lib/require-user'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
 
 // ---------------------------------------------------------------------------
 // Tipos
@@ -28,6 +29,25 @@ export type AddressData = {
   reference: string | null
   isDefault: boolean
 }
+
+const profileUpdateSchema = z.object({
+  phone: z.string().trim().max(30).optional(),
+  hasKids: z.boolean().optional(),
+  kidsCount: z.number().int().min(0).max(20).nullable().optional(),
+})
+
+const addressSchema = z.object({
+  label: z.string().trim().min(1).max(40),
+  fullName: z.string().trim().min(2).max(120),
+  phone: z.string().trim().min(7).max(30),
+  address: z.string().trim().min(5).max(250),
+  district: z.string().trim().min(2).max(100),
+  city: z.string().trim().min(2).max(100),
+  reference: z.string().trim().max(500).nullable().optional(),
+  isDefault: z.boolean().optional(),
+})
+
+const addressIdSchema = z.string().min(1).max(191)
 
 // ---------------------------------------------------------------------------
 // Perfil
@@ -60,13 +80,13 @@ export async function getMyProfile(): Promise<ProfileData | null> {
   }
 }
 
-export async function updateMyProfile(data: {
-  phone?: string
-  hasKids?: boolean
-  kidsCount?: number | null
-}): Promise<{ success: boolean; error?: string }> {
+export async function updateMyProfile(data: unknown): Promise<{ success: boolean; error?: string }> {
   const session = await requireUser()
   if (session.denied) return { success: false, error: session.denied.error }
+
+  const parsed = profileUpdateSchema.safeParse(data)
+  if (!parsed.success) return { success: false, error: 'Datos de perfil inválidos' }
+  const input = parsed.data
 
   try {
     const user = await db.user.findUnique({ where: { email: session.email }, select: { id: true } })
@@ -75,15 +95,15 @@ export async function updateMyProfile(data: {
     await db.profile.upsert({
       where: { userId: user.id },
       update: {
-        phone: data.phone ?? undefined,
-        hasKids: data.hasKids ?? undefined,
-        kidsCount: data.hasKids === false ? null : (data.kidsCount ?? undefined),
+        phone: input.phone ?? undefined,
+        hasKids: input.hasKids ?? undefined,
+        kidsCount: input.hasKids === false ? null : (input.kidsCount ?? undefined),
       },
       create: {
         userId: user.id,
-        phone: data.phone,
-        hasKids: data.hasKids ?? false,
-        kidsCount: data.hasKids ? (data.kidsCount ?? null) : null,
+        phone: input.phone,
+        hasKids: input.hasKids ?? false,
+        kidsCount: input.hasKids ? (input.kidsCount ?? null) : null,
       },
     })
 
@@ -125,35 +145,41 @@ export async function getMyAddresses(): Promise<AddressData[]> {
 }
 
 export async function createAddress(
-  data: Omit<AddressData, 'id' | 'isDefault'> & { isDefault?: boolean },
+  data: unknown,
 ): Promise<{ success: boolean; id?: string; error?: string }> {
   const session = await requireUser()
   if (session.denied) return { success: false, error: session.denied.error }
+
+  const parsed = addressSchema.safeParse(data)
+  if (!parsed.success) return { success: false, error: 'Datos de dirección inválidos' }
+  const input = parsed.data
 
   try {
     const user = await db.user.findUnique({ where: { email: session.email }, select: { id: true } })
     if (!user) return { success: false, error: 'Usuario no encontrado' }
 
-    // Si es la primera o se marca como default, desmarcar las demás
-    if (data.isDefault) {
-      await db.userAddress.updateMany({
-        where: { userId: user.id },
-        data: { isDefault: false },
+    const addr = await db.$transaction(async (tx) => {
+      const count = await tx.userAddress.count({ where: { userId: user.id } })
+      const isDefault = input.isDefault === true || count === 0
+      if (isDefault) {
+        await tx.userAddress.updateMany({
+          where: { userId: user.id },
+          data: { isDefault: false },
+        })
+      }
+      return tx.userAddress.create({
+        data: {
+          userId: user.id,
+          label: input.label,
+          fullName: input.fullName,
+          phone: input.phone,
+          address: input.address,
+          district: input.district,
+          city: input.city,
+          reference: input.reference ?? null,
+          isDefault,
+        },
       })
-    }
-
-    const addr = await db.userAddress.create({
-      data: {
-        userId: user.id,
-        label: data.label,
-        fullName: data.fullName,
-        phone: data.phone,
-        address: data.address,
-        district: data.district,
-        city: data.city,
-        reference: data.reference ?? null,
-        isDefault: data.isDefault ?? false,
-      },
     })
 
     revalidatePath('/cuenta/direcciones')
@@ -165,10 +191,15 @@ export async function createAddress(
 
 export async function updateAddress(
   id: string,
-  data: Partial<Omit<AddressData, 'id'>>,
+  data: unknown,
 ): Promise<{ success: boolean; error?: string }> {
   const session = await requireUser()
   if (session.denied) return { success: false, error: session.denied.error }
+
+  if (!addressIdSchema.safeParse(id).success) return { success: false, error: 'ID inválido' }
+  const parsed = addressSchema.partial().safeParse(data)
+  if (!parsed.success) return { success: false, error: 'Datos de dirección inválidos' }
+  const input = parsed.data
 
   try {
     const user = await db.user.findUnique({ where: { email: session.email }, select: { id: true } })
@@ -180,25 +211,26 @@ export async function updateAddress(
     })
     if (!existing) return { success: false, error: 'Dirección no encontrada' }
 
-    if (data.isDefault) {
-      await db.userAddress.updateMany({
-        where: { userId: user.id, id: { not: id } },
-        data: { isDefault: false },
+    await db.$transaction(async (tx) => {
+      if (input.isDefault) {
+        await tx.userAddress.updateMany({
+          where: { userId: user.id, id: { not: id } },
+          data: { isDefault: false },
+        })
+      }
+      await tx.userAddress.update({
+        where: { id },
+        data: {
+          label: input.label ?? undefined,
+          fullName: input.fullName ?? undefined,
+          phone: input.phone ?? undefined,
+          address: input.address ?? undefined,
+          district: input.district ?? undefined,
+          city: input.city ?? undefined,
+          reference: input.reference ?? undefined,
+          isDefault: input.isDefault ?? undefined,
+        },
       })
-    }
-
-    await db.userAddress.update({
-      where: { id },
-      data: {
-        label: data.label ?? undefined,
-        fullName: data.fullName ?? undefined,
-        phone: data.phone ?? undefined,
-        address: data.address ?? undefined,
-        district: data.district ?? undefined,
-        city: data.city ?? undefined,
-        reference: data.reference ?? undefined,
-        isDefault: data.isDefault ?? undefined,
-      },
     })
 
     revalidatePath('/cuenta/direcciones')
@@ -211,6 +243,7 @@ export async function updateAddress(
 export async function deleteAddress(id: string): Promise<{ success: boolean; error?: string }> {
   const session = await requireUser()
   if (session.denied) return { success: false, error: session.denied.error }
+  if (!addressIdSchema.safeParse(id).success) return { success: false, error: 'ID inválido' }
 
   try {
     const user = await db.user.findUnique({ where: { email: session.email }, select: { id: true } })
@@ -221,7 +254,17 @@ export async function deleteAddress(id: string): Promise<{ success: boolean; err
     })
     if (!existing) return { success: false, error: 'Dirección no encontrada' }
 
-    await db.userAddress.delete({ where: { id } })
+    await db.$transaction(async (tx) => {
+      await tx.userAddress.delete({ where: { id } })
+      if (existing.isDefault) {
+        const next = await tx.userAddress.findFirst({
+          where: { userId: user.id },
+          orderBy: { createdAt: 'desc' },
+          select: { id: true },
+        })
+        if (next) await tx.userAddress.update({ where: { id: next.id }, data: { isDefault: true } })
+      }
+    })
 
     revalidatePath('/cuenta/direcciones')
     return { success: true }
@@ -233,6 +276,7 @@ export async function deleteAddress(id: string): Promise<{ success: boolean; err
 export async function setDefaultAddress(id: string): Promise<{ success: boolean; error?: string }> {
   const session = await requireUser()
   if (session.denied) return { success: false, error: session.denied.error }
+  if (!addressIdSchema.safeParse(id).success) return { success: false, error: 'ID inválido' }
 
   try {
     const user = await db.user.findUnique({ where: { email: session.email }, select: { id: true } })
@@ -245,13 +289,15 @@ export async function setDefaultAddress(id: string): Promise<{ success: boolean;
     })
     if (!existing) return { success: false, error: 'Dirección no encontrada' }
 
-    await db.userAddress.updateMany({
-      where: { userId: user.id },
-      data: { isDefault: false },
-    })
-    await db.userAddress.update({
-      where: { id },
-      data: { isDefault: true },
+    await db.$transaction(async (tx) => {
+      await tx.userAddress.updateMany({
+        where: { userId: user.id },
+        data: { isDefault: false },
+      })
+      await tx.userAddress.update({
+        where: { id },
+        data: { isDefault: true },
+      })
     })
 
     revalidatePath('/cuenta/direcciones')

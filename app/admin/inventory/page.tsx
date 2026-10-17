@@ -9,6 +9,7 @@ import { ServerSearchForm } from '@/shared/components/admin/ServerSearchForm'
 import { KpiCard } from '@/features/dashboard/components/KpiCard'
 import { StockBadge } from '@/features/inventory/components/StockBadge'
 import { cls } from '@/shared/lib/admin/admin-classes'
+import { verifyAdmin } from '@/shared/lib/require-admin'
 import { cn } from '@/shared/lib/utils'
 import Image from 'next/image'
 
@@ -106,6 +107,7 @@ const columns: Column<SerializedProduct>[] = [
 // ---------------------------------------------------------------------------
 
 export default async function InventoryPage({ searchParams }: PageProps) {
+  await verifyAdmin()
   const { filter: rawFilter, q, page: rawPage } = await searchParams
   const stockFilter: StockFilter =
     rawFilter && VALID_FILTERS.has(rawFilter as StockFilter) ? (rawFilter as StockFilter) : 'all'

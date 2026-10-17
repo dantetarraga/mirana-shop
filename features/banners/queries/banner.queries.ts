@@ -1,6 +1,13 @@
 import 'server-only'
 import { hasBannerImage } from '@/features/banners/lib/banner-image'
+import {
+  cachedQuery,
+  CACHE_TAGS,
+  REVALIDATE_SHORT,
+  reviveDate,
+} from '@/shared/lib/data-cache'
 import { db } from '@/shared/lib/db'
+import { cache } from 'react'
 import type { BannerRow } from '@/features/banners/types'
 
 export const BANNER_SELECT = {
@@ -20,7 +27,7 @@ export const BANNER_SELECT = {
   updatedAt: true,
 } as const
 
-export async function getActiveBanners(): Promise<BannerRow[]> {
+async function fetchActiveBanners(): Promise<BannerRow[]> {
   const now = new Date()
   const banners = await db.banner.findMany({
     where: {
@@ -37,6 +44,29 @@ export async function getActiveBanners(): Promise<BannerRow[]> {
   // cadena vacía igual que el NULL en las tres columnas, y son pocas filas.
   return banners.filter(hasBannerImage)
 }
+
+function reviveBanner(b: BannerRow): BannerRow {
+  return {
+    ...b,
+    startsAt: reviveDate(b.startsAt),
+    endsAt: reviveDate(b.endsAt),
+    createdAt: reviveDate(b.createdAt),
+    updatedAt: reviveDate(b.updatedAt),
+  }
+}
+
+/**
+ * Banners del inicio. Caché corta: las ventanas startsAt/endsAt se evalúan al
+ * consultar, así que un banner programado puede tardar hasta REVALIDATE_SHORT
+ * en aparecer o desaparecer. Las actions de banners invalidan el tag 'banners'.
+ */
+export const getActiveBanners = cache(
+  cachedQuery(fetchActiveBanners, ['active-banners'], {
+    tags: [CACHE_TAGS.banners],
+    revalidate: REVALIDATE_SHORT,
+    revive: (rows) => rows.map(reviveBanner),
+  }),
+)
 
 export async function getBanners(): Promise<BannerRow[]> {
   return db.banner.findMany({

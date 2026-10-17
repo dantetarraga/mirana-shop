@@ -9,7 +9,7 @@ import { DELIVERY_KIND_LABELS, type DeliveryMethodOption } from '@/features/deli
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
-import { useEntityCrud } from '@/shared/hooks/admin'
+import { useEntityCrud } from '@/shared/hooks/admin/useEntityCrud'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { cn, formatCurrency } from '@/shared/lib/utils'
 import { Eye, EyeOff, MapPin, Pencil, Plus, Store, Timer, Trash2, Truck } from 'lucide-react'

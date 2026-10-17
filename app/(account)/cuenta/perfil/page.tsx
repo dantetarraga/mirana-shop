@@ -1,4 +1,4 @@
-import { getMyOrders } from '@/features/orders/actions/account-orders.actions'
+import { getMyOrders } from '@/features/orders/queries/account-orders.queries'
 import { getMyProfile } from '@/features/profile/actions/account-profile.actions'
 import { PerfilContent } from '@/features/profile/components/PerfilContent'
 import { ProfileSkeleton } from '@/features/profile/components/ProfileSkeleton'

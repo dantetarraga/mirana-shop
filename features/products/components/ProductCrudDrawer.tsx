@@ -13,14 +13,15 @@ import { RichTextEditor } from '@/shared/components/admin/RichTextEditor'
 import { Button } from '@/shared/components/ui/Button'
 import { DateField } from '@/shared/components/ui/DateField'
 import { FormField } from '@/shared/components/ui/FormField'
-import { useAutoSlug, useFormEntity } from '@/shared/hooks/admin'
+import { useAutoSlug } from '@/shared/hooks/admin/useAutoSlug'
+import { useFormEntity } from '@/shared/hooks/admin/useFormEntity'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { depositUnitPrice } from '@/features/checkout/lib/preorder'
 import { productDbSchema } from '@/features/products/schemas/product.schema'
 import { toRichHtml } from '@/shared/lib/rich-text'
 import { cn } from '@/shared/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
@@ -101,15 +102,27 @@ export function ProductCrudDrawer({
     defaultValues: EMPTY_FORM,
   })
 
-  // IDs de colecciones seleccionadas — estado separado del form (M2M)
-  const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>([])
+  // Estado separado del form (relaciones M2M e imágenes), inicializado de
+  // forma perezosa desde el producto. Antes un useEffect lo copiaba tras el
+  // primer render (estado derivado: un render con datos vacíos y luego otro);
+  // ahora quien monta el drawer le pasa `key={product.id}` y cambiar de
+  // producto lo remonta con el estado correcto desde el inicio.
+
+  // IDs de colecciones seleccionadas
+  const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>(
+    () => product?.collections.map((c) => c.collection.id) ?? [],
+  )
 
   // Ídem para las secciones del inicio (/admin/sections)
-  const [selectedSectionIds, setSelectedSectionIds] = useState<string[]>([])
+  const [selectedSectionIds, setSelectedSectionIds] = useState<string[]>(
+    () => product?.homeSections.map((s) => s.sectionId) ?? [],
+  )
 
-  // Imágenes — estado separado del form. El orden importa: la primera es la
-  // principal y se guarda como `position` en BD.
-  const [imageInputs, setImageInputs] = useState<ImageItem[]>([])
+  // Imágenes. El orden importa: la primera es la principal y se guarda como
+  // `position` en BD.
+  const [imageInputs, setImageInputs] = useState<ImageItem[]>(
+    () => product?.images.map((img) => ({ url: img.url, alt: img.alt ?? '' })) ?? [],
+  )
 
   useFormEntity({
     entity: product,
@@ -139,13 +152,6 @@ export function ProductCrudDrawer({
       estimatedArrival: toDateInput(p.estimatedArrival),
     }),
   })
-
-  // Sincroniza colecciones, secciones e imágenes cuando cambia el producto
-  useEffect(() => {
-    setSelectedCollectionIds(product ? product.collections.map((c) => c.collection.id) : [])
-    setSelectedSectionIds(product ? product.homeSections.map((s) => s.sectionId) : [])
-    setImageInputs(product?.images.map((img) => ({ url: img.url, alt: img.alt ?? '' })) ?? [])
-  }, [product?.id])
 
   const toggleCollection = (id: string) => {
     setSelectedCollectionIds((prev) =>

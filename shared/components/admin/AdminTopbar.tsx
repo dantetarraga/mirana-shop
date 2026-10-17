@@ -24,7 +24,7 @@ interface AdminTopbarProps {
 
 export function AdminTopbar({ alerts, unreadCount }: AdminTopbarProps) {
   const pathname = usePathname()
-  const { toggle } = useAdminSidebarStore()
+  const toggle = useAdminSidebarStore((s) => s.toggle)
   const [t1, t2] = TITLES[pathname] ?? ['Admin', 'Panel de administración']
 
   return (

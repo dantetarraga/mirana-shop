@@ -8,7 +8,7 @@ import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
 import { cls } from '@/shared/lib/admin/admin-classes'
-import { useServerAction } from '@/shared/hooks/admin'
+import { useServerAction } from '@/shared/hooks/admin/useServerAction'
 import { ArrowRight, ExternalLink, Save } from 'lucide-react'
 import { useState } from 'react'
 

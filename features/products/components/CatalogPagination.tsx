@@ -48,7 +48,7 @@ export function CatalogPagination({ currentPage, totalPages, baseParams }: Catal
             href={buildCatalogUrl({ ...baseParams, page: p })}
             className={`w-9.5 h-9.5 border flex items-center justify-center font-display text-[15px] font-bold transition-colors ${
               p === currentPage
-                ? 'bg-(--gold) border-(--gold) text-black'
+                ? 'bg-(--gold) border-(--gold) text-on-accent'
                 : 'border-(--bd) text-muted hover:text-text hover:border-muted'
             }`}
           >

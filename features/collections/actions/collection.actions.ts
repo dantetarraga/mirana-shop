@@ -9,7 +9,9 @@ import {
   trashedConflictError,
 } from '@/features/trash/lib/trashed-conflict'
 import { db } from '@/shared/lib/db'
+import { imageUrlSchema } from '@/shared/schemas/image-url.schema'
 import { requireAdmin } from '@/shared/lib/require-admin'
+import { isRichTextEmpty, sanitizeRichText } from '@/shared/lib/rich-text'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import type { DrawerProduct } from '@/shared/types/entity-products.types'
 import { revalidatePath, revalidateTag } from 'next/cache'
@@ -27,8 +29,12 @@ const slugSchema = z
 const createCollectionSchema = z.object({
   name: z.string().min(1, 'Nombre requerido').max(100),
   slug: slugSchema,
-  description: z.string().max(1000).optional(),
-  imageUrl: z.string().url('URL de imagen inválida').optional().or(z.literal('')),
+  description: z
+    .string()
+    .max(50_000)
+    .transform((value) => (isRichTextEmpty(value) ? '' : sanitizeRichText(value)))
+    .optional(),
+  imageUrl: imageUrlSchema().optional().or(z.literal('')),
   active: z.boolean().default(true),
   /**
    * Productos elegidos en el drawer antes de que la colección exista. Se

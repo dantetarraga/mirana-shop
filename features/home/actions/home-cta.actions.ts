@@ -2,6 +2,7 @@
 
 import { HOME_CTA_ID } from '@/features/home/queries/home-cta.queries'
 import { imageUrlSchema } from '@/shared/schemas/image-url.schema'
+import { safeHrefSchema } from '@/shared/schemas/safe-url.schema'
 import { db } from '@/shared/lib/db'
 import { requireAdmin } from '@/shared/lib/require-admin'
 import type { ActionResult } from '@/shared/types/action-result.types'
@@ -12,7 +13,7 @@ const homeCtaSchema = z.object({
   title: z.string().max(120).optional().default(''),
   subtitle: z.string().max(200).optional().default(''),
   ctaLabel: z.string().max(40).optional().default(''),
-  ctaHref: z.string().max(300).optional().default(''),
+  ctaHref: safeHrefSchema().optional().default(''),
   imageUrl: imageUrlSchema('URL de imagen inválida').optional().or(z.literal('')).default(''),
   active: z.boolean().default(true),
 })

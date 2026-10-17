@@ -1,10 +1,17 @@
+import { HOME_BLOCKS, isBlockHidden } from '@/features/home/lib/home-blocks'
 import { getHomeCta } from '@/features/home/queries/home-cta.queries'
+import { getStoreSettings } from '@/features/settings/queries/store-settings.queries'
 import { Button } from '@/shared/components/ui/Button'
 import { cn } from '@/shared/lib/utils'
+import { safeHref } from '@/shared/schemas/safe-url.schema'
 import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
 export async function CTABand() {
+  // Ajustes primero: con el bloque oculto no hace falta leer el CTA.
+  const { hiddenHomeBlocks } = await getStoreSettings()
+  if (isBlockHidden(hiddenHomeBlocks, HOME_BLOCKS.CTA_BAND)) return null
+
   const cta = await getHomeCta()
 
   if (!cta.active) return null
@@ -41,7 +48,7 @@ export async function CTABand() {
         )}
       </div>
       {cta.ctaLabel && (
-        <Link href={cta.ctaHref || '/catalogo'} className="relative z-1 no-underline shrink-0">
+        <Link href={safeHref(cta.ctaHref, '/catalogo')} className="relative z-1 no-underline shrink-0">
           <Button
             variant={hasImage ? 'accent' : 'dark'}
             size="lg"

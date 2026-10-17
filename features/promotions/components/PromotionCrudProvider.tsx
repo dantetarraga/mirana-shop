@@ -9,7 +9,7 @@ import { PromotionFormDrawer } from '@/features/promotions/components/PromotionF
 import { promotionDbSchema } from '@/features/promotions/schemas/promotion.schema'
 import type { PromotionRow } from '@/features/promotions/types'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
-import { useEntityCrud } from '@/shared/hooks/admin'
+import { useEntityCrud } from '@/shared/hooks/admin/useEntityCrud'
 import { createContext, useContext, type ReactNode } from 'react'
 import type { z } from 'zod'
 

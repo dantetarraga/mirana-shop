@@ -4,7 +4,7 @@ import type { AppliedCoupon } from '@/features/checkout/lib/pricing'
 import { isCouponEligible } from '@/features/checkout/lib/pricing'
 import { applyCoupon } from '@/features/coupons/actions/apply-coupon.actions'
 import { Button } from '@/shared/components/ui/Button'
-import { formatCurrency } from '@/shared/lib/utils'
+import { cn, formatCurrency } from '@/shared/lib/utils'
 import { Check, Loader2, Ticket, X } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -61,7 +61,7 @@ export function CouponField({ coupon, onApply, onRemove, subtotal, disabled }: P
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <span className="font-mono font-bold text-[14px] tracking-[1px]">{coupon.code}</span>
-              {eligible && <Check size={14} className="text-emerald-400 shrink-0" aria-hidden />}
+              {eligible && <Check size={14} className="text-success shrink-0" aria-hidden />}
             </div>
             <p className="text-[12px] text-muted mt-0.5 leading-snug">
               {eligible ? (
@@ -80,13 +80,13 @@ export function CouponField({ coupon, onApply, onRemove, subtotal, disabled }: P
           <Button
             type="button"
             variant="icon"
-            size="sm"
+            size="md"
             title="Quitar cupón"
             aria-label="Quitar cupón"
             onClick={onRemove}
             disabled={disabled}
           >
-            <X size={14} />
+            <X size={14} aria-hidden />
           </Button>
         </div>
       ) : (
@@ -101,7 +101,7 @@ export function CouponField({ coupon, onApply, onRemove, subtotal, disabled }: P
                 void submit()
               }
             }}
-            className={`${input} font-mono uppercase tracking-[1px] py-[9px] text-[13px]`}
+            className={cn(input, 'font-mono uppercase tracking-[1px] py-[9px] sm:text-[13px]')}
             placeholder="MIRANA10"
             aria-label="Código de cupón"
             autoComplete="off"

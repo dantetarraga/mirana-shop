@@ -2,65 +2,64 @@
 
 import { CartCtaSkeleton } from '@/features/cart/components/CartCtaSkeleton'
 import { useCartLine } from '@/features/cart/hooks/useCartLine'
+import { removeWithUndo } from '@/features/cart/lib/remove-with-undo'
 import { useCartStore } from '@/features/cart/stores/cart.store'
+import { getProductBadge } from '@/features/products/lib/product-badge'
 import { useProductModalStore } from '@/features/products/stores/product-modal.store'
 import type { CatalogProduct } from '@/features/products/types/catalog.types'
 import { getCategoryLabel, getCategoryStripe } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
-import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
-// import { StarRating } from '@/shared/components/ui/StarRating' — oculto hasta tener reviews reales
 import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState, type MouseEvent } from 'react'
+import type { MouseEvent } from 'react'
 import { toast } from 'sonner'
+
+/**
+ * Ancho real de la card en cada breakpoint de los grids que la usan (home
+ * 2→4 columnas, catálogo auto-fill de 220px, carrusel 2→5). Antes decía 33vw
+ * entre 640 y 1024px, donde casi siempre hay 2 columnas: bajaba una imagen
+ * más chica que la pintada y se veía borrosa.
+ */
+const DEFAULT_SIZES = '(max-width: 1023px) 50vw, (max-width: 1399px) 25vw, 350px'
 
 interface ProductCardProps {
   product: CatalogProduct
   showBadge?: boolean
+  /** @deprecated Ya no hay animación de entrada por card; se conserva por compatibilidad. */
   noAnimation?: boolean
+  /** `sizes` de la imagen si el grid contenedor difiere del estándar. */
+  sizes?: string
 }
 
-export function ProductCard({
-  product,
-  showBadge = true,
-  noAnimation = false,
-}: ProductCardProps) {
-  const { openProductModal } = useProductModalStore()
-  const { addToCart, updateQty, removeItem } = useCartStore()
-  const [confirmRemove, setConfirmRemove] = useState(false)
+export function ProductCard({ product, showBadge = true, sizes = DEFAULT_SIZES }: ProductCardProps) {
+  // Selectores atómicos: con `useCartStore()` CADA card de la página se
+  // re-renderizaba ante cualquier cambio del carrito. Las acciones son
+  // referencias estables, así que estas suscripciones no disparan nunca.
+  const openProductModal = useProductModalStore((s) => s.openProductModal)
+  const addToCart = useCartStore((s) => s.addToCart)
+  const updateQty = useCartStore((s) => s.updateQty)
   // Disponibilidad, tope y precio salen del mismo hook que el modal y el PDP.
-  // `p` es el producto de la línea del carrito cuando existe: antes el botón `+`
-  // usaba ese stock fresco pero "Agregar al carrito" el del prop, ya rancio.
-  const { product: p, qtyInCart, isPreorder, isOutOfStock, remaining, unitPrice, hasDiscount, ctaState } =
-    useCartLine(product)
+  const {
+    product: p,
+    qtyInCart,
+    isPreorder,
+    isOutOfStock,
+    remaining,
+    unitPrice,
+    hasDiscount,
+    preorderMode,
+    ctaState,
+  } = useCartLine(product)
   const loading = ctaState === 'loading'
   const stripe = getCategoryStripe(p.category.slug)
   const catLabel = getCategoryLabel(p.category.slug)
-  // const isNew = p.status === 'AVAILABLE' && p.stock > 0 — solo se usaba para las estrellas ocultas
 
-  const discountPct = hasDiscount ? Math.round((1 - unitPrice / p.price) * 100) : 0
-  // isNewArrival viene precalculado del server (toProductCard) — no usar
-  // Date.now() en render: es impuro y el React Compiler lo rechaza.
-  const isNewArrival = p.isNewArrival
-
-  // Una sola badge visible por card, por prioridad.
-  const badge = isOutOfStock
-    ? { label: 'AGOTADO', className: 'bg-surface-700 text-white' }
-    : p.status === 'PREORDER'
-      ? { label: 'PREVENTA', className: 'bg-info text-white' }
-      : discountPct > 0
-        ? { label: `-${discountPct}%`, className: 'bg-danger text-white' }
-        : isNewArrival
-          ? { label: 'NUEVO', className: 'bg-success text-white' }
-          : p.featured
-            ? { label: 'TOP', className: 'bg-(--gold) text-black' }
-            : null
+  // Una sola badge por card, misma regla que el modal y la ficha.
+  const badge = getProductBadge({ ...p, isOutOfStock })
 
   // Click normal → abre el modal (preventDefault). Click con modificador, botón
-  // central o teclado → deja navegar al enlace real /catalogo/[slug]. Así la
-  // card es un <Link> de verdad: navegable por teclado, Ctrl+click y crawleable
-  // (antes era un <div onClick> sin enlace, invisible para SEO y teclado).
+  // central o teclado → deja navegar al enlace real /catalogo/[slug].
   const handleNavClick = (e: MouseEvent) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return
     e.preventDefault()
@@ -68,29 +67,27 @@ export function ProductCard({
   }
 
   return (
-    <div className={`pcard${noAnimation ? '' : ' animate-fade-up'}`}>
+    // Sin `animate-fade-up`: un fade por card en cada grid se leía genérico y
+    // retrasaba la primera imagen visible.
+    <div className="pcard">
       <Link href={`/catalogo/${p.slug}`} onClick={handleNavClick} className="block">
         <div className="relative">
+          {/* 4:5 en vez de un alto fijo: las figuras son verticales y con
+              `h-55 object-cover` se les cortaba la cabeza o la base. */}
           <div
-            className={`${stripe} h-55 flex items-center justify-center relative overflow-hidden`}
+            className={`${stripe} aspect-[4/5] flex items-center justify-center relative overflow-hidden`}
           >
             {p.imageUrl ? (
-              <Image
-                src={p.imageUrl}
-                alt={p.name}
-                fill
-                className="object-cover"
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              />
+              <Image src={p.imageUrl} alt={p.name} fill className="object-cover" sizes={sizes} />
             ) : (
-              <span className="font-mono text-[10px] tracking-[2px] uppercase text-muted">
+              <span className="font-mono text-[11px] tracking-[2px] uppercase text-muted">
                 {catLabel}
               </span>
             )}
           </div>
           {showBadge && badge && (
             <div
-              className={`absolute top-3 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-2.5 py-1.25 ${badge.className}`}
+              className={`absolute top-3 left-0 text-[11px] font-extrabold tracking-[1.5px] uppercase px-2.5 py-1 ${badge.className}`}
             >
               {badge.label}
             </div>
@@ -98,7 +95,7 @@ export function ProductCard({
         </div>
 
         <div className="px-4 pt-4">
-          <div className="text-[10px] tracking-[2px] uppercase mb-1.25 text-muted">{catLabel}</div>
+          <div className="text-[11px] tracking-[2px] uppercase mb-1.25 text-muted">{catLabel}</div>
           <h3 className="font-display text-[21px] font-black uppercase leading-[1.05] mb-3 tracking-[-0.5px] line-clamp-2 min-h-11">
             {p.name}
           </h3>
@@ -106,26 +103,18 @@ export function ProductCard({
       </Link>
 
       <div className="px-4 pb-3.5">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-baseline gap-1.5 min-w-0">
-            <span className="font-display text-[19px] sm:text-[26px] font-black text-accent-ink whitespace-nowrap">
-              S/ {unitPrice.toFixed(2)}
-            </span>
-            {hasDiscount && (
-              <span className="text-[11px] sm:text-[14px] font-normal text-muted line-through whitespace-nowrap">
-                S/ {p.price.toFixed(2)}
-              </span>
-            )}
-          </div>
-          {/* Estrellas ocultas hasta tener sistema de reviews real
-          <div className="text-[11px] text-muted">
-            <StarRating value={isNew ? 4.5 : 4.0} size={11} className="text-accent-ink" />
-          </div>
-          */}
+        <div className="flex items-baseline gap-1.5 min-w-0 flex-wrap mb-3">
+          <span className="font-display text-[20px] sm:text-[26px] font-black text-accent-ink whitespace-nowrap">
+            {hasDiscount && <span className="sr-only">Precio de oferta: </span>}
+            S/ {unitPrice.toFixed(2)}
+          </span>
+          {hasDiscount && (
+            <del className="text-[12px] sm:text-[14px] font-normal text-muted whitespace-nowrap">
+              <span className="sr-only">Precio anterior: </span>S/ {p.price.toFixed(2)}
+            </del>
+          )}
         </div>
-        {/* El selector aparece apenas se agrega. Antes esperaba a que expirara
-            el verde de `useJustAdded` (1,8 s), así que el botón se ponía verde y
-            recién después mutaba en controles: dos transiciones para una acción. */}
+
         {loading ? (
           <CartCtaSkeleton size="md" />
         ) : ctaState === 'in-cart' && !isOutOfStock ? (
@@ -135,20 +124,21 @@ export function ProductCard({
                 variant="icon"
                 size="md"
                 destructive
-                className="flex-1"
+                className="flex-1 border-transparent"
                 aria-label={`Quitar "${p.name}" del carrito`}
                 onClick={(e) => {
                   e.stopPropagation()
-                  setConfirmRemove(true)
+                  // Sin modal de confirmación: se quita y el toast ofrece deshacer.
+                  removeWithUndo({ product: p, qty: qtyInCart, preorderMode })
                 }}
               >
-                <Trash2 size={14} />
+                <Trash2 size={14} aria-hidden />
               </Button>
             ) : (
               <Button
                 variant="icon"
                 size="md"
-                className="flex-1"
+                className="flex-1 border-transparent"
                 aria-label={`Quitar una unidad de "${p.name}"`}
                 onClick={(e) => {
                   e.stopPropagation()
@@ -157,16 +147,19 @@ export function ProductCard({
                   }
                 }}
               >
-                <Minus size={14} />
+                <Minus size={14} aria-hidden />
               </Button>
             )}
-            <div className="flex-1 text-center font-display text-[16px] font-extrabold border-l border-r border-(--bd) flex items-center justify-center h-10.5">
+            <div
+              className="flex-1 text-center font-display text-[16px] font-extrabold border-l border-r border-(--bd) flex items-center justify-center h-11"
+            >
               {qtyInCart}
+              <span className="sr-only"> en el carrito</span>
             </div>
             <Button
               variant="icon"
               size="md"
-              className="flex-1"
+              className="flex-1 border-transparent"
               disabled={remaining !== null && remaining === 0}
               aria-label={`Agregar una unidad de "${p.name}"`}
               onClick={(e) => {
@@ -177,14 +170,14 @@ export function ProductCard({
                 }
               }}
             >
-              <Plus size={14} />
+              <Plus size={14} aria-hidden />
             </Button>
           </div>
         ) : (
           <Button
             variant="accent"
             size="md"
-            className="add-btn w-full"
+            className="add-btn w-full min-h-11"
             disabled={ctaState !== 'idle'}
             onClick={(e) => {
               e.stopPropagation()
@@ -201,25 +194,13 @@ export function ProductCard({
               'Sin más stock'
             ) : (
               <>
-                <ShoppingCart size={15} />
+                <ShoppingCart size={15} aria-hidden />
                 {isPreorder ? 'Reservar ahora' : 'Agregar al carrito'}
               </>
             )}
           </Button>
         )}
       </div>
-
-      <ConfirmModal
-        open={confirmRemove}
-        onClose={() => setConfirmRemove(false)}
-        onConfirm={() => {
-          removeItem(p.id)
-          toast.success(`"${p.name}" eliminado del carrito`)
-          setConfirmRemove(false)
-        }}
-        title="¿Eliminar producto?"
-        description={`"${p.name}" será eliminado de tu carrito.`}
-      />
     </div>
   )
 }

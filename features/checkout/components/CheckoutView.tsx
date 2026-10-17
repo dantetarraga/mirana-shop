@@ -10,16 +10,9 @@ import { SavedAddressSelector } from '@/features/checkout/components/SavedAddres
 import { SuccessScreen } from '@/features/checkout/components/SuccessScreen'
 import type { SuccessData } from '@/features/checkout/types'
 import { placeOrder } from '@/features/checkout/actions/checkout.actions'
-import {
-  createAddress,
-  getMyAddresses,
-  getMyProfile,
-  type AddressData,
-} from '@/features/profile/actions/account-profile.actions'
-import {
-  AddressFormPanel,
-  type AddressFormValues,
-} from '@/features/profile/components/AddressFormPanel'
+import { defaultAddress, useSavedAddresses } from '@/features/checkout/hooks/useSavedAddresses'
+import type { AddressData, ProfileData } from '@/features/profile/actions/account-profile.actions'
+import { AddressFormPanel } from '@/features/profile/components/AddressFormPanel'
 import { cartKindOf, hasMixedKinds } from '@/features/cart/lib/cart-kind'
 import { useCartStore } from '@/features/cart/stores/cart.store'
 import { eligibleDeliveryMethods } from '@/features/checkout/lib/delivery-eligibility'
@@ -33,8 +26,8 @@ import {
 import { depositUnitPrice, splitPreorderTotals } from '@/features/checkout/lib/preorder'
 import type { DeliveryMethodOption } from '@/features/delivery/types'
 import type { PaymentAccountData } from '@/features/settings/queries/payment-accounts.queries'
-import { Button } from '@/shared/components/ui/Button'
-import { useUser } from '@/shared/hooks'
+import { Button, buttonClass } from '@/shared/components/ui/Button'
+import { useUser } from '@/shared/hooks/useUser'
 import {
   buildCheckoutSchema,
   type CheckoutFormRules,
@@ -95,17 +88,44 @@ interface CheckoutViewProps {
   whatsappPhone: string
   /** Reglas de precios (envío, entregas y promociones activas) del server */
   pricingRules: PricingRules
+  /** Perfil de la cuenta (para el DNI) — `null` sin sesión. Viene del server. */
+  initialProfile?: ProfileData | null
+  /** Direcciones guardadas — `[]` sin sesión. Vienen del server. */
+  initialAddresses?: AddressData[]
 }
 
-export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: CheckoutViewProps) {
-  const { cart, clearCart } = useCartStore()
+/** Sin carrito no hay nada que pagar: se invita a volver al catálogo. */
+function EmptyCheckout() {
+  return (
+    <div className="min-h-[70vh] flex flex-col items-center justify-center gap-6 px-6 pt-9">
+      <ShoppingBag size={80} strokeWidth={1} className="opacity-15" aria-hidden />
+      <p className="text-[15px] text-muted">Tu carrito está vacío.</p>
+      <Link href="/catalogo" className={buttonClass({ variant: 'accent', size: 'md' })}>
+        <ShoppingCart size={15} aria-hidden />
+        Ver catálogo
+      </Link>
+    </div>
+  )
+}
+
+export function CheckoutView({
+  paymentAccounts,
+  whatsappPhone,
+  pricingRules,
+  initialProfile = null,
+  initialAddresses = [],
+}: CheckoutViewProps) {
+  const cart = useCartStore((s) => s.cart)
+  const clearCart = useCartStore((s) => s.clearCart)
   const { user } = useUser()
   const [success, setSuccess] = useState<SuccessData | null>(null)
   const [loading, setLoading] = useState(false)
-  const [savedAddresses, setSavedAddresses] = useState<AddressData[]>([])
-  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
-  const [showNewAddressForm, setShowNewAddressForm] = useState(false)
   const [coupon, setCoupon] = useState<AppliedCoupon | null>(null)
+  // Con sesión el server ya mandó perfil y direcciones: el formulario nace
+  // relleno en vez de saltar cuando terminaban los useEffect de antes.
+  const isLoggedIn = Boolean(user) || initialProfile !== null
+  const startAddress = defaultAddress(initialAddresses)
+  const accountName = initialProfile?.name ?? user?.name ?? ''
 
   // Un carrito es de preventa o de entrega inmediata, nunca los dos (lo impide
   // el propio carrito). De ahí sale qué entregas se pueden ofrecer: la preventa
@@ -156,18 +176,18 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
   } = useForm<CheckoutInput>({
     resolver,
     defaultValues: {
-      fullName: user?.name ?? '',
-      email: user?.email ?? '',
-      phone: '',
-      dni: '',
+      fullName: startAddress?.fullName ?? accountName,
+      email: initialProfile?.email ?? user?.email ?? '',
+      phone: startAddress?.phone ?? initialProfile?.phone ?? '',
+      dni: initialProfile?.dni ?? '',
       deliveryMethodId: initialMethod?.id ?? '',
       deliveryLocationId: initialMethod?.requiresLocation
         ? (initialMethod.locations[0]?.id ?? '')
         : '',
-      address: '',
-      district: '',
-      city: 'Lima',
-      reference: '',
+      address: startAddress?.address ?? '',
+      district: startAddress?.district ?? '',
+      city: startAddress?.city ?? 'Lima',
+      reference: startAddress?.reference ?? '',
       couponCode: '',
       acceptTerms: false,
       paymentMethod: 'WHATSAPP_TRANSFER',
@@ -295,83 +315,23 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
     { shippingCost: selectedMethod?.cost, coupon },
   )
 
-  // Prellenar el DNI con el de la cuenta: ya lo dio al registrarse
-  useEffect(() => {
-    if (!user) return
-    getMyProfile().then((profile) => {
-      if (profile?.dni) setValue('dni', profile.dni)
-    })
-  }, [user, setValue])
-
-  // Cargar direcciones guardadas si el usuario está logueado
-  useEffect(() => {
-    if (!user) return
-    getMyAddresses().then((addrs) => {
-      setSavedAddresses(addrs)
-      // Pre-seleccionar la dirección predeterminada
-      const def = addrs.find((a) => a.isDefault) ?? addrs[0]
-      if (def) {
-        setSelectedAddressId(def.id)
-        setValue('fullName', def.fullName)
-        setValue('phone', def.phone)
-        setValue('address', def.address)
-        setValue('district', def.district)
-        setValue('city', def.city)
-        setValue('reference', def.reference ?? '')
-      }
-    })
-  }, [user, setValue])
-
-  const applyAddress = (addr: AddressData) => {
-    setSelectedAddressId(addr.id)
-    setValue('fullName', addr.fullName)
-    setValue('phone', addr.phone)
-    setValue('address', addr.address)
-    setValue('district', addr.district)
-    setValue('city', addr.city)
-    setValue('reference', addr.reference ?? '')
-  }
-
-  const clearSavedAddress = () => {
-    setSelectedAddressId(null)
-    setValue('fullName', user?.name ?? '')
-    setValue('phone', '')
-    setValue('address', '')
-    setValue('district', '')
-    setValue('city', 'Lima')
-    setValue('reference', '')
-  }
-
-  const handleSaveNewAddress = async (data: AddressFormValues) => {
-    if (!user) return
-    const result = await createAddress(data)
-    if (result.success && result.id) {
-      toast.success('Dirección guardada en tu cuenta')
-      const updatedAddrs = await getMyAddresses()
-      setSavedAddresses(updatedAddrs)
-      const newAddr = updatedAddrs.find((a) => a.id === result.id)
-      if (newAddr) applyAddress(newAddr)
-      setShowNewAddressForm(false)
-    } else {
-      toast.error(result.error ?? 'Error al guardar la dirección')
-    }
-  }
+  const {
+    savedAddresses,
+    selectedAddressId,
+    showNewAddressForm,
+    setShowNewAddressForm,
+    applyAddress,
+    clearSavedAddress,
+    saveNewAddress,
+  } = useSavedAddresses({
+    initialAddresses,
+    setValue,
+    fallbackName: accountName,
+    canSave: isLoggedIn,
+  })
 
   // Redirect to cart if empty (and not in success state)
-  if (cart.length === 0 && !success) {
-    return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-6 px-6 pt-[calc(var(--nh)+36px)]">
-        <ShoppingBag size={80} strokeWidth={1} className="opacity-15" />
-        <p className="text-[15px] text-muted">Tu carrito está vacío.</p>
-        <Link href="/catalogo">
-          <Button variant="accent" size="md">
-            <ShoppingCart size={15} className="mr-2" />
-            Ver catálogo
-          </Button>
-        </Link>
-      </div>
-    )
-  }
+  if (cart.length === 0 && !success) return <EmptyCheckout />
 
   // ---------------------------------------------------------------------------
   // Success screen
@@ -456,10 +416,10 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
   }
 
   return (
-    <div className="max-w-275 mx-auto px-4 sm:px-6 pt-[calc(var(--nh)+36px)] pb-16">
+    <div className="max-w-275 mx-auto px-4 sm:px-6 pt-9 pb-16">
       {/* Header */}
       <div className="mb-8">
-        <p className="text-[10px] tracking-[3px] uppercase text-accent-ink mb-1">Tienda</p>
+        <p className="text-[11px] tracking-[3px] uppercase text-accent-ink mb-1">Tienda</p>
         <h1 className="font-display font-black uppercase text-[28px] sm:text-[34px] tracking-tight leading-none">
           Finalizar compra
         </h1>
@@ -498,12 +458,12 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
                       selectedId={selectedAddressId}
                       onSelect={applyAddress}
                       onClearManual={clearSavedAddress}
-                      onAddNew={user ? () => setShowNewAddressForm(true) : undefined}
+                      onAddNew={isLoggedIn ? () => setShowNewAddressForm(true) : undefined}
                     />
                     {showNewAddressForm && (
                       <AddressFormPanel
                         title="Agregar y guardar dirección"
-                        onSave={handleSaveNewAddress}
+                        onSave={saveNewAddress}
                         onCancel={() => setShowNewAddressForm(false)}
                       />
                     )}
@@ -541,7 +501,7 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
                     full
                     onClick={() => void goToStep(current - 1)}
                   >
-                    <ArrowLeft size={14} className="mr-1.5" />
+                    <ArrowLeft size={14} aria-hidden />
                     Atrás
                   </Button>
                 )}
@@ -553,7 +513,7 @@ export function CheckoutView({ paymentAccounts, whatsappPhone, pricingRules }: C
                   onClick={() => void goToStep(current + 1)}
                 >
                   Continuar
-                  <ArrowRight size={15} className="ml-2" />
+                  <ArrowRight size={15} aria-hidden />
                 </Button>
               </div>
             )}

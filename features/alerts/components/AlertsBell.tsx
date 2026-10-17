@@ -19,6 +19,7 @@ const TYPE_LABELS: Record<string, string> = {
   PENDING_ORDERS: 'Pedidos',
   PROMO_EXPIRING: 'Promociones',
   DAILY_SUMMARY: 'Resumen',
+  COMPLAINT_DUE: 'Reclamos',
 }
 
 export function AlertsBell({ alerts, unreadCount }: AlertsBellProps) {

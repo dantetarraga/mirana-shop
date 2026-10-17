@@ -71,7 +71,7 @@ export function DeliveryMethodSelector({
                     </span>
                     <span
                       className={`shrink-0 font-semibold text-[13px] ${
-                        method.cost === 0 ? 'text-emerald-400 uppercase tracking-wide' : ''
+                        method.cost === 0 ? 'text-success uppercase tracking-wide' : ''
                       }`}
                     >
                       {method.cost === 0 ? 'Gratis' : formatCurrency(method.cost)}
@@ -134,8 +134,8 @@ export function DeliveryMethodSelector({
         })}
       </ul>
 
-      {methodError && <p className="text-red-500 text-[12px] mt-2">{methodError}</p>}
-      {locationError && <p className="text-red-500 text-[12px] mt-2">{locationError}</p>}
+      {methodError && <p role="alert" className="text-danger text-[12px] mt-2">{methodError}</p>}
+      {locationError && <p role="alert" className="text-danger text-[12px] mt-2">{locationError}</p>}
     </section>
   )
 }

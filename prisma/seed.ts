@@ -49,60 +49,130 @@ const bannerMobile = (id: string) =>
 
 const IMGS = {
   // Figuras de acción y anime
-  goku: '1563396983906-b3795482a59a', // figura articulada colorida
-  eva01: '1608889825205-eebdb9fc5806', // colección de figuras
-  makima: '1614732414444-086425adebe5', // figura anime femenina
-  naruto: '1611532736597-de2d4265fba3', // acción figure orange
-  ironman: '1594736797933-d0401ba2fe65', // superhero figure rojo
-  tanjiro: '1619364726002-c54a0bc7ba04', // anime figure azul
-  luffy: '1578632767115-351597cf2477', // anime figure naranja
+  goku: '1606663889134-b1dedb5ed8b7', // figura Goku Super Saiyan
+  eva01: '1563396983906-b3795482a59a', // robot de colección
+  makima: '1578632767115-351597cf2477', // figura anime femenina
+  naruto: '1613771404721-1f92d799e49f', // coleccionables anime
+  ironman: '1608278047522-58806a6ac85b', // figuras Marvel
+  tanjiro: '1566576912321-d58ddd7a6088', // figuras en exhibición
+  luffy: '1609372332255-611485350f25', // peluche/figura anime
 
   // LEGO
-  falcon: '1587654780291-39c9404d746b', // LEGO colorido
-  bugatti: '1530281700549-e82e7bf110d6', // LEGO technic
-  hogwarts: '1516770965459-ef23bdff65dd', // LEGO castle
+  falcon: '1585366119957-e9730b6d0f60', // LEGO Star Wars
+  bugatti: '1589254065878-42c9da997008', // set LEGO armado
+  hogwarts: '1612404730960-5c71577fca11', // escenario LEGO
 
   // Modelos a escala / autos
-  ferrari: '1568605117036-5fe5e7bab0b7', // Ferrari rojo
-  f1: '1525609004556-c46c7d6cf023', // Formula 1
+  ferrari: '1583121274602-3e2820c69888', // Ferrari rojo
+  f1: '1581235720704-06d3acfcb36f', // auto a escala
 
   // Categorías (paisaje)
-  catFiguras: '1527443224154-599571801185', // estante de figuras
-  catLego: '1607604276583-eef5d176b328', // LEGO colorido wide
-  catModelos: '1558618666-fcd25c85cd64', // colección de autos
-  catAnime: '1612036782180-6f0b6cd846fe', // figuras anime shelf
+  catFiguras: '1608889476561-6242cfdbf622', // figuras Marvel
+  catLego: '1633469924738-52101af51d87', // ladrillos LEGO
+  catModelos: '1594787318286-3d835c1d207f', // auto a escala rojo
+  catAnime: '1578632767115-351597cf2477', // figura anime
 
   // Banners (panorámico oscuro)
-  bannerHero: '1542281286-9e0a16bb7366', // toys display dark
-  bannerLego: '1531746790731-6c087fecd65a', // LEGO dark
-  bannerAnime: '1518770660439-4636190af475', // neon dark collectibles
-  bannerBlack: '1616159236399-5f52e6ad60b3', // dark discount
+  bannerHero: '1558060370-d644479cb6f7', // juguetes de colección
+  bannerLego: '1587654780291-39c9404d746b', // LEGO
+  bannerAnime: '1608889175123-8ee362201f81', // figura en fondo oscuro
+  bannerBlack: '1608889476561-6242cfdbf622', // figuras en fondo oscuro
 
   // Marcas (logos placeholder con color de marca real)
   brandBandai: '1608889825205-eebdb9fc5806',
   brandLego: '1587654780291-39c9404d746b',
-  brandGsc: '1614732414444-086425adebe5',
-  brandKotobukiya: '1611532736597-de2d4265fba3',
-  brandHasbro: '1594736797933-d0401ba2fe65',
-  brandFunko: '1578632767115-351597cf2477',
+  brandGsc: '1578632767115-351597cf2477',
+  brandKotobukiya: '1613771404721-1f92d799e49f',
+  brandHasbro: '1608278047522-58806a6ac85b',
+  brandFunko: '1609372332255-611485350f25',
   brandHotWheels: '1568605117036-5fe5e7bab0b7',
+}
+
+// ---------------------------------------------------------------------------
+// Galerías — cada producto termina con GALLERY_SIZE imágenes: su portada
+// (IMGS) seguida de fotos del pool temático de su categoría. IDs verificados.
+// ---------------------------------------------------------------------------
+
+const GALLERY_SIZE = 5
+
+const GALLERY_POOLS: Record<string, string[]> = {
+  'figuras-accion': [
+    '1608278047522-58806a6ac85b',
+    '1608889476561-6242cfdbf622',
+    '1608889175123-8ee362201f81',
+    '1601814933824-fd0b574dd592',
+    '1618336753974-aae8e04506aa',
+    '1608889825205-eebdb9fc5806',
+    '1580477667995-2b94f01c9516',
+    '1599623560574-39d485900c95',
+  ],
+  anime: [
+    '1606663889134-b1dedb5ed8b7',
+    '1578632767115-351597cf2477',
+    '1609372332255-611485350f25',
+    '1613771404721-1f92d799e49f',
+    '1566576912321-d58ddd7a6088',
+    '1563396983906-b3795482a59a',
+    '1612036782180-6f0b6cd846fe',
+  ],
+  lego: [
+    '1585366119957-e9730b6d0f60',
+    '1589254065878-42c9da997008',
+    '1612404730960-5c71577fca11',
+    '1611604548018-d56bbd85d681',
+    '1633469924738-52101af51d87',
+    '1587654780291-39c9404d746b',
+    '1560961911-ba7ef651a56c',
+  ],
+  'modelos-escala': [
+    '1583121274602-3e2820c69888',
+    '1594787318286-3d835c1d207f',
+    '1581235720704-06d3acfcb36f',
+    '1503736334956-4c8f8e92946d',
+    '1525609004556-c46c7d6cf023',
+    '1568605117036-5fe5e7bab0b7',
+    '1552519507-da3b142c6e3d',
+  ],
+}
+
+const GALLERY_VIEWS = ['frente', 'perfil', 'detalle', 'reverso', 'en caja']
+
+/** Portada + imágenes del pool, sin repetir y rotando el inicio por producto. */
+function galleryFor(cover: string | undefined, pool: string[], offset: number) {
+  const rest = pool.filter((id) => id !== cover)
+  const ids = cover ? [cover] : []
+  for (let i = 0; ids.length < GALLERY_SIZE && i < rest.length; i++) {
+    ids.push(rest[(offset + i) % rest.length])
+  }
+  return ids
 }
 
 async function main() {
   console.log('Seeding database...')
 
-  const adminEmail = process.env.SEED_ADMIN_EMAIL ?? 'admin@mirana.com'
-  const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? 'Admin123456*'
+  // Credenciales del admin: obligatorias y sin valor por defecto. Antes había
+  // una contraseña fija en el código y además se imprimía en consola (quedaba
+  // en los logs del hosting/CI). Nunca se loguea la contraseña.
+  const adminEmail = process.env.SEED_ADMIN_EMAIL?.trim().toLowerCase()
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD
+  if (!adminEmail || !adminPassword) {
+    throw new Error('Define SEED_ADMIN_EMAIL y SEED_ADMIN_PASSWORD para ejecutar el seed')
+  }
+  if (adminPassword.length < 12) {
+    throw new Error('SEED_ADMIN_PASSWORD debe tener al menos 12 caracteres')
+  }
   const adminPasswordHash = await bcrypt.hash(adminPassword, 12)
 
   // ── Admin user ─────────────────────────────────────────────────────────────
   const admin = await prisma.user.upsert({
     where: { email: adminEmail },
+    // Si el admin ya existe NO se toca su passwordHash: re-ejecutar el seed no
+    // debe resetear la contraseña real (la de SEED_ADMIN_PASSWORD solo vale
+    // para crear la cuenta la primera vez).
     update: {
       name: 'Admin Mirana',
       role: 'ADMIN',
       emailVerified: new Date(),
-      passwordHash: adminPasswordHash,
     },
     create: {
       email: adminEmail,
@@ -141,7 +211,6 @@ async function main() {
   })
 
   console.log(`Users: ${admin.email}, ${customer.email}`)
-  console.log(`Admin credentials: ${admin.email} / ${adminPassword}`)
 
   // ── Categories ─────────────────────────────────────────────────────────────
   const catFiguras = await prisma.category.upsert({
@@ -1107,6 +1176,40 @@ async function main() {
     },
   })
   console.log('Promotions: envío gratis seeded')
+
+  // ── Galerías de producto ─────────────────────────────────────────────────
+  // Se reescribe la galería de TODOS los productos de la base (incluidos los
+  // creados a mano en el admin de desarrollo) para que cada ficha tenga 5 fotos.
+  const allProducts = await prisma.product.findMany({
+    where: { deletedAt: null },
+    select: {
+      id: true,
+      name: true,
+      category: { select: { slug: true } },
+      images: { orderBy: { position: 'asc' }, take: 1, select: { url: true } },
+    },
+    orderBy: { createdAt: 'asc' },
+  })
+  const fallbackPool = Object.values(GALLERY_POOLS).flat()
+
+  for (const [index, product] of allProducts.entries()) {
+    const coverId = product.images[0]?.url.match(/photo-([w-]+)?/)?.[1]
+    const pool = GALLERY_POOLS[product.category.slug] ?? fallbackPool
+    const ids = galleryFor(coverId, pool, index)
+
+    await prisma.$transaction([
+      prisma.productImage.deleteMany({ where: { productId: product.id } }),
+      prisma.productImage.createMany({
+        data: ids.map((id, position) => ({
+          productId: product.id,
+          url: img(id),
+          alt: `${product.name} — ${GALLERY_VIEWS[position] ?? `vista ${position + 1}`}`,
+          position,
+        })),
+      }),
+    ])
+  }
+  console.log(`Galerías: ${allProducts.length} productos con ${GALLERY_SIZE} imágenes`)
 
   console.log('Seed completado exitosamente.')
 }

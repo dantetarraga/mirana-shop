@@ -1,3 +1,4 @@
+import { verifyAdmin } from '@/shared/lib/require-admin'
 import Link from 'next/link'
 import { CategoriesTableClient } from '@/features/categories/components/CategoriesTableClient'
 import { countCategories, getCategories } from '@/features/categories/queries/category.queries'
@@ -12,6 +13,7 @@ interface PageProps {
 export const metadata = { title: 'Categorías — Admin Mirana' }
 
 export default async function CategoriesPage({ searchParams }: PageProps) {
+  await verifyAdmin()
   const { q, page } = await searchParams
   const currentPage = Math.max(1, Number(page ?? 1))
   const perPage = ADMIN_PER_PAGE

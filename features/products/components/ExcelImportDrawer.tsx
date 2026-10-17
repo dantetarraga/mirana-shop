@@ -6,7 +6,7 @@ import { findBestMatch } from '@/features/products/lib/catalog-match'
 import type { ImportProductRow } from '@/features/products/schemas/product.schema'
 import { cn } from '@/shared/lib/utils'
 import { AlertCircle, AlertTriangle, CheckCircle2, FileSpreadsheet, Star, Upload, X } from 'lucide-react'
-import { useCallback, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import * as XLSX from 'xlsx'
 
 // ---------------------------------------------------------------------------
@@ -308,12 +308,15 @@ export function ExcelImportDrawer({ categories, brands, existingSkus, onClose, o
     reader.readAsArrayBuffer(file)
   }
 
-  const onDrop = useCallback((e: React.DragEvent) => {
+  // Función normal y no useCallback: se pasa a un elemento DOM (memorizarla no
+  // ahorra nada) y con deps [] capturaba el `processFile` del primer render,
+  // es decir, las props (catálogo/campos) de cuando se abrió el drawer.
+  const onDrop = (e: React.DragEvent) => {
     e.preventDefault()
     setDragging(false)
     const file = e.dataTransfer.files[0]
     if (file) processFile(file)
-  }, [])
+  }
 
   const validRows = rows?.filter((r) => r.errors.length === 0) ?? []
   const errorRows = rows?.filter((r) => r.errors.length > 0) ?? []

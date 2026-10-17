@@ -48,7 +48,7 @@ export function CheckoutSteps({ steps, current, onSelect }: Props) {
                   className={cn(
                     'w-6 h-6 shrink-0 flex items-center justify-center font-display font-black text-[11px] border',
                     isCurrent
-                      ? 'bg-(--gold) text-black border-(--gold)'
+                      ? 'bg-(--gold) text-on-accent border-(--gold)'
                       : isDone
                         ? 'border-(--gold) text-accent-ink'
                         : 'border-(--bd) text-muted',

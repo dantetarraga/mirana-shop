@@ -2,10 +2,7 @@ import { HOME_BLOCKS, isBlockHidden } from '@/features/home/lib/home-blocks'
 import { ProductCard } from '@/features/products/components/ProductCard'
 import { toProductCards } from '@/features/products/lib/product-card'
 import { getNewProducts } from '@/features/products/queries/product.queries'
-import {
-  getHideOutOfStock,
-  getStoreSettings,
-} from '@/features/settings/queries/store-settings.queries'
+import { getStoreSettings } from '@/features/settings/queries/store-settings.queries'
 import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
@@ -15,12 +12,12 @@ const NEW_ARRIVALS_COUNT = 4
 
 // Server Component — no necesita "use client"
 export async function NewArrivals() {
-  const [products, { hiddenHomeBlocks }] = await Promise.all([
-    getNewProducts(NEW_ARRIVALS_COUNT, await getHideOutOfStock()),
-    getStoreSettings(),
-  ])
-
+  // Los ajustes van primero: si el bloque está oculto no se consulta nada más,
+  // y de ahí sale también el filtro de stock (una sola lectura por request).
+  const { hiddenHomeBlocks, showOutOfStock } = await getStoreSettings()
   if (isBlockHidden(hiddenHomeBlocks, HOME_BLOCKS.NEW_ARRIVALS)) return null
+
+  const products = await getNewProducts(NEW_ARRIVALS_COUNT, !showOutOfStock)
 
   const items = toProductCards(products)
 

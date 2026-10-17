@@ -62,12 +62,16 @@ export function Modal({
   if (!open) return null
 
   return createPortal(
-    // Overlay
-    <div
-      onClick={onClose}
-      className="fixed inset-0 z-500 flex items-center justify-center p-4 sm:p-6
-                 bg-scrim backdrop-blur-[10px] animate-fade-in"
-    >
+    <div className="fixed inset-0 z-500 flex items-center justify-center p-4 sm:p-6">
+      {/* Overlay como <button> fuera del orden de Tab: clic fuera cierra; con
+          teclado se cierra con Escape o la X. */}
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-label="Cerrar"
+        onClick={onClose}
+        className="absolute inset-0 w-full h-full bg-scrim backdrop-blur-[10px] animate-fade-in cursor-default"
+      />
       {/* Panel */}
       <div
         ref={panelRef}
@@ -75,7 +79,6 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
         aria-label={!title && label ? label : undefined}
-        onClick={(e) => e.stopPropagation()}
         className={cn(
           'relative w-full bg-surf border border-(--bd)',
           'flex flex-col max-h-[calc(100dvh-3rem)] animate-slide-up',
@@ -108,7 +111,7 @@ export function Modal({
                 className="absolute top-4 right-4"
                 aria-label="Cerrar"
               >
-                <X size={16} />
+                <X size={18} aria-hidden />
               </Button>
             )}
           </div>

@@ -1,15 +1,19 @@
 import { ComplaintsClient, type SerializedComplaint } from '@/features/complaints/components/ComplaintsClient'
 import { countComplaints, getComplaints, getComplaintStats } from '@/features/complaints/queries/complaint.queries'
+import { complaintDueStatus } from '@/features/complaints/lib/business-days'
 import type { ComplaintFilters } from '@/features/complaints/types'
 import { KpiCard } from '@/features/dashboard/components/KpiCard'
 import { AdminPagination } from '@/shared/components/admin/AdminPagination'
 import { ADMIN_PER_PAGE } from '@/shared/lib/admin/pagination'
 import { ServerSearchForm } from '@/shared/components/admin/ServerSearchForm'
+import { verifyAdmin } from '@/shared/lib/require-admin'
 import { cn } from '@/shared/lib/utils'
 
 const PER_PAGE = ADMIN_PER_PAGE
 
 const VALID_STATUSES = new Set(['PENDING', 'ANSWERED'])
+/** Filtro especial: pendientes con el plazo legal (15 días hábiles) vencido */
+const OVERDUE_KEY = 'OVERDUE'
 
 function toStatus(v: string | undefined): ComplaintFilters['status'] {
   return v && VALID_STATUSES.has(v) ? (v as ComplaintFilters['status']) : undefined
@@ -19,6 +23,7 @@ const FILTER_TABS = [
   { key: '', label: 'Todos' },
   { key: 'PENDING', label: 'Pendientes' },
   { key: 'ANSWERED', label: 'Respondidos' },
+  { key: OVERDUE_KEY, label: 'Vencidos' },
 ]
 
 function buildUrl(params: Record<string, string | undefined>) {
@@ -35,20 +40,25 @@ interface PageProps {
 }
 
 export default async function ComplaintsPage({ searchParams }: PageProps) {
+  await verifyAdmin()
   const { q, status: rawStatus, page: rawPage } = await searchParams
   const status = toStatus(rawStatus)
+  const overdue = rawStatus === OVERDUE_KEY
   const page = Math.max(1, Number(rawPage ?? 1))
   const skip = (page - 1) * PER_PAGE
 
   const [complaints, stats, total] = await Promise.all([
-    getComplaints({ search: q, status, take: PER_PAGE, skip }),
+    getComplaints({ search: q, status, overdue, take: PER_PAGE, skip }),
     getComplaintStats(),
-    countComplaints({ search: q, status }),
+    countComplaints({ search: q, status, overdue }),
   ])
 
+  // El semáforo se calcula en el servidor con un único "ahora" (sin desfase de hidratación)
+  const now = new Date()
   const serialized: SerializedComplaint[] = complaints.map((c) => ({
     ...c,
     claimedAmount: c.claimedAmount != null ? Number(c.claimedAmount) : null,
+    dueStatus: complaintDueStatus(c.dueAt, c.status === 'ANSWERED', now),
   }))
 
   const totalPages = Math.ceil(total / PER_PAGE)
@@ -58,10 +68,15 @@ export default async function ComplaintsPage({ searchParams }: PageProps) {
   return (
     <div className="px-4 sm:px-6 lg:px-8 pt-5 lg:pt-7 pb-12">
       {/* KPIs */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <KpiCard label="Total reclamos" value={stats.total} valueClass="text-text" />
         <KpiCard label="Pendientes" value={stats.pending} valueClass="text-[#ffb84a]" />
         <KpiCard label="Respondidos" value={stats.answered} valueClass="text-[#3fcf7f]" />
+        <KpiCard
+          label="Vencidos sin respuesta"
+          value={stats.overdue}
+          valueClass={stats.overdue > 0 ? 'text-[#ff6644]' : 'text-text'}
+        />
       </div>
 
       {/* Filtros server-side */}

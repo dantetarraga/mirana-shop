@@ -29,24 +29,24 @@ export function buildCheckoutSchema({
 }: CheckoutFormRules) {
   return z
     .object({
-      fullName: z.string().min(2, 'Nombre y apellido requeridos'),
-      email: z.string().email('Correo electrónico inválido'),
-      phone: z.string().min(7, 'Teléfono requerido'),
+      fullName: z.string().trim().min(2, 'Nombre y apellido requeridos').max(120),
+      email: z.string().trim().toLowerCase().email('Correo electrónico inválido').max(254),
+      phone: z.string().trim().min(7, 'Teléfono requerido').max(30),
       dni: z
         .string()
         .trim()
         .regex(/^\d{8}$/, 'El DNI debe tener 8 dígitos'),
 
-      deliveryMethodId: z.string().optional(),
-      deliveryLocationId: z.string().optional(),
+      deliveryMethodId: z.string().max(191).optional(),
+      deliveryLocationId: z.string().max(191).optional(),
 
-      address: z.string().optional(),
-      district: z.string().optional(),
-      city: z.string().optional(),
-      reference: z.string().optional(),
+      address: z.string().max(250).optional(),
+      district: z.string().max(100).optional(),
+      city: z.string().max(100).optional(),
+      reference: z.string().max(500).optional(),
 
       /** Código escrito por el cliente; se valida contra la BD aparte */
-      couponCode: z.string().optional(),
+      couponCode: z.string().max(30).optional(),
 
       acceptTerms: z.boolean(),
       paymentMethod: z.enum(['WHATSAPP_TRANSFER'], { error: 'Selecciona un método de pago' }),

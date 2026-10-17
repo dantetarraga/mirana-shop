@@ -1,5 +1,5 @@
-import { getBrands } from "@/features/brands/queries/brand.queries";
-import { getCategories } from "@/features/categories/queries/category.queries";
+import { getPublicBrands } from "@/features/brands/queries/brand.queries";
+import { getPublicCategories } from "@/features/categories/queries/category.queries";
 import { CollectionCard } from "@/features/collections/components/CollectionCard";
 import { getPublicCollections } from "@/features/collections/queries/collection.queries";
 import { CatalogFilters } from "@/features/products/components/CatalogFilters";
@@ -8,7 +8,10 @@ import { CatalogSortSelect } from "@/features/products/components/CatalogSortSel
 import { ProductCard } from "@/features/products/components/ProductCard";
 import { resolveAvailability, type AvailabilityOption } from "@/features/products/lib/availability";
 import { toProductCards } from "@/features/products/lib/product-card";
-import { countProducts, getProducts } from "@/features/products/queries/product.queries";
+import {
+  countCatalogProducts,
+  getCatalogProducts,
+} from "@/features/products/queries/product.queries";
 import { getHideOutOfStock } from "@/features/settings/queries/store-settings.queries";
 import type { ProductSort } from "@/features/products/types";
 import type { Metadata } from "next";
@@ -44,7 +47,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   const cats = parseCsv(params.cat);
   const brandSlugs = parseCsv(params.brand);
   if (brandSlugs.length === 1 && cats.length === 0) {
-    const brands = await getBrands({ perPage: 50 });
+    const brands = await getPublicBrands();
     const brand = brands.find((b) => b.slug === brandSlugs[0]);
     if (brand) return { ...base, title: `Figuras de ${brand.name}` };
   }
@@ -69,9 +72,12 @@ export default async function CatalogPage({ searchParams }: PageProps) {
   const onSale = params.oferta === "1" || undefined;
 
   const { status, stockFilter } = resolveAvailability(avail);
-  const hideOutOfStock = await getHideOutOfStock();
+  // Los productos dependen del ajuste de stock, las categorías y marcas no:
+  // se lanza la lectura de ajustes sin esperarla y solo las consultas que la
+  // necesitan se encadenan a ella.
+  const hideOutOfStockPromise = getHideOutOfStock();
 
-  const productFilters = {
+  const baseFilters = {
     categorySlug: cats.length > 0 ? cats : undefined,
     brandSlug: brandSlugs.length > 0 ? brandSlugs : undefined,
     search: q,
@@ -79,7 +85,6 @@ export default async function CatalogPage({ searchParams }: PageProps) {
     priceMax,
     status,
     stockFilter,
-    hideOutOfStock,
     onSale,
     sort,
   };
@@ -100,11 +105,22 @@ export default async function CatalogPage({ searchParams }: PageProps) {
   const showCollections = !hasFilters && page === 1;
 
   const [products, total, categories, brands, collections] = await Promise.all([
-    getProducts({ ...productFilters, take: PAGE_SIZE, skip: (page - 1) * PAGE_SIZE }),
-    countProducts(productFilters),
-    getCategories({ perPage: 50 }),
-    getBrands({ perPage: 50 }),
-    showCollections ? getPublicCollections(hideOutOfStock) : Promise.resolve([]),
+    hideOutOfStockPromise.then((hideOutOfStock) =>
+      getCatalogProducts({
+        ...baseFilters,
+        hideOutOfStock,
+        take: PAGE_SIZE,
+        skip: (page - 1) * PAGE_SIZE,
+      }),
+    ),
+    hideOutOfStockPromise.then((hideOutOfStock) =>
+      countCatalogProducts({ ...baseFilters, hideOutOfStock }),
+    ),
+    getPublicCategories(),
+    getPublicBrands(),
+    showCollections
+      ? hideOutOfStockPromise.then((hideOutOfStock) => getPublicCollections(hideOutOfStock))
+      : Promise.resolve([]),
   ]);
 
   const items = toProductCards(products);
@@ -113,7 +129,7 @@ export default async function CatalogPage({ searchParams }: PageProps) {
   const baseParams = { q, cat: cats, brand: brandSlugs, avail, oferta: onSale, priceMin, priceMax, sort };
 
   return (
-    <section className="shell pb-20 pt-[calc(var(--nh)+36px)]">
+    <section className="shell pb-20 pt-9">
       <div className="text-[10px] font-bold tracking-[3px] uppercase mb-1.5 text-accent-ink">
         Tienda completa
       </div>

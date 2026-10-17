@@ -5,11 +5,12 @@ import { useCartLine } from '@/features/cart/hooks/useCartLine'
 import { useCartStore } from '@/features/cart/stores/cart.store'
 import type { PreorderMode } from '@/features/checkout/lib/preorder'
 import { ProductImageCarousel } from '@/features/products/components/ProductImageCarousel'
+import { ProductPrice } from '@/features/products/components/ProductPrice'
 import { maxPurchasable, stockLimitMessage } from '@/features/products/lib/stock'
 import { useProductModalStore } from '@/features/products/stores/product-modal.store'
 import { getCategoryStripe, type CatalogProduct } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
-import { useScrollLock } from '@/shared/hooks'
+import { useScrollLock } from '@/shared/hooks/useScrollLock'
 import { useFocusTrap } from '@/shared/hooks/useFocusTrap'
 import { ArrowRight, Check, Minus, Plus, X } from 'lucide-react'
 import Link from 'next/link'
@@ -17,7 +18,8 @@ import { useEffect, useId, useState } from 'react'
 import { toast } from 'sonner'
 
 export function ProductModal({ defaultDepositPercent }: { defaultDepositPercent: number }) {
-  const { activeProduct: p, closeProductModal } = useProductModalStore()
+  const p = useProductModalStore((s) => s.activeProduct)
+  const closeProductModal = useProductModalStore((s) => s.closeProductModal)
 
   if (!p) return null
 
@@ -42,14 +44,15 @@ function ProductModalContent({
   onClose: () => void
   defaultDepositPercent: number
 }) {
-  const { addToCart, updateQty, setLineMode } = useCartStore()
+  const addToCart = useCartStore((s) => s.addToCart)
+  const updateQty = useCartStore((s) => s.updateQty)
+  const setLineMode = useCartStore((s) => s.setLineMode)
   const {
     product: p,
     qtyInCart,
     isPreorder,
     isOutOfStock,
     unitPrice,
-    hasDiscount,
     preorder,
     preorderMode,
     ctaState,
@@ -113,17 +116,22 @@ function ProductModalContent({
   }
 
   return (
-    <div
-      onClick={onClose}
-      className="fixed inset-0 z-300 bg-scrim backdrop-blur-[10px] flex items-center justify-center p-3 sm:p-6"
-    >
+    <div className="fixed inset-0 z-300 flex items-center justify-center p-3 sm:p-6">
+      {/* Overlay como <button> (sin parada de Tab): el cierre por teclado es
+          Escape o la X del panel. */}
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-label="Cerrar"
+        onClick={onClose}
+        className="absolute inset-0 w-full h-full bg-scrim backdrop-blur-[10px] cursor-default"
+      />
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        onClick={(e) => e.stopPropagation()}
-        className="bg-surf border border-(--bd) max-w-220 w-full max-h-[92vh] flex flex-col relative overflow-hidden"
+        className="bg-surf border border-(--bd) max-w-220 w-full max-h-[92dvh] flex flex-col relative overflow-hidden"
       >
         {/* La X vive en el panel, no dentro del carrusel: ahí quedaba pegada al
             borde derecho de la IMAGEN, o sea a mitad del modal en desktop, y
@@ -136,7 +144,7 @@ function ProductModalContent({
           onClick={onClose}
           className="absolute top-3 right-3 z-20 bg-surf/80 backdrop-blur-sm"
         >
-          <X size={16} />
+          <X size={18} aria-hidden />
         </Button>
 
         <div className="overflow-y-auto grid grid-cols-1 sm:grid-cols-2 sm:items-stretch">
@@ -161,7 +169,7 @@ function ProductModalContent({
               de dejar un hueco grande solo al pie cuando la ficha es corta. */}
           <div className="p-5 sm:px-9 sm:py-8 flex flex-col justify-center gap-4">
           <div>
-            <div className="text-[10px] tracking-[3px] uppercase text-muted">
+            <div className="text-[11px] tracking-[3px] uppercase text-muted">
               {p.category.name} · {p.brand.name}
             </div>
             <h2
@@ -172,16 +180,8 @@ function ProductModalContent({
             </h2>
           </div>
 
-          <div className="flex items-baseline gap-3 flex-wrap">
-            <div className="font-display text-[38px] sm:text-[52px] font-black text-accent-ink leading-none">
-              S/ {unitPrice.toFixed(2)}
-            </div>
-            {hasDiscount && (
-              <div className="font-display text-[20px] sm:text-[26px] font-normal text-muted line-through leading-none">
-                S/ {p.price.toFixed(2)}
-              </div>
-            )}
-          </div>
+          {/* Mismo bloque de precio que la ficha: %, tachado y "Ahorras". */}
+          <ProductPrice price={p.price} salePrice={p.salePrice} size="md" />
 
           {/* Preventa total vs parcial — mismo contrato que el PDP. */}
           {preorder && !isOutOfStock && (
@@ -210,7 +210,7 @@ function ProductModalContent({
                       : 'border-(--bd) hover:border-(--bdh)'
                   }`}
                 >
-                  <span className="block text-[10px] tracking-[2px] uppercase text-muted">
+                  <span className="block text-[11px] tracking-[2px] uppercase text-muted">
                     {opt.title}
                   </span>
                   <span className="block font-display text-[20px] font-black text-accent-ink leading-tight">
@@ -224,7 +224,7 @@ function ProductModalContent({
 
           {!isOutOfStock && ctaState !== 'capped' && !loading && (
             <div>
-              <div className="text-[10px] tracking-[2px] uppercase text-muted mb-2.5">
+              <div className="text-[11px] tracking-[2px] uppercase text-muted mb-2.5">
                 {inCart ? 'En tu carrito' : 'Cantidad'}
               </div>
               {
@@ -237,10 +237,10 @@ function ProductModalContent({
                       aria-label="Quitar una unidad"
                       onClick={decrease}
                     >
-                      <Minus size={14} />
+                      <Minus size={14} aria-hidden />
                     </Button>
                     <div
-                      className="w-13 text-center font-display text-[20px] font-extrabold border-l border-r border-(--bd) flex items-center justify-center h-10.5"
+                      className="w-13 text-center font-display text-[20px] font-extrabold border-l border-r border-(--bd) flex items-center justify-center h-11"
                       aria-live="polite"
                     >
                       {qty}
@@ -252,7 +252,7 @@ function ProductModalContent({
                       aria-label="Agregar una unidad"
                       onClick={increase}
                     >
-                      <Plus size={14} />
+                      <Plus size={14} aria-hidden />
                     </Button>
                   </div>
                   {inCart && (
@@ -309,10 +309,10 @@ function ProductModalContent({
           <Link
             href={`/catalogo/${p.slug}`}
             onClick={onClose}
-            className="inline-flex justify-center items-center w-full text-center border border-(--bd) px-6 py-3 text-[12px] tracking-[2px] uppercase font-display font-extrabold hover:border-(--gold) hover:text-accent-ink transition-colors duration-300"
+            className="inline-flex justify-center items-center w-full text-center border border-(--bd) px-6 py-3 text-[12px] tracking-[2px] uppercase font-display font-extrabold hover:border-(--gold) hover:text-accent-ink transition-colors duration-200"
           >
             Ver detalles del producto
-            <ArrowRight className="ml-1" size={14} strokeWidth={3} />
+            <ArrowRight className="ml-1" size={14} strokeWidth={3} aria-hidden />
           </Link>
 
             <Button variant="ghost" size="lg" full onClick={onClose}>

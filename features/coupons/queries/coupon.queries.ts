@@ -2,6 +2,7 @@ import 'server-only'
 import type { AppliedCoupon } from '@/features/checkout/lib/pricing'
 import { normalizeCouponCode, type CouponRow, type PromotionOption } from '@/features/coupons/types'
 import { db } from '@/shared/lib/db'
+import { verifyAdmin } from '@/shared/lib/require-admin'
 
 // ---------------------------------------------------------------------------
 // Cupones — códigos que desbloquean una promoción concreta en el checkout.
@@ -31,6 +32,7 @@ function isPromotionLive(
 }
 
 export async function getCoupons(): Promise<CouponRow[]> {
+  await verifyAdmin()
   const now = new Date()
   const rows = await db.coupon.findMany({
     include: { promotion: { select: PROMO_SELECT } },
@@ -56,6 +58,7 @@ export async function getCoupons(): Promise<CouponRow[]> {
 
 /** Promociones disponibles para asociar a un cupón (todas, activas o no) */
 export async function getPromotionOptions(): Promise<PromotionOption[]> {
+  await verifyAdmin()
   return db.promotion.findMany({
     select: { id: true, name: true, type: true, requiresCoupon: true },
     orderBy: [{ active: 'desc' }, { name: 'asc' }],

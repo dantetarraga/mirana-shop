@@ -1,7 +1,10 @@
 import { effectivePrice } from '@/features/checkout/lib/pricing'
 import { AddToCartPanel } from '@/features/products/components/AddToCartPanel'
 import { ProductImageCarousel } from '@/features/products/components/ProductImageCarousel'
+import { ProductPrice } from '@/features/products/components/ProductPrice'
 import { RelatedProducts } from '@/features/products/components/RelatedProducts'
+import { RelatedProductsSkeleton } from '@/features/products/components/RelatedProductsSkeleton'
+import { getProductBadge } from '@/features/products/lib/product-badge'
 import { getProductBySlug } from '@/features/products/queries/product.queries'
 import { getPreorderDepositPercent } from '@/features/settings/queries/store-settings.queries'
 import type { CatalogProduct } from '@/features/products/types/catalog.types'
@@ -13,8 +16,8 @@ import { ChevronRight } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+import { getSiteUrl } from '@/shared/lib/env'
+import { Suspense } from 'react'
 
 /** Máximo de caracteres del meta description (Google corta ~160). */
 const META_DESCRIPTION_MAX = 300
@@ -101,13 +104,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const isOutOfStock = product.status === 'SOLD_OUT' || (!isPreorder && product.stock === 0)
   const displayPrice = effectivePrice(product)
 
-  const badge = isOutOfStock
-    ? { label: 'AGOTADO', className: 'bg-danger text-white' }
-    : isPreorder
-      ? { label: 'PREVENTA', className: 'bg-info text-white' }
-      : product.featured
-        ? { label: 'DESTACADO', className: 'bg-(--gold) text-black' }
-        : null
+  // Misma badge que la card y el modal (features/products/lib/product-badge.ts).
+  const badge = getProductBadge({ ...product, isOutOfStock })
 
   const productJsonLd = {
     '@context': 'https://schema.org',
@@ -119,14 +117,14 @@ export default async function ProductDetailPage({ params }: PageProps) {
     brand: { '@type': 'Brand', name: product.brand.name },
     offers: {
       '@type': 'Offer',
-      url: `${BASE_URL}/catalogo/${product.slug}`,
+      url: `${getSiteUrl()}/catalogo/${product.slug}`,
       priceCurrency: raw.currency ?? 'PEN',
       price: displayPrice.toFixed(2),
       availability: isPreorder
         ? 'https://schema.org/PreOrder'
-          : isOutOfStock
-            ? 'https://schema.org/OutOfStock'
-            : 'https://schema.org/InStock',
+        : isOutOfStock
+          ? 'https://schema.org/OutOfStock'
+          : 'https://schema.org/InStock',
     },
   }
 
@@ -134,19 +132,19 @@ export default async function ProductDetailPage({ params }: PageProps) {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Inicio', item: BASE_URL },
-      { '@type': 'ListItem', position: 2, name: 'Catálogo', item: `${BASE_URL}/catalogo` },
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: getSiteUrl() },
+      { '@type': 'ListItem', position: 2, name: 'Catálogo', item: `${getSiteUrl()}/catalogo` },
       {
         '@type': 'ListItem',
         position: 3,
         name: catLabel,
-        item: `${BASE_URL}/catalogo?cat=${product.category.slug}`,
+        item: `${getSiteUrl()}/catalogo?cat=${product.category.slug}`,
       },
       {
         '@type': 'ListItem',
         position: 4,
         name: product.name,
-        item: `${BASE_URL}/catalogo/${product.slug}`,
+        item: `${getSiteUrl()}/catalogo/${product.slug}`,
       },
     ],
   }
@@ -158,23 +156,44 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
       <div className="px-4 sm:px-6 py-8 sm:py-12 max-w-360 mx-auto">
         {/* Breadcrumb */}
-        <nav className="flex flex-wrap items-center gap-1.5 text-[11px] tracking-[1.5px] uppercase text-muted mb-6 sm:mb-10">
-          <Link href="/" className="hover:text-text transition-colors">
-            Inicio
-          </Link>
-          <ChevronRight size={12} />
-          <Link href="/catalogo" className="hover:text-text transition-colors">
-            Catálogo
-          </Link>
-          <ChevronRight size={12} />
-          <Link
-            href={`/catalogo?cat=${product.category.slug}`}
-            className="hover:text-text transition-colors"
-          >
-            {catLabel}
-          </Link>
-          <ChevronRight size={12} />
-          <span className="text-text truncate max-w-[160px] sm:max-w-none">{product.name}</span>
+        <nav aria-label="Migas de pan" className="mb-6 sm:mb-10">
+          <ol className="flex flex-wrap items-center gap-1.5 text-[11px] tracking-[1.5px] uppercase text-muted">
+            <li>
+              <Link href="/" className="hover:text-text transition-colors py-1">
+                Inicio
+              </Link>
+            </li>
+            <li aria-hidden>
+              <ChevronRight size={12} />
+            </li>
+            <li>
+              <Link href="/catalogo" className="hover:text-text transition-colors py-1">
+                Catálogo
+              </Link>
+            </li>
+            <li aria-hidden>
+              <ChevronRight size={12} />
+            </li>
+            <li>
+              <Link
+                href={`/catalogo?cat=${product.category.slug}`}
+                className="hover:text-text transition-colors py-1"
+              >
+                {catLabel}
+              </Link>
+            </li>
+            <li aria-hidden>
+              <ChevronRight size={12} />
+            </li>
+            <li className="min-w-0">
+              <span
+                aria-current="page"
+                className="text-text block truncate max-w-[180px] sm:max-w-none"
+              >
+                {product.name}
+              </span>
+            </li>
+          </ol>
         </nav>
 
         {/* Main grid */}
@@ -191,7 +210,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 posicionaban en el mismo top/left y se pisaban entre sí. */}
             {badge && (
               <div
-                className={`z-1 absolute top-4 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-3 py-1.5 ${badge.className}`}
+                className={`z-2 absolute top-4 left-0 text-[11px] font-extrabold tracking-[1.5px] uppercase px-3 py-1.5 ${badge.className}`}
               >
                 {badge.label}
               </div>
@@ -215,17 +234,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
               SKU: {product.sku}
             </div>
 
-            {/* Price */}
-            <div className="flex items-baseline gap-4 flex-wrap">
-              <div className="font-display text-[40px] sm:text-[56px] font-black text-accent-ink leading-none">
-                S/ {displayPrice.toFixed(2)}
-              </div>
-              {product.salePrice && product.salePrice < product.price && (
-                <div className="font-display text-[22px] sm:text-[28px] font-bold text-muted line-through">
-                  S/ {product.price.toFixed(2)}
-                </div>
-              )}
-            </div>
+            {/* Price — mismo bloque que el modal: %, tachado y "Ahorras S/ X" */}
+            <ProductPrice price={product.price} salePrice={product.salePrice} />
 
             {/* El aviso de "últimas unidades" vive ahora en AddToCartPanel: aquí
                 se calculaba sobre el stock crudo y seguía apareciendo aunque el
@@ -256,12 +266,16 @@ export default async function ProductDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      <RelatedProducts
-        currentId={raw.id}
-        categorySlug={raw.category.slug}
-        brandSlug={raw.brand.slug}
-        collectionSlugs={raw.collections.map((c) => c.collection.slug)}
-      />
+      {/* Streaming: los relacionados (3 queries) ya no retrasan el HTML de la
+          ficha; llegan después con su propio esqueleto. */}
+      <Suspense fallback={<RelatedProductsSkeleton />}>
+        <RelatedProducts
+          currentId={raw.id}
+          categorySlug={raw.category.slug}
+          brandSlug={raw.brand.slug}
+          collectionSlugs={raw.collections.map((c) => c.collection.slug)}
+        />
+      </Suspense>
     </>
   )
 }

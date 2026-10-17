@@ -161,7 +161,7 @@ export function OrderSummary({
                   <span className="font-mono text-[11px] text-accent-ink"> · {couponCode}</span>
                 )}
               </span>
-              <span className="text-emerald-400 font-semibold shrink-0">
+              <span className="text-success font-semibold shrink-0">
                 −{formatCurrency(discount)}
               </span>
             </div>
@@ -170,7 +170,7 @@ export function OrderSummary({
           <div className="flex justify-between text-[13px] gap-3">
             <span className="text-muted min-w-0 truncate">{deliveryLabel ?? 'Envío'}</span>
             {shippingIsFree ? (
-              <span className="text-emerald-400 font-semibold text-[12px] uppercase tracking-wide shrink-0">
+              <span className="text-success font-semibold text-[12px] uppercase tracking-wide shrink-0">
                 Gratis
               </span>
             ) : (
@@ -210,6 +210,7 @@ export function OrderSummary({
             type="checkbox"
             {...registerTerms}
             aria-invalid={termsError ? true : undefined}
+            aria-describedby={termsError ? 'checkout-terms-error' : undefined}
             className="mt-0.5 accent-(--gold) w-4 h-4 shrink-0"
           />
           <span className="text-[12px] leading-snug">
@@ -232,7 +233,11 @@ export function OrderSummary({
             .
           </span>
         </label>
-        {termsError && <p className="text-red-500 text-[12px] mt-2">{termsError}</p>}
+        {termsError && (
+          <p id="checkout-terms-error" role="alert" className="text-danger text-[12px] mt-2">
+            {termsError}
+          </p>
+        )}
       </div>
 
       {/* CTA — solo el último paso confirma; los anteriores avanzan */}

@@ -3,6 +3,7 @@ import { CollectionsTableClient } from "@/features/collections/components/Collec
 import { AdminPagination } from "@/shared/components/admin/AdminPagination";
 import { ADMIN_PER_PAGE } from "@/shared/lib/admin/pagination";
 import { ServerSearchForm } from "@/shared/components/admin/ServerSearchForm";
+import { verifyAdmin } from "@/shared/lib/require-admin";
 
 interface PageProps {
   searchParams: Promise<{ q?: string; page?: string; active?: string }>;
@@ -11,6 +12,7 @@ interface PageProps {
 export const metadata = { title: "Colecciones — Admin Mirana" };
 
 export default async function CollectionsPage({ searchParams }: PageProps) {
+  await verifyAdmin();
   const { q, page, active: activeParam } = await searchParams;
   const currentPage = Math.max(1, Number(page ?? 1));
   const perPage = ADMIN_PER_PAGE;

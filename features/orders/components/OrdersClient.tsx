@@ -9,7 +9,7 @@ import { ORDER_STATUS_LABELS, orderStatusGroup } from '@/features/orders/lib/ord
 import type { OrderStatus } from '@/generated/prisma/client'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
 import { StatusBadge } from '@/features/orders/components/StatusBadge'
-import { useServerAction } from '@/shared/hooks/admin'
+import { useServerAction } from '@/shared/hooks/admin/useServerAction'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { ORDER_STATUS, fmt } from '@/shared/lib/admin/admin-constants'
 import { cn, formatDate } from '@/shared/lib/utils'

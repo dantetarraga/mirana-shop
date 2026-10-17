@@ -9,10 +9,11 @@
 //   404 — Not Found:            recurso no encontrado
 //   409 — Conflict:             slug/SKU duplicado, bloqueo optimista
 //   422 — Unprocessable Entity: regla de negocio violada
+//   429 — Too Many Requests:    límite de intentos alcanzado
 //   500 — Internal Server Error: error inesperado del servidor
 // ---------------------------------------------------------------------------
 
-export type ActionErrorCode = 400 | 401 | 403 | 404 | 409 | 422 | 500
+export type ActionErrorCode = 400 | 401 | 403 | 404 | 409 | 422 | 429 | 500
 
 export type ActionResult<T = void> =
   | { success: true; data: T }

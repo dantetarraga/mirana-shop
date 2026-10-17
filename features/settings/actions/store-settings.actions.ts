@@ -4,9 +4,20 @@ import { DEFAULT_DEPOSIT_PERCENT } from '@/features/checkout/lib/preorder'
 import { STORE_SETTINGS_ID } from '@/features/settings/queries/store-settings.queries'
 import { db } from '@/shared/lib/db'
 import { requireAdmin } from '@/shared/lib/require-admin'
+import { imageUrlSchema } from '@/shared/schemas/image-url.schema'
+import { httpUrlSchema } from '@/shared/schemas/safe-url.schema'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+
+/** Texto opcional: vacío se guarda como null ("sin configurar"). */
+const optionalText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max, `Máximo ${max} caracteres`)
+    .nullish()
+    .transform((v) => (v ? v : null))
 
 const storeSettingsSchema = z.object({
   showOutOfStock: z.boolean(),
@@ -23,12 +34,21 @@ const storeSettingsSchema = z.object({
     .max(100, 'Máximo 100%')
     .optional()
     .default(DEFAULT_DEPOSIT_PERCENT),
-  footerLogoUrl: z.string().optional().default(''),
-  instagramUrl: z.string().optional().default(''),
-  tiktokUrl: z.string().optional().default(''),
-  youtubeUrl: z.string().optional().default(''),
-  facebookUrl: z.string().optional().default(''),
+  footerLogoUrl: z.union([imageUrlSchema(), z.literal('')]).optional().default(''),
+  instagramUrl: httpUrlSchema().optional().default(''),
+  tiktokUrl: httpUrlSchema().optional().default(''),
+  youtubeUrl: httpUrlSchema().optional().default(''),
+  facebookUrl: httpUrlSchema().optional().default(''),
   hiddenHomeBlocks: z.string().optional().default(''),
+  // Datos del proveedor para el Libro de Reclamaciones y el footer
+  legalName: optionalText(191),
+  ruc: z
+    .string()
+    .trim()
+    .nullish()
+    .transform((v) => (v ? v : null))
+    .refine((v) => v === null || /^(10|15|17|20)\d{9}$/.test(v), 'El RUC debe tener 11 dígitos y empezar con 10, 15, 17 o 20'),
+  fiscalAddress: optionalText(300),
 })
 
 export async function saveStoreSettings(rawInput: unknown): Promise<ActionResult> {
@@ -55,9 +75,11 @@ export async function saveStoreSettings(rawInput: unknown): Promise<ActionResult
     revalidatePath('/catalogo')
     revalidatePath('/checkout')
     revalidatePath('/admin/settings')
+    // El footer (todas las páginas) y el libro muestran los datos del proveedor
+    revalidatePath('/', 'layout')
     return { success: true, data: undefined }
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Error al guardar la configuración'
-    return { success: false, error: message, code: 500 }
+    console.error('[saveStoreSettings]', err)
+    return { success: false, error: 'Error al guardar la configuración', code: 500 }
   }
 }

@@ -5,6 +5,7 @@ import { KpiCard } from "@/features/dashboard/components/KpiCard";
 import { AdminPagination } from "@/shared/components/admin/AdminPagination";
 import { ADMIN_PER_PAGE } from "@/shared/lib/admin/pagination";
 import { ServerSearchForm } from "@/shared/components/admin/ServerSearchForm";
+import { verifyAdmin } from "@/shared/lib/require-admin";
 import { cn } from "@/shared/lib/utils";
 
 const PER_PAGE = ADMIN_PER_PAGE;
@@ -37,6 +38,7 @@ interface PageProps {
 }
 
 export default async function OrdersPage({ searchParams }: PageProps) {
+  await verifyAdmin();
   const { q, statusGroup: rawGroup, page: rawPage } = await searchParams;
   const statusGroup = toGroup(rawGroup);
   const page = Math.max(1, Number(rawPage ?? 1));

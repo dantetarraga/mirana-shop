@@ -1,7 +1,10 @@
-import { CategoryDonut } from '@/features/dashboard/components/charts/CategoryDonut'
-import { OrdersBarChart } from '@/features/dashboard/components/charts/OrdersBarChart'
-import { RevenueAreaChart } from '@/features/dashboard/components/charts/RevenueAreaChart'
-import { Sparkline } from '@/features/dashboard/components/charts/Sparkline'
+// Versiones con carga diferida (ssr:false + skeleton): recharts fuera del bundle inicial.
+import {
+  CategoryDonut,
+  OrdersBarChart,
+  RevenueAreaChart,
+  Sparkline,
+} from '@/features/dashboard/components/charts/LazyCharts'
 import { KpiCard } from '@/features/dashboard/components/KpiCard'
 import {
   ORDER_STATUS_CFG,

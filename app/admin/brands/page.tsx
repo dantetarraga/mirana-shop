@@ -3,6 +3,7 @@ import { countBrands, getBrands } from '@/features/brands/queries/brand.queries'
 import { AdminPagination } from '@/shared/components/admin/AdminPagination'
 import { ADMIN_PER_PAGE } from '@/shared/lib/admin/pagination'
 import { ServerSearchForm } from '@/shared/components/admin/ServerSearchForm'
+import { verifyAdmin } from '@/shared/lib/require-admin'
 import Link from 'next/link'
 
 interface PageProps {
@@ -12,6 +13,7 @@ interface PageProps {
 export const metadata = { title: 'Marcas — Admin Mirana' }
 
 export default async function BrandsPage({ searchParams }: PageProps) {
+  await verifyAdmin()
   const { q, page } = await searchParams
   const currentPage = Math.max(1, Number(page ?? 1))
   const perPage = ADMIN_PER_PAGE

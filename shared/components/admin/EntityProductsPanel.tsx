@@ -88,10 +88,16 @@ async function doRemoveProduct(entityId: string, productId: string): Promise<boo
 // Componente
 // ---------------------------------------------------------------------------
 
+// Referencia estable para "sin productos". Un `[]` literal (en el default de
+// `staged` o mientras carga) es un array nuevo en cada render, y `products`
+// es dependencia del efecto de búsqueda: el debounce se reiniciaba en cada
+// render y la búsqueda podía no dispararse nunca.
+const NO_PRODUCTS: DrawerProduct[] = []
+
 export function EntityProductsPanel({
   entityId,
   entityType,
-  staged = [],
+  staged = NO_PRODUCTS,
   onStagedChange,
 }: EntityProductsPanelProps) {
   /** Sin ID todavía: la selección vive en memoria hasta que se guarde. */
@@ -103,7 +109,7 @@ export function EntityProductsPanel({
   const entityKey = `${entityType}:${entityId}`
   const [loaded, setLoaded] = useState<{ key: string; products: DrawerProduct[] }>({
     key: '',
-    products: [],
+    products: NO_PRODUCTS,
   })
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<DrawerProduct[]>([])
@@ -113,7 +119,7 @@ export function EntityProductsPanel({
   const searchBoxRef = useRef<HTMLDivElement>(null)
 
   const loading = !isStaged && loaded.key !== entityKey
-  const products = isStaged ? staged : loading ? [] : loaded.products
+  const products = isStaged ? staged : loading ? NO_PRODUCTS : loaded.products
   const setProducts = (updater: (prev: DrawerProduct[]) => DrawerProduct[]) => {
     if (isStaged) {
       onStagedChange?.(updater(staged))

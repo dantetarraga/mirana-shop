@@ -3,6 +3,7 @@
 import type { AppliedCoupon } from '@/features/checkout/lib/pricing'
 import { findRedeemableCoupon } from '@/features/coupons/queries/coupon.queries'
 import type { ActionResult } from '@/shared/types/action-result.types'
+import { consumeRateLimits, RateLimitError, requestIp } from '@/shared/lib/rate-limit'
 import { z } from 'zod'
 
 const codeSchema = z.string().min(1, 'Escribe un código de cupón').max(30, 'Código demasiado largo')
@@ -19,6 +20,18 @@ export async function applyCoupon(rawCode: unknown): Promise<ActionResult<Applie
   const parsed = codeSchema.safeParse(rawCode)
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0]?.message ?? 'Código inválido', code: 400 }
+  }
+
+  try {
+    await consumeRateLimits([
+      { scope: 'coupon-ip', subject: await requestIp(), limit: 20, windowMs: 10 * 60_000 },
+    ])
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof RateLimitError ? err.message : 'No se pudo validar el cupón.',
+      code: 429,
+    }
   }
 
   const lookup = await findRedeemableCoupon(parsed.data)

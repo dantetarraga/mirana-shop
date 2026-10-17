@@ -55,7 +55,7 @@ export function SavedAddressSelector({
                 selectedId === addr.id ? 'bg-(--gold) border-(--gold)' : 'bg-surf border-(--bd)',
               )}
             >
-              {selectedId === addr.id && <Check size={10} className="text-black" />}
+              {selectedId === addr.id && <Check size={10} className="text-on-accent" />}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
@@ -94,7 +94,7 @@ export function SavedAddressSelector({
               selectedId === null ? 'bg-(--gold) border-(--gold)' : 'bg-surf border-(--bd)',
             )}
           >
-            {selectedId === null && <Check size={10} className="text-black" />}
+            {selectedId === null && <Check size={10} className="text-on-accent" />}
           </div>
           <div>
             <p className="text-[13px] font-semibold">Ingresar nueva dirección</p>

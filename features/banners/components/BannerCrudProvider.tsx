@@ -9,7 +9,7 @@ import { BannerFormDrawer } from '@/features/banners/components/BannerFormDrawer
 import { bannerDbSchema } from '@/features/banners/schemas/banner.schema'
 import type { BannerRow } from '@/features/banners/types'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
-import { useEntityCrud } from '@/shared/hooks/admin'
+import { useEntityCrud } from '@/shared/hooks/admin/useEntityCrud'
 import { createContext, useContext, type ReactNode } from 'react'
 import type { z } from 'zod'
 
