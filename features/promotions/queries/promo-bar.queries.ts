@@ -1,6 +1,7 @@
 import { db } from '@/shared/lib/db'
 import { formatCurrency } from '@/shared/lib/utils'
 import 'server-only'
+import { cache } from 'react'
 
 // ---------------------------------------------------------------------------
 // Items para el banner de anuncios del inicio.
@@ -12,7 +13,7 @@ export type PromoBarItem =
   | { kind: 'discount'; text: string }
   | { kind: 'coupon'; text: string; code: string }
 
-export async function getPromoBarItems(): Promise<PromoBarItem[]> {
+async function getPromoBarItemsImpl(): Promise<PromoBarItem[]> {
   const now = new Date()
 
   const [autoPromos, coupons] = await Promise.all([
@@ -123,3 +124,6 @@ export async function getPromoBarItems(): Promise<PromoBarItem[]> {
 
   return items
 }
+
+/** Deduplicada por request con `cache()`. */
+export const getPromoBarItems = cache(getPromoBarItemsImpl)

@@ -8,7 +8,8 @@ import { Button } from '@/shared/components/ui/Button'
 import { DateField } from '@/shared/components/ui/DateField'
 import { FormField } from '@/shared/components/ui/FormField'
 import { Select } from '@/shared/components/ui/Select'
-import { useFormEntity, useServerAction } from '@/shared/hooks/admin'
+import { useFormEntity } from '@/shared/hooks/admin/useFormEntity'
+import { useServerAction } from '@/shared/hooks/admin/useServerAction'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AlertTriangle } from 'lucide-react'
@@ -107,7 +108,7 @@ export function CouponDrawer({ coupon, isNew, promotions, onClose }: Props) {
 
         {selected && !selected.requiresCoupon && (
           <div className="flex items-start gap-2.5 border border-(--bd) p-3 text-[12px]">
-            <AlertTriangle size={15} className="mt-0.5 shrink-0 text-(--gold)" />
+            <AlertTriangle size={15} className="mt-0.5 shrink-0 text-warning" />
             <span className="text-muted">
               <span className="text-text font-semibold">«{selected.name}» es automática.</span> Se
               aplica sola a todos los pedidos que cumplan sus condiciones, así que el cupón no
@@ -147,13 +148,13 @@ export function CouponDrawer({ coupon, isNew, promotions, onClose }: Props) {
         </p>
 
         <label className="flex items-center gap-2.5 cursor-pointer text-[13px] select-none">
-          <input type="checkbox" {...register('active')} className="accent-(--gold)" />
+          <input type="checkbox" {...register('active')} className="accent-accent-ink" />
           Cupón activo
         </label>
 
         <div className="flex gap-2.5 pt-1">
-          <Button type="submit" variant="accent" size="md" full disabled={isPending}>
-            {isPending ? 'Guardando...' : isNew ? 'Crear cupón' : 'Guardar cambios'}
+          <Button type="submit" variant="accent" size="md" full loading={isPending} loadingText="Guardando…">
+            {isNew ? 'Crear cupón' : 'Guardar cambios'}
           </Button>
           <Button type="button" variant="outline" size="md" full onClick={onClose}>
             Cancelar

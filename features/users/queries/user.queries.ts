@@ -1,5 +1,6 @@
 import 'server-only'
 import { db } from '@/shared/lib/db'
+import { verifyAdmin } from '@/shared/lib/require-admin'
 import type { UserFilters, UserRow, UserSegment } from '@/features/users/types'
 
 // Prisma no soporta filtrar por COUNT de relaciones en where.
@@ -42,6 +43,7 @@ const SELECT = {
 } as const
 
 export async function getUsers(filters: UserFilters = {}): Promise<UserRow[]> {
+  await verifyAdmin()
   const { search, segment = 'todos', take = 100, skip = 0 } = filters
 
   const segmentIds = await getUserIdsBySegment(segment)
@@ -69,6 +71,7 @@ export async function getUsers(filters: UserFilters = {}): Promise<UserRow[]> {
 }
 
 export async function countUsers(filters: Omit<UserFilters, 'take' | 'skip'> = {}): Promise<number> {
+  await verifyAdmin()
   const { search, segment = 'todos' } = filters
 
   const segmentIds = await getUserIdsBySegment(segment)
@@ -92,6 +95,7 @@ export async function countUsers(filters: Omit<UserFilters, 'take' | 'skip'> = {
 }
 
 export async function getUserById(id: string): Promise<UserRow | null> {
+  await verifyAdmin()
   return db.user.findUnique({
     where: { id },
     select: SELECT,

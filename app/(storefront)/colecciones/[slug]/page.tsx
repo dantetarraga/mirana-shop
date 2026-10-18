@@ -4,6 +4,7 @@ import { ProductCard } from '@/features/products/components/ProductCard'
 import { toProductCards } from '@/features/products/lib/product-card'
 import { getHideOutOfStock } from '@/features/settings/queries/store-settings.queries'
 import { JsonLd } from '@/shared/components/JsonLd'
+import { getSiteUrl } from '@/shared/lib/env'
 import { stripHtml, toRichHtml } from '@/shared/lib/rich-text'
 import { ChevronRight, Layers } from 'lucide-react'
 import type { Metadata } from 'next'
@@ -11,17 +12,25 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-
 const META_DESCRIPTION_MAX = 300
 
 interface PageProps {
   params: Promise<{ slug: string }>
 }
 
+/**
+ * La colección depende del ajuste de stock: esa espera es una dependencia real
+ * (no un waterfall evitable) y ambas lecturas están en `cache()`, así que
+ * generateMetadata y la página comparten las mismas dos consultas.
+ */
+async function loadCollection(slug: string) {
+  const hideOutOfStock = await getHideOutOfStock()
+  return getPublicCollectionBySlug(slug, hideOutOfStock)
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
-  const collection = await getPublicCollectionBySlug(slug, await getHideOutOfStock())
+  const collection = await loadCollection(slug)
   if (!collection) return { title: 'Colección no encontrada' }
 
   const text = stripHtml(toRichHtml(collection.description ?? ''))
@@ -48,9 +57,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function CollectionDetailPage({ params }: PageProps) {
   const { slug } = await params
-  const collection = await getPublicCollectionBySlug(slug, await getHideOutOfStock())
+  const collection = await loadCollection(slug)
 
   if (!collection) notFound()
+
+  const BASE_URL = getSiteUrl()
 
   const items = toProductCards(collection.products)
   const descriptionHtml = toRichHtml(collection.description ?? '')
@@ -123,7 +134,7 @@ export default async function CollectionDetailPage({ params }: PageProps) {
             ) : (
               <Layers size={48} className="text-muted" aria-hidden />
             )}
-            <div className="z-1 absolute top-4 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-3 py-1.5 bg-(--gold) text-black">
+            <div className="z-1 absolute top-4 left-0 text-[9px] font-extrabold tracking-[2px] uppercase px-3 py-1.5 bg-(--gold) text-on-accent">
               COLECCIÓN
             </div>
           </div>

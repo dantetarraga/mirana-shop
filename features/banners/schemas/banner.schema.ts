@@ -1,4 +1,5 @@
 import { imageUrlSchema } from '@/shared/schemas/image-url.schema'
+import { safeHrefSchema } from '@/shared/schemas/safe-url.schema'
 import { z } from 'zod'
 
 export const bannerSchema = z.object({
@@ -21,13 +22,7 @@ export const bannerDbSchema = z.object({
   title: z.string().optional().default(''),
   subtitle: z.string().optional().default(''),
   ctaLabel: z.string().optional().default(''),
-  ctaHref: z
-    .union([
-      z.string().url('URL inválida'), // URL absoluta: https://...
-      z.string().startsWith('/'), // Ruta interna: /catalogo, /productos/...
-      z.literal(''),
-    ])
-    .optional(),
+  ctaHref: safeHrefSchema().optional(),
   imageUrl: z.union([imageUrlSchema(), z.literal('')]).optional().default(''),
   // Imagen alternativa para mobile/tablet. Vacía = se reutiliza la de desktop.
   imageUrlMobile: z.union([imageUrlSchema(), z.literal('')]).optional().default(''),

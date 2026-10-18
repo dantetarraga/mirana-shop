@@ -1,29 +1,18 @@
 'use client'
 
+import { CartLineItem } from '@/features/cart/components/CartLineItem'
+import { CartSkeleton } from '@/features/cart/components/CartSkeleton'
 import { cartKindOf } from '@/features/cart/lib/cart-kind'
 import { useCartStore } from '@/features/cart/stores/cart.store'
 import { eligibleDeliveryMethods } from '@/features/checkout/lib/delivery-eligibility'
-import {
-  computeTotals,
-  effectivePrice,
-  type PricingRules,
-} from '@/features/checkout/lib/pricing'
-import {
-  canPartialPreorder,
-  depositUnitPrice,
-  splitPreorderTotals,
-} from '@/features/checkout/lib/preorder'
-import { maxPurchasable } from '@/features/products/lib/stock'
-import { getCategoryLabel, getCategoryStripe } from '@/features/products/types/catalog.types'
-import { Button } from '@/shared/components/ui/Button'
-import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
+import { computeTotals, type PricingRules } from '@/features/checkout/lib/pricing'
+import { splitPreorderTotals } from '@/features/checkout/lib/preorder'
+import { buttonClass } from '@/shared/components/ui/Button'
 import { formatCurrency } from '@/shared/lib/utils'
-import { ArrowLeft, CreditCard, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
-import Image from 'next/image'
+import { ArrowLeft, CreditCard, ShoppingBag } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
-import { toast } from 'sonner'
+import { EmptyState } from '@/shared/components/ui/EmptyState'
 
 interface CartViewProps {
   /** Reglas de precios (envío y promociones activas) calculadas en el server */
@@ -31,9 +20,9 @@ interface CartViewProps {
 }
 
 export function CartView({ pricingRules }: CartViewProps) {
-  const { cart, updateQty, removeItem, setLineMode } = useCartStore()
+  const cart = useCartStore((s) => s.cart)
+  const hydrated = useCartStore((s) => s.hydrated)
   const router = useRouter()
-  const [pendingRemove, setPendingRemove] = useState<{ id: string; name: string } | null>(null)
 
   const { subtotal, payableNow, dueTotal } = splitPreorderTotals(
     cart,
@@ -57,41 +46,40 @@ export function CartView({ pricingRules }: CartViewProps) {
     { shippingCost: deliveryMethods[0]?.cost },
   )
 
+  // Antes de que CartHydrator siembre el store el carrito siempre está vacío:
+  // se muestra el esqueleto de loading.tsx en vez del estado vacío.
+  if (!hydrated) return <CartSkeleton />
+
   /* ── Empty state ─────────────────────────────────── */
   if (cart.length === 0) {
     return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-6 px-4 sm:px-6 pt-[calc(var(--nh)+36px)]">
-        <div className="text-[72px] opacity-20 select-none">
-          <ShoppingBag size={96} strokeWidth={1} />
-        </div>
-        <div className="text-center">
-          <h1 className="font-display text-[32px] font-black uppercase tracking-tight mb-2">
-            Tu carrito está vacío
-          </h1>
-          <p className="text-muted text-[14px]">
-            Explora el catálogo y agrega productos para continuar.
-          </p>
-        </div>
-        <Link href="/catalogo">
-          <Button variant="accent" size="lg">
+      <EmptyState
+        size="page"
+        icon={ShoppingBag}
+        title="Tu carrito está vacío"
+        description="Explora el catálogo y agrega productos para continuar."
+        className="min-h-[70vh] justify-center pt-9"
+        action={
+          <Link href="/catalogo" className={buttonClass({ variant: 'accent', size: 'lg' })}>
             Ver catálogo
-          </Button>
-        </Link>
-      </div>
+          </Link>
+        }
+      />
     )
   }
 
   return (
     <>
-      <div className="px-4 sm:px-6 pt-[calc(var(--nh)+36px)] pb-12 max-w-360 mx-auto">
+      <div className="px-4 sm:px-6 pt-9 pb-12 max-w-360 mx-auto">
         {/* ── Page header ── */}
         <div className="flex items-center gap-4 mb-6 sm:mb-10">
           <button
+            type="button"
             onClick={() => router.back()}
-            className="text-muted hover:text-accent-ink transition-colors duration-200"
+            className="w-11 h-11 -ml-3 flex items-center justify-center text-muted hover:text-accent-ink transition-colors duration-200"
             aria-label="Volver"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={20} aria-hidden />
           </button>
           <h1 className="font-display text-[24px] sm:text-[32px] font-black uppercase tracking-tight">
             Mi Carrito <span className="text-accent-ink">({itemCount})</span>
@@ -101,144 +89,18 @@ export function CartView({ pricingRules }: CartViewProps) {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 lg:gap-8 items-start">
           {/* ── Items list ──────────────────────────────── */}
           <div className="flex flex-col gap-4">
-            {cart.map((item) => {
-              const stripe = getCategoryStripe(item.product.category.slug)
-              const catLabel = getCategoryLabel(item.product.category.slug)
-              const fullUnit = effectivePrice(item.product)
-              const canPartial = canPartialPreorder(item.product)
-              const isPartial = item.preorderMode === 'PARTIAL'
-              const depositUnit = canPartial
-                ? depositUnitPrice(item.product, pricingRules.preorderDepositPercent)
-                : fullUnit
-              // La línea muestra lo que se cobra hoy: el adelanto si es parcial.
-              const unitPrice = isPartial ? depositUnit : fullUnit
-              const lineTotal = unitPrice * item.qty
-              const max = maxPurchasable(item.product)
-              const atLimit = max !== null && item.qty >= max
-
-              return (
-                <div
-                  key={item.product.id}
-                  className="flex flex-col sm:flex-row gap-4 sm:gap-5 p-4 sm:p-5 bg-(--surf) border border-(--bd) sm:items-center"
-                >
-                  <div className="flex gap-4 sm:gap-5 sm:flex-1 min-w-0">
-                    {/* Image / stripe */}
-                    <Link
-                      href={`/catalogo/${item.product.slug}`}
-                      className="relative shrink-0 block w-20 h-20 sm:w-24 sm:h-24 overflow-hidden"
-                    >
-                      {item.product.imageUrl ? (
-                        <Image
-                          src={item.product.imageUrl}
-                          alt={item.product.name}
-                          fill
-                          sizes="96px"
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className={`${stripe} w-full h-full`} />
-                      )}
-                    </Link>
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[10px] tracking-[2px] uppercase text-muted mb-1">
-                        {catLabel} · {item.product.brand.name}
-                      </div>
-                      <Link href={`/catalogo/${item.product.slug}`}>
-                        <div className="font-display text-[16px] sm:text-[18px] font-black uppercase leading-tight hover:text-accent-ink transition-colors duration-150 truncate">
-                          {item.product.name}
-                        </div>
-                      </Link>
-                      <div className="text-accent-ink font-display text-[15px] font-bold mt-0.5">
-                        {formatCurrency(unitPrice)} c/u
-                      </div>
-
-                      {/* Preventa: se puede alternar entre pagar todo y pagar
-                          solo el adelanto sin volver a la ficha del producto. */}
-                      {canPartial && (
-                        <div className="flex items-center border border-(--bd) w-fit mt-2">
-                          {(
-                            [
-                              { mode: 'FULL' as const, label: 'Pago total', amount: fullUnit },
-                              {
-                                mode: 'PARTIAL' as const,
-                                label: 'Adelanto',
-                                amount: depositUnit,
-                              },
-                            ]
-                          ).map((opt) => (
-                            <button
-                              key={opt.mode}
-                              type="button"
-                              onClick={() => setLineMode(item.product.id, opt.mode)}
-                              aria-pressed={item.preorderMode === opt.mode}
-                              className={`px-3 py-1.5 text-[11px] tracking-[1px] uppercase font-display font-extrabold transition-colors duration-150 ${
-                                item.preorderMode === opt.mode
-                                  ? 'bg-(--gold) text-on-accent'
-                                  : 'text-muted hover:text-text'
-                              }`}
-                            >
-                              {opt.label} · {formatCurrency(opt.amount)}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Qty controls */}
-                      <div className="flex items-center gap-3 mt-3">
-                        <div className="flex items-center border border-(--bd) bg-background">
-                          <button
-                            onClick={() => updateQty(item.product.id, -1)}
-                            disabled={item.qty <= 1}
-                            className="px-3 py-2 text-muted hover:text-text disabled:opacity-30 transition-colors duration-150"
-                            aria-label="Disminuir cantidad"
-                          >
-                            <Minus size={13} />
-                          </button>
-                          <span className="font-display font-extrabold text-[15px] min-w-8 text-center">
-                            {item.qty}
-                          </span>
-                          <button
-                            onClick={() => updateQty(item.product.id, 1)}
-                            disabled={atLimit}
-                            className="px-3 py-2 text-muted hover:text-text disabled:opacity-30 transition-colors duration-150"
-                            aria-label="Aumentar cantidad"
-                          >
-                            <Plus size={13} />
-                          </button>
-                        </div>
-                        <button
-                          onClick={() =>
-                            setPendingRemove({ id: item.product.id, name: item.product.name })
-                          }
-                          className="text-muted hover:text-red-400 transition-colors duration-200"
-                          aria-label="Eliminar producto"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Line total */}
-                  <div className="flex items-center justify-between sm:flex-col sm:items-end sm:justify-center shrink-0 pt-3 sm:pt-0 border-t border-(--bd) sm:border-t-0">
-                    <div className="font-display text-[20px] sm:text-[22px] font-black text-accent-ink">
-                      {formatCurrency(lineTotal)}
-                    </div>
-                    {item.qty > 1 && (
-                      <div className="text-[11px] text-muted sm:mt-0.5">
-                        {item.qty} × {formatCurrency(unitPrice)}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
+            {cart.map((item) => (
+              <CartLineItem
+                key={item.product.id}
+                item={item}
+                depositPercent={pricingRules.preorderDepositPercent}
+                variant="full"
+              />
+            ))}
           </div>
 
           {/* ── Order summary ────────────────────────────── */}
-          <div className="lg:sticky lg:top-24 bg-(--surf) border border-(--bd) p-5 sm:p-7 flex flex-col gap-5">
+          <div className="lg:sticky lg:top-[calc(var(--nh)+24px)] bg-(--surf) border border-(--bd) p-5 sm:p-7 flex flex-col gap-5">
             <h2 className="font-display text-[20px] font-black uppercase tracking-tight">
               Resumen del pedido
             </h2>
@@ -266,14 +128,14 @@ export function CartView({ pricingRules }: CartViewProps) {
                   <span className="text-muted">
                     Descuento{discountName ? ` — ${discountName}` : ''}
                   </span>
-                  <span className="text-green-400 font-semibold">−{formatCurrency(discount)}</span>
+                  <span className="text-success font-semibold">−{formatCurrency(discount)}</span>
                 </div>
               )}
 
               <div className="flex justify-between items-baseline">
                 <span className="text-muted">Envío</span>
                 {shippingFree || shippingCost === 0 ? (
-                  <span className="text-green-400 font-semibold text-[13px]">Gratis</span>
+                  <span className="text-success font-semibold text-[13px]">Gratis</span>
                 ) : (
                   <span className="font-semibold">{formatCurrency(shippingCost)}</span>
                 )}
@@ -315,34 +177,24 @@ export function CartView({ pricingRules }: CartViewProps) {
               )}
             </div>
 
-            <Button variant="accent" size="lg" full onClick={() => router.push('/checkout')}>
-              <CreditCard size={16} className="mr-2" />
+            {/* Navegación = enlaces (Ctrl+click, prefetch), con estilo de botón */}
+            <Link
+              href="/checkout"
+              className={buttonClass({ variant: 'accent', size: 'lg', full: true })}
+            >
+              <CreditCard size={16} aria-hidden />
               Proceder al pago
-            </Button>
+            </Link>
 
-            <Button variant="outline" size="md" full onClick={() => router.push('/catalogo')}>
-              <ArrowLeft size={15} className="mr-2" /> Seguir comprando
-            </Button>
+            <Link
+              href="/catalogo"
+              className={buttonClass({ variant: 'outline', size: 'md', full: true })}
+            >
+              <ArrowLeft size={15} aria-hidden /> Seguir comprando
+            </Link>
           </div>
         </div>
       </div>
-
-      <ConfirmModal
-        open={pendingRemove !== null}
-        onClose={() => setPendingRemove(null)}
-        onConfirm={() => {
-          if (!pendingRemove) return
-          removeItem(pendingRemove.id)
-          toast.success(`"${pendingRemove.name}" eliminado del carrito`)
-          setPendingRemove(null)
-        }}
-        title="¿Eliminar producto?"
-        description={
-          pendingRemove ? `"${pendingRemove.name}" será eliminado de tu carrito.` : undefined
-        }
-        confirmLabel="Eliminar"
-        cancelLabel="Cancelar"
-      />
     </>
   )
 }

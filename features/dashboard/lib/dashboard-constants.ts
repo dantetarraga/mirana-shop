@@ -1,15 +1,21 @@
 import type { OrderListItem } from '@/features/orders/types'
 
-export const PIE_COLORS = ['#00c8ff', '#8b7cff', '#c77cff', '#3fcf7f', '#ffb84a']
+/**
+ * Paleta de series de los gráficos, como NOMBRES de custom properties: recharts
+ * escribe atributos de presentación SVG, donde `var()` no funciona, así que los
+ * valores se resuelven en runtime con `useChartColors()` (sigue el tema).
+ * El primero es --accent-ink, no --gold: el cyan da 1.96:1 sobre blanco.
+ */
+export const PIE_COLOR_VARS = ['--accent-ink', '--c-blue', '--c-violet', '--c-green', '--c-amber'] as const
 
 export const ORDER_STATUS_CFG: Record<string, { label: string; color: string }> = {
-  PENDING: { label: 'Pendiente', color: 'text-[#ffb84a]' },
-  AWAITING_PROOF: { label: 'Esp. comprobante', color: 'text-[#ff9933]' },
-  PAID: { label: 'Pagado', color: 'text-[#3fcf7f]' },
-  PREPARING: { label: 'Preparando', color: 'text-[#00c8ff]' },
-  SHIPPED: { label: 'Enviado', color: 'text-[#8b7cff]' },
-  DELIVERED: { label: 'Entregado', color: 'text-[#3fcf7f]' },
-  CANCELLED: { label: 'Cancelado', color: 'text-[#ff6644]' },
+  PENDING: { label: 'Pendiente', color: 'text-warning' },
+  AWAITING_PROOF: { label: 'Esp. comprobante', color: 'text-warning' },
+  PAID: { label: 'Pagado', color: 'text-success' },
+  PREPARING: { label: 'Preparando', color: 'text-accent-ink' },
+  SHIPPED: { label: 'Enviado', color: 'text-info' },
+  DELIVERED: { label: 'Entregado', color: 'text-success' },
+  CANCELLED: { label: 'Cancelado', color: 'text-danger' },
   REFUNDED: { label: 'Reembolsado', color: 'text-muted' },
 }
 

@@ -6,6 +6,7 @@ import { toProductCards } from '@/features/products/lib/product-card'
 import { countProducts, getProducts } from '@/features/products/queries/product.queries'
 import type { CatalogProduct } from '@/features/products/types/catalog.types'
 import { getHideOutOfStock } from '@/features/settings/queries/store-settings.queries'
+import { consumeRateLimits, requestIp } from '@/shared/lib/rate-limit'
 
 const MIN_QUERY_LENGTH = 2
 const PRODUCT_SUGGESTIONS_TAKE = 6
@@ -28,7 +29,15 @@ async function getPopularCategories(take: number): Promise<CategoryRow[]> {
 }
 
 export async function getSearchSuggestions(rawQuery: string): Promise<SearchSuggestions> {
-  const query = rawQuery.trim()
+  const query = typeof rawQuery === 'string' ? rawQuery.trim().slice(0, 100) : ''
+
+  try {
+    await consumeRateLimits([
+      { scope: 'search-ip', subject: await requestIp(), limit: 120, windowMs: 60_000 },
+    ])
+  } catch {
+    return { query, products: [], categories: [], total: 0 }
+  }
 
   if (query.length < MIN_QUERY_LENGTH) {
     return {

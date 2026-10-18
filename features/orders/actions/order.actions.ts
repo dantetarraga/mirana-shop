@@ -1,14 +1,13 @@
 'use server'
 
-import type { OrderStatus } from '@/generated/prisma/client'
+import { releaseCouponUsage } from '@/features/coupons/lib/usage'
 import { finalizeReservedStock, releaseReservedStock } from '@/features/inventory/lib/stock'
-import { ORDER_LIST_SELECT } from '@/features/orders/queries/order.queries'
+import { canTransitionOrder, OrderStatusConflictError } from '@/features/orders/lib/order-status'
 import { updateOrderStatusSchema } from '@/features/orders/schemas/order.schema'
-import type { OrderListItem } from '@/features/orders/types'
 import { db } from '@/shared/lib/db'
 import { requireAdmin } from '@/shared/lib/require-admin'
 import type { ActionResult } from '@/shared/types/action-result.types'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 
 // ---------------------------------------------------------------------------
 // updateOrderStatus
@@ -41,7 +40,9 @@ export async function updateOrderStatus(
       const current = await tx.order.findUnique({
         where: { id: orderId },
         select: {
+          id: true,
           status: true,
+          couponId: true,
           // `isPreorder` decide si el stock a liberar/confirmar está en
           // `preorderedStock` o en `reservedStock` (ver inventory/lib/stock.ts).
           items: { select: { productId: true, quantity: true, isPreorder: true } },
@@ -51,9 +52,29 @@ export async function updateOrderStatus(
         throw new Error('Pedido no encontrado')
       }
 
-      const wasFinalized = current.status === 'CANCELLED' || current.status === 'REFUNDED'
-      const isCancelling = (status === 'CANCELLED' || status === 'REFUNDED') && !wasFinalized
-      const isAccepting = status === 'PAID' && current.status !== 'PAID'
+      if (!canTransitionOrder(current.status, status)) {
+        throw new Error(`No se puede cambiar un pedido de ${current.status} a ${status}`)
+      }
+
+      if (current.status === status) return { id: current.id, status: current.status }
+
+      const isCancelling = status === 'CANCELLED'
+      const isAccepting = status === 'PAID'
+
+      // La transición se gana antes de tocar stock, pago o cupón. Si otra
+      // transacción cambió el estado leído, se revierte toda esta operación.
+      const changed = await tx.order.updateMany({
+        where: { id: orderId, status: current.status },
+        data: {
+          status,
+          paymentStatus:
+            status === 'PAID' ? 'PAID' : status === 'REFUNDED' ? 'REFUNDED' : undefined,
+          reservationExpiresAt: isAccepting || isCancelling ? null : undefined,
+          cancelledAt: options.cancelledAt ?? undefined,
+          paidAt: options.paidAt ?? undefined,
+        },
+      })
+      if (changed.count === 0) throw new OrderStatusConflictError()
 
       if (isCancelling) {
         for (const item of current.items) {
@@ -64,6 +85,7 @@ export async function updateOrderStatus(
             isPreorder: item.isPreorder,
           })
         }
+        await releaseCouponUsage(tx, current.couponId)
       }
 
       if (isAccepting) {
@@ -77,25 +99,26 @@ export async function updateOrderStatus(
         }
       }
 
-      return tx.order.update({
-        where: { id: orderId },
-        data: {
-          status: status as OrderStatus,
-          paymentStatus: isAccepting ? 'PAID' : undefined,
-          cancelledAt: options.cancelledAt ?? undefined,
-          paidAt: options.paidAt ?? undefined,
-        },
-        select: ORDER_LIST_SELECT,
-      }) as Promise<OrderListItem>
+      if (status === 'PAID' || status === 'REFUNDED') {
+        await tx.payment.updateMany({
+          where: { orderId },
+          data: { status: status === 'PAID' ? 'PAID' : 'REFUNDED' },
+        })
+      }
+
+      return { id: current.id, status }
     })
 
+    // Cancelar o confirmar mueve stock reservado/disponible.
+    revalidateTag('products', 'max')
     revalidatePath('/admin/orders')
     revalidatePath('/admin/dashboard')
+    if (status === 'CANCELLED') revalidatePath('/admin/coupons')
 
     return { success: true, data: { id: updated.id, status: updated.status } }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Error al actualizar estado del pedido'
-    return { success: false, error: message, code: 500 }
+    return { success: false, error: message, code: err instanceof OrderStatusConflictError ? 409 : 500 }
   }
 }
 
@@ -119,11 +142,14 @@ export async function setOrderBalancePaid(
   try {
     const order = await db.order.findUnique({
       where: { id: orderId },
-      select: { dueTotal: true },
+      select: { dueTotal: true, status: true },
     })
     if (!order) return { success: false, error: 'Pedido no encontrado', code: 404 }
     if (Number(order.dueTotal) <= 0) {
       return { success: false, error: 'Este pedido no tiene saldo pendiente', code: 400 }
+    }
+    if (!['PAID', 'PREPARING', 'SHIPPED', 'DELIVERED'].includes(order.status)) {
+      return { success: false, error: 'El pedido debe estar pagado y vigente', code: 409 }
     }
 
     const updated = await db.order.update({

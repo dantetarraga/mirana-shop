@@ -30,10 +30,11 @@ export function CopyValue({ label, value }: { label: string; value: string }) {
           .then(() => toast.success(`${label} copiado`))
           .catch(() => {})
       }}
-      className="inline-flex items-center gap-1.5 font-mono text-[13px] text-text hover:text-accent-ink transition-colors cursor-pointer"
+      className="inline-flex items-center gap-1.5 min-h-9 font-mono text-[14px] text-text hover:text-accent-ink transition-colors cursor-pointer"
     >
       {value}
-      <Copy size={12} className="opacity-50" />
+      <Copy size={13} className="opacity-60" aria-hidden />
+      <span className="sr-only">(copiar {label.toLowerCase()})</span>
     </button>
   )
 }
@@ -45,9 +46,7 @@ export function PaymentAccountsPanel({ accounts, className }: Props) {
     <div className={cn('border border-(--bd)', className)}>
       <div className="px-4 py-3 border-b border-(--bd) flex items-center gap-2">
         <Landmark size={14} className="text-accent-ink" aria-hidden />
-        <span className="text-[10px] tracking-[2px] uppercase text-muted">
-          Cuentas para realizar tu pago
-        </span>
+        <span className="text-[13px] font-semibold text-text">Cuentas para tu pago</span>
       </div>
       <ul className="divide-y divide-(--bd)">
         {accounts.map((acc) => (
@@ -63,19 +62,17 @@ export function PaymentAccountsPanel({ accounts, className }: Props) {
                   className="h-5.5 w-auto max-w-11 object-contain shrink-0"
                 />
               )}
-              <span className="font-display font-bold text-[13px] uppercase tracking-tight">
-                {acc.name}
-              </span>
-              {acc.holder && <span className="text-[11px] text-muted">— {acc.holder}</span>}
+              <span className="text-[14px] font-semibold text-text">{acc.name}</span>
+              {acc.holder && <span className="text-[13px] text-muted">{acc.holder}</span>}
             </div>
 
-            <div className="flex flex-wrap gap-x-6 gap-y-1">
-              <span className="text-[11px] text-muted">
+            <div className="flex flex-wrap items-center gap-x-6">
+              <span className="text-[13px] text-muted">
                 {acc.cci ? 'Cuenta: ' : 'Número: '}
                 <CopyValue label="Número" value={acc.number} />
               </span>
               {acc.cci && (
-                <span className="text-[11px] text-muted">
+                <span className="text-[13px] text-muted">
                   CCI: <CopyValue label="CCI" value={acc.cci} />
                 </span>
               )}
@@ -90,7 +87,7 @@ export function PaymentAccountsPanel({ accounts, className }: Props) {
                   href={acc.qrImageUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block border border-(--bd) bg-white p-1.5 shrink-0"
+                  className="block border border-(--bd) bg-surface-0 p-1.5 shrink-0"
                   title={`Ver el QR de ${acc.name} en grande`}
                 >
                   <Image
@@ -101,7 +98,7 @@ export function PaymentAccountsPanel({ accounts, className }: Props) {
                     className="w-33 h-33 object-contain"
                   />
                 </a>
-                <p className="text-[11px] text-muted leading-snug">
+                <p className="text-[13px] text-muted leading-snug">
                   <span className="inline-flex items-center gap-1 text-text font-semibold">
                     <QrCode size={12} aria-hidden />
                     Escanea el QR

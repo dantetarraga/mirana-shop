@@ -5,13 +5,13 @@ import {
   OrderDetailDrawer,
   type SerializedOrder,
 } from '@/features/orders/components/OrderDetailDrawer'
-import { ORDER_STATUS_LABELS, orderStatusGroup } from '@/features/orders/lib/order-status'
+import { getOrderStatusMeta } from '@/features/orders/lib/order-status'
 import type { OrderStatus } from '@/generated/prisma/client'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
 import { StatusBadge } from '@/features/orders/components/StatusBadge'
-import { useServerAction } from '@/shared/hooks/admin'
+import { useServerAction } from '@/shared/hooks/admin/useServerAction'
 import { cls } from '@/shared/lib/admin/admin-classes'
-import { ORDER_STATUS, fmt } from '@/shared/lib/admin/admin-constants'
+import { fmt } from '@/shared/lib/admin/admin-constants'
 import { cn, formatDate } from '@/shared/lib/utils'
 import { ChevronRight } from 'lucide-react'
 import { useMemo, useState } from 'react'
@@ -41,7 +41,7 @@ export function OrdersClient({ orders }: OrdersClientProps) {
     run(() => updateOrderStatus({ orderId, status }), {
       // El toast nombra el estado exacto que se eligió, no el grupo: si dijera
       // "Pendiente" al marcar "Preparando" parecería que no guardó nada.
-      successMsg: `Estado: ${ORDER_STATUS_LABELS[status] ?? status}`,
+      successMsg: `Estado: ${getOrderStatusMeta(status).label}`,
       // Actualización optimista del drawer — el toast sobrevive al refresh
       onSuccess: () => setDetail((d) => (d?.id === orderId ? { ...d, status } : d)),
       // router.refresh() trae los pedidos actualizados del servidor
@@ -95,7 +95,8 @@ export function OrdersClient({ orders }: OrdersClientProps) {
         header: 'Estado',
         render: (o) => (
           <StatusBadge
-            config={ORDER_STATUS[orderStatusGroup(o.status)] ?? ORDER_STATUS.pendiente}
+            // El admin lista por grupo: el badge muestra el estado que ve el cliente.
+            config={getOrderStatusMeta(o.status).tone}
             variant="filled"
           />
         ),

@@ -93,9 +93,9 @@ export function ProductCarousel({ items }: Props) {
             aria-label="Anterior"
             className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-5 z-10
               size-10 rounded-full bg-(--surf) border border-(--bd) items-center justify-center
-              shadow-md transition-all duration-200
+              shadow-md transition-colors duration-200
               disabled:opacity-0 disabled:pointer-events-none
-              hover:bg-(--gold) hover:border-(--gold) hover:text-black"
+              hover:bg-(--gold) hover:border-(--gold) hover:text-on-accent"
           >
             <ChevronLeft size={18} />
           </button>
@@ -106,9 +106,9 @@ export function ProductCarousel({ items }: Props) {
             aria-label="Siguiente"
             className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-5 z-10
               size-10 rounded-full bg-(--surf) border border-(--bd) items-center justify-center
-              shadow-md transition-all duration-200
+              shadow-md transition-colors duration-200
               disabled:opacity-0 disabled:pointer-events-none
-              hover:bg-(--gold) hover:border-(--gold) hover:text-black"
+              hover:bg-(--gold) hover:border-(--gold) hover:text-on-accent"
           >
             <ChevronRight size={18} />
           </button>

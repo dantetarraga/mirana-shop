@@ -9,8 +9,10 @@ import {
   getRevenueByMonth,
 } from '@/features/orders/queries/order.queries'
 import { countUsers } from '@/features/users/queries/user.queries'
+import { verifyAdmin } from '@/shared/lib/require-admin'
 
 export default async function DashboardPage() {
+  await verifyAdmin()
   const [
     orderStats,
     products,

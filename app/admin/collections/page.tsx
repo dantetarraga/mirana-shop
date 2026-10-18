@@ -1,8 +1,9 @@
 import { countCollections, getCollections } from "@/features/collections/queries/collection.queries";
 import { CollectionsTableClient } from "@/features/collections/components/CollectionsTableClient";
 import { AdminPagination } from "@/shared/components/admin/AdminPagination";
-import { ADMIN_PER_PAGE } from "@/shared/lib/admin/pagination";
+import { ADMIN_PER_PAGE, parsePage } from "@/shared/lib/admin/pagination";
 import { ServerSearchForm } from "@/shared/components/admin/ServerSearchForm";
+import { verifyAdmin } from "@/shared/lib/require-admin";
 
 interface PageProps {
   searchParams: Promise<{ q?: string; page?: string; active?: string }>;
@@ -11,8 +12,9 @@ interface PageProps {
 export const metadata = { title: "Colecciones — Admin Mirana" };
 
 export default async function CollectionsPage({ searchParams }: PageProps) {
+  await verifyAdmin();
   const { q, page, active: activeParam } = await searchParams;
-  const currentPage = Math.max(1, Number(page ?? 1));
+  const currentPage = parsePage(page);
   const perPage = ADMIN_PER_PAGE;
 
   // Filtro por estado activo: undefined = todos, "1" = activas, "0" = inactivas
@@ -60,7 +62,7 @@ export default async function CollectionsPage({ searchParams }: PageProps) {
                 href={buildHref({ active: value, page: "1" })}
                 className={`px-3.5 py-2 text-[11px] tracking-[1px] uppercase font-display font-extrabold border transition-colors ${
                   isActive
-                    ? "bg-(--gold) border-(--gold) text-black"
+                    ? "bg-(--gold) border-(--gold) text-on-accent"
                     : "border-(--bd) text-muted hover:text-text"
                 }`}
               >

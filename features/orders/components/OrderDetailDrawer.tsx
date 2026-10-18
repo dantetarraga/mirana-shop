@@ -6,7 +6,8 @@ import {
   ORDER_STATUS_FLOW,
   ORDER_STATUS_GROUPS,
   ORDER_STATUS_LABELS,
-  orderStatusGroup,
+  ORDER_STATUS_TRANSITIONS,
+  getOrderStatusMeta,
 } from '@/features/orders/lib/order-status'
 import type { OrderListItem, OrderStatusGroup } from '@/features/orders/types'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
@@ -15,6 +16,7 @@ import { Button } from '@/shared/components/ui/Button'
 import { InfoTooltip } from '@/shared/components/ui/InfoTooltip'
 import { ORDER_STATUS, fmt } from '@/shared/lib/admin/admin-constants'
 import { formatDate } from '@/shared/lib/utils'
+import { useState } from 'react'
 
 // ---------------------------------------------------------------------------
 // Tipo serializado exportado
@@ -55,6 +57,8 @@ export function OrderDetailDrawer({
   onBalanceChange,
   isPending,
 }: OrderDetailDrawerProps) {
+  // Solo el botón de estado pulsado muestra el spinner (los demás quedan deshabilitados)
+  const [clickedStatus, setClickedStatus] = useState<string | null>(null)
   const hasBalance = order.dueTotal > 0
   const balancePaid = order.duePaidAt != null
 
@@ -186,7 +190,7 @@ export function OrderDetailDrawer({
                 variant="accent"
                 size="sm"
                 full
-                disabled={isPending}
+                loading={isPending}
                 onClick={() => onBalanceChange(order.id, true)}
               >
                 Marcar saldo como cobrado
@@ -206,17 +210,22 @@ export function OrderDetailDrawer({
       >
         <div className="flex flex-wrap gap-2">
           {ORDER_STATUS_FLOW.map((s) => {
-            const config = ORDER_STATUS[orderStatusGroup(s)] ?? ORDER_STATUS.pendiente
+            const meta = getOrderStatusMeta(s)
+            const allowed = ORDER_STATUS_TRANSITIONS[order.status].includes(s)
             return (
               <Button
                 key={s}
                 variant="outline"
                 size="sm"
-                disabled={isPending || order.status === s}
-                onClick={() => onStatusChange(order.id, s)}
-                className={order.status === s ? config.btnCls : 'text-muted'}
+                disabled={isPending || order.status === s || !allowed}
+                loading={isPending && clickedStatus === s}
+                onClick={() => {
+                  setClickedStatus(s)
+                  onStatusChange(order.id, s)
+                }}
+                className={order.status === s ? meta.tone.btnCls : 'text-muted'}
               >
-                {ORDER_STATUS_LABELS[s]}
+                {meta.label}
               </Button>
             )
           })}

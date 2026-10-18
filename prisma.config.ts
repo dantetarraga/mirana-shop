@@ -5,6 +5,9 @@ export default defineConfig({
   schema: 'prisma/schema.prisma',
   migrations: {
     path: 'prisma/migrations',
+  },
+  datasource: {
+    url: env('DATABASE_URL'),
     // `prisma migrate dev` necesita una base espejo (shadow database) que crea
     // y destruye para validar el diff. En hosting compartido el usuario no
     // suele tener permiso para crear bases, así que se apunta a una segunda
@@ -17,8 +20,5 @@ export default defineConfig({
     ...(process.env.SHADOW_DATABASE_URL
       ? { shadowDatabaseUrl: process.env.SHADOW_DATABASE_URL }
       : {}),
-  },
-  datasource: {
-    url: env('DATABASE_URL'),
   },
 })

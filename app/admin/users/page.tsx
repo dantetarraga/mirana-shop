@@ -2,8 +2,9 @@ import { countUsers, getUsers } from "@/features/users/queries/user.queries";
 import type { UserSegment } from "@/features/users/types";
 import { UsersClient } from "@/features/users/components/UsersClient";
 import { AdminPagination } from "@/shared/components/admin/AdminPagination";
-import { ADMIN_PER_PAGE } from "@/shared/lib/admin/pagination";
+import { ADMIN_PER_PAGE, parsePage } from "@/shared/lib/admin/pagination";
 import { ServerSearchForm } from "@/shared/components/admin/ServerSearchForm";
+import { verifyAdmin } from "@/shared/lib/require-admin";
 import { cn } from "@/shared/lib/utils";
 
 const VALID_SEGMENTS = new Set<UserSegment>(["todos", "vip", "activo", "nuevo"]);
@@ -35,9 +36,10 @@ interface PageProps {
 const PER_PAGE = ADMIN_PER_PAGE;
 
 export default async function UsersPage({ searchParams }: PageProps) {
+  await verifyAdmin();
   const { q, segment: rawSegment, page: rawPage } = await searchParams;
   const segment = toSegment(rawSegment);
-  const page = Math.max(1, Number(rawPage ?? 1));
+  const page = parsePage(rawPage);
   const skip = (page - 1) * PER_PAGE;
 
   const [users, total] = await Promise.all([
@@ -74,7 +76,7 @@ export default async function UsersPage({ searchParams }: PageProps) {
                 className={cn(
                   "px-3.5 py-2 text-[11px] tracking-[1px] uppercase font-display font-extrabold border transition-colors",
                   isActive
-                    ? "bg-(--gold) border-(--gold) text-black"
+                    ? "bg-(--gold) border-(--gold) text-on-accent"
                     : "border-(--bd) text-muted hover:text-text",
                 )}
               >

@@ -5,11 +5,12 @@ import type { TrashRow, TrashType } from '@/features/trash/types'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
-import { useServerAction } from '@/shared/hooks/admin'
+import { useServerAction } from '@/shared/hooks/admin/useServerAction'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { formatDate } from '@/shared/lib/utils'
 import { RotateCcw, Trash2 } from 'lucide-react'
 import { useState } from 'react'
+import { EmptyState } from '@/shared/components/ui/EmptyState'
 
 const SUB_LABEL: Record<TrashType, string> = {
   product: 'SKU',
@@ -35,8 +36,13 @@ interface TrashClientProps {
 export function TrashClient({ type, items }: TrashClientProps) {
   const { isPending, run } = useServerAction()
   const [pendingPurge, setPendingPurge] = useState<TrashRow | null>(null)
+  // Fila + acción en curso: solo ese botón muestra el spinner
+  const [acting, setActing] = useState<{ id: string; kind: 'restore' | 'purge' } | null>(null)
+  const isActing = (id: string, kind: 'restore' | 'purge') =>
+    isPending && acting?.id === id && acting.kind === kind
 
   const handleRestore = (row: TrashRow) => {
+    setActing({ id: row.id, kind: 'restore' })
     run(() => restoreTrashItem(type, row.id), {
       successMsg: `"${row.name}" restaurado`,
       refresh: true,
@@ -47,6 +53,7 @@ export function TrashClient({ type, items }: TrashClientProps) {
     if (!pendingPurge) return
     const row = pendingPurge
     setPendingPurge(null)
+    setActing({ id: row.id, kind: 'purge' })
     run(() => purgeTrashItem(type, row.id), {
       successMsg: `"${row.name}" eliminado definitivamente`,
       refresh: true,
@@ -91,6 +98,8 @@ export function TrashClient({ type, items }: TrashClientProps) {
             variant="outline"
             size="sm"
             disabled={isPending}
+            loading={isActing(r.id, 'restore')}
+            loadingText={`Restaurando ${r.name}…`}
             onClick={() => handleRestore(r)}
             title="Restaurar"
           >
@@ -101,6 +110,8 @@ export function TrashClient({ type, items }: TrashClientProps) {
             size="sm"
             destructive
             disabled={isPending || !!r.purgeBlockedReason}
+            loading={isActing(r.id, 'purge')}
+            loadingText={`Eliminando ${r.name}…`}
             onClick={() => setPendingPurge(r)}
             title={r.purgeBlockedReason ?? 'Eliminar definitivamente'}
           >
@@ -113,9 +124,11 @@ export function TrashClient({ type, items }: TrashClientProps) {
 
   if (items.length === 0) {
     return (
-      <div className="text-center py-16 text-muted text-sm">
-        No hay nada eliminado en esta sección.
-      </div>
+      <EmptyState
+        icon={Trash2}
+        title="La papelera está vacía"
+        description="No hay nada eliminado en esta sección."
+      />
     )
   }
 

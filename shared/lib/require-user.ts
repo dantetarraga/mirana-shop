@@ -1,5 +1,7 @@
 import { auth } from '@/auth'
 import type { AdminDenied } from '@/shared/lib/require-admin'
+import { db } from '@/shared/lib/db'
+import { isSessionVersionValid } from '@/shared/lib/session-version'
 
 // ---------------------------------------------------------------------------
 // requireUser — guard de autenticación para Server Actions del área de cuenta.
@@ -15,7 +17,9 @@ import type { AdminDenied } from '@/shared/lib/require-admin'
 //   const { email } = session
 // ---------------------------------------------------------------------------
 
-export type RequireUserResult = { email: string; denied?: never } | { denied: AdminDenied; email?: never }
+export type RequireUserResult =
+  | { id: string; email: string; denied?: never }
+  | { denied: AdminDenied; id?: never; email?: never }
 
 export async function requireUser(): Promise<RequireUserResult> {
   const session = await auth()
@@ -24,5 +28,14 @@ export async function requireUser(): Promise<RequireUserResult> {
     return { denied: { success: false, error: 'Debes iniciar sesión', code: 401 } }
   }
 
-  return { email: session.user.email }
+  const user = await db.user.findUnique({
+    where: { email: session.user.email },
+    select: { id: true, email: true, deletedAt: true, sessionVersion: true },
+  })
+  // Baja o sesión revocada (versión distinta a la del token): sin sesión.
+  if (!user || user.deletedAt || !isSessionVersionValid(session.sv, user.sessionVersion)) {
+    return { denied: { success: false, error: 'La sesión ya no es válida', code: 401 } }
+  }
+
+  return { id: user.id, email: user.email }
 }

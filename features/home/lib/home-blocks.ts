@@ -6,7 +6,6 @@ export const HOME_BLOCKS = {
   NEW_ARRIVALS: 'new-arrivals',
   FEATURED_PRODUCTS: 'featured-products',
   PREORDER: 'preorder',
-  REVIEWS: 'reviews',
   CTA_BAND: 'cta-band',
 } as const
 
@@ -24,10 +23,6 @@ export const HOME_BLOCK_LABELS: Record<HomeBlockKey, { title: string; desc: stri
   preorder: {
     title: 'Preventas',
     desc: 'Productos en preventa disponibles para reserva.',
-  },
-  reviews: {
-    title: 'Reseñas de clientes',
-    desc: 'Testimonios de compradores anteriores.',
   },
   'cta-band': {
     title: 'Banda de llamada a la acción',

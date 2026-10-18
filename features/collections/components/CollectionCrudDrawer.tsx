@@ -4,6 +4,10 @@ import {
   createCollection,
   updateCollection,
 } from '@/features/collections/actions/collection.actions'
+import {
+  collectionBaseSchema,
+  type CollectionFormValues as FormValues,
+} from '@/features/collections/schemas/collection.schema'
 import type { CollectionRow } from '@/features/collections/types'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { EntityProductsPanel } from '@/shared/components/admin/EntityProductsPanel'
@@ -11,31 +15,14 @@ import { FilterMultiSelect } from '@/shared/components/admin/FilterMultiSelect'
 import { ImageUploadField } from '@/shared/components/admin/ImageUploadField'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
-import { useAutoSlug, useFormEntity, useServerAction } from '@/shared/hooks/admin'
+import { useAutoSlug } from '@/shared/hooks/admin/useAutoSlug'
+import { useFormEntity } from '@/shared/hooks/admin/useFormEntity'
+import { useServerAction } from '@/shared/hooks/admin/useServerAction'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import type { DrawerProduct } from '@/shared/types/entity-products.types'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { z } from 'zod'
-
-// ---------------------------------------------------------------------------
-// Schema del formulario
-// ---------------------------------------------------------------------------
-
-const formSchema = z.object({
-  name: z.string().min(1, 'Nombre requerido').max(100),
-  slug: z
-    .string()
-    .min(1, 'Slug requerido')
-    .regex(/^[a-z0-9-]+$/, 'Solo minúsculas, números y guiones'),
-  description: z.string().max(1000).optional(),
-  imageUrl: z.string().url('URL inválida').optional().or(z.literal('')),
-  active: z.boolean().default(true),
-})
-
-// z.input captura los tipos antes de aplicar .default() — compatible con useForm generic
-type FormValues = z.input<typeof formSchema>
 
 // ---------------------------------------------------------------------------
 // Props
@@ -55,7 +42,8 @@ export function CollectionCrudDrawer({ collection, isNew, onClose }: CollectionC
   const [stagedProducts, setStagedProducts] = useState<DrawerProduct[]>([])
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    // Mismo schema que valida la Server Action: límites y formatos coinciden.
+    resolver: zodResolver(collectionBaseSchema),
     defaultValues: {
       name: '',
       slug: '',
@@ -94,9 +82,7 @@ export function CollectionCrudDrawer({ collection, isNew, onClose }: CollectionC
     const payload = {
       ...data,
       active: data.active ?? true,
-      ...(collection
-        ? { id: collection.id }
-        : { productIds: stagedProducts.map((p) => p.id) }),
+      ...(collection ? { id: collection.id } : { productIds: stagedProducts.map((p) => p.id) }),
     }
     run(collection ? () => updateCollection(payload) : () => createCollection(payload), {
       successMsg: isNew ? 'Colección creada' : 'Colección actualizada',
@@ -152,8 +138,15 @@ export function CollectionCrudDrawer({ collection, isNew, onClose }: CollectionC
         </FormField>
 
         <div className="flex gap-2.5 pt-1">
-          <Button type="submit" variant="accent" size="md" full disabled={isPending}>
-            {isPending ? 'Guardando...' : isNew ? 'Crear colección' : 'Guardar cambios'}
+          <Button
+            type="submit"
+            variant="accent"
+            size="md"
+            full
+            loading={isPending}
+            loadingText="Guardando…"
+          >
+            {isNew ? 'Crear colección' : 'Guardar cambios'}
           </Button>
           <Button type="button" variant="outline" size="md" full onClick={onClose}>
             Cancelar

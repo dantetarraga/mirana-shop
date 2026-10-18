@@ -13,10 +13,11 @@ import {
   type AddressFormValues,
 } from '@/features/profile/components/AddressFormPanel'
 import { Button } from '@/shared/components/ui/Button'
+import { useServerAction } from '@/shared/hooks/useServerAction'
 import { cn } from '@/shared/lib/utils'
 import { Home, MapPin, Pencil, Plus, Star, Trash2 } from 'lucide-react'
 import { use, useState } from 'react'
-import { toast } from 'sonner'
+import { EmptyState } from '@/shared/components/ui/EmptyState'
 
 // ---------------------------------------------------------------------------
 // Address card
@@ -70,7 +71,7 @@ function AddressCard({
           <button
             type="button"
             onClick={onDelete}
-            className="p-1.5 text-muted hover:text-red-500 transition-colors duration-150"
+            className="p-1.5 text-muted hover:text-danger transition-colors duration-150"
             title="Eliminar"
           >
             <Trash2 size={13} />
@@ -117,46 +118,44 @@ export function DireccionesContent({
     setAddresses(await getMyAddresses())
   }
 
+  const { runAsync } = useServerAction()
+
   const handleCreate = async (data: AddressFormValues) => {
-    const result = await createAddress(data)
-    if (result.success) {
-      toast.success('Direccion guardada')
-      setShowForm(false)
-      await reload()
-    } else {
-      toast.error(result.error ?? 'Error al guardar')
-    }
+    await runAsync(() => createAddress(data), {
+      successMessage: 'Direccion guardada',
+      errorMessage: 'Error al guardar',
+      onSuccess: async () => {
+        setShowForm(false)
+        await reload()
+      },
+    })
   }
 
   const handleUpdate = async (id: string, data: AddressFormValues) => {
-    const result = await updateAddress(id, data)
-    if (result.success) {
-      toast.success('Direccion actualizada')
-      setEditingId(null)
-      await reload()
-    } else {
-      toast.error(result.error ?? 'Error al actualizar')
-    }
+    await runAsync(() => updateAddress(id, data), {
+      successMessage: 'Direccion actualizada',
+      errorMessage: 'Error al actualizar',
+      onSuccess: async () => {
+        setEditingId(null)
+        await reload()
+      },
+    })
   }
 
   const handleDelete = async (id: string) => {
-    const result = await deleteAddress(id)
-    if (result.success) {
-      toast.success('Direccion eliminada')
-      setAddresses((prev) => prev.filter((a) => a.id !== id))
-    } else {
-      toast.error(result.error ?? 'Error al eliminar')
-    }
+    await runAsync(() => deleteAddress(id), {
+      successMessage: 'Direccion eliminada',
+      errorMessage: 'Error al eliminar',
+      onSuccess: () => setAddresses((prev) => prev.filter((a) => a.id !== id)),
+    })
   }
 
   const handleSetDefault = async (id: string) => {
-    const result = await setDefaultAddress(id)
-    if (result.success) {
-      toast.success('Direccion predeterminada actualizada')
-      await reload()
-    } else {
-      toast.error(result.error ?? 'Error')
-    }
+    await runAsync(() => setDefaultAddress(id), {
+      successMessage: 'Direccion predeterminada actualizada',
+      errorMessage: 'Error',
+      onSuccess: reload,
+    })
   }
 
   return (
@@ -192,14 +191,19 @@ export function DireccionesContent({
       {/* Lista */}
       {addresses.length === 0 ? (
         !showForm && (
-          <div className="bg-card border border-(--bd) p-12 flex flex-col items-center gap-4 text-center">
-            <MapPin size={32} className="text-muted" />
-            <p className="text-[14px] text-muted">Aun no tienes direcciones guardadas.</p>
-            <Button variant="accent" size="md" onClick={() => setShowForm(true)}>
-              <Plus size={14} className="mr-2" />
-              Agregar primera direccion
-            </Button>
-          </div>
+          <EmptyState
+            as="h2"
+            icon={MapPin}
+            title="Aún no tienes direcciones"
+            description="Guarda una dirección y el checkout la completará por ti."
+            className="bg-card border border-(--bd)"
+            action={
+              <Button variant="accent" size="md" onClick={() => setShowForm(true)}>
+                <Plus size={14} className="mr-2" />
+                Agregar primera dirección
+              </Button>
+            }
+          />
         )
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

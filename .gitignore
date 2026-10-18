@@ -29,6 +29,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+dev-log.txt
+.claude/settings.local.json
+.codex/
 
 # env files — .env.example es commitable, el resto no
 .env*

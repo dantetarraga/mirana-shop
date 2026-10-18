@@ -8,7 +8,8 @@ import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { FilterMultiSelect } from '@/shared/components/admin/FilterMultiSelect'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
-import { useFormEntity, useServerAction } from '@/shared/hooks/admin'
+import { useFormEntity } from '@/shared/hooks/admin/useFormEntity'
+import { useServerAction } from '@/shared/hooks/admin/useServerAction'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -136,8 +137,8 @@ export function HomeSectionDrawer({ section, isNew, onClose }: HomeSectionDrawer
         </p>
 
         <div className="flex gap-2.5 pt-1">
-          <Button type="submit" variant="accent" size="md" full disabled={isPending}>
-            {isPending ? 'Guardando...' : isNew ? 'Crear sección' : 'Guardar cambios'}
+          <Button type="submit" variant="accent" size="md" full loading={isPending} loadingText="Guardando…">
+            {isNew ? 'Crear sección' : 'Guardar cambios'}
           </Button>
           <Button type="button" variant="outline" size="md" full onClick={onClose}>
             Cancelar

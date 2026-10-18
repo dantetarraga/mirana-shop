@@ -1,6 +1,7 @@
 import 'server-only'
 import type { DeliveryMethodOption } from '@/features/delivery/types'
 import { db } from '@/shared/lib/db'
+import { cache } from 'react'
 
 // ---------------------------------------------------------------------------
 // Formas de entrega — administrables en /admin/delivery, leídas por el checkout.
@@ -38,7 +39,7 @@ function serialize(row: Row): DeliveryMethodOption {
 }
 
 /** Solo métodos activos — para el checkout */
-export async function getActiveDeliveryMethods(): Promise<DeliveryMethodOption[]> {
+async function getActiveDeliveryMethodsImpl(): Promise<DeliveryMethodOption[]> {
   const rows = await db.deliveryMethod.findMany({
     where: { active: true },
     select: SELECT,
@@ -69,3 +70,6 @@ export async function getActiveDeliveryMethodById(
   })
   return row ? serialize(row) : null
 }
+
+/** Deduplicada por request con `cache()`. */
+export const getActiveDeliveryMethods = cache(getActiveDeliveryMethodsImpl)

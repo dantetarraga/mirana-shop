@@ -2,7 +2,7 @@
 
 import { adjustStock } from '@/features/inventory/actions/inventory.actions'
 import { Button } from '@/shared/components/ui/Button'
-import { useServerAction } from '@/shared/hooks/admin'
+import { useServerAction } from '@/shared/hooks/admin/useServerAction'
 import { Minus, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 

@@ -1,5 +1,7 @@
 import { CheckoutView } from '@/features/checkout/components/CheckoutView'
 import { getPricingRules } from '@/features/checkout/queries/pricing.queries'
+import { getMyAddresses, getMyProfile } from '@/features/profile/actions/account-profile.actions'
+import { orderReservationTtlMinutes } from '@/features/orders/lib/reservation'
 import { getActivePaymentAccounts } from '@/features/settings/queries/payment-accounts.queries'
 import { getWhatsappPhone } from '@/features/settings/queries/store-settings.queries'
 import type { Metadata } from 'next'
@@ -7,17 +9,31 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = { robots: { index: false, follow: false } }
 
 export default async function CheckoutPage() {
-  const [paymentAccounts, whatsappPhone, pricingRules] = await Promise.all([
+  // Perfil y direcciones salen del servidor junto con el resto, en paralelo.
+  // Antes CheckoutView los pedía en dos useEffect después de hidratar: el
+  // formulario se pintaba vacío y saltaba al rellenarse (y el DNI llegaba tarde).
+  // Ambas derivan el usuario de la sesión (requireUser) y sin sesión devuelven
+  // null / [] sin tocar la BD más allá del guard.
+  const [paymentAccounts, whatsappPhone, pricingRules, profile, addresses] = await Promise.all([
     getActivePaymentAccounts(),
     getWhatsappPhone(),
     getPricingRules(),
+    getMyProfile(),
+    getMyAddresses(),
   ])
 
   return (
+    // `key` por cuenta: al iniciar sesión desde el checkout, CheckoutView pide
+    // router.refresh() y se remonta con el perfil y las direcciones guardadas
+    // (useForm solo lee sus defaultValues al montar).
     <CheckoutView
+      key={profile?.email ?? 'guest'}
       paymentAccounts={paymentAccounts}
       whatsappPhone={whatsappPhone}
       pricingRules={pricingRules}
+      initialProfile={profile}
+      initialAddresses={addresses}
+      reservationMinutes={orderReservationTtlMinutes()}
     />
   )
 }

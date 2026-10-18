@@ -1,6 +1,7 @@
 'use client'
 
-import { PIE_COLORS } from '@/features/dashboard/lib/dashboard-constants'
+import { PIE_COLOR_VARS } from '@/features/dashboard/lib/dashboard-constants'
+import { useChartColors } from '@/features/dashboard/lib/use-chart-colors'
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 
 interface CategoryDonutProps {
@@ -8,6 +9,7 @@ interface CategoryDonutProps {
 }
 
 export function CategoryDonut({ data }: CategoryDonutProps) {
+  const colors = useChartColors(PIE_COLOR_VARS)
   return (
     <ResponsiveContainer width="100%" height={200}>
       <PieChart>
@@ -21,14 +23,14 @@ export function CategoryDonut({ data }: CategoryDonutProps) {
           strokeWidth={0}
         >
           {data.map((_, i) => (
-            <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+            <Cell key={i} fill={colors[i % colors.length]} />
           ))}
         </Pie>
         <Tooltip
           formatter={(v) => [`${v}%`, 'Ventas']}
           contentStyle={{
             background: 'var(--card-h)',
-            border: '1px solid var(--gold)',
+            border: '1px solid var(--bdh)',
             borderRadius: 0,
           }}
           labelStyle={{ color: 'var(--mt)' }}

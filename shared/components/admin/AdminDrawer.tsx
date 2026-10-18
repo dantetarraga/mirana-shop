@@ -3,6 +3,7 @@
 import { Button } from '@/shared/components/ui/Button'
 import { useFocusTrap } from '@/shared/hooks/useFocusTrap'
 import { cls } from '@/shared/lib/admin/admin-classes'
+import { cn } from '@/shared/lib/utils'
 import { X } from 'lucide-react'
 import React, { useEffect, useId } from 'react'
 
@@ -11,9 +12,20 @@ interface AdminDrawerProps {
   sub?: string
   onClose: () => void
   children: React.ReactNode
+  /**
+   * `md` (por defecto) para formularios; `lg` para contenido tabular ancho
+   * como el preview de una importación por Excel.
+   */
+  size?: 'md' | 'lg'
 }
 
-export function AdminDrawer({ title, sub, onClose, children }: AdminDrawerProps) {
+const SIZE_CLASSES = {
+  md: { panel: 'w-110', gutter: 'px-7', body: 'gap-4.5' },
+  lg: { panel: 'w-175', gutter: 'px-5 sm:px-7', body: 'gap-5' },
+} as const
+
+export function AdminDrawer({ title, sub, onClose, children, size = 'md' }: AdminDrawerProps) {
+  const sizing = SIZE_CLASSES[size]
   const panelRef = useFocusTrap<HTMLDivElement>(true)
   const titleId = useId()
 
@@ -40,9 +52,17 @@ export function AdminDrawer({ title, sub, onClose, children }: AdminDrawerProps)
         aria-modal="true"
         aria-labelledby={titleId}
         onClick={(e) => e.stopPropagation()}
-        className="w-110 max-w-full h-screen overflow-y-auto bg-surf border-l border-(--bd)"
+        className={cn(
+          sizing.panel,
+          'max-w-full h-screen overflow-y-auto bg-surf border-l border-(--bd)',
+        )}
       >
-        <div className="px-7 py-6 flex justify-between items-start sticky top-0 z-5 bg-surf border-b border-(--bd)">
+        <div
+          className={cn(
+            sizing.gutter,
+            'py-6 flex justify-between items-start sticky top-0 z-5 bg-surf border-b border-(--bd)',
+          )}
+        >
           <div>
             {sub && <div className={cls.label}>{sub}</div>}
             <div id={titleId} className="font-display text-[26px] font-black tracking-[-0.5px]">
@@ -53,7 +73,7 @@ export function AdminDrawer({ title, sub, onClose, children }: AdminDrawerProps)
             <X size={16} />
           </Button>
         </div>
-        <div className="px-7 pt-6 pb-10 flex flex-col gap-4.5">{children}</div>
+        <div className={cn(sizing.gutter, sizing.body, 'pt-6 pb-10 flex flex-col')}>{children}</div>
       </div>
     </div>
   )

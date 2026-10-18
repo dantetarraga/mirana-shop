@@ -1,96 +1,121 @@
 'use client'
 
-import type { BrandRow } from '@/features/brands/types'
+import { FadeImage } from '@/shared/components/ui/FadeImage'
 import { cn } from '@/shared/lib/utils'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
-import Image from 'next/image'
 import Link from 'next/link'
-import { useEffect, useRef, useState } from 'react'
 
-interface BrandsCarouselProps {
-  brands: BrandRow[]
+export interface BrandShowcaseItem {
+  id: string
+  name: string
+  slug: string
+  /** Imagen de la marca subida en el admin: si existe, llena el círculo. */
+  imageUrl: string | null
+  tagline: string | null
+  productCount: number
+  /** Foto de respaldo: heroUrl de la marca o su producto destacado. */
+  coverUrl: string | null
 }
 
-export function BrandsCarousel({ brands }: BrandsCarouselProps) {
-  const trackRef = useRef<HTMLDivElement>(null)
-  // Si todas las marcas caben sin scroll, se centran y las flechas se ocultan.
-  const [hasOverflow, setHasOverflow] = useState(false)
+interface BrandsCarouselProps {
+  /** Destacadas en el orden del admin (`position`); enlazan a /marcas/[slug]. */
+  brands: BrandShowcaseItem[]
+}
 
-  useEffect(() => {
-    const track = trackRef.current
-    if (!track) return
-    // ResizeObserver dispara al observar y en cada cambio de tamaño
-    const ro = new ResizeObserver(() => {
-      setHasOverflow(track.scrollWidth > track.clientWidth + 1)
-    })
-    ro.observe(track)
-    return () => ro.disconnect()
-  }, [])
+/** Mínimo de círculos por vuelta: con pocas marcas la fila se repite para
+ *  que el bucle no deje un hueco en pantallas anchas. */
+const MIN_PER_LOOP = 10
+/** Segundos por marca: la velocidad es la misma con 4 o con 20 marcas. */
+const SECONDS_PER_ITEM = 3.5
 
-  if (brands.length === 0) return null
-
-  const scrollByPage = (dir: 1 | -1) => {
-    const track = trackRef.current
-    if (!track) return
-    track.scrollBy({ left: dir * track.clientWidth * 0.8, behavior: 'smooth' })
-  }
-
+function BrandCircle({ brand, hidden }: { brand: BrandShowcaseItem; hidden?: boolean }) {
+  // Siempre a sangre: la imagen ocupa el círculo entero. Para que un logo no
+  // se recorte, conviene subirlo cuadrado y con el fondo ya incluido.
+  const src = brand.imageUrl || brand.coverUrl
   return (
-    <section className="bg-surf border-b border-(--bd)">
-      <div className="flex items-center">
-        {hasOverflow && (
-          <button
-            type="button"
-            aria-label="Marcas anteriores"
-            onClick={() => scrollByPage(-1)}
-            className="shrink-0 h-14 sm:h-18 px-2 sm:px-2.5 bg-transparent border-none text-muted transition-colors duration-200 hover:text-accent-ink"
-          >
-            <ChevronLeft size={26} />
-          </button>
-        )}
-
-        <div
-          ref={trackRef}
+    <li className="shrink-0 px-3 sm:px-4" aria-hidden={hidden || undefined}>
+      <Link
+        href={`/marcas/${brand.slug}`}
+        tabIndex={hidden ? -1 : undefined}
+        className="group flex flex-col items-center gap-3 w-28 sm:w-36 no-underline focus-visible:outline-none"
+      >
+        <span
           className={cn(
-            'flex-1 flex overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
-            !hasOverflow && 'justify-center',
+            'relative block w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden',
+            'ring-1 ring-(--bd) ring-offset-4 ring-offset-bg transition-[box-shadow,transform] duration-300',
+            'group-hover:ring-2 group-hover:ring-(--brand-moon) group-hover:-translate-y-1',
+            'group-focus-visible:ring-2 group-focus-visible:ring-ring',
+            'motion-reduce:transition-none motion-reduce:group-hover:translate-y-0',
+            'bg-(--brand-navy)',
           )}
         >
-          {brands.map((b) => (
-            <Link
-              key={b.id}
-              href={`/catalogo?brand=${b.slug}`}
-              title={b.name}
-              className="brand-item relative shrink-0 w-32 h-14 sm:w-44 sm:h-18 flex items-center justify-center border-r border-(--bd) no-underline first:border-l"
-            >
-              {b.imageUrl ? (
-                <Image src={b.imageUrl} alt={b.name} fill className="object-cover" />
-              ) : (
-                <div className="text-center">
-                  <div className="font-display font-black uppercase tracking-[1px] leading-none text-text text-[18px]">
-                    {b.name}
-                  </div>
-                  {b.tagline && (
-                    <div className="font-sans text-[8px] tracking-[2.5px] font-medium text-muted mt-1">
-                      {b.tagline}
-                    </div>
-                  )}
-                </div>
-              )}
-            </Link>
-          ))}
-        </div>
+          {src ? (
+            <FadeImage
+              src={src}
+              alt=""
+              fill
+              sizes="144px"
+              className="object-cover transition-transform duration-500 group-hover:scale-110 motion-reduce:transition-none"
+            />
+          ) : (
+            <span className="absolute inset-0 grid place-items-center px-3 text-center font-display font-black uppercase leading-none text-on-media text-[18px]">
+              {brand.name}
+            </span>
+          )}
+        </span>
+        <span className="text-center font-display font-bold uppercase tracking-[0.3px] text-[14px] sm:text-[15px] leading-tight text-text group-hover:text-accent-ink transition-colors">
+          {brand.name}
+        </span>
+      </Link>
+    </li>
+  )
+}
 
-        {hasOverflow && (
-          <button
-            type="button"
-            aria-label="Más marcas"
-            onClick={() => scrollByPage(1)}
-            className="shrink-0 h-14 sm:h-18 px-2 sm:px-2.5 bg-transparent border-none text-muted transition-colors duration-200 hover:text-accent-ink"
-          >
-            <ChevronRight size={26} />
-          </button>
-        )}
+/**
+ * Marcas del inicio: círculos en una fila que avanza sola en bucle infinito.
+ * Se detiene con el mouse o el foco (WCAG 2.2.2) y, con movimiento reducido,
+ * queda quieta y se recorre deslizando. La segunda copia de la fila solo
+ * existe para cerrar el bucle: es invisible para lectores y teclado.
+ */
+export function BrandsCarousel({ brands }: BrandsCarouselProps) {
+  if (brands.length === 0) return null
+
+  const repeats = Math.max(1, Math.ceil(MIN_PER_LOOP / brands.length))
+  const loop = Array.from({ length: repeats }, () => brands).flat()
+  const duration = `${loop.length * SECONDS_PER_ITEM}s`
+
+  return (
+    <section aria-labelledby="home-brands-title" className="pt-12 md:pt-16">
+      <div className="shell flex items-end justify-between gap-4 mb-6">
+        <h2
+          id="home-brands-title"
+          className="font-display font-black uppercase tracking-[-0.5px] leading-none text-[clamp(26px,3.4vw,40px)]"
+        >
+          Marcas
+        </h2>
+        <Link
+          href="/marcas"
+          className="text-[13px] font-semibold text-accent-ink underline underline-offset-2 hover:no-underline"
+        >
+          Ver todas
+        </Link>
+      </div>
+
+      <div
+        data-brand-marquee
+        className="relative overflow-hidden motion-reduce:overflow-x-auto py-2 [mask-image:linear-gradient(to_right,transparent,black_6%,black_94%,transparent)] motion-reduce:[mask-image:none]"
+      >
+        <ul
+          className="flex w-max animate-marquee motion-reduce:animate-none"
+          style={{ animationDuration: duration }}
+        >
+          {loop.map((b, i) => (
+            <BrandCircle key={`a-${i}-${b.id}`} brand={b} hidden={i >= brands.length} />
+          ))}
+          {/* Copia para el bucle: el marquee se desplaza -50%. */}
+          {loop.map((b, i) => (
+            <BrandCircle key={`b-${i}-${b.id}`} brand={b} hidden />
+          ))}
+        </ul>
       </div>
     </section>
   )

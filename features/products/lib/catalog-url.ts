@@ -10,7 +10,12 @@ export type CatalogUrlParams = {
   page?: number
 }
 
-export function buildCatalogUrl(params: CatalogUrlParams): string {
+/**
+ * URL de un listado con filtros. `path` es la página que lista: /catalogo,
+ * /categorias/[slug] o /marcas/[slug] (estas dos fijan su propio ámbito, así
+ * que no llevan `cat`/`brand` del ámbito en la query).
+ */
+export function buildCatalogUrl(params: CatalogUrlParams, path = '/catalogo'): string {
   const p = new URLSearchParams()
   if (params.q) p.set('q', params.q)
   if (params.cat?.length) p.set('cat', params.cat.join(','))
@@ -22,5 +27,5 @@ export function buildCatalogUrl(params: CatalogUrlParams): string {
   if (params.sort && params.sort !== 'relevance') p.set('sort', params.sort)
   if (params.page && params.page > 1) p.set('page', String(params.page))
   const qs = p.toString()
-  return qs ? `/catalogo?${qs}` : '/catalogo'
+  return qs ? `${path}?${qs}` : path
 }

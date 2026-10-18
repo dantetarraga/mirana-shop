@@ -3,6 +3,7 @@ import type { DiscountPromoRule, PricingRules } from '@/features/checkout/lib/pr
 import { getActiveDeliveryMethods } from '@/features/delivery/queries/delivery.queries'
 import { getActivePromotions } from '@/features/promotions/queries/promotion.queries'
 import { getStoreSettings } from '@/features/settings/queries/store-settings.queries'
+import { cache } from 'react'
 
 /**
  * Reglas de precios vigentes según las promociones activas en la BD.
@@ -13,7 +14,7 @@ import { getStoreSettings } from '@/features/settings/queries/store-settings.que
  * solas, hace falta que el cliente escriba el código en el checkout (ahí las
  * resuelve findRedeemableCoupon).
  */
-export async function getPricingRules(): Promise<PricingRules> {
+async function getPricingRulesImpl(): Promise<PricingRules> {
   const [promos, { baseShippingCost, preorderDepositPercent }, deliveryMethods] = await Promise.all([
     getActivePromotions(),
     getStoreSettings(),
@@ -46,3 +47,6 @@ export async function getPricingRules(): Promise<PricingRules> {
     deliveryMethods,
   }
 }
+
+/** Deduplicada por request con `cache()`. */
+export const getPricingRules = cache(getPricingRulesImpl)

@@ -5,12 +5,13 @@ import type { OrderListItem } from '@/features/orders/types'
 import type { ProfileData } from '@/features/profile/actions/account-profile.actions'
 import { ProfileCard } from '@/features/profile/components/ProfileCard'
 import { ProfileEditForm } from '@/features/profile/components/ProfileEditForm'
-import { Button } from '@/shared/components/ui/Button'
+import { Button, buttonClass } from '@/shared/components/ui/Button'
 import type { SessionUser } from '@/shared/hooks/useUser'
-import { LogOut } from 'lucide-react'
+import { LogOut, Package } from 'lucide-react'
 import { logout } from '@/features/auth/lib/logout'
 import Link from 'next/link'
 import { use, useState } from 'react'
+import { EmptyState } from '@/shared/components/ui/EmptyState'
 
 export function PerfilContent({
   user,
@@ -107,13 +108,16 @@ export function PerfilContent({
           </div>
 
           {orders.length === 0 ? (
-            <div className="bg-card border border-(--bd) p-8 text-center flex flex-col items-center gap-3">
-              <p className="text-[13px] text-muted">Aun no tienes pedidos.</p>
-              <Link href="/catalogo">
-                <Button variant="accent" size="sm">
-                  Ver catalogo
-                </Button>
-              </Link>
+            <div className="bg-card border border-(--bd)">
+              <EmptyState
+                icon={Package}
+                title="Aún no tienes pedidos"
+                action={
+                  <Link href="/catalogo" className={buttonClass({ variant: 'accent', size: 'sm' })}>
+                    Ver catálogo
+                  </Link>
+                }
+              />
             </div>
           ) : (
             <OrdersCarousel orders={orders} />

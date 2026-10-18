@@ -23,7 +23,8 @@ interface CollectionAddAllButtonProps {
 }
 
 export function CollectionAddAllButton({ products, collectionName }: CollectionAddAllButtonProps) {
-  const { cart, addManyToCart } = useCartStore()
+  const cart = useCartStore((s) => s.cart)
+  const addManyToCart = useCartStore((s) => s.addManyToCart)
 
   // Lo que realmente entraría ahora mismo — el mismo criterio y el mismo orden
   // que aplica addManyToCart (primero stock, después tipo de carrito), para que
@@ -75,7 +76,7 @@ export function CollectionAddAllButton({ products, collectionName }: CollectionA
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <div className="text-[10px] tracking-[2px] uppercase text-muted mb-2.5">Set completo</div>
+        <div className="text-[11px] tracking-[2px] uppercase text-muted mb-2.5">Set completo</div>
         <p className="text-[13px] text-muted leading-relaxed max-w-120">
           Agrega una unidad de cada producto disponible de la colección. También puedes elegirlos
           uno a uno más abajo.

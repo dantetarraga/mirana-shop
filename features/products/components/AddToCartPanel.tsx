@@ -11,8 +11,8 @@ import {
 } from '@/features/products/lib/stock'
 import type { CatalogProduct } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
-import { Check, Minus, PackageCheck, Plus, TriangleAlert } from 'lucide-react'
-import { useState } from 'react'
+import { Check, Minus, PackageCheck, Plus, ShoppingBag, TriangleAlert } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 interface Props {
@@ -22,7 +22,10 @@ interface Props {
 }
 
 export function AddToCartPanel({ product, defaultDepositPercent }: Props) {
-  const { addToCart, updateQty, setLineMode } = useCartStore()
+  const addToCart = useCartStore((s) => s.addToCart)
+  const updateQty = useCartStore((s) => s.updateQty)
+  const setLineMode = useCartStore((s) => s.setLineMode)
+  const setCartOpen = useCartStore((s) => s.setCartOpen)
   const {
     product: p,
     qtyInCart,
@@ -35,6 +38,21 @@ export function AddToCartPanel({ product, defaultDepositPercent }: Props) {
   } = useCartLine(product, defaultDepositPercent)
   const [chosenQty, setQty] = useState(1)
   const [chosenMode, setChosenMode] = useState<PreorderMode>('FULL')
+  // La barra fija de móvil solo aparece cuando el CTA principal salió de
+  // pantalla: duplicarlo mientras está a la vista sería ruido.
+  const ctaRef = useRef<HTMLDivElement>(null)
+  const [ctaVisible, setCtaVisible] = useState(true)
+
+  useEffect(() => {
+    const el = ctaRef.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const io = new IntersectionObserver(([entry]) => setCtaVisible(entry.isIntersecting), {
+      // El navbar fijo tapa la parte de arriba: lo que queda debajo no cuenta.
+      rootMargin: '-80px 0px 0px 0px',
+    })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
 
   const loading = ctaState === 'loading'
   const inCart = qtyInCart > 0
@@ -107,7 +125,7 @@ export function AddToCartPanel({ product, defaultDepositPercent }: Props) {
         <div
           aria-live="polite"
           className={`text-[12px] font-semibold tracking-[0.5px] flex items-center gap-1.5 ${
-            stockNotice.tone === 'warn' ? 'text-[#ffb84a]' : 'text-info'
+            stockNotice.tone === 'warn' ? 'text-warning' : 'text-info'
           }`}
         >
           <stockNotice.Icon size={14} className="shrink-0" aria-hidden />
@@ -120,7 +138,7 @@ export function AddToCartPanel({ product, defaultDepositPercent }: Props) {
           un producto que no lo permite igual se cobra completo. */}
       {preorder && !isOutOfStock && (
         <div>
-          <div className="text-[10px] tracking-[2px] uppercase text-muted mb-2.5">
+          <div className="text-[11px] tracking-[2px] uppercase text-muted mb-2.5">
             Forma de pago
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -151,7 +169,7 @@ export function AddToCartPanel({ product, defaultDepositPercent }: Props) {
                     : 'border-(--bd) hover:border-(--bdh)'
                 }`}
               >
-                <span className="block text-[10px] tracking-[2px] uppercase text-muted">
+                <span className="block text-[11px] tracking-[2px] uppercase text-muted">
                   {opt.title}
                 </span>
                 <span className="block font-display text-[22px] font-black text-accent-ink leading-tight">
@@ -169,7 +187,7 @@ export function AddToCartPanel({ product, defaultDepositPercent }: Props) {
           "En tu carrito 3" al hidratar era el mismo parpadeo que el botón. */}
       {!isOutOfStock && ctaState !== 'capped' && !loading && (
         <div>
-          <div className="text-[10px] tracking-[2px] uppercase text-muted mb-2.5">
+          <div className="text-[11px] tracking-[2px] uppercase text-muted mb-2.5">
             {inCart ? 'En tu carrito' : 'Cantidad'}
           </div>
           {
@@ -182,10 +200,10 @@ export function AddToCartPanel({ product, defaultDepositPercent }: Props) {
                   aria-label="Quitar una unidad"
                   onClick={decrease}
                 >
-                  <Minus size={14} />
+                  <Minus size={14} aria-hidden />
                 </Button>
                 <div
-                  className="w-13 text-center font-display text-[20px] font-extrabold border-l border-r border-(--bd) flex items-center justify-center h-10.5"
+                  className="w-13 text-center font-display text-[20px] font-extrabold border-l border-r border-(--bd) flex items-center justify-center h-11"
                   aria-live="polite"
                 >
                   {qty}
@@ -197,7 +215,7 @@ export function AddToCartPanel({ product, defaultDepositPercent }: Props) {
                   aria-label="Agregar una unidad"
                   onClick={increase}
                 >
-                  <Plus size={14} />
+                  <Plus size={14} aria-hidden />
                 </Button>
               </div>
               {inCart && (
@@ -212,6 +230,7 @@ export function AddToCartPanel({ product, defaultDepositPercent }: Props) {
 
       {/* El verde deriva del carrito, no de un temporizador: mientras el
           producto siga agregado, ese es su estado. */}
+      <div ref={ctaRef}>
       {loading ? (
         <CartCtaSkeleton withQuantity={!isOutOfStock} />
       ) : (
@@ -250,6 +269,7 @@ export function AddToCartPanel({ product, defaultDepositPercent }: Props) {
           )}
         </Button>
       )}
+      </div>
 
       {preorder && mode === 'PARTIAL' && !isOutOfStock && !loading && (
         <p className="text-[12px] text-muted -mt-2">
@@ -259,6 +279,49 @@ export function AddToCartPanel({ product, defaultDepositPercent }: Props) {
           </span>{' '}
           cuando el producto esté listo para entregarse.
         </p>
+      )}
+
+      {/* Barra de compra fija (móvil/tablet). `data-sticky-cta` sube el FAB de
+          WhatsApp y reserva espacio al pie (globals.css). Sale de la vista con
+          `translate` en vez de desmontarse para no saltar al aparecer. */}
+      {!loading && ctaState !== 'out-of-stock' && (
+        <div
+          data-sticky-cta
+          aria-hidden={ctaVisible}
+          inert={ctaVisible}
+          className={`sticky-cta lg:hidden fixed inset-x-0 bottom-0 z-150 bg-surf/95 backdrop-blur-md border-t border-(--bd) px-4 pt-3 flex items-center gap-3 transition-transform duration-200 ${
+            ctaVisible ? 'translate-y-full' : 'translate-y-0'
+          }`}
+        >
+          <div className="min-w-0 flex-1">
+            <div className="text-[12px] text-muted truncate">{p.name}</div>
+            <div className="font-display text-[22px] font-black text-accent-ink leading-none">
+              S/ {(payNowUnit * qty).toFixed(2)}
+            </div>
+          </div>
+          {ctaState === 'in-cart' ? (
+            <Button variant="success" size="md" onClick={() => setCartOpen(true)}>
+              <ShoppingBag size={15} aria-hidden />
+              Ver carrito
+            </Button>
+          ) : (
+            <Button
+              variant="accent"
+              size="md"
+              disabled={ctaState === 'capped'}
+              onClick={() => {
+                if (ctaState !== 'idle') return
+                if (addToCart(p, qty, mode) > 0) {
+                  toast.success(
+                    isPreorder ? `"${p.name}" reservado` : `"${p.name}" agregado al carrito`,
+                  )
+                }
+              }}
+            >
+              {isPreorder ? 'Reservar' : 'Agregar'}
+            </Button>
+          )}
+        </div>
       )}
     </div>
   )

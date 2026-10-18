@@ -1,5 +1,6 @@
 'use server'
 
+import { auth } from '@/auth'
 import type { PaymentMethod, ProductStatus } from '@/generated/prisma/client'
 import { cartKindOf, hasMixedKinds } from '@/features/cart/lib/cart-kind'
 import {
@@ -12,6 +13,7 @@ import {
   isDeliveryMethodEligible,
 } from '@/features/checkout/lib/delivery-eligibility'
 import { computeTotals, effectivePrice } from '@/features/checkout/lib/pricing'
+import { nextOrderCode } from '@/features/checkout/lib/order-code'
 import { getPricingRules } from '@/features/checkout/queries/pricing.queries'
 import { buildCheckoutSchema } from '@/features/checkout/schemas/checkout.schema'
 import {
@@ -21,8 +23,10 @@ import {
 import { getActiveDeliveryMethodById } from '@/features/delivery/queries/delivery.queries'
 import { formatDeliveryLocation, type DeliveryMethodOption } from '@/features/delivery/types'
 import { reserveStockForOrder } from '@/features/inventory/lib/stock'
+import { orderReservationTtlMinutes } from '@/features/orders/lib/reservation'
 import { db } from '@/shared/lib/db'
-import { revalidatePath } from 'next/cache'
+import { consumeRateLimits, RateLimitError, requestIp } from '@/shared/lib/rate-limit'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { z } from 'zod'
 
 // ---------------------------------------------------------------------------
@@ -75,11 +79,19 @@ const itemsSchema = z
   )
   .min(1, 'El carrito está vacío')
   .max(50)
+  .refine(
+    (items) => new Set(items.map((item) => item.productId)).size === items.length,
+    'El carrito contiene productos duplicados',
+  )
 
 /** Lo mínimo que hace falta leer del formulario antes de conocer sus reglas */
 const deliveryPickSchema = z.object({
   deliveryMethodId: z.string().optional(),
   couponCode: z.string().optional(),
+})
+
+const checkoutIdentitySchema = z.object({
+  email: z.string().trim().toLowerCase().email().max(254),
 })
 
 // ---------------------------------------------------------------------------
@@ -102,6 +114,25 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   const picked = deliveryPickSchema.safeParse(input.form)
   if (!picked.success) {
     return { success: false, error: 'Datos de entrega inválidos' }
+  }
+
+  const identity = checkoutIdentitySchema.safeParse(input.form)
+  if (!identity.success) return { success: false, error: 'Correo electrónico inválido' }
+
+  try {
+    const ip = await requestIp()
+    await consumeRateLimits([
+      { scope: 'checkout-ip', subject: ip, limit: 5, windowMs: 10 * 60_000 },
+      { scope: 'checkout-email', subject: identity.data.email, limit: 3, windowMs: 10 * 60_000 },
+    ])
+  } catch (err) {
+    return {
+      success: false,
+      error:
+        err instanceof RateLimitError
+          ? err.message
+          : 'El checkout no está disponible temporalmente. Inténtalo más tarde.',
+    }
   }
 
   const rules = await getPricingRules()
@@ -225,6 +256,18 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
 
   const d = parsed.data
 
+  // Si existe una sesión vigente, el dueño se deriva de ella. Nunca se
+  // adjudican pedidos de invitado solo porque coincida el email escrito.
+  const session = await auth()
+  const accountUser = session?.user?.email
+    ? await db.user.findUnique({
+        where: { email: session.user.email },
+        select: { id: true, email: true, deletedAt: true },
+      })
+    : null
+  const activeAccount = accountUser && !accountUser.deletedAt ? accountUser : null
+  const checkoutEmail = activeAccount?.email ?? d.email
+
   // La sede tiene que pertenecer al método elegido
   const location = requiresLocation
     ? (method?.locations.find((loc) => loc.id === d.deliveryLocationId) ?? null)
@@ -275,8 +318,9 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   const redeemedCoupon = coupon != null && totals.couponCode === coupon.code ? coupon : null
   const deliveryLocationText = location ? formatDeliveryLocation(location) : null
 
-  // El código MIR-YYYY-NNNN se calcula con count(): dos checkouts simultáneos
-  // pueden chocar en el unique de `code` — reintentamos hasta 3 veces.
+  // El código parte del mayor correlativo del año. Dos checkouts simultáneos
+  // todavía pueden proponer el mismo valor, pero el reintento abre una nueva
+  // transacción, observa el código confirmado y avanza al siguiente.
   const MAX_CODE_RETRIES = 3
 
   const createOrder = async () =>
@@ -300,14 +344,13 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
         }
       }
 
-      const year = new Date().getFullYear()
-      const count = await tx.order.count()
-      const code = `MIR-${year}-${String(count + 1).padStart(4, '0')}`
+      const code = await nextOrderCode(tx, new Date().getFullYear())
 
       const created = await tx.order.create({
         data: {
           code,
-          guestEmail: d.email,
+          userId: activeAccount?.id ?? null,
+          guestEmail: checkoutEmail,
           paymentMethod: d.paymentMethod as PaymentMethod,
           status: 'AWAITING_PROOF',
           paymentStatus: 'UNPAID',
@@ -328,6 +371,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
           // El checkout no deja confirmar sin marcar la casilla; se guarda la
           // fecha como constancia de esa aceptación.
           termsAcceptedAt: new Date(),
+          reservationExpiresAt: new Date(Date.now() + orderReservationTtlMinutes() * 60_000),
           items: {
             create: orderItems.map((item) => ({
               productId: item.productId,
@@ -394,6 +438,8 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     }
     if (!order) throw new Error('No se pudo generar el código del pedido')
 
+    // La reserva cambia el stock visible en la tienda (caché de datos con tag products).
+    revalidateTag('products', 'max')
     revalidatePath('/admin/orders')
     revalidatePath('/admin/dashboard')
     if (redeemedCoupon) revalidatePath('/admin/coupons')

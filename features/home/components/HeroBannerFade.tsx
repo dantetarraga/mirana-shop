@@ -7,8 +7,9 @@ import {
   hasBannerImage,
 } from '@/features/banners/lib/banner-image'
 import type { BannerRow } from '@/features/banners/types'
-import { useReducedMotion } from '@/shared/hooks'
+import { useReducedMotion } from '@/shared/hooks/useReducedMotion'
 import Link from 'next/link'
+import { safeHref } from '@/shared/schemas/safe-url.schema'
 import { useCallback, useEffect, useState } from 'react'
 
 /** Tiempo que permanece visible cada banner antes de fundirse al siguiente. */
@@ -132,8 +133,8 @@ export function HeroBannerFade({ banners: allBanners }: HeroBannerFadeProps) {
                   </p>
                 )}
                 <Link
-                  href={banner.ctaHref || '/catalogo'}
-                  className="mt-7 inline-block no-underline bg-(--gold) text-on-accent font-display font-extrabold uppercase text-[13px] sm:text-[15px] tracking-[2px] px-8 sm:px-10 py-3.5 sm:py-4 transition-all duration-200 hover:bg-(--gl) hover:-translate-y-0.5 hover:shadow-gold"
+                  href={safeHref(banner.ctaHref, '/catalogo')}
+                  className="mt-7 inline-block no-underline bg-(--gold) text-on-accent font-display font-extrabold uppercase text-[13px] sm:text-[15px] tracking-[2px] px-8 sm:px-10 py-3.5 sm:py-4 transition-[background-color,transform,box-shadow] duration-200 hover:bg-(--gl) hover:-translate-y-0.5 hover:shadow-gold"
                 >
                   {banner.ctaLabel || 'Comprar ahora'}
                 </Link>
@@ -152,7 +153,7 @@ export function HeroBannerFade({ banners: allBanners }: HeroBannerFadeProps) {
               aria-label={banner.title ? `Ir al banner ${i + 1}: ${banner.title}` : `Ir al banner ${i + 1}`}
               aria-current={i === index}
               onClick={() => goTo(i)}
-              className={`h-1.5 border-none transition-all duration-300 ${
+              className={`h-1.5 border-none transition-[width,background-color] duration-300 ${
                 i === index ? 'w-8 bg-(--gold)' : 'w-3 bg-on-media/40 hover:bg-on-media/70'
               }`}
             />

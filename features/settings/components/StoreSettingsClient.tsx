@@ -17,7 +17,8 @@ import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
 import { FormField } from '@/shared/components/ui/FormField'
-import { useEntityCrud, useServerAction } from '@/shared/hooks/admin'
+import { useEntityCrud } from '@/shared/hooks/admin/useEntityCrud'
+import { useServerAction } from '@/shared/hooks/admin/useServerAction'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { cn } from '@/shared/lib/utils'
 import {
@@ -31,6 +32,7 @@ import {
   Plus,
   QrCode,
   Save,
+  Scale,
   Smartphone,
   Trash2,
 } from 'lucide-react'
@@ -77,7 +79,7 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
               type="checkbox"
               checked={form.showOutOfStock}
               onChange={(e) => setForm({ ...form, showOutOfStock: e.target.checked })}
-              className="mt-1 accent-(--gold)"
+              className="mt-1 accent-accent-ink"
             />
             <span>
               <span className="block text-[14px] font-semibold">
@@ -185,9 +187,76 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
           </p>
 
           <div>
-            <Button variant="accent" size="md" onClick={saveGeneral} disabled={general.isPending}>
+            <Button variant="accent" size="md" onClick={saveGeneral} loading={general.isPending}
+          loadingText="Guardando…">
               <Save size={15} className="mr-1.5" />
-              {general.isPending ? 'Guardando…' : 'Guardar cambios'}
+              Guardar cambios
+            </Button>
+          </div>
+        </div>
+
+        {/* ── Datos del proveedor ─────────────────────────── */}
+        <div className="bg-card border border-(--bd) p-5 flex flex-col gap-5">
+          <div className="flex items-center gap-2">
+            <Scale size={15} className="text-accent-ink" />
+            <span className="text-[10px] font-bold tracking-[2px] uppercase text-muted">
+              Datos del proveedor (Libro de Reclamaciones)
+            </span>
+          </div>
+          <p className="text-[12px] text-muted -mt-2">
+            Obligatorios por el Reglamento del Libro de Reclamaciones (D.S. 011-2011-PCM): se
+            imprimen en cada hoja de reclamación, en la constancia que recibe el consumidor por
+            correo y en el footer de todas las páginas.
+          </p>
+
+          <div>
+            <label htmlFor="settings-legal-name" className={`${cls.label} block`}>
+              Razón social
+            </label>
+            <input
+              id="settings-legal-name"
+              value={form.legalName ?? ''}
+              onChange={(e) => setForm({ ...form, legalName: e.target.value })}
+              className={cls.input}
+              placeholder="MIRANA S.A.C. / Nombre del titular"
+              maxLength={191}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="settings-ruc" className={`${cls.label} block`}>
+              RUC
+            </label>
+            <input
+              id="settings-ruc"
+              value={form.ruc ?? ''}
+              onChange={(e) => setForm({ ...form, ruc: e.target.value.replace(/\D/g, '').slice(0, 11) })}
+              className={cls.input}
+              placeholder="20123456789"
+              inputMode="numeric"
+              maxLength={11}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="settings-fiscal-address" className={`${cls.label} block`}>
+              Domicilio fiscal
+            </label>
+            <input
+              id="settings-fiscal-address"
+              value={form.fiscalAddress ?? ''}
+              onChange={(e) => setForm({ ...form, fiscalAddress: e.target.value })}
+              className={cls.input}
+              placeholder="Av. Ejemplo 123, Cercado, Arequipa"
+              maxLength={300}
+            />
+          </div>
+
+          <div>
+            <Button variant="accent" size="md" onClick={saveGeneral} loading={general.isPending}
+          loadingText="Guardando…">
+              <Save size={15} className="mr-1.5" />
+              Guardar cambios
             </Button>
           </div>
         </div>
@@ -264,9 +333,10 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
           </div>
 
           <div>
-            <Button variant="accent" size="md" onClick={saveGeneral} disabled={general.isPending}>
+            <Button variant="accent" size="md" onClick={saveGeneral} loading={general.isPending}
+          loadingText="Guardando…">
               <Save size={15} className="mr-1.5" />
-              {general.isPending ? 'Guardando…' : 'Guardar cambios'}
+              Guardar cambios
             </Button>
           </div>
         </div>
@@ -478,9 +548,10 @@ function HomeSectionBlocksPanel({
       </ul>
 
       <div>
-        <Button variant="accent" size="md" onClick={onSave} disabled={isPending}>
+        <Button variant="accent" size="md" onClick={onSave} loading={isPending}
+          loadingText="Guardando…">
           <Save size={15} className="mr-1.5" />
-          {isPending ? 'Guardando…' : 'Guardar cambios'}
+          Guardar cambios
         </Button>
       </div>
     </div>

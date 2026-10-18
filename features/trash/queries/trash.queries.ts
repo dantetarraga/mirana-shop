@@ -1,5 +1,6 @@
 import 'server-only'
 import { db } from '@/shared/lib/db'
+import { verifyAdmin } from '@/shared/lib/require-admin'
 import type { TrashCounts, TrashRow, TrashType } from '@/features/trash/types'
 
 // ---------------------------------------------------------------------------
@@ -31,6 +32,7 @@ function plural(n: number, singular: string, plural: string): string {
 // ---------------------------------------------------------------------------
 
 export async function getTrashCounts(): Promise<TrashCounts> {
+  await verifyAdmin()
   const deleted = { deletedAt: { not: null } } as const
 
   const [product, collection, category, brand, user] = await Promise.all([
@@ -176,6 +178,7 @@ async function getDeletedUsers(): Promise<TrashRow[]> {
 }
 
 export async function getTrashItems(type: TrashType): Promise<TrashRow[]> {
+  await verifyAdmin()
   switch (type) {
     case 'product':
       return getDeletedProducts()

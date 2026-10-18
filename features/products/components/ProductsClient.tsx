@@ -10,22 +10,21 @@ import {
   importProducts,
   updateProduct,
 } from '@/features/products/actions/product.actions'
-import {
-  ProductCrudDrawer,
-  type SerializedProduct,
-} from '@/features/products/components/ProductCrudDrawer'
+import type { SerializedProduct } from '@/features/products/components/ProductCrudDrawer'
 import type { BrandRow } from '@/features/brands/types'
 import type { CategoryRow } from '@/features/categories/types'
 import type { CollectionRow } from '@/features/collections/types'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
-import { ExcelImportDrawer } from '@/features/products/components/ExcelImportDrawer'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
+import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import { StockBadge } from '@/features/inventory/components/StockBadge'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
-import { useCrudState, useServerAction } from '@/shared/hooks/admin'
+import { useCrudState } from '@/shared/hooks/admin/useCrudState'
+import { useServerAction } from '@/shared/hooks/admin/useServerAction'
 import { cls } from '@/shared/lib/admin/admin-classes'
+import { formatCurrency } from '@/shared/lib/utils'
 import { PRODUCT_STATUS_LABELS } from '@/features/products/lib/product-status'
 import type { ImportProductRow } from '@/features/products/schemas/product.schema'
 import { productDbSchema } from '@/features/products/schemas/product.schema'
@@ -34,6 +33,18 @@ import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
 type ProductFormValues = z.input<typeof productDbSchema>
+
+// Carga diferida: el formulario arrastra tiptap (RichTextEditor) y el import
+// arrastra xlsx — ~400 KB que el listado no necesita hasta abrir un drawer.
+// ssr:false porque solo se montan tras una interacción del usuario.
+const ProductCrudDrawer = dynamic(
+  () => import('@/features/products/components/ProductCrudDrawer').then((m) => m.ProductCrudDrawer),
+  { ssr: false },
+)
+const ExcelImportDrawer = dynamic(
+  () => import('@/features/products/components/ExcelImportDrawer').then((m) => m.ExcelImportDrawer),
+  { ssr: false },
+)
 
 function getCategoryStripe(slug: string): string {
   const map: Record<string, string> = {
@@ -277,7 +288,7 @@ export function ProductsClient({
       { header: 'SKU', className: cls.mono, render: (p) => p.sku },
       { header: 'Categoría', render: (p) => p.category.name },
       { header: 'Marca', render: (p) => p.brand.name },
-      { header: 'Precio', className: cls.valGold, render: (p) => `S/ ${p.price.toFixed(2)}` },
+      { header: 'Precio', className: cls.valGold, render: (p) => formatCurrency(p.price) },
       { header: 'Stock', render: (p) => <StockBadge s={p.inventory?.availableStock ?? 0} /> },
       {
         header: 'Colecciones',
@@ -384,6 +395,9 @@ export function ProductsClient({
 
       {crud.drawerOpen && (
         <ProductCrudDrawer
+          // El drawer inicializa su estado desde el producto: la key lo remonta
+          // al pasar de un producto a otro (o a "nuevo") sin un efecto de sync.
+          key={crud.editing?.id ?? 'new'}
           product={crud.editing}
           isNew={crud.isNew}
           categories={categories}

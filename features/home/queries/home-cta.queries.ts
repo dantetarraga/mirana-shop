@@ -1,4 +1,6 @@
 import { db } from '@/shared/lib/db'
+import { cachedQuery, CACHE_TAGS, REVALIDATE_LONG } from '@/shared/lib/data-cache'
+import { cache } from 'react'
 
 // ---------------------------------------------------------------------------
 // CTA del home — registro único editable desde /admin/cta
@@ -26,7 +28,7 @@ export interface HomeCtaData {
   active: boolean
 }
 
-export async function getHomeCta(): Promise<HomeCtaData> {
+async function fetchHomeCta(): Promise<HomeCtaData> {
   const row = await db.homeCta.findUnique({
     where: { id: HOME_CTA_ID },
     select: {
@@ -40,3 +42,15 @@ export async function getHomeCta(): Promise<HomeCtaData> {
   })
   return row ?? HOME_CTA_DEFAULTS
 }
+
+/**
+ * Cacheada entre requests (solo primitivos). La action del CTA hace
+ * `revalidatePath('/')` y `revalidatePath('/admin/cta')`, que caducan la entrada
+ * en las únicas rutas que la leen.
+ */
+export const getHomeCta = cache(
+  cachedQuery(fetchHomeCta, ['home-cta'], {
+    tags: [CACHE_TAGS.homeCta],
+    revalidate: REVALIDATE_LONG,
+  }),
+)

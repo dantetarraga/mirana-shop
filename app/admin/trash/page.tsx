@@ -2,6 +2,7 @@ import { TrashClient } from '@/features/trash/components/TrashClient'
 import { getTrashCounts, getTrashItems } from '@/features/trash/queries/trash.queries'
 import { TRASH_TYPE_LABELS, TRASH_TYPES, type TrashType } from '@/features/trash/types'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
+import { verifyAdmin } from '@/shared/lib/require-admin'
 import { cn } from '@/shared/lib/utils'
 
 function toType(v: string | undefined): TrashType {
@@ -13,6 +14,7 @@ interface PageProps {
 }
 
 export default async function TrashPage({ searchParams }: PageProps) {
+  await verifyAdmin()
   const { type: rawType } = await searchParams
   const type = toType(rawType)
 
@@ -45,7 +47,7 @@ export default async function TrashPage({ searchParams }: PageProps) {
               className={cn(
                 'px-3.5 py-2 text-[11px] tracking-[1px] uppercase font-display font-extrabold border transition-colors',
                 isActive
-                  ? 'bg-(--gold) border-(--gold) text-black'
+                  ? 'bg-(--gold) border-(--gold) text-on-accent'
                   : 'border-(--bd) text-muted hover:text-text',
               )}
             >

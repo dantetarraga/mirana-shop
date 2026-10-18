@@ -1,6 +1,10 @@
-﻿import { getStoreSettings } from '@/features/settings/queries/store-settings.queries'
+﻿import { providerLine } from '@/features/complaints/lib/complaint-sheet'
+import { MiranaLogo } from '@/shared/components/brand/MiranaLogo'
+import { getStoreSettings } from '@/features/settings/queries/store-settings.queries'
+import { BookOpen } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { safeHref } from '@/shared/schemas/safe-url.schema'
 
 const FOOTER_NAVIGATION = [
   {
@@ -84,6 +88,8 @@ function WhatsAppIcon({ size = 18 }: { size?: number }) {
 
 export async function Footer() {
   const settings = await getStoreSettings()
+  // Razón social · RUC · domicilio fiscal del proveedor (se configura en /admin/settings)
+  const legalLine = providerLine(settings)
 
   const socialLinks = [
     { name: 'Instagram', url: settings.instagramUrl, Icon: InstagramIcon, color: 'text-[#E1306C]' },
@@ -91,7 +97,7 @@ export async function Footer() {
       name: 'TikTok',
       url: settings.tiktokUrl,
       Icon: TikTokIcon,
-      color: 'text-text dark:text-white',
+      color: 'text-text',
     },
     { name: 'YouTube', url: settings.youtubeUrl, Icon: YouTubeIcon, color: 'text-[#FF0000]' },
     { name: 'Facebook', url: settings.facebookUrl, Icon: FacebookIcon, color: 'text-[#1877F2]' },
@@ -99,25 +105,40 @@ export async function Footer() {
       name: 'WhatsApp',
       url: settings.whatsappNumber ? `https://wa.me/${settings.whatsappNumber}` : '',
       Icon: WhatsAppIcon,
-      color: 'text-[#25D366]',
+      color: 'text-[#128C7E] dark:text-whatsapp',
     },
-  ].filter((s) => s.url)
+  ]
+    .map((social) => ({ ...social, url: safeHref(social.url) }))
+    .filter((social) => social.url)
 
   return (
     <footer className="border-t border-(--bd) pt-12 md:pt-16 pb-8 shell grid gap-10 grid-cols-2 sm:grid-cols-3 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
       <div className="col-span-2 sm:col-span-3 md:col-span-1">
-        <Image
-          src={settings.footerLogoUrl || '/logo.svg'}
-          alt="Mirana"
-          width={150}
-          height={50}
-          className="h-9 sm:h-10 w-auto mb-3.5 [filter:invert(1)_hue-rotate(180deg)_saturate(1.4)] dark:[filter:none]"
-        />
+        {settings.footerLogoUrl ? (
+          <Image
+            src={settings.footerLogoUrl}
+            alt="Mirana"
+            width={150}
+            height={50}
+            className="h-9 sm:h-10 w-auto mb-3.5"
+          />
+        ) : (
+          <MiranaLogo className="h-8 w-auto mb-4 text-text" />
+        )}
         <p className="text-[13px] text-muted leading-[1.75] max-w-sm md:max-w-55">
           Mirana Shop es tu tienda en Arequipa de juguetes, figuras de colección y modelos a escala
           100% originales. Importación directa, calidad garantizada y novedades para todos los
           fanáticos del coleccionismo.
         </p>
+
+        {/* Acceso visible al Libro de Reclamaciones Virtual (D.S. 011-2011-PCM) */}
+        <Link
+          href="/libro-de-reclamaciones"
+          className="mt-5 inline-flex items-center gap-2.5 border border-(--bd) hover:border-(--gold) px-3.5 py-2.5 text-[13px] font-semibold text-text no-underline transition-colors duration-200"
+        >
+          <BookOpen size={22} aria-hidden="true" className="text-accent-ink shrink-0" />
+          Libro de Reclamaciones
+        </Link>
       </div>
 
       {FOOTER_NAVIGATION.map(({ title, links }) => (
@@ -129,7 +150,7 @@ export async function Footer() {
           <ul className="list-none flex flex-col gap-2.5">
             {links.map(({ label, href }) => (
               <li key={label}>
-                <Link href={href} className="footer-link text-[14px] text-text no-underline block">
+                <Link href={href} className="footer-link text-[14px] no-underline inline-block py-1">
                   {label}
                 </Link>
               </li>
@@ -139,7 +160,10 @@ export async function Footer() {
       ))}
 
       <div className="col-span-full pt-7 border-t border-(--bd) flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-[12px] text-muted">
-        <span>© 2026 MIRANA. Todos los derechos reservados.</span>
+        <div className="flex flex-col gap-1">
+          <span>© 2026 MIRANA. Todos los derechos reservados.</span>
+          {legalLine && <span>{legalLine}</span>}
+        </div>
         {socialLinks.length > 0 && (
           <div className="flex gap-4 flex-wrap items-center">
             {socialLinks.map(({ name, url, Icon, color }) => (

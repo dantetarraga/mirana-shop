@@ -1,4 +1,5 @@
 import { db } from '@/shared/lib/db'
+import { cache } from 'react'
 
 // ---------------------------------------------------------------------------
 // Páginas legales — contenido editable desde /admin/legal
@@ -18,9 +19,12 @@ export interface LegalPageData {
   updatedAt: Date
 }
 
-export async function getLegalPage(slug: string): Promise<LegalPageData | null> {
+async function getLegalPageImpl(slug: string): Promise<LegalPageData | null> {
   return db.legalPage.findUnique({
     where: { slug },
     select: { slug: true, title: true, content: true, updatedAt: true },
   })
 }
+
+/** Deduplicada por request con `cache()`. */
+export const getLegalPage = cache(getLegalPageImpl)

@@ -3,12 +3,13 @@ import type { ProductListItem, StockFilter } from '@/features/products/types'
 import { countProducts, getProducts } from '@/features/products/queries/product.queries'
 import { getInventoryStats } from '@/features/inventory/queries/inventory.queries'
 import { AdminPagination } from '@/shared/components/admin/AdminPagination'
-import { ADMIN_PER_PAGE } from '@/shared/lib/admin/pagination'
+import { ADMIN_PER_PAGE, parsePage } from '@/shared/lib/admin/pagination'
 import { AdminTable, type Column } from '@/shared/components/admin/AdminTable'
 import { ServerSearchForm } from '@/shared/components/admin/ServerSearchForm'
 import { KpiCard } from '@/features/dashboard/components/KpiCard'
 import { StockBadge } from '@/features/inventory/components/StockBadge'
 import { cls } from '@/shared/lib/admin/admin-classes'
+import { verifyAdmin } from '@/shared/lib/require-admin'
 import { cn } from '@/shared/lib/utils'
 import Image from 'next/image'
 
@@ -106,10 +107,11 @@ const columns: Column<SerializedProduct>[] = [
 // ---------------------------------------------------------------------------
 
 export default async function InventoryPage({ searchParams }: PageProps) {
+  await verifyAdmin()
   const { filter: rawFilter, q, page: rawPage } = await searchParams
   const stockFilter: StockFilter =
     rawFilter && VALID_FILTERS.has(rawFilter as StockFilter) ? (rawFilter as StockFilter) : 'all'
-  const page = Math.max(1, Number(rawPage ?? 1))
+  const page = parsePage(rawPage)
   const currentQ = q ?? ''
 
   // Un COUNT por pestaña (respetando la búsqueda) — antes cada pestaña mostraba
@@ -147,8 +149,8 @@ export default async function InventoryPage({ searchParams }: PageProps) {
           value={`S/ ${(stats.totalValue / 1000).toFixed(1)}K`}
           valueClass="text-accent-ink"
         />
-        <KpiCard label="Stock bajo" value={stats.lowStockCount} valueClass="text-[#ffb84a]" />
-        <KpiCard label="Agotados" value={stats.outOfStockCount} valueClass="text-[#ff6644]" />
+        <KpiCard label="Stock bajo" value={stats.lowStockCount} valueClass="text-warning" />
+        <KpiCard label="Agotados" value={stats.outOfStockCount} valueClass="text-danger" />
       </div>
 
       {/* Búsqueda y tabs — GET navigation, sin estado cliente */}
@@ -170,7 +172,7 @@ export default async function InventoryPage({ searchParams }: PageProps) {
               className={cn(
                 'px-3.5 py-2 text-[11px] tracking-[1px] uppercase font-display font-extrabold border transition-colors',
                 key === stockFilter
-                  ? 'bg-(--gold) border-(--gold) text-black'
+                  ? 'bg-(--gold) border-(--gold) text-on-accent'
                   : 'border-(--bd) text-muted hover:text-text',
               )}
             >

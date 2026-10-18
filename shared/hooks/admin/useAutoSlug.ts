@@ -1,22 +1,11 @@
 'use client'
 
+import { slugify } from '@/shared/lib/slug'
 import { useEffect } from 'react'
 
 /**
- * Convierte un string a slug URL-friendly.
- * Centraliza la lógica antes duplicada en cada CrudDrawer.
- */
-export function toSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-}
-
-/**
- * Auto-genera el campo `slug` a partir del `name` cuando se crea un nuevo ítem.
+ * Auto-genera el campo `slug` a partir del `name` cuando se crea un nuevo ítem,
+ * con el mismo `slugify` que usan las actions en el servidor.
  * No sobrescribe el slug si el usuario lo edita manualmente.
  *
  * @example
@@ -36,7 +25,7 @@ export function useAutoSlug({
 }) {
   useEffect(() => {
     if (isNew && name) {
-      setValue(field, toSlug(name), { shouldValidate: false })
+      setValue(field, slugify(name), { shouldValidate: false })
     }
   }, [isNew, name, setValue, field])
 }

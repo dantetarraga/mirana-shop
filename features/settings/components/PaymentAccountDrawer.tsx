@@ -6,7 +6,8 @@ import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { ImageUploadField } from '@/shared/components/admin/ImageUploadField'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
-import { useFormEntity, useServerAction } from '@/shared/hooks/admin'
+import { useFormEntity } from '@/shared/hooks/admin/useFormEntity'
+import { useServerAction } from '@/shared/hooks/admin/useServerAction'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -137,13 +138,13 @@ export function PaymentAccountDrawer({ account, isNew, onClose }: PaymentAccount
         </p>
 
         <label className="flex items-center gap-2.5 cursor-pointer text-[13px] select-none">
-          <input type="checkbox" {...register('active')} className="accent-(--gold)" />
+          <input type="checkbox" {...register('active')} className="accent-accent-ink" />
           Visible en el checkout
         </label>
 
         <div className="flex gap-2.5 pt-1">
-          <Button type="submit" variant="accent" size="md" full disabled={isPending}>
-            {isPending ? 'Guardando...' : isNew ? 'Crear método' : 'Guardar cambios'}
+          <Button type="submit" variant="accent" size="md" full loading={isPending} loadingText="Guardando…">
+            {isNew ? 'Crear método' : 'Guardar cambios'}
           </Button>
           <Button type="button" variant="outline" size="md" full onClick={onClose}>
             Cancelar

@@ -4,8 +4,10 @@ import { NewBannerButton } from "@/features/banners/components/NewBannerButton";
 import { getBannerStatus } from "@/features/banners/lib/banner-status";
 import { getBanners } from "@/features/banners/queries/banner.queries";
 import { PanelHeader } from "@/shared/components/admin/PanelHeader";
+import { verifyAdmin } from "@/shared/lib/require-admin";
 
 export default async function BannersPage() {
+  await verifyAdmin();
   const banners = await getBanners();
   const activeCount = banners.filter((b) => getBannerStatus(b) === "activo").length;
 

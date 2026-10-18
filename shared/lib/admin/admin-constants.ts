@@ -4,34 +4,36 @@ export const ORDER_STATUS: Record<
   string,
   { label: string; color: string; bg: string; cls: string; outlineCls: string; btnCls: string }
 > = {
+  // Colores como var(): siguen el tema (claro usa tonos más oscuros, ver
+  // globals.css). `color`/`bg` son para estilos inline (puntos de leyenda).
   pendiente: {
     label: 'Pendiente',
-    color: '#ffb84a',
-    bg: 'rgba(255,184,74,.12)',
+    color: 'var(--c-amber)',
+    bg: 'color-mix(in srgb, var(--c-amber) 12%, transparent)',
     cls: 'badge-amber',
     outlineCls: 'badge-amber-outline',
     btnCls: 'btn-status-amber',
   },
   enviado: {
     label: 'Enviado',
-    color: '#8b7cff',
-    bg: 'rgba(139,124,255,.12)',
+    color: 'var(--c-blue)',
+    bg: 'color-mix(in srgb, var(--c-blue) 12%, transparent)',
     cls: 'badge-blue',
     outlineCls: 'badge-blue-outline',
     btnCls: 'btn-status-blue',
   },
   entregado: {
     label: 'Entregado',
-    color: '#3fcf7f',
-    bg: 'rgba(63,207,127,.12)',
+    color: 'var(--c-green)',
+    bg: 'color-mix(in srgb, var(--c-green) 12%, transparent)',
     cls: 'badge-green',
     outlineCls: 'badge-green-outline',
     btnCls: 'btn-status-green',
   },
   cancelado: {
     label: 'Cancelado',
-    color: '#ff6644',
-    bg: 'rgba(255,102,68,.12)',
+    color: 'var(--c-red)',
+    bg: 'color-mix(in srgb, var(--c-red) 12%, transparent)',
     cls: 'badge-red',
     outlineCls: 'badge-red-outline',
     btnCls: 'btn-status-red',
@@ -44,24 +46,24 @@ export const USER_STATUS: Record<
 > = {
   vip: {
     label: 'VIP',
-    color: 'var(--gold)',
+    color: 'var(--accent-ink)',
     cls: 'badge-gold',
     outlineCls: 'badge-gold-outline',
-    textCls: 'text-(--gold)',
+    textCls: 'text-accent-ink',
   },
   activo: {
     label: 'Activo',
-    color: '#3fcf7f',
+    color: 'var(--c-green)',
     cls: 'badge-green',
     outlineCls: 'badge-green-outline',
-    textCls: 'text-[#3fcf7f]',
+    textCls: 'text-success',
   },
   nuevo: {
     label: 'Nuevo',
-    color: '#8b7cff',
+    color: 'var(--c-blue)',
     cls: 'badge-blue',
     outlineCls: 'badge-blue-outline',
-    textCls: 'text-[#8b7cff]',
+    textCls: 'text-info',
   },
 }
 
@@ -71,19 +73,19 @@ export const BANNER_STATUS: Record<
 > = {
   activo: {
     label: 'Activo',
-    color: '#3fcf7f',
+    color: 'var(--c-green)',
     cls: 'badge-green',
     outlineCls: 'badge-green-outline',
   },
   programado: {
     label: 'Programado',
-    color: '#8b7cff',
+    color: 'var(--c-blue)',
     cls: 'badge-blue',
     outlineCls: 'badge-blue-outline',
   },
   inactivo: {
     label: 'Inactivo',
-    color: '#ff6644',
+    color: 'var(--c-red)',
     cls: 'badge-red',
     outlineCls: 'badge-red-outline',
   },

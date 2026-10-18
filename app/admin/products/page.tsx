@@ -1,3 +1,4 @@
+import type { SerializedProduct } from '@/features/products/components/ProductCrudDrawer'
 import { ProductsClient } from '@/features/products/components/ProductsClient'
 import { ProductFilters } from '@/features/products/components/ProductFilters'
 import { getBrands } from '@/features/brands/queries/brand.queries'
@@ -8,8 +9,9 @@ import { PRODUCT_STATUS_LABELS, parseProductStatuses } from '@/features/products
 import { countProducts, getAdminProducts } from '@/features/products/queries/product.queries'
 import { getPreorderDepositPercent } from '@/features/settings/queries/store-settings.queries'
 import { AdminPagination } from '@/shared/components/admin/AdminPagination'
-import { ADMIN_PER_PAGE } from '@/shared/lib/admin/pagination'
+import { ADMIN_PER_PAGE, parsePage } from '@/shared/lib/admin/pagination'
 import { ServerSearchForm } from '@/shared/components/admin/ServerSearchForm'
+import { verifyAdmin } from '@/shared/lib/require-admin'
 import { X } from 'lucide-react'
 
 const PER_PAGE = ADMIN_PER_PAGE
@@ -40,8 +42,9 @@ const chipCls =
   'group flex items-center gap-1.5 px-2.5 py-1 bg-(--sub) border border-(--bd) hover:border-(--gold) transition-colors'
 
 export default async function ProductsPage({ searchParams }: PageProps) {
+  await verifyAdmin()
   const { q, cat, brand, collection, status, page: rawPage } = await searchParams
-  const page = Math.max(1, Number(rawPage ?? 1))
+  const page = parsePage(rawPage)
   const skip = (page - 1) * PER_PAGE
 
   const categorySlugs = cat ? cat.split(',').filter(Boolean) : []
@@ -70,11 +73,29 @@ export default async function ProductsPage({ searchParams }: PageProps) {
       getPreorderDepositPercent(),
     ])
 
-  // Serializar Decimals — todos los campos Decimal deben convertirse
-  const serializedProducts = products.map((p) => ({
-    ...p,
+  // Lo que cruza al cliente se elige campo a campo (antes `...p` mandaba la
+  // fila entera tal cual saliera de la query): solo lo que pintan la tabla y
+  // el formulario, con los Decimal ya convertidos a number.
+  const serializedProducts: SerializedProduct[] = products.map((p) => ({
+    id: p.id,
+    sku: p.sku,
+    slug: p.slug,
+    name: p.name,
+    description: p.description,
     price: Number(p.price),
     salePrice: p.salePrice != null ? Number(p.salePrice) : null,
+    status: p.status,
+    featured: p.featured,
+    createdAt: p.createdAt,
+    allowPartialPreorder: p.allowPartialPreorder,
+    preorderDepositPercent: p.preorderDepositPercent,
+    estimatedArrival: p.estimatedArrival,
+    category: p.category,
+    brand: p.brand,
+    images: p.images,
+    inventory: p.inventory,
+    collections: p.collections,
+    homeSections: p.homeSections,
   }))
 
   const totalPages = Math.ceil(total / PER_PAGE)

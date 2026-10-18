@@ -8,7 +8,7 @@ import { FilterMultiSelect } from '@/shared/components/admin/FilterMultiSelect'
 import { ImageUploadField } from '@/shared/components/admin/ImageUploadField'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
-import { useFormEntity } from '@/shared/hooks/admin'
+import { useFormEntity } from '@/shared/hooks/admin/useFormEntity'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -182,8 +182,8 @@ export function BannerFormDrawer({
         </div>
 
         <div className="flex gap-2.5">
-          <Button type="submit" variant="accent" size="md" full disabled={isPending}>
-            {isPending ? 'Guardando...' : 'Guardar banner'}
+          <Button type="submit" variant="accent" size="md" full loading={isPending} loadingText="Guardando…">
+            {'Guardar banner'}
           </Button>
           <Button type="button" variant="outline" size="md" full onClick={onClose}>
             Cancelar

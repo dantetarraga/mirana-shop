@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { httpUrlSchema } from '@/shared/schemas/safe-url.schema'
 
 // ---------------------------------------------------------------------------
 // Forma de entrega + sus sedes. El drawer del admin envía las sedes completas
@@ -8,12 +9,7 @@ import { z } from 'zod'
 export const deliveryLocationSchema = z.object({
   label: z.string().min(1, 'Etiqueta requerida (ej: LIMA)').max(40),
   address: z.string().min(5, 'Dirección requerida').max(180),
-  mapUrl: z
-    .string()
-    .max(500)
-    .refine((v) => !v || /^https?:\/\//i.test(v), 'Debe ser un enlace http(s)')
-    .optional()
-    .default(''),
+  mapUrl: httpUrlSchema('Debe ser un enlace http(s)').optional().default(''),
 })
 
 export const deliveryMethodSchema = z

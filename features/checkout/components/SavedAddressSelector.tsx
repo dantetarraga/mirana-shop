@@ -3,6 +3,7 @@
 import type { AddressData } from '@/features/profile/actions/account-profile.actions'
 import { cn } from '@/shared/lib/utils'
 import { Check, MapPin, Plus } from 'lucide-react'
+import { sectionCard, sectionTitle } from './ui'
 
 type Props = {
   addresses: AddressData[]
@@ -20,19 +21,19 @@ export function SavedAddressSelector({
   onAddNew,
 }: Props) {
   return (
-    <section className="bg-card border border-(--bd) p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="font-display font-black uppercase text-[14px] tracking-[2px] text-accent-ink">
-          Mis direcciones guardadas
+    <section className={sectionCard} aria-labelledby="saved-addresses-title">
+      <div className="flex items-center justify-between gap-3 mb-5">
+        <h2 id="saved-addresses-title" className={sectionTitle}>
+          Direcciones guardadas
         </h2>
         {onAddNew && (
           <button
             type="button"
             onClick={onAddNew}
-            className="flex items-center gap-1.5 text-[11px] font-semibold text-muted hover:text-accent-ink transition-colors duration-150"
+            className="flex items-center gap-1.5 min-h-11 -mr-2 px-2 text-[14px] font-semibold text-accent-ink hover:underline underline-offset-4 cursor-pointer"
           >
-            <Plus size={13} />
-            Nueva
+            <Plus size={15} aria-hidden />
+            Agregar dirección
           </button>
         )}
       </div>
@@ -43,11 +44,12 @@ export function SavedAddressSelector({
             type="button"
             onClick={() => onSelect(addr)}
             className={cn(
-              'text-left flex items-start gap-3 border p-3.5 transition-colors duration-150',
+              'text-left flex items-start gap-3 border p-3.5 transition-colors duration-150 cursor-pointer',
               selectedId === addr.id
-                ? 'border-(--gold)/60 bg-(--gold)/5'
-                : 'border-(--bd) hover:border-(--gold)/30',
+                ? 'border-(--gold) bg-(--sub)'
+                : 'border-(--bd) hover:border-(--bdh)',
             )}
+            aria-pressed={selectedId === addr.id}
           >
             <div
               className={cn(
@@ -55,22 +57,20 @@ export function SavedAddressSelector({
                 selectedId === addr.id ? 'bg-(--gold) border-(--gold)' : 'bg-surf border-(--bd)',
               )}
             >
-              {selectedId === addr.id && <Check size={10} className="text-black" />}
+              {selectedId === addr.id && <Check size={11} className="text-on-accent" aria-hidden />}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
-                <MapPin size={12} className="text-accent-ink shrink-0" />
-                <span className="text-[11px] font-semibold uppercase tracking-[1.5px] text-accent-ink">
-                  {addr.label}
-                </span>
+                <MapPin size={13} className="text-accent-ink shrink-0" aria-hidden />
+                <span className="text-[13px] font-semibold text-accent-ink">{addr.label}</span>
                 {addr.isDefault && (
-                  <span className="text-[9px] tracking-[1px] uppercase border border-(--gold)/30 text-accent-ink/70 px-1.5 py-0.5">
+                  <span className="text-[12px] border border-(--bd) text-muted px-1.5">
                     Predeterminada
                   </span>
                 )}
               </div>
-              <p className="text-[13px] font-semibold truncate">{addr.fullName}</p>
-              <p className="text-[12px] text-muted truncate">
+              <p className="text-[14px] font-semibold truncate">{addr.fullName}</p>
+              <p className="text-[13px] text-muted truncate">
                 {addr.address}, {addr.district}
               </p>
             </div>
@@ -82,11 +82,12 @@ export function SavedAddressSelector({
           type="button"
           onClick={onClearManual}
           className={cn(
-            'text-left flex items-start gap-3 border p-3.5 transition-colors duration-150',
+            'text-left flex items-start gap-3 border p-3.5 transition-colors duration-150 cursor-pointer',
             selectedId === null
-              ? 'border-(--gold)/60 bg-(--gold)/5'
-              : 'border-(--bd) hover:border-(--gold)/30',
+              ? 'border-(--gold) bg-(--sub)'
+              : 'border-(--bd) hover:border-(--bdh)',
           )}
+          aria-pressed={selectedId === null}
         >
           <div
             className={cn(
@@ -94,11 +95,11 @@ export function SavedAddressSelector({
               selectedId === null ? 'bg-(--gold) border-(--gold)' : 'bg-surf border-(--bd)',
             )}
           >
-            {selectedId === null && <Check size={10} className="text-black" />}
+            {selectedId === null && <Check size={11} className="text-on-accent" aria-hidden />}
           </div>
           <div>
-            <p className="text-[13px] font-semibold">Ingresar nueva dirección</p>
-            <p className="text-[12px] text-muted">Completa los campos manualmente</p>
+            <p className="text-[14px] font-semibold">Usar otra dirección</p>
+            <p className="text-[13px] text-muted">La escribes en el formulario de abajo.</p>
           </div>
         </button>
       </div>

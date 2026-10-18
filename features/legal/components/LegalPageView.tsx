@@ -1,9 +1,12 @@
 import { getLegalPage } from '@/features/legal/queries/legal.queries'
+import { sanitizeRichText } from '@/shared/lib/rich-text'
 import { formatDate } from '@/shared/lib/utils'
 
 // ---------------------------------------------------------------------------
 // Vista pública de una página legal. El contenido HTML proviene del editor
-// del admin (/admin/legal), autoría restringida a administradores.
+// del admin (/admin/legal), autoría restringida a administradores. Se sanea
+// también al renderizar (defensa en profundidad: filas guardadas con el
+// saneador anterior, o escritas fuera de la action).
 // ---------------------------------------------------------------------------
 
 interface LegalPageViewProps {
@@ -15,7 +18,7 @@ export async function LegalPageView({ slug, fallbackTitle }: LegalPageViewProps)
   const page = await getLegalPage(slug)
 
   return (
-    <section className="shell pb-20 pt-[calc(var(--nh)+36px)]">
+    <section className="shell pb-20 pt-9">
       <div className="max-w-175 mx-auto">
         <div className="text-[10px] font-bold tracking-[3px] uppercase mb-1.5 text-accent-ink">
           Legal
@@ -30,7 +33,7 @@ export async function LegalPageView({ slug, fallbackTitle }: LegalPageViewProps)
         )}
 
         {page?.content ? (
-          <div className="rich-prose" dangerouslySetInnerHTML={{ __html: page.content }} />
+          <div className="rich-prose" dangerouslySetInnerHTML={{ __html: sanitizeRichText(page.content) }} />
         ) : (
           <p className="text-muted text-[14px] mt-6">
             Contenido en preparación. Vuelve a revisar pronto.

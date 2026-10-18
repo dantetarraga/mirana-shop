@@ -62,8 +62,8 @@ export interface CartLineState {
 }
 
 /**
- * Estado de un producto respecto del carrito — fuente única para card, modal,
- * PDP y drawer.
+ * Estado de un producto respecto del carrito — fuente única para card, PDP y
+ * drawer.
  *
  * Antes cada superficie lo derivaba por su cuenta y divergían: había tres
  * definiciones distintas de "sin stock" (el PDP era la única que no eximía la

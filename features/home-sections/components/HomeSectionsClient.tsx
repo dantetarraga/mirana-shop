@@ -10,10 +10,11 @@ import { HOME_SECTION_DEFAULT_HREF } from '@/features/home-sections/types'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
-import { useEntityCrud } from '@/shared/hooks/admin'
+import { useEntityCrud } from '@/shared/hooks/admin/useEntityCrud'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { cn } from '@/shared/lib/utils'
 import { Eye, EyeOff, LayoutList, Link2, Package, Pencil, Plus, Trash2 } from 'lucide-react'
+import { EmptyState } from '@/shared/components/ui/EmptyState'
 
 interface Props {
   sections: HomeSectionRow[]
@@ -52,17 +53,17 @@ export function HomeSectionsClient({ sections }: Props) {
 
       <div className="max-w-200 flex flex-col gap-4">
         {sections.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-muted gap-3 border border-dashed border-(--bd)">
-            <LayoutList size={48} strokeWidth={1} aria-hidden />
-            <p className="text-[14px]">Todavía no hay secciones.</p>
-            <p className="text-[12px] max-w-100 text-center">
-              Crea una y después enlaza los productos desde la ficha de cada producto. El inicio
-              sigue mostrando Novedades y Favoritos aunque no crees ninguna.
-            </p>
-            <Button variant="accent" size="sm" onClick={crud.openNew}>
-              <Plus size={13} className="mr-1.5" /> Crear la primera
-            </Button>
-          </div>
+          <EmptyState
+            icon={LayoutList}
+            title="Aún no hay secciones"
+            description="Crea una y después enlaza los productos desde la ficha de cada producto. El inicio sigue mostrando Novedades y Favoritos aunque no crees ninguna."
+            className="border border-dashed border-(--bd)"
+            action={
+              <Button variant="accent" size="sm" onClick={crud.openNew}>
+                <Plus size={13} className="mr-1.5" /> Crear la primera
+              </Button>
+            }
+          />
         ) : (
           <ul className="flex flex-col gap-3">
             {sections.map((s) => (

@@ -13,6 +13,8 @@ import type { AdminAlertType } from '@/generated/prisma/enums'
 const LOW_STOCK_THRESHOLD = 8
 const PENDING_ORDER_HOURS = 12
 const PROMO_EXPIRING_DAYS = 3
+/** Reclamos sin responder que vencen dentro de N días (plazo legal: 15 días hábiles) */
+const COMPLAINT_DUE_SOON_DAYS = 3
 /** Las alertas leídas se conservan como historial por N días y luego se eliminan */
 const READ_RETENTION_DAYS = 7
 
@@ -93,7 +95,39 @@ export async function generateAdminAlerts(): Promise<{ generated: number; types:
     })
   }
 
-  // ── 4. Resumen de ventas (últimas 24 h) ─────────────────────────────────
+  // ── 4. Libro de Reclamaciones: plazos vencidos o por vencer ─────────────
+  // D.S. 101-2022-PCM: respuesta en máximo 15 días hábiles, improrrogable.
+  const overdueWhere = { status: 'PENDING' as const, dueAt: { lt: now } }
+  const dueSoonWhere = {
+    status: 'PENDING' as const,
+    dueAt: { gte: now, lte: Dates.addDays(now, COMPLAINT_DUE_SOON_DAYS) },
+  }
+  const [overdueTotal, dueSoonTotal, urgentComplaints] = await Promise.all([
+    db.complaint.count({ where: overdueWhere }),
+    db.complaint.count({ where: dueSoonWhere }),
+    db.complaint.findMany({
+      where: { status: 'PENDING', dueAt: { lte: Dates.addDays(now, COMPLAINT_DUE_SOON_DAYS) } },
+      select: { code: true, dueAt: true },
+      orderBy: { dueAt: 'asc' },
+      take: 5,
+    }),
+  ])
+
+  if (overdueTotal + dueSoonTotal > 0) {
+    const detail = urgentComplaints
+      .map((c) => `${c.code} (vence ${Dates.formatShort(c.dueAt)})`)
+      .join(' · ')
+    alerts.push({
+      type: 'COMPLAINT_DUE',
+      title:
+        overdueTotal > 0
+          ? `Libro de Reclamaciones: ${overdueTotal} vencido(s) y ${dueSoonTotal} por vencer`
+          : `Libro de Reclamaciones: ${dueSoonTotal} reclamo(s) por vencer`,
+      message: `Plazo legal de 15 días hábiles. ${detail}. Respóndelos en Reclamos.`,
+    })
+  }
+
+  // ── 5. Resumen de ventas (últimas 24 h) ─────────────────────────────────
   const since = Dates.addDays(now, -1)
   const [orderCount, revenue] = await Promise.all([
     db.order.count({

@@ -1,6 +1,7 @@
 import 'server-only'
 import type { Decimal } from '@/generated/prisma/internal/prismaNamespace'
 import { db } from '@/shared/lib/db'
+import { verifyAdmin } from '@/shared/lib/require-admin'
 import { formatDate } from '@/shared/lib/utils'
 import { ORDER_STATUS_GROUPS as STATUS_GROUP_MAP } from '@/features/orders/lib/order-status'
 import type { OrderDetail, OrderFilters, OrderListItem } from '@/features/orders/types'
@@ -73,6 +74,7 @@ export const ORDER_DETAIL_SELECT = {
 } as const
 
 export async function getOrders(filters: OrderFilters = {}): Promise<OrderListItem[]> {
+  await verifyAdmin()
   const { status, statusGroup, paymentStatus, search, take = 50, skip = 0 } = filters
 
   const statusFilter = statusGroup
@@ -103,6 +105,7 @@ export async function getOrders(filters: OrderFilters = {}): Promise<OrderListIt
 }
 
 export async function getOrderById(id: string): Promise<OrderDetail | null> {
+  await verifyAdmin()
   return db.order.findUnique({
     where: { id },
     select: ORDER_DETAIL_SELECT,
@@ -116,14 +119,11 @@ export async function getOrderByCode(code: string): Promise<OrderDetail | null> 
   }) as Promise<OrderDetail | null>
 }
 
-export async function getOrdersByEmail(email: string, take = 20): Promise<OrderListItem[]> {
+export async function getOrdersByUserId(userId: string, take = 20): Promise<OrderListItem[]> {
   return db.order.findMany({
-    where: {
-      OR: [
-        { guestEmail: { equals: email } },
-        { user: { email: { equals: email } } },
-      ],
-    },
+    // Los pedidos de invitado no se reclaman solo por coincidencia de email:
+    // sin verificación de correo eso expondría dirección, teléfono y DNI.
+    where: { userId },
     select: ORDER_LIST_SELECT,
     orderBy: { createdAt: 'desc' },
     take,
@@ -131,6 +131,7 @@ export async function getOrdersByEmail(email: string, take = 20): Promise<OrderL
 }
 
 export async function countOrders(filters: Omit<OrderFilters, 'take' | 'skip'> = {}): Promise<number> {
+  await verifyAdmin()
   const { status, statusGroup, paymentStatus, search } = filters
 
   const statusFilter = statusGroup
@@ -162,39 +163,51 @@ export async function getOrderStats(): Promise<{
   cancelled: number
   revenue: Decimal
 }> {
+  await verifyAdmin()
   const [counts, revenue] = await Promise.all([
     db.order.groupBy({
       by: ['status'],
       _count: { _all: true },
     }),
-    db.order.aggregate({
-      _sum: { total: true },
-      where: { status: { notIn: ['CANCELLED', 'REFUNDED'] } },
-    }),
+    db.$queryRaw<{ revenue: Decimal }[]>`
+      SELECT COALESCE(
+        SUM(total + CASE WHEN duePaidAt IS NOT NULL THEN dueTotal ELSE 0 END),
+        0
+      ) AS revenue
+      FROM \`Order\`
+      WHERE paymentStatus = 'PAID'
+    `,
   ])
 
   const byStatus = Object.fromEntries(counts.map((r) => [r.status, r._count._all]))
 
   return {
     total: counts.reduce((s, r) => s + r._count._all, 0),
-    pending: byStatus['PENDING'] ?? 0,
+    pending: (byStatus['PENDING'] ?? 0) + (byStatus['AWAITING_PROOF'] ?? 0),
     shipped: byStatus['SHIPPED'] ?? 0,
     delivered: byStatus['DELIVERED'] ?? 0,
     cancelled: byStatus['CANCELLED'] ?? 0,
-    revenue: revenue._sum.total ?? (0 as unknown as Decimal),
+    revenue: revenue[0]?.revenue ?? (0 as unknown as Decimal),
   }
 }
 
 // Ingresos por mes — últimos 12 meses (para el gráfico de área)
 export async function getRevenueByMonth(): Promise<{ m: string; v: number }[]> {
+  await verifyAdmin()
   const rows = await db.$queryRaw<{ month: Date; revenue: number }[]>`
-    SELECT
-      CAST(DATE_FORMAT(createdAt, '%Y-%m-01') AS DATE) AS month,
-      CAST(COALESCE(SUM(total), 0) AS DOUBLE)          AS revenue
-    FROM \`Order\`
-    WHERE createdAt >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
-      AND status NOT IN ('CANCELLED', 'REFUNDED')
-    GROUP BY DATE_FORMAT(createdAt, '%Y-%m-01')
+    SELECT month, CAST(SUM(amount) AS DOUBLE) AS revenue
+    FROM (
+      SELECT CAST(DATE_FORMAT(paidAt, '%Y-%m-01') AS DATE) AS month, total AS amount
+      FROM \`Order\`
+      WHERE paidAt >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+        AND paymentStatus = 'PAID'
+      UNION ALL
+      SELECT CAST(DATE_FORMAT(duePaidAt, '%Y-%m-01') AS DATE) AS month, dueTotal AS amount
+      FROM \`Order\`
+      WHERE duePaidAt >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+        AND paymentStatus = 'PAID'
+    ) revenue_events
+    GROUP BY month
     ORDER BY month ASC
   `
   return rows.map((r) => ({
@@ -205,6 +218,7 @@ export async function getRevenueByMonth(): Promise<{ m: string; v: number }[]> {
 
 // Pedidos por día — últimos N días (para el gráfico de barras)
 export async function getOrdersByDay(days = 14): Promise<{ d: string; v: number }[]> {
+  await verifyAdmin()
   const rows = await db.$queryRaw<{ day: Date; count: number }[]>`
     SELECT
       DATE(createdAt)              AS day,
@@ -229,13 +243,16 @@ export async function getOrdersByDay(days = 14): Promise<{ d: string; v: number 
 
 // Pedidos por categoría (para el donut)
 export async function getOrdersByCategory(): Promise<{ name: string; value: number }[]> {
+  await verifyAdmin()
   const rows = await db.$queryRaw<{ category: string; total: number }[]>`
     SELECT
       c.name                      AS category,
       CAST(COUNT(oi.id) AS SIGNED) AS total
     FROM \`OrderItem\` oi
+    JOIN \`Order\`    o ON o.id = oi.orderId
     JOIN \`Product\`  p ON p.id = oi.productId
     JOIN \`Category\` c ON c.id = p.categoryId
+    WHERE o.paymentStatus = 'PAID'
     GROUP BY c.id, c.name
     ORDER BY total DESC
     LIMIT 5

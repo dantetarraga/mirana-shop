@@ -5,7 +5,7 @@ import { adjustStockSchema } from '@/features/inventory/schemas/inventory.schema
 import { db } from '@/shared/lib/db'
 import { requireAdmin } from '@/shared/lib/require-admin'
 import type { ActionResult } from '@/shared/types/action-result.types'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 
 export async function adjustStock(rawInput: unknown): Promise<ActionResult<{ newStock: number }>> {
   const denied = await requireAdmin()
@@ -67,6 +67,7 @@ export async function adjustStock(rawInput: unknown): Promise<ActionResult<{ new
         })
       })
 
+      revalidateTag('products', 'max')
       revalidatePath('/admin/inventory')
       revalidatePath('/admin/dashboard')
       revalidatePath('/catalogo')

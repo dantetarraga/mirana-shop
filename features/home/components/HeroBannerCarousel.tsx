@@ -6,6 +6,8 @@ import type { BannerRow } from '@/features/banners/types'
 import useEmblaCarousel from 'embla-carousel-react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
+import { useReducedMotion } from '@/shared/hooks/useReducedMotion'
+import { safeHref } from '@/shared/schemas/safe-url.schema'
 import { useCallback, useEffect, useState } from 'react'
 
 // A partir de este número de banners reales se usa carrusel; por debajo,
@@ -42,7 +44,7 @@ function toCards(banners: BannerRow[]): SlideCard[] {
         imageUrl,
         imageUrlMobile: bannerMobileImage(b),
         ctaLabel: b.ctaLabel ?? 'Comprar ahora',
-        ctaHref: b.ctaHref ?? '/catalogo',
+        ctaHref: safeHref(b.ctaHref, '/catalogo'),
       },
     ]
   })
@@ -70,7 +72,7 @@ function BannerCard({ card, priority, className }: { card: SlideCard; priority: 
           en ambos temas: usa --on-media (blanco fijo), no los tokens del tema.
           Con `text-text` el botón quedaba casi negro sobre fondo oscuro en modo
           claro y solo se leía al pasar el mouse, cuando el hover lo pinta de
-          dorado. Mismo criterio que CategoryStrips y HeroBannerFade. */}
+          dorado. Mismo criterio que CategoryTiles y HeroBannerFade. */}
       <div className="relative z-1 p-5 pb-6 sm:p-7 sm:pb-8 text-center">
         {card.title && (
           <h3 className="font-display font-black uppercase tracking-[-0.5px] leading-[0.95] text-[clamp(20px,2.2vw,34px)] mb-1.5 text-on-media">
@@ -117,6 +119,14 @@ function HeroBannerSlider({ cards }: { cards: SlideCard[] }) {
 
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [scrollSnaps, setScrollSnaps] = useState<number[]>([])
+  // Mismo criterio que HeroBannerFade: el avance automático se detiene con
+  // hover/foco (WCAG 2.2.2), con la pestaña oculta y si el sistema pide
+  // reducir el movimiento (la regla CSS global no puede parar un setInterval).
+  const [hovered, setHovered] = useState(false)
+  const [focused, setFocused] = useState(false)
+  const [hiddenTab, setHiddenTab] = useState(false)
+  const reducedMotion = useReducedMotion()
+  const paused = hovered || focused || hiddenTab || reducedMotion
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return
@@ -139,13 +149,19 @@ function HeroBannerSlider({ cards }: { cards: SlideCard[] }) {
   }, [emblaApi, onSelect])
 
   useEffect(() => {
-    if (!emblaApi || scrollSnaps.length <= 1) return
+    if (!emblaApi || scrollSnaps.length <= 1 || paused) return
     const id = setInterval(() => {
       if (emblaApi.canScrollNext()) emblaApi.scrollNext()
       else emblaApi.scrollTo(0)
     }, AUTOPLAY_MS)
     return () => clearInterval(id)
-  }, [emblaApi, scrollSnaps.length])
+  }, [emblaApi, scrollSnaps.length, paused])
+
+  useEffect(() => {
+    const onVisibility = () => setHiddenTab(document.visibilityState === 'hidden')
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
+  }, [])
 
   const scrollPrev = useCallback(() => {
     if (!emblaApi) return
@@ -163,7 +179,20 @@ function HeroBannerSlider({ cards }: { cards: SlideCard[] }) {
   const showControls = scrollSnaps.length > 1
 
   return (
-    <section className="relative overflow-hidden group/hero">
+    // Pausa con mouse y con foco de teclado: solo detiene el temporizador, no
+    // hay acción exclusiva del mouse (mismo razonamiento que HeroBannerFade).
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
+    <section
+      className="relative overflow-hidden group/hero"
+      aria-roledescription="carrusel"
+      aria-label="Banners"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocus={() => setFocused(true)}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocused(false)
+      }}
+    >
       <div className="overflow-hidden px-1 pt-1" ref={emblaRef}>
         <div className="flex gap-1">
           {cards.map((card, i) => (
@@ -180,30 +209,39 @@ function HeroBannerSlider({ cards }: { cards: SlideCard[] }) {
             type="button"
             aria-label="Banner anterior"
             onClick={scrollPrev}
-            className="absolute left-3 top-1/2 -translate-y-1/2 z-2 w-11 h-11 flex items-center justify-center bg-media-scrim/70 border border-(--bdh) text-on-media backdrop-blur-sm transition-all duration-200 hover:border-(--gold) hover:text-(--gold)"
+            className="absolute left-3 top-1/2 -translate-y-1/2 z-2 w-11 h-11 flex items-center justify-center bg-media-scrim/70 border border-(--bdh) text-on-media backdrop-blur-sm transition-colors duration-200 hover:border-(--gold) hover:text-(--gold)"
           >
-            <ChevronLeft size={22} />
+            <ChevronLeft size={22} aria-hidden />
           </button>
           <button
             type="button"
             aria-label="Banner siguiente"
             onClick={scrollNext}
-            className="absolute right-3 top-1/2 -translate-y-1/2 z-2 w-11 h-11 flex items-center justify-center bg-media-scrim/70 border border-(--bdh) text-on-media backdrop-blur-sm transition-all duration-200 hover:border-(--gold) hover:text-(--gold)"
+            className="absolute right-3 top-1/2 -translate-y-1/2 z-2 w-11 h-11 flex items-center justify-center bg-media-scrim/70 border border-(--bdh) text-on-media backdrop-blur-sm transition-colors duration-200 hover:border-(--gold) hover:text-(--gold)"
           >
-            <ChevronRight size={22} />
+            <ChevronRight size={22} aria-hidden />
           </button>
 
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-2 flex gap-2">
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-2 flex">
             {scrollSnaps.map((_, i) => (
               <button
                 key={i}
                 type="button"
                 aria-label={`Ir a la vista ${i + 1}`}
+                aria-current={i === selectedIndex ? 'true' : undefined}
                 onClick={() => scrollTo(i)}
-                className={`h-1.5 border-none transition-all duration-300 ${
-                  i === selectedIndex ? 'w-7 bg-(--gold)' : 'w-3 bg-on-media/30 hover:bg-on-media/60'
-                }`}
-              />
+                // Área táctil de 44px; la barrita visible sigue siendo fina.
+                className="group/dot h-11 px-1 flex items-center border-none bg-transparent"
+              >
+                <span
+                  aria-hidden
+                  className={`block h-1.5 transition-[width,background-color] duration-300 ${
+                    i === selectedIndex
+                      ? 'w-7 bg-(--gold)'
+                      : 'w-3 bg-on-media/30 group-hover/dot:bg-on-media/60'
+                  }`}
+                />
+              </button>
             ))}
           </div>
         </>

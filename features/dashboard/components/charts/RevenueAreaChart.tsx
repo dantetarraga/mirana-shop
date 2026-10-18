@@ -1,6 +1,7 @@
 'use client'
 
 import { ChartTooltip } from '@/features/dashboard/components/charts/ChartTooltip'
+import { useChartColors } from '@/features/dashboard/lib/use-chart-colors'
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 interface RevenueAreaChartProps {
@@ -8,16 +9,18 @@ interface RevenueAreaChartProps {
 }
 
 export function RevenueAreaChart({ data }: RevenueAreaChartProps) {
+  // --accent-ink: cyan en oscuro, azul profundo en claro (≥3:1 para gráficos)
+  const [ink, grid] = useChartColors(['--accent-ink', '--bd'] as const)
   return (
     <ResponsiveContainer width="100%" height={260}>
       <AreaChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
         <defs>
           <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#00c8ff" stopOpacity={0.28} />
-            <stop offset="100%" stopColor="#00c8ff" stopOpacity={0.02} />
+            <stop offset="0%" stopColor={ink} stopOpacity={0.28} />
+            <stop offset="100%" stopColor={ink} stopOpacity={0.02} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,200,255,.1)" />
+        <CartesianGrid strokeDasharray="3 3" stroke={grid} />
         <XAxis
           dataKey="m"
           tick={{
@@ -42,13 +45,13 @@ export function RevenueAreaChart({ data }: RevenueAreaChartProps) {
         <Area
           type="monotone"
           dataKey="v"
-          stroke="#00c8ff"
+          stroke={ink}
           strokeWidth={2.5}
           fill="url(#areaGrad)"
           dot={false}
           activeDot={{
             r: 5,
-            fill: '#00c8ff',
+            fill: ink,
             stroke: 'var(--surf)',
             strokeWidth: 2,
           }}

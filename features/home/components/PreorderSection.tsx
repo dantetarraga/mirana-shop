@@ -1,13 +1,16 @@
 import { ProductCard } from '@/features/products/components/ProductCard'
 import { toProductCards } from '@/features/products/lib/product-card'
-import { getProducts } from '@/features/products/queries/product.queries'
-import { getPreorderDepositPercent } from '@/features/settings/queries/store-settings.queries'
+import { HOME_BLOCKS, isBlockHidden } from '@/features/home/lib/home-blocks'
+import { getCatalogProducts } from '@/features/products/queries/product.queries'
+import { getStoreSettings } from '@/features/settings/queries/store-settings.queries'
 
 export async function PreorderSection() {
-  const [preorders, depositPercent] = await Promise.all([
-    getProducts({ status: 'PREORDER', take: 6 }),
-    getPreorderDepositPercent(),
-  ])
+  // Ajustes primero: el admin puede ocultar el bloque desde /admin/settings y
+  // entonces no se consulta nada.
+  const { hiddenHomeBlocks, preorderDepositPercent: depositPercent } = await getStoreSettings()
+  if (isBlockHidden(hiddenHomeBlocks, HOME_BLOCKS.PREORDER)) return null
+
+  const preorders = await getCatalogProducts({ status: 'PREORDER', take: 6 })
 
   const items = toProductCards(preorders)
   // Antes decía "50%" fijo aunque el adelanto real fuera otro.

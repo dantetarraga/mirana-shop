@@ -3,7 +3,7 @@
 import type { AddressData } from '@/features/profile/actions/account-profile.actions'
 import { Button } from '@/shared/components/ui/Button'
 import { cn } from '@/shared/lib/utils'
-import { Check, Home, Loader2, MapPin, X } from 'lucide-react'
+import { Check, Home, MapPin, X } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
@@ -33,7 +33,7 @@ const emptyForm: AddressFormValues = {
 }
 
 const inputCls =
-  'w-full bg-surf border border-(--bd) text-text font-sans text-[14px] px-[13px] py-[10px] outline-none focus:border-(--gold)/50 transition-colors duration-150 placeholder:text-muted/50'
+  'w-full bg-surf border border-field text-text font-sans text-[14px] px-[13px] py-[10px] outline-none focus:border-accent-ink transition-colors duration-150 placeholder:text-muted/75'
 
 // ---------------------------------------------------------------------------
 // AddressFormPanel
@@ -98,7 +98,7 @@ export function AddressFormPanel({
               className={cn(
                 'flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold border transition-colors duration-150',
                 form.label === l
-                  ? 'bg-(--gold) text-black border-(--gold)'
+                  ? 'bg-(--gold) text-on-accent border-(--gold)'
                   : 'bg-surf border-(--bd) text-muted hover:border-(--gold)/40',
               )}
             >
@@ -185,7 +185,7 @@ export function AddressFormPanel({
             form.isDefault ? 'bg-(--gold) border-(--gold)' : 'bg-surf border-(--bd)',
           )}
         >
-          {form.isDefault && <Check size={12} className="text-black" />}
+          {form.isDefault && <Check size={12} className="text-on-accent" />}
         </div>
         <span className="text-[13px] text-text">Usar como dirección predeterminada</span>
       </label>
@@ -195,14 +195,11 @@ export function AddressFormPanel({
           variant="accent"
           size="md"
           onClick={handleSubmit}
-          disabled={saving}
+          loading={saving}
+          loadingText="Guardando dirección…"
           className="flex-1"
         >
-          {saving ? (
-            <Loader2 size={14} className="mr-2 animate-spin" />
-          ) : (
-            <Check size={14} className="mr-2" />
-          )}
+          <Check size={14} className="mr-2" />
           Guardar
         </Button>
         <Button variant="outline" size="md" onClick={onCancel} className="flex-1">

@@ -28,6 +28,9 @@ export interface ModalProps {
   children?: React.ReactNode
   footer?: React.ReactNode
   hideClose?: boolean
+  /** Sin cabecera ni padding: el contenido arma su propia estructura
+   *  (el modal de acceso, con su franja de marca). Requiere `label`. */
+  bare?: boolean
   className?: string
 }
 
@@ -41,6 +44,7 @@ export function Modal({
   children,
   footer,
   hideClose = false,
+  bare = false,
   className,
 }: ModalProps) {
   const panelRef = useFocusTrap<HTMLDivElement>(open)
@@ -62,12 +66,16 @@ export function Modal({
   if (!open) return null
 
   return createPortal(
-    // Overlay
-    <div
-      onClick={onClose}
-      className="fixed inset-0 z-500 flex items-center justify-center p-4 sm:p-6
-                 bg-scrim backdrop-blur-[10px] animate-fade-in"
-    >
+    <div className="fixed inset-0 z-500 flex items-center justify-center p-4 sm:p-6">
+      {/* Overlay como <button> fuera del orden de Tab: clic fuera cierra; con
+          teclado se cierra con Escape o la X. */}
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-label="Cerrar"
+        onClick={onClose}
+        className="absolute inset-0 w-full h-full bg-scrim backdrop-blur-[10px] animate-fade-in cursor-default"
+      />
       {/* Panel */}
       <div
         ref={panelRef}
@@ -75,7 +83,6 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
         aria-label={!title && label ? label : undefined}
-        onClick={(e) => e.stopPropagation()}
         className={cn(
           'relative w-full bg-surf border border-(--bd)',
           'flex flex-col max-h-[calc(100dvh-3rem)] animate-slide-up',
@@ -83,8 +90,10 @@ export function Modal({
           className,
         )}
       >
+        {bare && children}
+
         {/* Header */}
-        {(label || title || !hideClose) && (
+        {!bare && (label || title || !hideClose) && (
           <div className="px-5 sm:px-8 pt-6 sm:pt-8 pb-0 shrink-0">
             {label && <div className={cn(cls.label, 'mb-1.5')}>{label}</div>}
             {title && (
@@ -108,21 +117,21 @@ export function Modal({
                 className="absolute top-4 right-4"
                 aria-label="Cerrar"
               >
-                <X size={16} />
+                <X size={18} aria-hidden />
               </Button>
             )}
           </div>
         )}
 
         {/* Body — scrollable */}
-        {children && (
+        {!bare && children && (
           <div className={cn('flex-1 overflow-y-auto px-5 sm:px-8 pb-6', label || title ? 'pt-6' : 'pt-6 sm:pt-8')}>
             {children}
           </div>
         )}
 
         {/* Footer */}
-        {footer && <div className="px-5 sm:px-8 pb-6 sm:pb-8 pt-0 shrink-0 flex flex-wrap gap-2.5">{footer}</div>}
+        {!bare && footer && <div className="px-5 sm:px-8 pb-6 sm:pb-8 pt-0 shrink-0 flex flex-wrap gap-2.5">{footer}</div>}
       </div>
     </div>,
     document.body,

@@ -8,7 +8,7 @@ import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
 import { cls } from '@/shared/lib/admin/admin-classes'
-import { useServerAction } from '@/shared/hooks/admin'
+import { useServerAction } from '@/shared/hooks/admin/useServerAction'
 import { ArrowRight, ExternalLink, Save } from 'lucide-react'
 import { useState } from 'react'
 
@@ -63,7 +63,7 @@ export function HomeCtaClient({ initial }: HomeCtaClientProps) {
               )}
             </div>
             {form.ctaLabel && (
-              <span className="relative z-1 shrink-0 inline-flex items-center gap-1.5 bg-black text-(--gold) font-display font-bold uppercase text-[13px] tracking-[1px] px-5 py-3 whitespace-nowrap">
+              <span className="relative z-1 shrink-0 inline-flex items-center gap-1.5 bg-on-accent text-(--gold) font-display font-bold uppercase text-[13px] tracking-[1px] px-5 py-3 whitespace-nowrap">
                 {form.ctaLabel} <ArrowRight size={13} strokeWidth={3} />
               </span>
             )}
@@ -119,7 +119,7 @@ export function HomeCtaClient({ initial }: HomeCtaClientProps) {
             type="checkbox"
             checked={form.active}
             onChange={(e) => set('active', e.target.checked)}
-            className="accent-(--gold)"
+            className="accent-accent-ink"
           />
           Mostrar la franja en el inicio
         </label>
@@ -129,10 +129,11 @@ export function HomeCtaClient({ initial }: HomeCtaClientProps) {
             variant="accent"
             size="md"
             onClick={save}
-            disabled={isPending}
+            loading={isPending}
+          loadingText="Guardando…"
           >
             <Save size={15} className="mr-1.5" />
-            {isPending ? 'Guardando…' : 'Guardar cambios'}
+            Guardar cambios
           </Button>
           <a
             href="/"

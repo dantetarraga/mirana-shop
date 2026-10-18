@@ -2,7 +2,9 @@
 
 import { deliveryMapUrl, type DeliveryMethodOption } from '@/features/delivery/types'
 import { formatCurrency } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/utils'
 import { MapPin, Store, Timer, Truck } from 'lucide-react'
+import { sectionCard, sectionLead, sectionTitle } from './ui'
 
 const KIND_ICON = {
   PICKUP: Store,
@@ -39,20 +41,30 @@ export function DeliveryMethodSelector({
   locationError,
 }: Props) {
   return (
-    <section className="bg-card border border-(--bd) p-6">
-      <h2 className="font-display font-black uppercase text-[14px] tracking-[2px] text-accent-ink mb-5">
+    <section className={sectionCard} aria-labelledby="delivery-method-title">
+      <h2 id="delivery-method-title" className={sectionTitle}>
         Forma de entrega
       </h2>
+      <p className={sectionLead}>
+        {hint ?? 'El costo de entrega se suma al total del resumen.'}
+      </p>
 
-      {hint && <p className="text-[12px] text-muted leading-snug -mt-3 mb-4">{hint}</p>}
-
-      <ul className="flex flex-col divide-y divide-(--bd) border border-(--bd)">
+      <ul className="flex flex-col gap-2.5 mt-6">
         {methods.map((method) => {
           const Icon = KIND_ICON[method.kind] ?? Truck
           const isSelected = method.id === selectedId
 
           return (
-            <li key={method.id}>
+            <li
+              key={method.id}
+              className={cn(
+                'border transition-colors duration-150',
+                isSelected ? 'border-(--gold) bg-(--sub)' : 'border-(--bd) hover:border-(--bdh)',
+              )}
+            >
+              {/* El label cubre solo la cabecera del método: las sedes (con sus
+                  propios radios y enlaces) van fuera, porque un label no puede
+                  contener otros controles interactivos. */}
               <label className="flex items-start gap-3.5 px-4 py-4 cursor-pointer">
                 <input
                   type="radio"
@@ -60,82 +72,83 @@ export function DeliveryMethodSelector({
                   value={method.id}
                   checked={isSelected}
                   onChange={() => onSelect(method)}
-                  className="mt-1 accent-(--gold) w-4 h-4 shrink-0"
+                  className="mt-0.5 accent-accent-ink size-5 shrink-0"
                 />
-                <Icon size={17} className="mt-0.5 shrink-0 text-accent-ink" aria-hidden />
+                <Icon size={18} className="mt-0.5 shrink-0 text-accent-ink" aria-hidden />
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-3">
-                    <span className="font-display font-bold text-[14px] uppercase tracking-tight leading-tight">
+                <span className="flex-1 min-w-0">
+                  <span className="flex items-start justify-between gap-3">
+                    <span className="text-[15px] leading-5 font-semibold text-text">
                       {method.name}
                     </span>
                     <span
-                      className={`shrink-0 font-semibold text-[13px] ${
-                        method.cost === 0 ? 'text-emerald-400 uppercase tracking-wide' : ''
-                      }`}
+                      className={cn(
+                        'shrink-0 font-semibold text-[14px] leading-5 tabular-nums',
+                        method.cost === 0 && 'text-success',
+                      )}
                     >
                       {method.cost === 0 ? 'Gratis' : formatCurrency(method.cost)}
                     </span>
-                  </div>
+                  </span>
 
                   {method.description && (
-                    <p className="text-[12px] text-muted mt-1 leading-snug whitespace-pre-line">
+                    <span className="block text-[13px] text-muted mt-1 leading-snug whitespace-pre-line">
                       {method.description}
-                    </p>
+                    </span>
                   )}
-
-                  {/* Sedes. Si el método obliga a elegir una, se muestran como
-                      radios anidados; si no, son solo informativas. */}
-                  {method.locations.length > 0 && (
-                    <ul className="flex flex-col gap-1.5 mt-2.5">
-                      {method.locations.map((loc) => (
-                        <li key={loc.id} className="flex items-start gap-2 flex-wrap">
-                          {isSelected && method.requiresLocation ? (
-                            <label className="flex items-start gap-2 cursor-pointer text-[12px] flex-1 min-w-0">
-                              <input
-                                type="radio"
-                                name="deliveryLocation"
-                                value={loc.id}
-                                checked={loc.id === selectedLocationId}
-                                onChange={() => onSelectLocation(loc.id)}
-                                className="mt-0.5 accent-(--gold) w-3.5 h-3.5 shrink-0"
-                              />
-                              <span>
-                                <span className="font-semibold tracking-[0.5px]">{loc.label}:</span>{' '}
-                                <span className="text-muted">{loc.address}</span>
-                              </span>
-                            </label>
-                          ) : (
-                            <span className="text-[12px] flex-1 min-w-0">
-                              <span className="font-semibold tracking-[0.5px]">{loc.label}:</span>{' '}
-                              <span className="text-muted">{loc.address}</span>
-                            </span>
-                          )}
-
-                          <a
-                            href={deliveryMapUrl(loc)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="shrink-0 inline-flex items-center gap-1 text-[11px] tracking-[1px] uppercase text-accent-ink no-underline hover:underline"
-                          >
-                            <MapPin size={12} aria-hidden />
-                            Ver en el mapa
-                            <span className="sr-only"> — {loc.label}</span>
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
+                </span>
               </label>
+
+              {/* Sedes. Si el método obliga a elegir una, se muestran como
+                  radios propios; si no, son solo informativas. La sangría
+                  alinea el texto con el nombre del método (radio + icono). */}
+              {method.locations.length > 0 && (
+                <ul className="flex flex-col gap-1 -mt-2 pb-3 pr-4 pl-[82px]">
+                  {method.locations.map((loc) => (
+                    <li key={loc.id} className="flex items-start gap-2 flex-wrap">
+                      {isSelected && method.requiresLocation ? (
+                        <label className="flex items-start gap-2.5 cursor-pointer text-[13px] leading-snug flex-1 min-w-0 py-2">
+                          <input
+                            type="radio"
+                            name="deliveryLocation"
+                            value={loc.id}
+                            checked={loc.id === selectedLocationId}
+                            onChange={() => onSelectLocation(loc.id)}
+                            className="mt-px accent-accent-ink size-4.5 shrink-0"
+                          />
+                          <span>
+                            <span className="font-semibold text-text">{loc.label}:</span>{' '}
+                            <span className="text-muted">{loc.address}</span>
+                          </span>
+                        </label>
+                      ) : (
+                        <span className="text-[13px] leading-snug flex-1 min-w-0 py-2">
+                          <span className="font-semibold text-text">{loc.label}:</span>{' '}
+                          <span className="text-muted">{loc.address}</span>
+                        </span>
+                      )}
+
+                      <a
+                        href={deliveryMapUrl(loc)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 inline-flex items-center gap-1 min-h-9 text-[13px] font-semibold text-accent-ink no-underline hover:underline underline-offset-4"
+                      >
+                        <MapPin size={12} aria-hidden />
+                        Ver en el mapa
+                        <span className="sr-only"> de {loc.label} (se abre en una pestaña nueva)</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </li>
           )
         })}
       </ul>
 
-      {methodError && <p className="text-red-500 text-[12px] mt-2">{methodError}</p>}
-      {locationError && <p className="text-red-500 text-[12px] mt-2">{locationError}</p>}
+      {methodError && <p role="alert" className="text-danger text-[13px] mt-3">{methodError}</p>}
+      {locationError && <p role="alert" className="text-danger text-[13px] mt-3">{locationError}</p>}
     </section>
   )
 }

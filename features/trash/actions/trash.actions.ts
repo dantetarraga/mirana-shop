@@ -2,6 +2,7 @@
 
 import { TRASH_TYPES, type TrashType } from '@/features/trash/types'
 import { db } from '@/shared/lib/db'
+import { prismaFailure } from '@/shared/lib/prisma-errors'
 import { requireAdmin } from '@/shared/lib/require-admin'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import { revalidatePath, revalidateTag } from 'next/cache'
@@ -115,6 +116,60 @@ async function findPurgeBlocker(type: TrashType, id: string): Promise<string | n
   }
 }
 
+/**
+ * `null` si se puede restaurar; el motivo si no. Una fila restaurada no puede
+ * apuntar a algo que sigue en la papelera: el producto quedaría colgando de
+ * una categoría/marca invisible y la subcategoría de un padre borrado.
+ */
+async function findRestoreBlocker(type: TrashType, id: string): Promise<string | null> {
+  switch (type) {
+    case 'product': {
+      const product = await db.product.findUnique({
+        where: { id },
+        select: {
+          category: { select: { name: true, deletedAt: true } },
+          brand: { select: { name: true, deletedAt: true } },
+        },
+      })
+      if (!product) return null
+      const trashed = [
+        product.category.deletedAt ? `la categoría "${product.category.name}"` : null,
+        product.brand.deletedAt ? `la marca "${product.brand.name}"` : null,
+      ].filter(Boolean)
+      return trashed.length > 0
+        ? `Restaura primero ${trashed.join(' y ')}: también está en la papelera`
+        : null
+    }
+
+    case 'category': {
+      const category = await db.category.findUnique({
+        where: { id },
+        select: {
+          name: true,
+          parentId: true,
+          parent: { select: { name: true, deletedAt: true } },
+        },
+      })
+      if (!category) return null
+      if (category.parent?.deletedAt) {
+        return `Restaura primero la categoría padre "${category.parent.name}": también está en la papelera`
+      }
+      // Nombre único entre hermanas. El índice (parentId, name) no cubre las
+      // raíces en MariaDB (NULL ≠ NULL), así que se comprueba aquí.
+      const twin = await db.category.findFirst({
+        where: { parentId: category.parentId, name: category.name, deletedAt: null, NOT: { id } },
+        select: { id: true },
+      })
+      return twin
+        ? `Ya existe otra categoría "${category.name}" en el mismo nivel: renómbrala antes de restaurar esta`
+        : null
+    }
+
+    default:
+      return null
+  }
+}
+
 // ---------------------------------------------------------------------------
 // restoreTrashItem
 // ---------------------------------------------------------------------------
@@ -134,11 +189,13 @@ export async function restoreTrashItem(rawType: string, id: string): Promise<Act
       return { success: false, error: 'El elemento no está en la papelera', code: 404 }
     }
 
+    const blocker = await findRestoreBlocker(type, id)
+    if (blocker) return { success: false, error: blocker, code: 422 }
+
     if (type === 'product') {
-      // deleteProduct borra el inventario y los carritos al mandar el producto
-      // a la papelera, así que restaurarlo tal cual lo dejaría sin fila de
-      // inventario y fuera de /admin/inventory. Se recrea en cero: el stock
-      // real hay que volver a cargarlo a mano, porque el que tenía se perdió.
+      // Conserva todos los contadores y la versión del inventario archivado.
+      // Solo los productos antiguos que perdieron su fila se recrean en cero;
+      // sus existencias deben reconciliarse manualmente.
       await db.$transaction([
         db.productInventory.upsert({
           where: { productId: id },
@@ -160,8 +217,11 @@ export async function restoreTrashItem(rawType: string, id: string): Promise<Act
     invalidateEverything()
     return { success: true, data: undefined }
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Error al restaurar'
-    return { success: false, error: message, code: 500 }
+    return prismaFailure(err, {
+      unique: 'Otro elemento activo ya usa ese nombre, slug o SKU: cámbialo antes de restaurar',
+      notFound: 'El elemento ya no existe',
+      fallback: 'No se pudo restaurar',
+    })
   }
 }
 
@@ -206,7 +266,10 @@ export async function purgeTrashItem(rawType: string, id: string): Promise<Actio
     invalidateEverything()
     return { success: true, data: undefined }
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Error al eliminar definitivamente'
-    return { success: false, error: message, code: 500 }
+    return prismaFailure(err, {
+      foreignKey: 'Todavía hay registros que dependen de este elemento',
+      notFound: 'El elemento ya no existe',
+      fallback: 'No se pudo eliminar definitivamente',
+    })
   }
 }

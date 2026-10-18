@@ -2,14 +2,22 @@
 
 import { saveLegalPage } from '@/features/legal/actions/legal.actions'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
-import { RichTextEditor } from '@/shared/components/admin/RichTextEditor'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
-import { useServerAction } from '@/shared/hooks/admin'
+import { useServerAction } from '@/shared/hooks/admin/useServerAction'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { cn } from '@/shared/lib/utils'
+import { Skeleton } from '@/shared/components/ui/Skeleton'
 import { ExternalLink, Save } from 'lucide-react'
+import dynamic from 'next/dynamic'
 import { useState } from 'react'
+
+// tiptap pesa ~150 KB: se carga aparte del resto del panel. ssr:false porque
+// el editor solo existe en el navegador (useEditor con immediatelyRender).
+const RichTextEditor = dynamic(
+  () => import('@/shared/components/admin/RichTextEditor').then((m) => m.RichTextEditor),
+  { ssr: false, loading: () => <Skeleton className="h-80 w-full" /> },
+)
 
 export interface LegalDoc {
   slug: string
@@ -52,9 +60,11 @@ function DocPanel({ doc, hidden }: { doc: LegalDoc; hidden: boolean }) {
       <RichTextEditor content={doc.content} onChange={setContent} />
 
       <div className="flex items-center gap-2.5 flex-wrap">
-        <Button variant="accent" size="md" onClick={save} disabled={isPending || !title.trim()}>
+        <Button variant="accent" size="md" onClick={save} disabled={!title.trim()}
+          loading={isPending}
+          loadingText="Guardando…">
           <Save size={15} className="mr-1.5" />
-          {isPending ? 'Guardando…' : 'Guardar cambios'}
+          Guardar cambios
         </Button>
         <a
           href={`/${doc.slug}`}

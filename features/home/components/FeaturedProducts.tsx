@@ -1,11 +1,11 @@
 import { HOME_BLOCKS, isBlockHidden } from '@/features/home/lib/home-blocks'
 import { ProductCard } from '@/features/products/components/ProductCard'
 import { toProductCards } from '@/features/products/lib/product-card'
-import { getFeaturedProducts, getProducts } from '@/features/products/queries/product.queries'
 import {
-  getHideOutOfStock,
-  getStoreSettings,
-} from '@/features/settings/queries/store-settings.queries'
+  getCatalogProducts,
+  getFeaturedProducts,
+} from '@/features/products/queries/product.queries'
+import { getStoreSettings } from '@/features/settings/queries/store-settings.queries'
 import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
@@ -14,19 +14,17 @@ import Link from 'next/link'
 const FEATURED_COUNT = 4
 
 export async function FeaturedProducts() {
-  const [featured, { hiddenHomeBlocks }] = await Promise.all([
-    getFeaturedProducts(FEATURED_COUNT),
-    getStoreSettings(),
-  ])
-
+  // Ajustes primero: si el bloque está oculto no se consulta ningún producto.
+  const { hiddenHomeBlocks, showOutOfStock } = await getStoreSettings()
   if (isBlockHidden(hiddenHomeBlocks, HOME_BLOCKS.FEATURED_PRODUCTS)) return null
 
+  const featured = await getFeaturedProducts(FEATURED_COUNT)
   let source = featured
 
   if (featured.length < FEATURED_COUNT) {
-    const recent = await getProducts({
+    const recent = await getCatalogProducts({
       take: FEATURED_COUNT,
-      hideOutOfStock: await getHideOutOfStock(),
+      hideOutOfStock: !showOutOfStock,
     })
 
     source = [

@@ -1,6 +1,7 @@
 'use server'
 
 import { db } from '@/shared/lib/db'
+import { safeHrefSchema } from '@/shared/schemas/safe-url.schema'
 import { requireAdmin } from '@/shared/lib/require-admin'
 import type { ActionResult } from '@/shared/types/action-result.types'
 import { revalidatePath, revalidateTag } from 'next/cache'
@@ -15,10 +16,7 @@ const sectionSchema = z.object({
   title: z.string().min(1, 'Título requerido').max(80),
   eyebrow: z.string().max(60).optional().default(''),
   // Lo arma el LinkPicker: ruta interna o URL absoluta. Vacío = /catalogo.
-  ctaHref: z
-    .union([z.string().url('URL inválida'), z.string().startsWith('/'), z.literal('')])
-    .optional()
-    .default(''),
+  ctaHref: safeHrefSchema().optional().default(''),
   position: z.number().int().min(0).default(0),
   active: z.boolean().default(true),
 })

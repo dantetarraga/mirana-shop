@@ -12,17 +12,17 @@ const TYPE_META: Record<string, { icon: React.ReactNode; label: string; color: s
   FREE_SHIPPING: {
     icon: <Truck size={18} />,
     label: 'Envío gratis',
-    color: 'text-emerald-400',
+    color: 'text-success',
   },
   FIXED_DISCOUNT: {
     icon: <Package size={18} />,
     label: 'Descuento fijo',
-    color: 'text-sky-400',
+    color: 'text-accent-ink',
   },
   PERCENT_DISCOUNT: {
     icon: <BadgePercent size={18} />,
     label: 'Descuento %',
-    color: 'text-violet-400',
+    color: 'text-info',
   },
 }
 
@@ -65,7 +65,7 @@ export function PromotionCard({ promotion }: Props) {
         {promotion.discountAmount != null && (
           <div className="flex justify-between text-[13px]">
             <span className="text-muted">Descuento</span>
-            <span className="font-semibold text-sky-400">
+            <span className="font-semibold text-accent-ink">
               {formatCurrency(promotion.discountAmount)}
             </span>
           </div>
@@ -74,7 +74,7 @@ export function PromotionCard({ promotion }: Props) {
         {promotion.discountPercent != null && (
           <div className="flex justify-between text-[13px]">
             <span className="text-muted">Porcentaje</span>
-            <span className="font-semibold text-violet-400">{promotion.discountPercent}%</span>
+            <span className="font-semibold text-info">{promotion.discountPercent}%</span>
           </div>
         )}
 

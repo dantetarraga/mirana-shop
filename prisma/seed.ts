@@ -49,60 +49,132 @@ const bannerMobile = (id: string) =>
 
 const IMGS = {
   // Figuras de acción y anime
-  goku: '1563396983906-b3795482a59a', // figura articulada colorida
-  eva01: '1608889825205-eebdb9fc5806', // colección de figuras
-  makima: '1614732414444-086425adebe5', // figura anime femenina
-  naruto: '1611532736597-de2d4265fba3', // acción figure orange
-  ironman: '1594736797933-d0401ba2fe65', // superhero figure rojo
-  tanjiro: '1619364726002-c54a0bc7ba04', // anime figure azul
-  luffy: '1578632767115-351597cf2477', // anime figure naranja
+  goku: '1606663889134-b1dedb5ed8b7', // figura Goku Super Saiyan
+  eva01: '1563396983906-b3795482a59a', // robot de colección
+  makima: '1578632767115-351597cf2477', // figura anime femenina
+  naruto: '1613771404721-1f92d799e49f', // coleccionables anime
+  ironman: '1608278047522-58806a6ac85b', // figuras Marvel
+  tanjiro: '1566576912321-d58ddd7a6088', // figuras en exhibición
+  luffy: '1609372332255-611485350f25', // peluche/figura anime
 
   // LEGO
-  falcon: '1587654780291-39c9404d746b', // LEGO colorido
-  bugatti: '1530281700549-e82e7bf110d6', // LEGO technic
-  hogwarts: '1516770965459-ef23bdff65dd', // LEGO castle
+  falcon: '1585366119957-e9730b6d0f60', // LEGO Star Wars
+  bugatti: '1589254065878-42c9da997008', // set LEGO armado
+  hogwarts: '1612404730960-5c71577fca11', // escenario LEGO
 
   // Modelos a escala / autos
-  ferrari: '1568605117036-5fe5e7bab0b7', // Ferrari rojo
-  f1: '1525609004556-c46c7d6cf023', // Formula 1
+  ferrari: '1583121274602-3e2820c69888', // Ferrari rojo
+  f1: '1581235720704-06d3acfcb36f', // auto a escala
 
   // Categorías (paisaje)
-  catFiguras: '1527443224154-599571801185', // estante de figuras
-  catLego: '1607604276583-eef5d176b328', // LEGO colorido wide
-  catModelos: '1558618666-fcd25c85cd64', // colección de autos
-  catAnime: '1612036782180-6f0b6cd846fe', // figuras anime shelf
+  catFiguras: '1608889476561-6242cfdbf622', // figuras Marvel
+  catLego: '1633469924738-52101af51d87', // ladrillos LEGO
+  catModelos: '1594787318286-3d835c1d207f', // auto a escala rojo
+  catAnime: '1578632767115-351597cf2477', // figura anime
 
   // Banners (panorámico oscuro)
-  bannerHero: '1542281286-9e0a16bb7366', // toys display dark
-  bannerLego: '1531746790731-6c087fecd65a', // LEGO dark
-  bannerAnime: '1518770660439-4636190af475', // neon dark collectibles
-  bannerBlack: '1616159236399-5f52e6ad60b3', // dark discount
+  bannerHero: '1558060370-d644479cb6f7', // juguetes de colección
+  bannerLego: '1587654780291-39c9404d746b', // LEGO
+  bannerAnime: '1608889175123-8ee362201f81', // figura en fondo oscuro
+  bannerBlack: '1608889476561-6242cfdbf622', // figuras en fondo oscuro
 
-  // Marcas (logos placeholder con color de marca real)
+  // Marcas: sin imagen a propósito. Un logo debe ser el logo real del
+  // fabricante (se sube en /admin/brands); una foto de stock recortada se veía
+  // como imagen rota. Sin logo, la tienda pinta el nombre en una placa.
   brandBandai: '1608889825205-eebdb9fc5806',
   brandLego: '1587654780291-39c9404d746b',
-  brandGsc: '1614732414444-086425adebe5',
-  brandKotobukiya: '1611532736597-de2d4265fba3',
-  brandHasbro: '1594736797933-d0401ba2fe65',
-  brandFunko: '1578632767115-351597cf2477',
+  brandGsc: '1578632767115-351597cf2477',
+  brandKotobukiya: '1613771404721-1f92d799e49f',
+  brandHasbro: '1608278047522-58806a6ac85b',
+  brandFunko: '1609372332255-611485350f25',
   brandHotWheels: '1568605117036-5fe5e7bab0b7',
+}
+
+// ---------------------------------------------------------------------------
+// Galerías — cada producto termina con GALLERY_SIZE imágenes: su portada
+// (IMGS) seguida de fotos del pool temático de su categoría. IDs verificados.
+// ---------------------------------------------------------------------------
+
+const GALLERY_SIZE = 5
+
+const GALLERY_POOLS: Record<string, string[]> = {
+  'figuras-accion': [
+    '1608278047522-58806a6ac85b',
+    '1608889476561-6242cfdbf622',
+    '1608889175123-8ee362201f81',
+    '1601814933824-fd0b574dd592',
+    '1618336753974-aae8e04506aa',
+    '1608889825205-eebdb9fc5806',
+    '1580477667995-2b94f01c9516',
+    '1599623560574-39d485900c95',
+  ],
+  anime: [
+    '1606663889134-b1dedb5ed8b7',
+    '1578632767115-351597cf2477',
+    '1609372332255-611485350f25',
+    '1613771404721-1f92d799e49f',
+    '1566576912321-d58ddd7a6088',
+    '1563396983906-b3795482a59a',
+    '1612036782180-6f0b6cd846fe',
+  ],
+  lego: [
+    '1585366119957-e9730b6d0f60',
+    '1589254065878-42c9da997008',
+    '1612404730960-5c71577fca11',
+    '1611604548018-d56bbd85d681',
+    '1633469924738-52101af51d87',
+    '1587654780291-39c9404d746b',
+    '1560961911-ba7ef651a56c',
+  ],
+  'modelos-escala': [
+    '1583121274602-3e2820c69888',
+    '1594787318286-3d835c1d207f',
+    '1581235720704-06d3acfcb36f',
+    '1503736334956-4c8f8e92946d',
+    '1525609004556-c46c7d6cf023',
+    '1568605117036-5fe5e7bab0b7',
+    '1552519507-da3b142c6e3d',
+  ],
+}
+
+const GALLERY_VIEWS = ['frente', 'perfil', 'detalle', 'reverso', 'en caja']
+
+/** Portada + imágenes del pool, sin repetir y rotando el inicio por producto. */
+function galleryFor(cover: string | undefined, pool: string[], offset: number) {
+  const rest = pool.filter((id) => id !== cover)
+  const ids = cover ? [cover] : []
+  for (let i = 0; ids.length < GALLERY_SIZE && i < rest.length; i++) {
+    ids.push(rest[(offset + i) % rest.length])
+  }
+  return ids
 }
 
 async function main() {
   console.log('Seeding database...')
 
-  const adminEmail = process.env.SEED_ADMIN_EMAIL ?? 'admin@mirana.com'
-  const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? 'Admin123456*'
+  // Credenciales del admin: obligatorias y sin valor por defecto. Antes había
+  // una contraseña fija en el código y además se imprimía en consola (quedaba
+  // en los logs del hosting/CI). Nunca se loguea la contraseña.
+  const adminEmail = process.env.SEED_ADMIN_EMAIL?.trim().toLowerCase()
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD
+  if (!adminEmail || !adminPassword) {
+    throw new Error('Define SEED_ADMIN_EMAIL y SEED_ADMIN_PASSWORD para ejecutar el seed')
+  }
+  if (adminPassword.length < 12) {
+    throw new Error('SEED_ADMIN_PASSWORD debe tener al menos 12 caracteres')
+  }
   const adminPasswordHash = await bcrypt.hash(adminPassword, 12)
 
   // ── Admin user ─────────────────────────────────────────────────────────────
   const admin = await prisma.user.upsert({
     where: { email: adminEmail },
+    // Si el admin ya existe NO se toca su passwordHash: re-ejecutar el seed no
+    // debe resetear la contraseña real (la de SEED_ADMIN_PASSWORD solo vale
+    // para crear la cuenta la primera vez).
     update: {
       name: 'Admin Mirana',
       role: 'ADMIN',
       emailVerified: new Date(),
-      passwordHash: adminPasswordHash,
     },
     create: {
       email: adminEmail,
@@ -141,7 +213,6 @@ async function main() {
   })
 
   console.log(`Users: ${admin.email}, ${customer.email}`)
-  console.log(`Admin credentials: ${admin.email} / ${adminPassword}`)
 
   // ── Categories ─────────────────────────────────────────────────────────────
   const catFiguras = await prisma.category.upsert({
@@ -216,97 +287,141 @@ async function main() {
     `Categories: ${catFiguras.name}, ${catLego.name}, ${catModelos.name}, ${catAnime.name}`,
   )
 
+  // ── Orden y menú de las raíces + subcategorías ─────────────────────────────
+  // docs/NAVEGACION-CATALOGO.md: máximo 2 niveles; las raíces entran al menú.
+  const rootOrder = [catFiguras, catAnime, catLego, catModelos]
+  for (const [position, cat] of rootOrder.entries()) {
+    await prisma.category.update({
+      where: { id: cat.id },
+      data: { position, showInMenu: true, isVisible: true },
+    })
+  }
+
+  const SUBCATEGORIES: { parentId: string; name: string; slug: string; description: string }[] = [
+    { parentId: catLego.id, name: 'Star Wars', slug: 'lego-star-wars', description: 'Naves, escenas y minifiguras de la galaxia muy, muy lejana.' },
+    { parentId: catLego.id, name: 'Technic', slug: 'lego-technic', description: 'Mecánica real: engranajes, suspensiones y motores para armar.' },
+    { parentId: catLego.id, name: 'Harry Potter', slug: 'lego-harry-potter', description: 'Hogwarts, el callejón Diagon y el mundo mágico pieza a pieza.' },
+    { parentId: catAnime.id, name: 'Dragon Ball', slug: 'dragon-ball', description: 'Goku, Vegeta y compañía en todas sus transformaciones.' },
+    { parentId: catAnime.id, name: 'One Piece', slug: 'one-piece', description: 'La tripulación del Sombrero de Paja y sus rivales.' },
+    { parentId: catAnime.id, name: 'Demon Slayer', slug: 'demon-slayer', description: 'Cazadores de demonios de Kimetsu no Yaiba.' },
+    { parentId: catFiguras.id, name: 'Marvel', slug: 'figuras-marvel', description: 'Vengadores, X-Men y villanos del universo Marvel.' },
+    { parentId: catFiguras.id, name: 'DC', slug: 'figuras-dc', description: 'Batman, Superman y la Liga de la Justicia.' },
+  ]
+
+  const subBySlug = new Map<string, string>()
+  const subPositions = new Map<string, number>()
+  for (const sub of SUBCATEGORIES) {
+    const position = subPositions.get(sub.parentId) ?? 0
+    subPositions.set(sub.parentId, position + 1)
+    const created = await prisma.category.upsert({
+      where: { slug: sub.slug },
+      update: { name: sub.name, parentId: sub.parentId, description: sub.description, position, showInMenu: false },
+      create: { ...sub, position, showInMenu: false },
+    })
+    subBySlug.set(sub.slug, created.id)
+  }
+  console.log(`Subcategories: ${SUBCATEGORIES.map((s) => s.name).join(', ')}`)
+
   // ── Brands ─────────────────────────────────────────────────────────────────
   const hasbro = await prisma.brand.upsert({
     where: { slug: 'hasbro' },
-    update: { tagline: 'MARVEL LEGENDS SERIES', imageUrl: img(IMGS.brandHasbro, 400, 400) },
+    update: { tagline: 'MARVEL LEGENDS SERIES', imageUrl: null },
     create: {
       name: 'Hasbro',
       slug: 'hasbro',
       tagline: 'MARVEL LEGENDS SERIES',
       description:
         'Fabricante estadounidense de juguetes y figuras de acción. Creadores de Marvel Legends, Star Wars Black Series y G.I. Joe.',
-      imageUrl: img(IMGS.brandHasbro, 400, 400),
+      imageUrl: null,
     },
   })
 
   const bandai = await prisma.brand.upsert({
     where: { slug: 'bandai' },
-    update: { tagline: 'TAMASHII NATIONS', imageUrl: img(IMGS.brandBandai, 400, 400) },
+    update: { tagline: 'TAMASHII NATIONS', imageUrl: null },
     create: {
       name: 'Bandai',
       slug: 'bandai',
       tagline: 'TAMASHII NATIONS',
       description:
         'Casa japonesa líder en figuras de anime y mecha. Creadores de la línea Robot Spirits, S.H.Figuarts y Dragon Stars.',
-      imageUrl: img(IMGS.brandBandai, 400, 400),
+      imageUrl: null,
     },
   })
 
   const legoGroup = await prisma.brand.upsert({
     where: { slug: 'lego-group' },
-    update: { tagline: 'OFFICIAL PARTNER', imageUrl: img(IMGS.brandLego, 400, 400) },
+    update: { tagline: 'OFFICIAL PARTNER', imageUrl: null },
     create: {
       name: 'LEGO Group',
       slug: 'lego-group',
       tagline: 'OFFICIAL PARTNER',
       description:
         'La marca de construcción más reconocida del mundo. Desde Dinamarca, con sets para todas las edades y niveles de habilidad.',
-      imageUrl: img(IMGS.brandLego, 400, 400),
+      imageUrl: null,
     },
   })
 
   const goodSmile = await prisma.brand.upsert({
     where: { slug: 'good-smile-company' },
-    update: { tagline: 'NENDOROID · FIGMA', imageUrl: img(IMGS.brandGsc, 400, 400) },
+    update: { tagline: 'NENDOROID · FIGMA', imageUrl: null },
     create: {
       name: 'Good Smile Company',
       slug: 'good-smile-company',
       tagline: 'NENDOROID · FIGMA',
       description:
         'Fabricante japonés premium de figuras de anime. Creadores de las líneas Nendoroid, Figma y Pop Up Parade.',
-      imageUrl: img(IMGS.brandGsc, 400, 400),
+      imageUrl: null,
     },
   })
 
   const kotobukiya = await prisma.brand.upsert({
     where: { slug: 'kotobukiya' },
-    update: { tagline: 'ARTFX SERIES', imageUrl: img(IMGS.brandKotobukiya, 400, 400) },
+    update: { tagline: 'ARTFX SERIES', imageUrl: null },
     create: {
       name: 'Kotobukiya',
       slug: 'kotobukiya',
       tagline: 'ARTFX SERIES',
       description:
         'Fabricante japonés especializado en kits de modelos y figuras ARTFX. Detalles escultóricos excepcionales en cada pieza.',
-      imageUrl: img(IMGS.brandKotobukiya, 400, 400),
+      imageUrl: null,
     },
   })
 
   const funko = await prisma.brand.upsert({
     where: { slug: 'funko' },
-    update: { tagline: 'POP! AUTHORIZED', imageUrl: img(IMGS.brandFunko, 400, 400) },
+    update: { tagline: 'POP! AUTHORIZED', imageUrl: null },
     create: {
       name: 'Funko',
       slug: 'funko',
       tagline: 'POP! AUTHORIZED',
       description:
         'Creadores de los icónicos Funko POP! con más de 15,000 diseños de pop culture: anime, películas, videojuegos y más.',
-      imageUrl: img(IMGS.brandFunko, 400, 400),
+      imageUrl: null,
     },
   })
 
   const hotWheels = await prisma.brand.upsert({
     where: { slug: 'hot-wheels' },
-    update: { tagline: 'PREMIUM COLLECTION', imageUrl: img(IMGS.brandHotWheels, 400, 400) },
+    update: { tagline: 'PREMIUM COLLECTION', imageUrl: null },
     create: {
       name: 'Hot Wheels',
       slug: 'hot-wheels',
       tagline: 'PREMIUM COLLECTION',
       description:
         'La marca de autos a escala más popular del mundo. Desde modelos básicos hasta la línea Premium de coleccionistas en metal fundido.',
-      imageUrl: img(IMGS.brandHotWheels, 400, 400),
+      imageUrl: null,
     },
   })
+
+  // Orden de la tienda y logos destacados del mega-menú (máx. 8).
+  const brandOrder = [bandai, legoGroup, goodSmile, kotobukiya, hasbro, funko, hotWheels]
+  for (const [position, brand] of brandOrder.entries()) {
+    await prisma.brand.update({
+      where: { id: brand.id },
+      data: { position, isVisible: true, featured: position < 6 },
+    })
+  }
 
   console.log(
     `Brands: ${bandai.name}, ${legoGroup.name}, ${goodSmile.name}, ${kotobukiya.name}, ${hasbro.name}, ${funko.name}, ${hotWheels.name}`,
@@ -1107,6 +1222,62 @@ async function main() {
     },
   })
   console.log('Promotions: envío gratis seeded')
+
+  // ── Productos → subcategorías ────────────────────────────────────────────
+  // Los upserts de productos no tocan categoryId en el update, así que la
+  // asignación se hace aparte (idempotente).
+  const PRODUCT_SUBCATEGORY: Record<string, string> = {
+    'LGO-SW-FALCON-001': 'lego-star-wars',
+    'LGO-TCH-BUGATTI-001': 'lego-technic',
+    'LGO-HGW-CASTLE-001': 'lego-harry-potter',
+    'BND-DBZ-GOKU-001': 'dragon-ball',
+    'FNK-OP-LUFFY-001': 'one-piece',
+    'KOT-DEM-TANJIRO-001': 'demon-slayer',
+    'HAS-MAR-IRONMAN-001': 'figuras-marvel',
+  }
+  for (const [sku, subSlug] of Object.entries(PRODUCT_SUBCATEGORY)) {
+    const categoryId = subBySlug.get(subSlug)
+    if (categoryId) await prisma.product.updateMany({ where: { sku }, data: { categoryId } })
+  }
+  console.log(`Products → subcategories: ${Object.keys(PRODUCT_SUBCATEGORY).length}`)
+
+  // ── Galerías de producto ─────────────────────────────────────────────────
+  // Se reescribe la galería de TODOS los productos de la base (incluidos los
+  // creados a mano en el admin de desarrollo) para que cada ficha tenga 5 fotos.
+  const allProducts = await prisma.product.findMany({
+    where: { deletedAt: null },
+    select: {
+      id: true,
+      name: true,
+      category: { select: { slug: true, parent: { select: { slug: true } } } },
+      images: { orderBy: { position: 'asc' }, take: 1, select: { url: true } },
+    },
+    orderBy: { createdAt: 'asc' },
+  })
+  const fallbackPool = Object.values(GALLERY_POOLS).flat()
+
+  for (const [index, product] of allProducts.entries()) {
+    const coverId = product.images[0]?.url.match(/photo-([w-]+)?/)?.[1]
+    // Las subcategorías heredan el pool de fotos de su categoría padre.
+    const pool =
+      GALLERY_POOLS[product.category.slug] ??
+      (product.category.parent ? GALLERY_POOLS[product.category.parent.slug] : undefined) ??
+      fallbackPool
+    const ids = galleryFor(coverId, pool, index)
+
+    await prisma.$transaction([
+      prisma.productImage.deleteMany({ where: { productId: product.id } }),
+      prisma.productImage.createMany({
+        data: ids.map((id, position) => ({
+          productId: product.id,
+          url: img(id),
+          alt: `${product.name} — ${GALLERY_VIEWS[position] ?? `vista ${position + 1}`}`,
+          position,
+        })),
+      }),
+    ])
+  }
+  console.log(`Galerías: ${allProducts.length} productos con ${GALLERY_SIZE} imágenes`)
 
   console.log('Seed completado exitosamente.')
 }

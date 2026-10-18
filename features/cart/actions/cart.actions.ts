@@ -12,6 +12,21 @@ import type { CartLine } from '@/features/cart/types'
 import { canPartialPreorder, type PreorderMode } from '@/features/checkout/lib/preorder'
 import { maxPurchasable } from '@/features/products/lib/stock'
 import { db } from '@/shared/lib/db'
+import { z } from 'zod'
+
+const productIdSchema = z.string().min(1).max(191)
+const cartItemInputSchema = z.object({
+  productId: productIdSchema,
+  qty: z.number().int().min(1).max(99),
+  preorderMode: z.enum(['FULL', 'PARTIAL']).default('FULL'),
+})
+const cartItemsInputSchema = z
+  .array(cartItemInputSchema.omit({ preorderMode: true }))
+  .max(50)
+  .refine(
+    (items) => new Set(items.map((item) => item.productId)).size === items.length,
+    'Productos duplicados',
+  )
 
 /**
  * Tope de unidades del producto. `null` = sin tope (preventa).
@@ -82,16 +97,20 @@ export async function addCartItemAction(
   qty: number,
   preorderMode: PreorderMode = 'FULL',
 ): Promise<CartLine[]> {
+  const parsed = cartItemInputSchema.safeParse({ productId, qty, preorderMode })
+  if (!parsed.success) return getCart()
+  const input = parsed.data
+
   const cartId = await getOrCreateCartId()
-  if (await wouldMixKinds(cartId, productId)) return getCart()
+  if (await wouldMixKinds(cartId, input.productId)) return getCart()
 
   const [existing, max, mode] = await Promise.all([
-    db.cartItem.findUnique({ where: { cartId_productId: { cartId, productId } } }),
-    maxQtyFor(productId),
-    resolveMode(productId, preorderMode),
+    db.cartItem.findUnique({ where: { cartId_productId: { cartId, productId: input.productId } } }),
+    maxQtyFor(input.productId),
+    resolveMode(input.productId, input.preorderMode),
   ])
 
-  const target = (existing?.quantity ?? 0) + Math.max(0, qty)
+  const target = (existing?.quantity ?? 0) + input.qty
   // Cantidad absoluta en vez de `increment`: con el tope aplicado, sumar a
   // ciegas podría dejar la línea por encima del stock.
   const quantity = max === null ? target : Math.min(target, max)
@@ -101,9 +120,9 @@ export async function addCartItemAction(
   // carrito, así que agregarlo con otro modo reemplaza el anterior en vez de
   // abrir una segunda línea.
   await db.cartItem.upsert({
-    where: { cartId_productId: { cartId, productId } },
+    where: { cartId_productId: { cartId, productId: input.productId } },
     update: { quantity, preorderMode: mode },
-    create: { cartId, productId, quantity, preorderMode: mode },
+    create: { cartId, productId: input.productId, quantity, preorderMode: mode },
   })
   return getCart()
 }
@@ -113,10 +132,13 @@ export async function setCartItemModeAction(
   productId: string,
   preorderMode: PreorderMode,
 ): Promise<CartLine[]> {
-  const cartId = await getOrCreateCartId()
-  const mode = await resolveMode(productId, preorderMode)
+  const parsed = z.object({ productId: productIdSchema, preorderMode: z.enum(['FULL', 'PARTIAL']) }).safeParse({ productId, preorderMode })
+  if (!parsed.success) return getCart()
 
-  await db.cartItem.updateMany({ where: { cartId, productId }, data: { preorderMode: mode } })
+  const cartId = await getOrCreateCartId()
+  const mode = await resolveMode(parsed.data.productId, parsed.data.preorderMode)
+
+  await db.cartItem.updateMany({ where: { cartId, productId: parsed.data.productId }, data: { preorderMode: mode } })
   return getCart()
 }
 
@@ -129,7 +151,9 @@ export async function setCartItemModeAction(
 export async function addCartItemsAction(
   items: { productId: string; qty: number }[],
 ): Promise<CartLine[]> {
-  if (items.length === 0) return getCart()
+  const parsed = cartItemsInputSchema.safeParse(items)
+  if (!parsed.success || parsed.data.length === 0) return getCart()
+  const safeItems = parsed.data
 
   const cartId = await getOrCreateCartId()
 
@@ -138,7 +162,7 @@ export async function addCartItemsAction(
   // Lo incompatible se ignora — el cliente ya avisó qué quedó fuera.
   const [incoming, stored] = await Promise.all([
     db.product.findMany({
-      where: { id: { in: items.map((i) => i.productId) } },
+      where: { id: { in: safeItems.map((i) => i.productId) } },
       select: { id: true, status: true },
     }),
     storedCartStatuses(cartId),
@@ -146,7 +170,7 @@ export async function addCartItemsAction(
   const statusById = new Map(incoming.map((p) => [p.id, p.status]))
   let kind = cartKindOf(stored)
 
-  for (const { productId, qty } of items) {
+  for (const { productId, qty } of safeItems) {
     const status = statusById.get(productId)
     if (!status) continue
 
@@ -186,10 +210,13 @@ export async function setCartItemQtyAction(
   productId: string,
   quantity: number,
 ): Promise<CartLine[]> {
+  const parsed = z.object({ productId: productIdSchema, quantity: z.number().int().min(1).max(99) }).safeParse({ productId, quantity })
+  if (!parsed.success) return getCart()
+
   const cartId = await getOrCreateCartId()
   const [existing, max] = await Promise.all([
-    db.cartItem.findUnique({ where: { cartId_productId: { cartId, productId } } }),
-    maxQtyFor(productId),
+    db.cartItem.findUnique({ where: { cartId_productId: { cartId, productId: parsed.data.productId } } }),
+    maxQtyFor(parsed.data.productId),
   ])
 
   if (existing) {
@@ -197,7 +224,7 @@ export async function setCartItemQtyAction(
       // Se agotó mientras el producto estaba en el carrito: la línea ya no vale.
       await db.cartItem.delete({ where: { id: existing.id } })
     } else {
-      const target = Math.max(1, Math.floor(quantity))
+      const target = parsed.data.quantity
       await db.cartItem.update({
         where: { id: existing.id },
         data: { quantity: max === null ? target : Math.min(target, max) },
@@ -208,6 +235,7 @@ export async function setCartItemQtyAction(
 }
 
 export async function removeCartItemAction(productId: string): Promise<CartLine[]> {
+  if (!productIdSchema.safeParse(productId).success) return getCart()
   const cartId = await getOrCreateCartId()
   await db.cartItem.deleteMany({ where: { cartId, productId } })
   return getCart()

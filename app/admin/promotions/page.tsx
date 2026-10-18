@@ -3,11 +3,14 @@ import { PromotionCard } from '@/features/promotions/components/PromotionCard'
 import { PromotionCrudProvider } from '@/features/promotions/components/PromotionCrudProvider'
 import { getPromotions } from '@/features/promotions/queries/promotion.queries'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
+import { verifyAdmin } from '@/shared/lib/require-admin'
 import { Tag } from 'lucide-react'
+import { EmptyState } from '@/shared/components/ui/EmptyState'
 
 export const metadata = { title: 'Promociones | Mirana Admin' }
 
 export default async function PromotionsPage() {
+  await verifyAdmin()
   const promotions = await getPromotions()
   const activeCount = promotions.filter((p) => p.active).length
 
@@ -22,11 +25,13 @@ export default async function PromotionsPage() {
         />
 
         {promotions.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-muted gap-3">
-            <Tag size={48} strokeWidth={1} aria-hidden />
-            <p className="text-[14px]">No hay promociones creadas todavía.</p>
-            <NewPromotionButton>Crear primera promoción</NewPromotionButton>
-          </div>
+          <EmptyState
+            icon={Tag}
+            title="Aún no hay promociones"
+            description="Una promoción define el descuento; luego puedes mostrarla en la barra superior o atarla a un cupón."
+            className="border border-dashed border-(--bd)"
+            action={<NewPromotionButton>Crear primera promoción</NewPromotionButton>}
+          />
         ) : (
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {promotions.map((promo) => (

@@ -1,27 +1,17 @@
 'use client'
 
-import { getBrandProducts, reassignProductBrand } from '@/features/brands/actions/brand.actions'
-import {
-  getCategoryProducts,
-  reassignProductCategory,
-} from '@/features/categories/actions/category.actions'
-import {
-  addProductToCollection,
-  getCollectionProducts,
-  removeProductFromCollection,
-} from '@/features/collections/actions/collection.actions'
-import { searchAvailableProducts } from '@/features/products/actions/product.actions'
+import { Button } from '@/shared/components/ui/Button'
+import { useEntityProducts, type EntityType } from '@/shared/hooks/admin/useEntityProducts'
 import type { DrawerProduct } from '@/shared/types/entity-products.types'
-import { Loader2, Package, Plus, Search, X } from 'lucide-react'
+import { AlertCircle, Loader2, Package, Plus, Search, X } from 'lucide-react'
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
-import { toast } from 'sonner'
 
 // ---------------------------------------------------------------------------
 // Tipos
 // ---------------------------------------------------------------------------
 
-export type EntityType = 'collection' | 'brand' | 'category'
+export type { EntityType }
 
 interface EntityProductsPanelProps {
   /**
@@ -38,116 +28,30 @@ interface EntityProductsPanelProps {
 }
 
 // ---------------------------------------------------------------------------
-// Helpers de actions
-// ---------------------------------------------------------------------------
-
-async function loadProducts(type: EntityType, id: string): Promise<DrawerProduct[]> {
-  switch (type) {
-    case 'collection': {
-      const r = await getCollectionProducts(id)
-      return r.success ? r.data : []
-    }
-    case 'brand': {
-      const r = await getBrandProducts(id)
-      return r.success ? r.data : []
-    }
-    case 'category': {
-      const r = await getCategoryProducts(id)
-      return r.success ? r.data : []
-    }
-  }
-}
-
-async function doAddProduct(
-  type: EntityType,
-  entityId: string,
-  productId: string,
-): Promise<boolean> {
-  switch (type) {
-    case 'collection': {
-      const r = await addProductToCollection(entityId, productId)
-      return r.success
-    }
-    case 'brand': {
-      const r = await reassignProductBrand(productId, entityId)
-      return r.success
-    }
-    case 'category': {
-      const r = await reassignProductCategory(productId, entityId)
-      return r.success
-    }
-  }
-}
-
-async function doRemoveProduct(entityId: string, productId: string): Promise<boolean> {
-  const r = await removeProductFromCollection(entityId, productId)
-  return r.success
-}
-
-// ---------------------------------------------------------------------------
-// Componente
+// Componente — vista; estado y acciones viven en useEntityProducts
 // ---------------------------------------------------------------------------
 
 export function EntityProductsPanel({
   entityId,
   entityType,
-  staged = [],
+  staged,
   onStagedChange,
 }: EntityProductsPanelProps) {
-  /** Sin ID todavía: la selección vive en memoria hasta que se guarde. */
-  const isStaged = !entityId
-
-  // Carga inicial con estado derivado: `loaded.key` indica de qué entidad es la
-  // lista cargada. Mientras no coincida, `loading` se deriva en render — evita
-  // el setState síncrono en el efecto (cascada de render).
-  const entityKey = `${entityType}:${entityId}`
-  const [loaded, setLoaded] = useState<{ key: string; products: DrawerProduct[] }>({
-    key: '',
-    products: [],
-  })
-  const [query, setQuery] = useState('')
-  const [results, setResults] = useState<DrawerProduct[]>([])
-  const [searching, setSearching] = useState(false)
+  const {
+    isStaged,
+    products,
+    loading,
+    loadError,
+    reload,
+    canRemove,
+    pendingId: actionId,
+    add,
+    remove,
+    search,
+  } = useEntityProducts({ entityType, entityId, staged, onStagedChange })
+  const { query, results, searching } = search
   const [showResults, setShowResults] = useState(false)
-  const [actionId, setActionId] = useState<string | null>(null)
   const searchBoxRef = useRef<HTMLDivElement>(null)
-
-  const loading = !isStaged && loaded.key !== entityKey
-  const products = isStaged ? staged : loading ? [] : loaded.products
-  const setProducts = (updater: (prev: DrawerProduct[]) => DrawerProduct[]) => {
-    if (isStaged) {
-      onStagedChange?.(updater(staged))
-      return
-    }
-    setLoaded((prev) => ({ key: entityKey, products: updater(prev.key === entityKey ? prev.products : []) }))
-  }
-
-  // Carga inicial — en modo pendiente no hay nada que cargar
-  useEffect(() => {
-    if (!entityId) return
-    let cancelled = false
-    loadProducts(entityType, entityId).then((data) => {
-      if (!cancelled) setLoaded({ key: `${entityType}:${entityId}`, products: data })
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [entityId, entityType])
-
-  // Búsqueda con debounce. Todos los setState viven dentro del callback async
-  // del setTimeout (no en el cuerpo del efecto): así no hay cascada de render.
-  useEffect(() => {
-    if (query.trim().length < 2) return
-    const timer = setTimeout(async () => {
-      setSearching(true)
-      const excludeIds = products.map((p) => p.id)
-      const r = await searchAvailableProducts(query, excludeIds)
-      setResults(r.success ? r.data : [])
-      setShowResults(true)
-      setSearching(false)
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [query, products])
 
   // Cierra dropdown al hacer click fuera
   useEffect(() => {
@@ -161,49 +65,13 @@ export function EntityProductsPanel({
   }, [])
 
   const clearSearch = () => {
-    setQuery('')
-    setResults([])
+    search.clear()
     setShowResults(false)
   }
 
   const handleAdd = async (product: DrawerProduct) => {
-    if (!entityId) {
-      setProducts((prev) => [...prev, product])
-      clearSearch()
-      return
-    }
-
-    setActionId(product.id)
-    const ok = await doAddProduct(entityType, entityId, product.id)
-    setActionId(null)
-    if (ok) {
-      setProducts((prev) => [...prev, product])
-      clearSearch()
-      toast.success(`"${product.name}" agregado`)
-    } else {
-      toast.error('No se pudo agregar el producto')
-    }
+    if (await add(product)) clearSearch()
   }
-
-  const handleRemove = async (product: DrawerProduct) => {
-    if (!entityId) {
-      setProducts((prev) => prev.filter((p) => p.id !== product.id))
-      return
-    }
-
-    setActionId(product.id)
-    const ok = await doRemoveProduct(entityId, product.id)
-    setActionId(null)
-    if (ok) {
-      setProducts((prev) => prev.filter((p) => p.id !== product.id))
-      toast.success(`"${product.name}" eliminado de la colección`)
-    } else {
-      toast.error('No se pudo eliminar el producto')
-    }
-  }
-
-  // En modo pendiente siempre se puede quitar: nada se ha guardado aún.
-  const canRemove = isStaged || entityType === 'collection'
 
   const addPlaceholder =
     entityType === 'collection'
@@ -230,7 +98,10 @@ export function EntityProductsPanel({
           <input
             type="text"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              search.setQuery(e.target.value)
+              setShowResults(true)
+            }}
             placeholder={addPlaceholder}
             className="w-full pl-8 pr-3 py-2.5 text-[13px] bg-card border border-(--bd) outline-none focus:border-(--bdh) placeholder:text-muted"
           />
@@ -238,7 +109,7 @@ export function EntityProductsPanel({
         </div>
 
         {/* Dropdown de resultados */}
-        {showResults && query.trim().length >= 2 && (
+        {showResults && search.active && search.hasResults && (
           <div className="absolute z-50 top-full w-full bg-(--surf) border border-(--bd) shadow-lg overflow-hidden max-h-60 overflow-y-auto">
             {results.length === 0 ? (
               <div className="px-4 py-3 text-[13px] text-muted">Sin resultados</div>
@@ -288,6 +159,17 @@ export function EntityProductsPanel({
           <div className="flex items-center justify-center py-6 text-muted">
             <Loader2 size={16} className="animate-spin" />
           </div>
+        ) : loadError ? (
+          <div
+            role="alert"
+            className="flex flex-col items-center justify-center py-6 gap-2 text-danger"
+          >
+            <AlertCircle size={18} />
+            <span className="text-[13px]">{loadError}</span>
+            <Button type="button" variant="outline" size="sm" onClick={reload}>
+              Reintentar
+            </Button>
+          </div>
         ) : products.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-6 gap-2 text-muted">
             <Package size={18} />
@@ -322,8 +204,8 @@ export function EntityProductsPanel({
                 <button
                   type="button"
                   disabled={actionId === p.id}
-                  onClick={() => handleRemove(p)}
-                  className="p-1.5 text-muted hover:text-red-400 hover:bg-red-400/10 transition-colors disabled:opacity-50"
+                  onClick={() => remove(p)}
+                  className="p-1.5 text-muted hover:text-danger hover:bg-danger/10 transition-colors disabled:opacity-50"
                   title="Quitar de la colección"
                 >
                   {actionId === p.id ? (

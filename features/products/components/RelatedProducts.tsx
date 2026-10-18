@@ -1,5 +1,5 @@
 import { toProductCards } from '@/features/products/lib/product-card'
-import { getProducts } from '@/features/products/queries/product.queries'
+import { getCatalogProducts } from '@/features/products/queries/product.queries'
 import { getHideOutOfStock } from '@/features/settings/queries/store-settings.queries'
 import { ProductCarousel } from './ProductCarousel'
 
@@ -17,15 +17,16 @@ export async function RelatedProducts({
   collectionSlugs,
 }: Props) {
   // Prioridad: misma colección > misma marca > misma categoría
-  // Hacemos las 3 queries y combinamos, deduplificando y excluyendo el producto actual
-
+  // Hacemos las 3 queries y combinamos, deduplificando y excluyendo el producto actual.
+  // El ajuste de stock es una dependencia real de las tres; se lee una vez
+  // (deduplicado con la ficha por `cache()`) y las tres van en paralelo.
   const hideOutOfStock = await getHideOutOfStock()
 
   const [byCat, byBrand, byCollection] = await Promise.all([
-    getProducts({ categorySlug, hideOutOfStock, take: 12 }),
-    getProducts({ brandSlug, hideOutOfStock, take: 12 }),
+    getCatalogProducts({ categorySlug, hideOutOfStock, take: 12 }),
+    getCatalogProducts({ brandSlug, hideOutOfStock, take: 12 }),
     collectionSlugs.length > 0
-      ? getProducts({ collectionSlug: collectionSlugs, hideOutOfStock, take: 12 })
+      ? getCatalogProducts({ collectionSlug: collectionSlugs, hideOutOfStock, take: 12 })
       : Promise.resolve([]),
   ])
 

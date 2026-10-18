@@ -3,8 +3,9 @@ import type { OrderStatusGroup } from "@/features/orders/types";
 import { OrdersClient } from "@/features/orders/components/OrdersClient";
 import { KpiCard } from "@/features/dashboard/components/KpiCard";
 import { AdminPagination } from "@/shared/components/admin/AdminPagination";
-import { ADMIN_PER_PAGE } from "@/shared/lib/admin/pagination";
+import { ADMIN_PER_PAGE, parsePage } from "@/shared/lib/admin/pagination";
 import { ServerSearchForm } from "@/shared/components/admin/ServerSearchForm";
+import { verifyAdmin } from "@/shared/lib/require-admin";
 import { cn } from "@/shared/lib/utils";
 
 const PER_PAGE = ADMIN_PER_PAGE;
@@ -37,9 +38,10 @@ interface PageProps {
 }
 
 export default async function OrdersPage({ searchParams }: PageProps) {
+  await verifyAdmin();
   const { q, statusGroup: rawGroup, page: rawPage } = await searchParams;
   const statusGroup = toGroup(rawGroup);
-  const page = Math.max(1, Number(rawPage ?? 1));
+  const page = parsePage(rawPage);
   const skip = (page - 1) * PER_PAGE;
 
   const [orders, stats, total] = await Promise.all([
@@ -67,8 +69,8 @@ export default async function OrdersPage({ searchParams }: PageProps) {
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <KpiCard label="Total pedidos" value={stats.total} valueClass="text-text" />
-        <KpiCard label="Por procesar" value={stats.pending} valueClass="text-[#ffb84a]" />
-        <KpiCard label="En tránsito" value={stats.shipped} valueClass="text-[#8b7cff]" />
+        <KpiCard label="Por procesar" value={stats.pending} valueClass="text-warning" />
+        <KpiCard label="En tránsito" value={stats.shipped} valueClass="text-info" />
         <KpiCard
           label="Ingresos"
           value={`S/ ${(Number(stats.revenue) / 1000).toFixed(1)}K`}
@@ -98,7 +100,7 @@ export default async function OrdersPage({ searchParams }: PageProps) {
                 className={cn(
                   "px-3.5 py-2 text-[11px] tracking-[1px] uppercase font-display font-extrabold border transition-colors",
                   isActive
-                    ? "bg-(--gold) border-(--gold) text-black"
+                    ? "bg-(--gold) border-(--gold) text-on-accent"
                     : "border-(--bd) text-muted hover:text-text hover:border-(--bd)",
                 )}
               >

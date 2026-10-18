@@ -66,6 +66,14 @@
   --color-subtle: var(--sub);
   --color-border: var(--bd);
   --color-border-gold: var(--bdh);
+  /* Borde de campos de formulario: ≥3:1 contra el fondo (WCAG 1.4.11).
+     --bd (12-15 % de alfa) queda en ~1.2:1 y el campo no se distingue. */
+  --color-field: var(--bd-field);
+  /* Placeholder de campos: más tenue que --mt para que un campo vacío nunca se
+     lea como uno ya relleno. Genera: placeholder:text-placeholder */
+  --color-placeholder: var(--ph);
+  /* Anillo de foco por teclado — mismo color en todo el sitio */
+  --color-ring: var(--ring);
   --color-gold-glow: var(--gd);
 
   /* ── Roles semánticos ──────────────────────────────────────
@@ -79,17 +87,28 @@
      skeleton  : placeholder de carga. */
   --color-accent-ink: var(--accent-ink);
   --color-on-accent: var(--on-accent);
+  --color-on-success: var(--on-success);
+  --color-on-warning: var(--on-warning);
+  --color-on-danger: var(--on-danger);
+  --color-on-info: var(--on-info);
+  --color-whatsapp: var(--wa);
+  --color-on-whatsapp: var(--on-wa);
+  --color-promo: var(--promo-bg);
+  --color-on-promo: var(--on-promo);
   --color-on-media: var(--on-media);
   --color-media-scrim: var(--media-scrim);
   --color-scrim: var(--scrim);
   --color-hover-tint: var(--hover-tint);
   --color-skeleton: var(--skeleton);
+  --color-skeleton-shine: var(--skeleton-shine);
 
   /* ── Estados ── Genera: bg-success, text-danger, etc. */
   --color-success: var(--c-green);
   --color-warning: var(--c-amber);
   --color-danger: var(--c-red);
   --color-info: var(--c-blue);
+  /* Serie extra de gráficos (violeta) — antes #c77cff suelto */
+  --color-chart-violet: var(--c-violet);
 
   /* ── Sombras ── Genera: shadow-premium, shadow-card, shadow-gold, shadow-pop */
   --shadow-premium: var(--sh-premium);
@@ -116,8 +135,10 @@
   --animate-fade-in: fade-in 0.2s ease both;
   --animate-slide-up: slide-up 0.25s cubic-bezier(0.4, 0, 0.2, 1) both;
   --animate-slide-right: slide-right 0.28s cubic-bezier(0.4, 0, 0.2, 1) both;
+  --animate-slide-left: slide-left 0.28s cubic-bezier(0.4, 0, 0.2, 1) both;
   --animate-pulse-dot: pulse-dot 2s infinite;
   --animate-fade-up: fade-up 0.5s ease both;
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
 
   @keyframes marquee {
     from {
@@ -153,6 +174,14 @@
       transform: translateX(0);
     }
   }
+  @keyframes slide-left {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
   @keyframes pulse-dot {
     0%,
     100% {
@@ -160,6 +189,14 @@
     }
     50% {
       opacity: 0.4;
+    }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: 150% 0;
+    }
+    to {
+      background-position: -50% 0;
     }
   }
   @keyframes fade-up {
@@ -204,14 +241,25 @@
   /* Acento */
   --gold: #00c8ff; /* fills, botones, barras — NO usar como texto en claro */
   --gl: #33d4ff; /* hover del acento */
+  /* Logo: acento un punto más profundo que --gold para que se lea sobre blanco,
+     y gris pizarra para los nudillos de las garras. */
+  --brand-moon: #00a6dd;
+  --brand-slate: #7d93aa;
+  /* Navy de marca para franjas que deben verse navy también en tema claro. */
+  --brand-navy: #0b1830;
   --gd: rgba(0, 200, 255, 0.14); /* glow / fondo de pills */
-  --accent-ink: #0077b6; /* 4.7:1 sobre blanco — precios, links, texto acento */
+  /* 5.8:1 sobre blanco y 5.3:1 sobre --card-h (hover de tarjeta). El #0077b6
+     anterior bajaba a 4.48:1 en el hover y reprobaba AA. */
+  --accent-ink: #006ba3;
   --on-accent: #00131c; /* texto sobre el acento cyan */
 
   /* Bordes */
   --bd: rgba(0, 119, 182, 0.15);
   --bdh: rgba(0, 119, 182, 0.45);
   --sub: rgba(0, 200, 255, 0.08);
+  --bd-field: #7f92a6; /* 3.2:1 sobre blanco · 3.05:1 sobre --surf */
+  --ph: #74869a; /* 3.7:1 sobre blanco: legible, pero claramente más tenue que un valor */
+  --ring: var(--accent-ink);
 
   /* Sobre fotografía — idénticos en ambos temas: la imagen no cambia */
   --on-media: #ffffff;
@@ -220,14 +268,33 @@
   /* Capas de interacción */
   --scrim: rgba(9, 20, 33, 0.45);
   --hover-tint: rgba(13, 27, 42, 0.04);
-  --skeleton: rgba(13, 27, 42, 0.08);
+  --skeleton: rgba(13, 27, 42, 0.07);
+  --skeleton-shine: rgba(255, 255, 255, 0.7);
 
   /* Estados — re-derivados: el ámbar y el verde del tema oscuro
-     reprueban contraste sobre blanco */
-  --c-green: #15803d;
-  --c-amber: #b45309;
-  --c-red: #c2321b;
+     reprueban contraste sobre blanco. Calibrados para ≥4.5:1 también sobre su
+     propio tinte al 12 % (badges) y sobre --surf: con #15803d / #b45309 el
+     texto de un badge quedaba en 4.25:1. */
+  --c-green: #127436;
+  --c-amber: #a64b08;
+  --c-red: #b42d18;
   --c-blue: #5b4bd6;
+  --c-violet: #8e3fd1;
+  /* Texto sobre el color pleno de cada estado — blanco ≥5.8:1 en claro */
+  --on-success: #ffffff;
+  --on-warning: #ffffff;
+  --on-danger: #ffffff;
+  --on-info: #ffffff;
+
+  /* WhatsApp — verde de marca con texto oscuro: el blanco sobre #25d366 da
+     1,98:1 y reprueba; #05301a da ~9:1. Igual en ambos temas. */
+  --wa: #25d366;
+  --on-wa: #05301a;
+
+  /* Barra de promociones — paleta de marca (antes bg-emerald-600, fuera de
+     paleta). Azul profundo + blanco = 4.7:1 (AA). */
+  --promo-bg: #0077b6;
+  --on-promo: #ffffff;
 
   /* Sombras — sobre blanco el negro al 40-50% resulta brutal */
   --sh-premium: 0 24px 48px -12px rgba(13, 27, 42, 0.18);
@@ -260,6 +327,9 @@
 
   --gold: #00c8ff;
   --gl: #50e0ff;
+  --brand-moon: #00c8ff;
+  --brand-slate: #5d7389;
+  --brand-navy: #07101f; /* un punto más hondo que --bg para separarse */
   --gd: rgba(0, 200, 255, 0.1);
   --accent-ink: #50e0ff; /* sobre navy el cyan claro sí es legible */
   --on-accent: #00131c;
@@ -267,18 +337,35 @@
   --bd: rgba(0, 200, 255, 0.12);
   --bdh: rgba(0, 200, 255, 0.48);
   --sub: rgba(0, 200, 255, 0.06);
+  --bd-field: #52709a; /* 3.5:1 sobre --bg · 3.2:1 sobre --card */
+  --ph: rgba(228, 240, 255, 0.42);
+  --ring: var(--accent-ink);
 
   --on-media: #ffffff;
   --media-scrim: rgba(3, 4, 9, 0.85);
 
   --scrim: rgba(3, 4, 9, 0.78);
   --hover-tint: rgba(255, 255, 255, 0.03);
-  --skeleton: rgba(255, 255, 255, 0.05);
+  --skeleton: rgba(255, 255, 255, 0.06);
+  --skeleton-shine: rgba(0, 200, 255, 0.07);
 
   --c-green: #3fcf7f;
   --c-amber: #ffb84a;
   --c-red: #ff6644;
   --c-blue: #8b7cff;
+  --c-violet: #c77cff;
+  /* Sobre los tonos claros del tema oscuro el blanco da ~1.9:1: texto navy */
+  --on-success: #00131c;
+  --on-warning: #00131c;
+  --on-danger: #00131c;
+  --on-info: #00131c;
+
+  --wa: #25d366;
+  --on-wa: #05301a;
+
+  /* Cyan de marca + texto navy profundo (~11:1) */
+  --promo-bg: #00c8ff;
+  --on-promo: #00131c;
 
   --sh-premium: 0 25px 50px -12px oklch(0% 0 0 / 0.5);
   --sh-card: 0 4px 24px -4px oklch(0% 0 0 / 0.4);
@@ -333,6 +420,12 @@
   h4 {
     @apply font-display;
   }
+
+  /* Selección de texto con el acento de marca (antes: azul del sistema) */
+  ::selection {
+    background: color-mix(in srgb, var(--gold) 32%, transparent);
+    color: var(--text);
+  }
   button {
     @apply cursor-pointer;
   }
@@ -378,10 +471,16 @@ select:focus-visible,
 textarea:focus-visible,
 [tabindex]:focus-visible,
 [role='button']:focus-visible {
-  /* --accent-ink, no --gold: el cyan puro sobre blanco no se distingue */
-  outline: 2px solid var(--accent-ink);
+  /* --ring (= --accent-ink), no --gold: el cyan puro sobre blanco da 1.96:1 */
+  outline: 2px solid var(--ring);
   outline-offset: 2px;
   border-radius: 1px;
+}
+/* Destinos de foco programático (tabIndex=-1: el paso nuevo del checkout, el
+   título de la pantalla de éxito). No son controles: el lector de pantalla
+   anuncia su contenido y un anillo alrededor de toda la sección solo confunde. */
+[data-focus-target]:focus-visible {
+  outline: none;
 }
 
 /* =============================================================
@@ -397,8 +496,9 @@ textarea:focus-visible,
   /* Base */
   .ui-btn {
     @apply font-display font-bold uppercase cursor-pointer inline-flex
-           items-center justify-center gap-2 transition-all duration-200
-           outline-none select-none shrink-0;
+           items-center justify-center gap-2 duration-200
+           outline-none select-none shrink-0 no-underline;
+    transition-property: background-color, color, border-color, box-shadow, transform, opacity;
     letter-spacing: 1.5px;
     border: none;
   }
@@ -420,10 +520,20 @@ textarea:focus-visible,
      Verde en vez del acento cyan para que el cambio se lea de un vistazo. */
   .ui-btn--success {
     background: var(--c-green);
-    color: #fff;
+    color: var(--on-success);
   }
   .ui-btn--success:hover:not(:disabled) {
     background: var(--c-green);
+  }
+
+  /* whatsapp: CTA dominante de la pantalla de éxito del pedido */
+  .ui-btn--whatsapp {
+    background: var(--wa);
+    color: var(--on-wa);
+  }
+  .ui-btn--whatsapp:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--wa) 88%, #fff);
+    transform: translateY(-1px);
   }
 
   /* outline: borde sutil, fondo transparente */
@@ -450,11 +560,11 @@ textarea:focus-visible,
 
   /* dark: fondo negro, texto acento — para CTAs sobre fondos dorados */
   .ui-btn--dark {
-    background: #000;
+    background: var(--on-accent);
     color: var(--gold);
   }
   .ui-btn--dark:hover:not(:disabled) {
-    background: #111;
+    background: color-mix(in srgb, var(--on-accent) 85%, var(--gold));
   }
 
   /* tab: filtro activo/inactivo */
@@ -511,9 +621,10 @@ textarea:focus-visible,
     height: 28px;
     font-size: 13px;
   }
+  /* 44px: mínimo de área táctil (WCAG 2.5.5 / guías iOS) */
   .ui-btn--icon.ui-btn--md {
-    width: 36px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
     font-size: 15px;
   }
   .ui-btn--icon.ui-btn--lg {
@@ -541,11 +652,18 @@ textarea:focus-visible,
     cursor: not-allowed;
     transform: none !important;
   }
+  /* En curso (prop `loading` de <Button>): sigue deshabilitado pero no se
+     "apaga" — un botón al 40 % parece roto, no ocupado. */
+  .ui-btn[aria-busy='true']:disabled {
+    opacity: 0.85;
+    cursor: progress;
+  }
 
   /* ── Botones legacy (mantener retrocompatibilidad) ── */
   .btn-gold {
-    @apply bg-gold-500 text-black font-display font-extrabold uppercase
-           cursor-pointer inline-block transition-all duration-200;
+    @apply bg-gold-500 text-on-accent font-display font-extrabold uppercase
+           cursor-pointer inline-block duration-200;
+    transition-property: background-color, transform, box-shadow;
     font-size: 15px;
     letter-spacing: 2px;
     padding: 14px 36px;
@@ -565,7 +683,7 @@ textarea:focus-visible,
 
   .btn-outline-mirana {
     @apply bg-transparent border border-border text-text font-display font-bold
-           uppercase cursor-pointer inline-block transition-all duration-200;
+           uppercase cursor-pointer inline-block transition-colors duration-200;
     font-size: 15px;
     letter-spacing: 2px;
     padding: 13px 32px;
@@ -575,7 +693,7 @@ textarea:focus-visible,
   }
 
   .btn-dark {
-    @apply bg-black text-gold-500 font-display font-extrabold uppercase
+    @apply bg-on-accent text-gold-500 font-display font-extrabold uppercase
            cursor-pointer transition-colors duration-200 whitespace-nowrap shrink-0;
     font-size: 15px;
     letter-spacing: 2px;
@@ -583,13 +701,14 @@ textarea:focus-visible,
     border: none;
   }
   .btn-dark:hover {
-    @apply bg-[#111];
+    background: color-mix(in srgb, var(--on-accent) 85%, var(--gold));
   }
 
   /* ── Product card ── */
   .pcard {
     @apply bg-card border border-border cursor-pointer relative
-           transition-all duration-300 ease-out;
+           duration-300 ease-out;
+    transition-property: background-color, border-color, box-shadow, transform;
   }
   .pcard:hover {
     @apply bg-card-hover -translate-y-1.5;
@@ -600,7 +719,8 @@ textarea:focus-visible,
   }
   .pcard .add-btn {
     @apply w-full border-none font-display font-extrabold
-           uppercase cursor-pointer transition-all duration-200;
+           uppercase cursor-pointer duration-200;
+    transition-property: background-color, color;
     font-size: 14px;
     letter-spacing: 1.5px;
     padding: 10px;
@@ -649,7 +769,7 @@ textarea:focus-visible,
   /* ── Filter pills ── */
   .filt {
     @apply bg-transparent border border-border text-muted font-display font-bold
-           uppercase cursor-pointer transition-all duration-200;
+           uppercase cursor-pointer transition-colors duration-200;
     font-size: 14px;
     letter-spacing: 1px;
     padding: 8px 20px;
@@ -658,16 +778,18 @@ textarea:focus-visible,
     @apply border-muted text-text;
   }
   .filt.active {
-    @apply bg-gold-500 text-black border-gold-500;
+    @apply bg-gold-500 text-on-accent border-gold-500;
   }
 
   /* ── Footer links ── */
+  /* Antes opacity .55 sobre --text: en claro quedaba ~3.4:1. --mt cumple AA
+     en ambos temas y el hover sube a --text. */
   .footer-link {
-    @apply transition-opacity duration-200;
-    opacity: 0.55;
+    @apply transition-colors duration-200;
+    color: var(--mt);
   }
   .footer-link:hover {
-    opacity: 1;
+    color: var(--text);
   }
 
   /* ── Brand carousel item ── */
@@ -835,7 +957,7 @@ textarea:focus-visible,
     background: var(--c-blue);
   }
   .pie-dot-2 {
-    background: #c77cff;
+    background: var(--c-violet);
   }
 
   /* El estilo de campo (antes `.adm-input`) vive ahora en
@@ -867,6 +989,59 @@ textarea:focus-visible,
   .ui-date:focus {
     border-color: var(--bdh);
   }
+}
+
+/* =============================================================
+   Skeleton — placeholder de carga (ver shared/components/ui/Skeleton.tsx)
+   Base --skeleton + un brillo que barre de izquierda a derecha. Con
+   movimiento reducido el brillo desaparece y queda el bloque estático (la
+   regla global de reduced-motion solo acorta la animación; aquí se quita).
+   ============================================================= */
+.skeleton {
+  background-color: var(--skeleton);
+  background-image: linear-gradient(
+    100deg,
+    transparent 30%,
+    var(--skeleton-shine) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: var(--animate-shimmer);
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    background-image: none;
+    animation: none;
+  }
+}
+
+/* =============================================================
+   Imagen con fundido (shared/components/ui/FadeImage.tsx) — el contenedor
+   pinta su placeholder y la foto entra con opacidad al decodificar.
+   ============================================================= */
+.img-fade {
+  opacity: 0;
+  transition: opacity 0.35s ease-out;
+}
+.img-fade[data-loaded='true'] {
+  opacity: 1;
+}
+
+/* =============================================================
+   Barra de progreso de navegación
+   (shared/components/layout/NavigationProgress.tsx) — el único momento de
+   movimiento "de marca" en la carga: una línea cyan bajo el borde superior.
+   ============================================================= */
+.nav-progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 2px;
+  z-index: 1000;
+  pointer-events: none;
+  transform-origin: 0 50%;
+  background: var(--gold);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--gold) 70%, transparent);
 }
 
 /* ── Contenido enriquecido (editor TipTap y páginas públicas) ── */
@@ -957,4 +1132,48 @@ textarea:focus-visible,
 }
 .rich-prose--compact hr {
   margin: 16px 0;
+}
+
+/* =============================================================
+   Barra de promociones — cierre sin salto de layout.
+   Un script inline (PromoAnnouncementBarClient) marca <html> con
+   `promo-dismissed` ANTES del primer pintado si el cliente ya la cerró, así
+   el navbar y el contenido nacen sin el hueco de la barra en vez de
+   saltar al hidratar. (0,1,1) le gana al `:root { --ab }` del SSR.
+   ============================================================= */
+html.promo-dismissed {
+  --ab: 0px;
+}
+html.promo-dismissed [data-promo-bar] {
+  display: none;
+}
+/* Marquee: se detiene con hover/foco (WCAG 2.2.2) */
+[data-promo-bar]:hover .animate-marquee,
+[data-promo-bar]:focus-within .animate-marquee,
+[data-brand-marquee]:hover .animate-marquee,
+[data-brand-marquee]:focus-within .animate-marquee {
+  animation-play-state: paused;
+}
+
+/* =============================================================
+   FAB de WhatsApp — respeta el área segura (iPhone) y sube por
+   encima de la barra de compra fija de la ficha en móvil.
+   ============================================================= */
+.wa-fab {
+  bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  right: calc(1rem + env(safe-area-inset-right, 0px));
+}
+@media (max-width: 1023.98px) {
+  body:has([data-sticky-cta]) .wa-fab {
+    bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+  }
+  /* Que la barra fija no tape el final del footer */
+  body:has([data-sticky-cta]) footer {
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Barra fija de compra (ficha de producto, móvil) */
+.sticky-cta {
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
 }

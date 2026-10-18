@@ -1,9 +1,11 @@
 'use client'
 
+import { useChartColor } from '@/features/dashboard/lib/use-chart-colors'
 import { Area, AreaChart, ResponsiveContainer } from 'recharts'
 
 interface SparklineProps {
   data: number[]
+  /** Color literal o nombre de custom property del tema (`--c-blue`) */
   color?: string
   w?: number
   h?: number
@@ -12,9 +14,10 @@ interface SparklineProps {
 // Nota: `w` se mantiene en la interfaz por compatibilidad de props, pero el
 // ancho real lo controla el contenedor padre (ResponsiveContainer) para que
 // el sparkline nunca desborde la KpiCard en grids angostos (mobile).
-export function Sparkline({ data, color = '#00c8ff', h = 40 }: SparklineProps) {
+export function Sparkline({ data, color: colorProp = '--accent-ink', h = 40 }: SparklineProps) {
+  const color = useChartColor(colorProp)
   const chartData = data.map((v) => ({ v }))
-  const gradId = 'spark-' + color.replace(/[^a-z0-9]/gi, '')
+  const gradId = 'spark-' + colorProp.replace(/[^a-z0-9]/gi, '')
   return (
     <ResponsiveContainer width="100%" height={h}>
       <AreaChart data={chartData} margin={{ top: 3, right: 0, left: 0, bottom: 0 }}>

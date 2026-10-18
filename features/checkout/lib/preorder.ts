@@ -53,12 +53,17 @@ export function resolveDepositPercent(
  * no sobre el precio base: con precio 359 y oferta 319, el 15% son S/47.85.
  */
 export function depositUnitPrice(p: PreorderPricing, globalDefault?: number): number {
-  return round2((effectivePrice(p) * resolveDepositPercent(p, globalDefault)) / 100)
+  const priceCents = Math.round(effectivePrice(p) * 100)
+  // Porcentaje entero y redondeo half-up: medio céntimo siempre sube.
+  const depositCents = Math.floor((priceCents * resolveDepositPercent(p, globalDefault) + 50) / 100)
+  return depositCents / 100
 }
 
 /** Saldo por unidad que queda para después. */
 export function balanceUnitPrice(p: PreorderPricing, globalDefault?: number): number {
-  return round2(effectivePrice(p) - depositUnitPrice(p, globalDefault))
+  const priceCents = Math.round(effectivePrice(p) * 100)
+  const depositCents = Math.round(depositUnitPrice(p, globalDefault) * 100)
+  return (priceCents - depositCents) / 100
 }
 
 /**

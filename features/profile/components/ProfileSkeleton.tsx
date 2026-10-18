@@ -1,8 +1,8 @@
-import { Skeleton } from '@/shared/components/ui/Skeleton'
+import { Skeleton, SkeletonRegion } from '@/shared/components/ui/Skeleton'
 
 export function ProfileSkeleton() {
   return (
-    <div className="max-w-275 mx-auto px-4 sm:px-6 pt-[calc(var(--nh)+48px)] pb-16">
+    <SkeletonRegion label="Cargando tu perfil…" className="max-w-275 mx-auto px-4 sm:px-6 pt-[calc(var(--nh)+48px)] pb-16">
       {/* Header */}
       <div className="mb-8">
         <Skeleton className="w-12 h-3 mb-2" />
@@ -56,6 +56,6 @@ export function ProfileSkeleton() {
           </div>
         </div>
       </div>
-    </div>
+    </SkeletonRegion>
   )
 }

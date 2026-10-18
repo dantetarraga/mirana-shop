@@ -22,7 +22,18 @@ function createPrismaClient() {
       database: url.pathname.replace(/^\//, ""),
       decimalAsNumber: true,
       bigIntAsNumber: true,
-      connectionLimit: 10,
+      // Pool chico a propósito: el hosting (Hostinger) limita a 500 conexiones
+      // NUEVAS por hora y por usuario de BD, y al agotarlas tumba el sitio.
+      // - connectionLimit 5: tope de conexiones simultáneas por proceso.
+      // - minimumIdle 1: se conserva una conexión abierta para no reconectar
+      //   en cada request tras un rato sin tráfico.
+      // - idleTimeout 120 s: las conexiones extra se liberan antes de que el
+      //   servidor las corte por wait_timeout (que en hosting compartido suele
+      //   ser bajo); una conexión cortada por el servidor cuesta igual una
+      //   reconexión y además un error en la query que la encuentra muerta.
+      connectionLimit: 5,
+      minimumIdle: 1,
+      idleTimeout: 120,
       acquireTimeout: 15000,
     },
     // El protocolo binario (execute) hace que el query compiler de Prisma

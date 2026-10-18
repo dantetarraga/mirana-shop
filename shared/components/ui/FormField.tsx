@@ -1,17 +1,24 @@
-import { cls } from '@/shared/lib/admin/admin-classes'
+import { Field } from '@/shared/components/ui/Field'
+import type { ReactNode } from 'react'
 
 interface FormFieldProps {
-  label:    string
-  error?:   string
-  children: React.ReactNode
+  label: string
+  error?: string
+  hint?: string
+  required?: boolean
+  children: ReactNode
 }
 
-export function FormField({ label, error, children }: FormFieldProps) {
+/**
+ * Campo del admin: label + control + error sobre el primitivo `Field`. Si
+ * `children` es un único control (input, select, textarea…), recibe `id`,
+ * `aria-invalid` y `aria-describedby` hacia el error; con hijos compuestos se
+ * comporta como un rótulo visual.
+ */
+export function FormField({ label, error, hint, required, children }: FormFieldProps) {
   return (
-    <div>
-      <label className={`${cls.label} block`}>{label}</label>
+    <Field label={label} error={error} hint={hint} required={required}>
       {children}
-      {error && <p className="mt-1 text-[11px] text-[#ff6644]">{error}</p>}
-    </div>
+    </Field>
   )
 }

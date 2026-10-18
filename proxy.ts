@@ -1,5 +1,11 @@
-import { auth } from '@/auth'
-import { NextResponse, type NextRequest } from 'next/server'
+import { authConfig } from '@/auth.config'
+import { legacyCatalogRedirect } from '@/features/products/lib/catalog-params'
+import NextAuth from 'next-auth'
+import { NextResponse, type NextFetchEvent, type NextRequest } from 'next/server'
+
+// Instancia ligera de Auth.js: solo decodifica el JWT. Se construye desde
+// auth.config.ts (sin Prisma) para no arrastrar la BD al bundle del proxy.
+const { auth } = NextAuth(authConfig)
 
 // ---------------------------------------------------------------------------
 // Protege /cuenta y /admin.
@@ -11,9 +17,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 // de que corriera nada de JavaScript, así que no había arreglo posible desde el
 // cliente.
 //
-// Acá el destino se arma con el host REAL de la request (el que reenvía el
-// proxy del hosting), así que funciona en cualquier dominio sin depender de
-// ninguna variable de entorno.
+// En producción el destino usa NEXT_PUBLIC_SITE_URL. Esto evita que un Host o
+// X-Forwarded-Host falsificado controle el Location del redirect.
 // ---------------------------------------------------------------------------
 
 /**
@@ -21,17 +26,45 @@ import { NextResponse, type NextRequest } from 'next/server'
  * puede ser el interno, por eso mandan los headers `x-forwarded-*`.
  */
 function publicOrigin(req: NextRequest): string {
+  if (process.env.NODE_ENV === 'production') {
+    const configured = process.env.NEXT_PUBLIC_SITE_URL
+    if (!configured) throw new Error('NEXT_PUBLIC_SITE_URL no definida en producción')
+    const url = new URL(configured)
+    if (!['http:', 'https:'].includes(url.protocol)) {
+      throw new Error('NEXT_PUBLIC_SITE_URL debe usar http o https')
+    }
+    return url.origin
+  }
+
   const host = req.headers.get('x-forwarded-host') ?? req.headers.get('host')
   if (!host) return req.nextUrl.origin
   const proto = req.headers.get('x-forwarded-proto') ?? req.nextUrl.protocol.replace(':', '')
   return `${proto}://${host}`
 }
 
-export const proxy = auth((req) => {
+/**
+ * Ruta inexistente a la que se reescribe /admin para quien no es admin: Next
+ * responde su 404 normal. Así el panel no se delata — ni redirect al login ni
+ * `?callbackUrl=/admin` en la URL — y desde fuera es indistinguible de
+ * cualquier página que no existe. El admin entra desde el modal de acceso
+ * como cualquier cliente y luego navega a /admin.
+ */
+const HIDDEN_ADMIN_PATH = '/__no-encontrado'
+
+const authProxy = auth((req) => {
+  const { pathname } = req.nextUrl
+
+  // Chequeo optimista de rol: es solo la primera capa — el rol del JWT puede
+  // estar obsoleto, así que cada page del admin vuelve a verificarlo contra la
+  // BD (verifyAdmin) y cada action con requireAdmin().
+  if (pathname.startsWith('/admin') && req.auth?.user?.role !== 'admin') {
+    return NextResponse.rewrite(new URL(HIDDEN_ADMIN_PATH, req.url))
+  }
+
   if (req.auth) return
 
   // Ruta + query, para poder volver adonde el usuario quería ir.
-  const target = `${req.nextUrl.pathname}${req.nextUrl.search}`
+  const target = `${pathname}${req.nextUrl.search}`
 
   // Absoluta y no relativa porque el wrapper de Auth.js hace `new URL()` sobre
   // el Location y una ruta suelta lo rompe con ERR_INVALID_URL.
@@ -39,6 +72,26 @@ export const proxy = auth((req) => {
   return NextResponse.redirect(url)
 })
 
+/**
+ * /catalogo?cat=x y /catalogo?brand=x (único parámetro) → 308 a la página
+ * propia de la categoría o la marca. Se hace aquí y no solo en la page porque
+ * /catalogo tiene loading.tsx: con streaming, permanentRedirect() sale como
+ * 200 + meta refresh, y los buscadores necesitan el 308 real para trasladar
+ * la URL. No pasa por Auth.js (no decodifica el JWT).
+ */
+function catalogRedirect(req: NextRequest): NextResponse {
+  const destination = legacyCatalogRedirect(Object.fromEntries(req.nextUrl.searchParams))
+  if (!destination) return NextResponse.next()
+  return NextResponse.redirect(new URL(destination, publicOrigin(req)), 308)
+}
+
+export function proxy(req: NextRequest, event: NextFetchEvent) {
+  if (req.nextUrl.pathname === '/catalogo') return catalogRedirect(req)
+  // Mismos argumentos que Next le pasaba antes al wrapper de Auth.js; su tipo
+  // público solo declara la firma de route handler ({ params }).
+  return authProxy(req, event as unknown as Parameters<typeof authProxy>[1])
+}
+
 export const config = {
-  matcher: ['/cuenta/:path*', '/admin/:path*'],
+  matcher: ['/cuenta/:path*', '/admin/:path*', '/catalogo'],
 }

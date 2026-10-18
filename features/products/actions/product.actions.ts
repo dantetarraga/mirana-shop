@@ -2,13 +2,16 @@
 
 import { getBrands } from '@/features/brands/queries/brand.queries'
 import { getCategories } from '@/features/categories/queries/category.queries'
+import { assertProductCanBeArchived, setAvailableStock } from '@/features/inventory/lib/stock'
 import { findBestMatch } from '@/features/products/lib/catalog-match'
 import { PRODUCT_DETAIL_SELECT } from '@/features/products/queries/product.queries'
 import {
   findTrashedConflict,
   trashedConflictError,
 } from '@/features/trash/lib/trashed-conflict'
+import { findDrawerProducts } from '@/features/products/queries/drawer-product.queries'
 import { db } from '@/shared/lib/db'
+import { slugify, uniqueSlug } from '@/shared/lib/slug'
 import { importProductRowSchema, productDbBaseSchema, productDbSchema } from '@/features/products/schemas/product.schema'
 import { requireAdmin } from '@/shared/lib/require-admin'
 import type { ActionResult } from '@/shared/types/action-result.types'
@@ -20,16 +23,6 @@ import { z } from 'zod'
 // Helpers
 // ---------------------------------------------------------------------------
 
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-}
-
 function invalidateProductCaches() {
   revalidatePath('/admin/products')
   revalidatePath('/admin/inventory')
@@ -38,6 +31,36 @@ function invalidateProductCaches() {
   revalidatePath('/')
   revalidateTag('products', 'max')
   revalidateTag('catalog', 'max')
+}
+
+/**
+ * La categoría y la marca de un producto deben existir y no estar en la
+ * papelera. Sin esto la FK aceptaba una categoría borrada (soft delete) y el
+ * producto quedaba colgado de algo que la tienda ya no muestra. Devuelve el
+ * mensaje de negocio, o null si todo está bien. Solo valida lo que llega.
+ */
+async function findCatalogRefError(refs: {
+  categoryId?: string
+  brandId?: string
+}): Promise<string | null> {
+  const [category, brand] = await Promise.all([
+    refs.categoryId
+      ? db.category.findUnique({ where: { id: refs.categoryId }, select: { name: true, deletedAt: true } })
+      : null,
+    refs.brandId
+      ? db.brand.findUnique({ where: { id: refs.brandId }, select: { name: true, deletedAt: true } })
+      : null,
+  ])
+  if (refs.categoryId) {
+    if (!category) return 'La categoría elegida no existe. Elige otra.'
+    if (category.deletedAt)
+      return `La categoría "${category.name}" está en la papelera. Restáurala o elige otra.`
+  }
+  if (refs.brandId) {
+    if (!brand) return 'La marca elegida no existe. Elige otra.'
+    if (brand.deletedAt) return `La marca "${brand.name}" está en la papelera. Restáurala o elige otra.`
+  }
+  return null
 }
 
 // ---------------------------------------------------------------------------
@@ -50,15 +73,6 @@ interface CatalogRef {
   id: string
   name: string
   slug: string
-}
-
-function uniqueSlug(name: string, taken: Set<string>): string {
-  const base = slugify(name) || 'item'
-  let candidate = base
-  let i = 2
-  while (taken.has(candidate)) candidate = `${base}-${i++}`
-  taken.add(candidate)
-  return candidate
 }
 
 async function resolveOrCreateCatalogRef(
@@ -100,6 +114,9 @@ export async function createProduct(
     const images = input.imageUrl ? [{ url: input.imageUrl, alt: input.name, position: 0 }] : []
     const stock = input.stock ?? 0
     const slug = input.slug || slugify(input.name)
+
+    const refError = await findCatalogRefError(input)
+    if (refError) return { success: false, error: refError, code: 400 }
 
     const trashed = await findTrashedConflict('product', { slug, sku: input.sku })
     if (trashed) return { success: false, error: trashedConflictError(trashed), code: 409 }
@@ -160,6 +177,11 @@ export async function updateProduct(
   const input = parsed.data
 
   try {
+    if (input.categoryId !== undefined || input.brandId !== undefined) {
+      const refError = await findCatalogRefError(input)
+      if (refError) return { success: false, error: refError, code: 400 }
+    }
+
     if (input.slug !== undefined || input.sku !== undefined) {
       const trashed = await findTrashedConflict('product', { slug: input.slug, sku: input.sku }, id)
       if (trashed) return { success: false, error: trashedConflictError(trashed), code: 409 }
@@ -191,13 +213,9 @@ export async function updateProduct(
         select: PRODUCT_DETAIL_SELECT,
       })
 
-      if (input.stock !== undefined) {
-        await tx.productInventory.upsert({
-          where: { productId: id },
-          update: { availableStock: input.stock },
-          create: { productId: id, availableStock: input.stock },
-        })
-      }
+      if (input.status === 'ARCHIVED') await assertProductCanBeArchived(tx, id)
+
+      if (input.stock !== undefined) await setAvailableStock(tx, id, input.stock)
 
       // Sincroniza imágenes: elimina las existentes y crea las nuevas
       if (images !== undefined) {
@@ -236,26 +254,26 @@ export async function deleteProduct(id: string): Promise<ActionResult> {
   if (!id) return { success: false, error: 'ID de producto requerido', code: 400 }
 
   try {
-    const [orderItemCount, preorderCount, movementCount] = await Promise.all([
-      db.orderItem.count({ where: { productId: id } }),
-      db.preorder.count({ where: { productId: id } }),
-      db.inventoryMovement.count({ where: { productId: id } }),
-    ])
+    await db.$transaction(async (tx) => {
+      // Bloquea primero el producto: una reserva concurrente debe terminar
+      // antes de comprobar los compromisos, o fallar al verlo archivado.
+      await tx.product.update({ where: { id }, data: { deletedAt: new Date() } })
+      await assertProductCanBeArchived(tx, id)
 
-    if (orderItemCount === 0 && preorderCount === 0 && movementCount === 0) {
-      // Sin historial de pedidos/preórdenes/movimientos: borrado real y completo.
-      // La cascada de Prisma limpia ProductInventory, ProductImage, CartItem y ProductCollection.
-      await db.product.delete({ where: { id } })
-    } else {
-      // Tiene historial ligado (OrderItem/Preorder/InventoryMovement no cascadean
-      // a propósito, para no romper pedidos pasados) — soft delete, pero sin dejar
-      // basura: se elimina el inventario y los carritos que quedarían huérfanos.
-      await db.$transaction([
-        db.cartItem.deleteMany({ where: { productId: id } }),
-        db.productInventory.deleteMany({ where: { productId: id } }),
-        db.product.update({ where: { id }, data: { deletedAt: new Date() } }),
+      const [orderItemCount, preorderCount, movementCount] = await Promise.all([
+        tx.orderItem.count({ where: { productId: id } }),
+        tx.preorder.count({ where: { productId: id } }),
+        tx.inventoryMovement.count({ where: { productId: id } }),
       ])
-    }
+
+      if (orderItemCount === 0 && preorderCount === 0 && movementCount === 0) {
+        // Sin historial: se conserva el borrado definitivo existente.
+        await tx.product.delete({ where: { id } })
+      } else {
+        // La papelera conserva el inventario completo y todos sus contadores.
+        await tx.cartItem.deleteMany({ where: { productId: id } })
+      }
+    })
 
     invalidateProductCaches()
     return { success: true, data: undefined }
@@ -311,8 +329,10 @@ export async function importProducts(
     // agrega a la lista para que filas siguientes del mismo archivo la reusen
     // en vez de crear duplicados.
     const [categories, brands] = await Promise.all([
-      getCategories({ perPage: 100 }),
-      getBrands({ perPage: 100 }),
+      // Sin el tope de 100 de antes: con más categorías/marcas el match no
+      // las veía y la importación creaba duplicados.
+      getCategories({ perPage: 5000 }),
+      getBrands({ perPage: 5000 }),
     ])
     categoryRefs = categories.map((c) => ({ id: c.id, name: c.name, slug: c.slug }))
     brandRefs = brands.map((b) => ({ id: b.id, name: b.name, slug: b.slug }))
@@ -321,8 +341,20 @@ export async function importProducts(
     return { success: false, error: message, code: 500 }
   }
 
-  const takenCategorySlugs = new Set(categoryRefs.map((c) => c.slug))
-  const takenBrandSlugs = new Set(brandRefs.map((b) => b.slug))
+  // Slugs ocupados, incluidos los de la papelera (siguen reservando el índice
+  // único): sin esto una categoría/marca nueva podía chocar con una borrada.
+  let takenCategorySlugs: Set<string>
+  let takenBrandSlugs: Set<string>
+  try {
+    const [categorySlugs, brandSlugs] = await Promise.all([
+      db.category.findMany({ select: { slug: true } }),
+      db.brand.findMany({ select: { slug: true } }),
+    ])
+    takenCategorySlugs = new Set(categorySlugs.map((c) => c.slug))
+    takenBrandSlugs = new Set(brandSlugs.map((b) => b.slug))
+  } catch {
+    return { success: false, error: 'No se pudo cargar categorías/marcas', code: 500 }
+  }
 
   for (const row of rows) {
     try {
@@ -356,7 +388,7 @@ export async function importProducts(
       // servidor.
       const match = await db.product.findUnique({
         where: { sku: row.sku },
-        select: { id: true, deletedAt: true, inventory: { select: { availableStock: true } } },
+        select: { id: true, deletedAt: true },
       })
 
       if (match) {
@@ -392,10 +424,11 @@ export async function importProducts(
             })
           }
 
-          const currentStock = match.inventory?.availableStock ?? 0
+          if (row.status === 'ARCHIVED') await assertProductCanBeArchived(tx, match.id)
+
           await tx.productInventory.upsert({
             where: { productId: match.id },
-            update: { availableStock: currentStock + row.stock },
+            update: { availableStock: { increment: row.stock }, version: { increment: 1 } },
             create: { productId: match.id, availableStock: row.stock },
           })
         })
@@ -462,15 +495,45 @@ export interface CatalogExportRow {
 }
 
 const MAX_IMAGE_BYTES = 4_000_000
+const EXPORT_IMAGE_HOSTS = new Set([
+  'res.cloudinary.com',
+  'images.unsplash.com',
+  'plus.unsplash.com',
+  'picsum.photos',
+  'placehold.co',
+])
 
 async function fetchImageAsDataUrl(url: string): Promise<string | null> {
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(8000) })
+    const parsed = new URL(url)
+    if (parsed.protocol !== 'https:' || !EXPORT_IMAGE_HOSTS.has(parsed.hostname)) return null
+
+    const res = await fetch(parsed, {
+      signal: AbortSignal.timeout(8000),
+      // No seguir redirecciones hacia hosts privados o no permitidos.
+      redirect: 'error',
+    })
     if (!res.ok) return null
     const type = res.headers.get('content-type') ?? 'image/jpeg'
     if (!type.startsWith('image/')) return null
-    const buf = Buffer.from(await res.arrayBuffer())
-    if (buf.byteLength === 0 || buf.byteLength > MAX_IMAGE_BYTES) return null
+    const declaredSize = Number(res.headers.get('content-length') ?? 0)
+    if (declaredSize > MAX_IMAGE_BYTES || !res.body) return null
+
+    const reader = res.body.getReader()
+    const chunks: Uint8Array[] = []
+    let bytes = 0
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      bytes += value.byteLength
+      if (bytes > MAX_IMAGE_BYTES) {
+        await reader.cancel()
+        return null
+      }
+      chunks.push(value)
+    }
+    if (bytes === 0) return null
+    const buf = Buffer.concat(chunks.map((chunk) => Buffer.from(chunk)))
     return `data:${type};base64,${buf.toString('base64')}`
   } catch {
     return null
@@ -537,48 +600,14 @@ export async function searchAvailableProducts(
   }
 
   try {
-    const products = await db.product.findMany({
+    const data = await findDrawerProducts({
       where: {
-        deletedAt: null,
         id: excludeIds.length > 0 ? { notIn: excludeIds } : undefined,
-        OR: [
-          { name: { contains: query.trim() } },
-          { sku: { contains: query.trim() } },
-        ],
+        OR: [{ name: { contains: query.trim() } }, { sku: { contains: query.trim() } }],
       },
-      select: {
-        id: true,
-        name: true,
-        sku: true,
-        price: true,
-        status: true,
-        images: {
-          select: { url: true },
-          orderBy: { position: 'asc' },
-          take: 1,
-        },
-        category: { select: { name: true } },
-        brand: { select: { name: true } },
-        inventory: { select: { availableStock: true } },
-      },
-      orderBy: { name: 'asc' },
       take: 20,
     })
-
-    return {
-      success: true,
-      data: products.map((p) => ({
-        id: p.id,
-        name: p.name,
-        sku: p.sku,
-        price: Number(p.price),
-        status: p.status,
-        imageUrl: p.images[0]?.url ?? null,
-        category: p.category.name,
-        brand: p.brand.name,
-        stock: p.inventory?.availableStock ?? 0,
-      })),
-    }
+    return { success: true, data }
   } catch {
     return { success: false, error: 'Error al buscar productos', code: 500 }
   }

@@ -10,6 +10,7 @@
 
 import type { OrderStatusGroup } from '@/features/orders/types'
 import type { OrderStatus } from '@/generated/prisma/client'
+import { ORDER_STATUS } from '@/shared/lib/admin/admin-constants'
 
 /** Qué estados de BD agrupa cada uno de los 4 estados visibles. */
 export const ORDER_STATUS_GROUPS: Record<OrderStatusGroup, OrderStatus[]> = {
@@ -34,6 +35,33 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
 /** Los 8 estados en el orden en que avanza un pedido — orden de los botones. */
 export const ORDER_STATUS_FLOW: OrderStatus[] = Object.values(ORDER_STATUS_GROUPS).flat()
 
+/**
+ * Transiciones válidas del flujo. CANCELLED y REFUNDED son terminales.
+ * Un reembolso no repone inventario automáticamente: una devolución física se
+ * registra como ajuste/retorno explícito para no inventar stock.
+ */
+export const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  PENDING: ['AWAITING_PROOF', 'CANCELLED'],
+  AWAITING_PROOF: ['PAID', 'CANCELLED'],
+  PAID: ['PREPARING', 'REFUNDED'],
+  PREPARING: ['SHIPPED', 'REFUNDED'],
+  SHIPPED: ['DELIVERED', 'REFUNDED'],
+  DELIVERED: ['REFUNDED'],
+  CANCELLED: [],
+  REFUNDED: [],
+}
+
+export function canTransitionOrder(from: OrderStatus, to: OrderStatus): boolean {
+  return from === to || ORDER_STATUS_TRANSITIONS[from].includes(to)
+}
+
+export class OrderStatusConflictError extends Error {
+  constructor() {
+    super('El pedido fue modificado concurrentemente. Actualiza la página e intenta de nuevo.')
+    this.name = 'OrderStatusConflictError'
+  }
+}
+
 const GROUP_BY_STATUS = Object.fromEntries(
   Object.entries(ORDER_STATUS_GROUPS).flatMap(([group, statuses]) =>
     statuses.map((s) => [s, group as OrderStatusGroup]),
@@ -43,4 +71,32 @@ const GROUP_BY_STATUS = Object.fromEntries(
 /** Estado visible al que pertenece un estado de BD. */
 export function orderStatusGroup(status: OrderStatus | string): OrderStatusGroup {
   return GROUP_BY_STATUS[status as OrderStatus] ?? 'pendiente'
+}
+
+/** Clases/colores del grupo visible (badge, botón, punto de leyenda). */
+export type OrderStatusTone = (typeof ORDER_STATUS)[string]
+
+export interface OrderStatusMeta {
+  /** Etiqueta del estado de BD ("Preparando"). */
+  label: string
+  /** Estado visible al que pertenece ("pendiente"). */
+  group: OrderStatusGroup
+  /** Clases y colores del grupo: los 8 estados se pintan con los 4 tonos del cliente. */
+  tone: OrderStatusTone
+}
+
+/**
+ * Etiqueta + tokens de color de un estado de pedido. Punto único para la
+ * tienda (OrdersContent, OrdersCarousel) y el admin: el color es siempre el
+ * del grupo, así un mismo pedido no se ve verde en un lado y ámbar en otro.
+ * Un estado desconocido cae a "pendiente" en vez de mostrar el código crudo.
+ */
+export function getOrderStatusMeta(status: OrderStatus | string): OrderStatusMeta {
+  const group = orderStatusGroup(status)
+  const tone = ORDER_STATUS[group] ?? ORDER_STATUS.pendiente
+  return {
+    label: ORDER_STATUS_LABELS[status as OrderStatus] ?? tone.label,
+    group,
+    tone,
+  }
 }

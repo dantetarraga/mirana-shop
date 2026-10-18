@@ -1,10 +1,11 @@
 import { Providers } from '@/shared/components/Providers'
 import { ThemedToaster } from '@/shared/components/ThemedToaster'
+import { NavigationProgress } from '@/shared/components/layout/NavigationProgress'
+import { getSiteUrl } from '@/shared/lib/env'
 import type { Metadata, Viewport } from 'next'
 import { Barlow_Condensed, Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 const SITE_TITLE = 'MIRANA — Juguetes & Figuras'
 const SITE_DESCRIPTION =
   'Mirana Shop: juguetes, figuras de colección y modelos a escala 100% originales, con importación directa y calidad garantizada en Arequipa.'
@@ -24,29 +25,34 @@ const plusJakarta = Plus_Jakarta_Sans({
   display: 'swap',
 })
 
-export const metadata: Metadata = {
-  metadataBase: new URL(BASE_URL),
-  title: {
-    default: SITE_TITLE,
-    template: '%s | MIRANA',
-  },
-  description: SITE_DESCRIPTION,
-  keywords: ['figuras', 'colección', 'anime', 'LEGO', 'preventa', 'importación', 'premium'],
-  openGraph: {
-    type: 'website',
-    locale: 'es_PE',
-    siteName: 'MIRANA',
-    url: BASE_URL,
-    title: SITE_TITLE,
+// generateMetadata (y no un objeto estático) para que la URL se valide al
+// renderizar y no al importar el módulo.
+export function generateMetadata(): Metadata {
+  const siteUrl = getSiteUrl()
+  return {
+    metadataBase: new URL(siteUrl),
+    title: {
+      default: SITE_TITLE,
+      template: '%s | MIRANA',
+    },
     description: SITE_DESCRIPTION,
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'MIRANA' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: SITE_TITLE,
-    description: SITE_DESCRIPTION,
-    images: ['/opengraph-image'],
-  },
+    keywords: ['figuras', 'colección', 'anime', 'LEGO', 'preventa', 'importación', 'premium'],
+    openGraph: {
+      type: 'website',
+      locale: 'es_PE',
+      siteName: 'MIRANA',
+      url: siteUrl,
+      title: SITE_TITLE,
+      description: SITE_DESCRIPTION,
+      images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'MIRANA' }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: SITE_TITLE,
+      description: SITE_DESCRIPTION,
+      images: ['/opengraph-image'],
+    },
+  }
 }
 
 export const viewport: Viewport = {
@@ -76,6 +82,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Saltar al contenido
         </a>
+        <NavigationProgress />
         <Providers>
           {children}
           <ThemedToaster />

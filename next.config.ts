@@ -1,38 +1,48 @@
 import type { NextConfig } from 'next'
 
+const isProduction = process.env.NODE_ENV === 'production'
+
+// Hosts de imágenes de relleno (seed/demo). En producción las imágenes reales
+// viven en Cloudinary: permitirlos ahí solo agranda la superficie de la CSP.
+const DEV_IMAGE_HOSTS = ['picsum.photos', 'images.unsplash.com', 'plus.unsplash.com']
+const IMAGE_HOSTS = [
+  'res.cloudinary.com',
+  'placehold.co',
+  ...(isProduction ? [] : DEV_IMAGE_HOSTS),
+]
+
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+  "object-src 'none'",
+  // React en desarrollo usa eval() para reconstruir callstacks entre entornos;
+  // sin 'unsafe-eval' el dev server rompe. En producción React nunca lo usa.
+  isProduction
+    ? "script-src 'self' 'unsafe-inline'"
+    : "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  "style-src 'self' 'unsafe-inline'",
+  `img-src 'self' data: blob: ${IMAGE_HOSTS.map((host) => `https://${host}`).join(' ')}`,
+  "font-src 'self' data:",
+  isProduction
+    ? "connect-src 'self'"
+    : "connect-src 'self' ws: wss:",
+  ...(isProduction ? ['upgrade-insecure-requests'] : []),
+].join('; ')
+
 const nextConfig: NextConfig = {
   images: {
-    // Cloudinary ya optimiza/redimensiona/convierte formato vía parámetros de URL
-    // (f_auto,q_auto) — reprocesar con sharp en el servidor sería trabajo duplicado
-    // y depende de que sharp funcione en el hosting, que es justo lo que fallaba.
-    //
-    // Con unoptimized:true las imágenes se sirven directo desde el host remoto
-    // (no pasan por el optimizador de Next), así que dangerouslyAllowSVG /
-    // contentDispositionType / contentSecurityPolicy del bloque images no
-    // aplicaban — se quitaron para no dar falsa sensación de protección.
-    unoptimized: true,
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'res.cloudinary.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'picsum.photos',
-      },
-      {
-        protocol: 'https',
-        hostname: 'placehold.co',
-      },
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'plus.unsplash.com',
-      },
-    ],
+    // Sin el optimizador de Next: reprocesar con sharp en el servidor era
+    // trabajo duplicado y dependía de que sharp funcionara en el hosting, que
+    // es justo lo que fallaba. En su lugar un loader propio pide a cada CDN
+    // (Cloudinary, Unsplash) el ancho exacto de cada entrada del srcSet; antes,
+    // con `unoptimized: true`, se descargaba siempre el original.
+    loader: 'custom',
+    loaderFile: './shared/lib/image-loader.ts',
+    // Con loader propio Next no valida estos hosts, pero se mantienen como
+    // inventario de orígenes permitidos (y alineados con la CSP de arriba).
+    remotePatterns: IMAGE_HOSTS.map((hostname) => ({ protocol: 'https' as const, hostname })),
   },
   experimental: {
     serverActions: {
@@ -51,6 +61,15 @@ const nextConfig: NextConfig = {
         { key: 'X-Content-Type-Options', value: 'nosniff' },
         { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
         { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+        { key: 'Content-Security-Policy', value: contentSecurityPolicy },
+        ...(isProduction
+          ? [
+              {
+                key: 'Strict-Transport-Security',
+                value: 'max-age=31536000; includeSubDomains',
+              },
+            ]
+          : []),
       ],
     },
   ],

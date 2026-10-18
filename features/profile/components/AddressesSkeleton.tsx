@@ -1,8 +1,8 @@
-import { Skeleton } from '@/shared/components/ui/Skeleton'
+import { Skeleton, SkeletonRegion } from '@/shared/components/ui/Skeleton'
 
 export function AddressesSkeleton() {
   return (
-    <div className="max-w-200 mx-auto px-4 sm:px-6 pt-[calc(var(--nh)+48px)] pb-16">
+    <SkeletonRegion label="Cargando tus direcciones…" className="max-w-200 mx-auto px-4 sm:px-6 pt-[calc(var(--nh)+48px)] pb-16">
       <div className="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
           <Skeleton className="w-12 h-3 mb-2" />
@@ -30,6 +30,6 @@ export function AddressesSkeleton() {
           </div>
         ))}
       </div>
-    </div>
+    </SkeletonRegion>
   )
 }

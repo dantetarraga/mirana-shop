@@ -1,22 +1,16 @@
 import { generateAdminAlerts } from '@/features/alerts/lib/generate-alerts'
+import { isCronAuthorized } from '@/shared/lib/cron-auth'
 import { NextResponse, type NextRequest } from 'next/server'
 
 // ---------------------------------------------------------------------------
-// GET /api/cron/alerts — genera las alertas del admin.
+// POST /api/cron/alerts — genera las alertas del admin.
 //
 // Protegida con CRON_SECRET (.env). En Hostinger (hPanel → Cron Jobs) crear
-// dos jobs, 8:00 y 20:00, que ejecuten:
-//   curl -s "https://TU-DOMINIO.com/api/cron/alerts?secret=CRON_SECRET"
-// (o con header: curl -H "Authorization: Bearer CRON_SECRET" …)
+// dos jobs, 8:00 y 20:00, que ejecuten un POST con Authorization: Bearer.
 // ---------------------------------------------------------------------------
 
-export async function GET(req: NextRequest) {
-  const secret = process.env.CRON_SECRET
-  const provided =
-    req.headers.get('authorization')?.replace('Bearer ', '') ??
-    req.nextUrl.searchParams.get('secret')
-
-  if (!secret || provided !== secret) {
+export async function POST(req: NextRequest) {
+  if (!isCronAuthorized(req)) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 

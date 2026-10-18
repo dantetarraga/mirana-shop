@@ -1,6 +1,6 @@
 'use client'
 
-import { Button } from '@/shared/components/ui/Button'
+import { Button, buttonClass } from '@/shared/components/ui/Button'
 import { AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect } from 'react'
@@ -18,7 +18,7 @@ export default function GlobalError({
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-6 px-6 bg-bg text-text">
-      <AlertTriangle size={80} strokeWidth={1} className="opacity-20" />
+      <AlertTriangle size={80} strokeWidth={1} className="opacity-20" aria-hidden />
       <div className="text-center">
         <h1 className="font-display text-[26px] font-black uppercase tracking-tight">
           Algo salió mal
@@ -27,14 +27,12 @@ export default function GlobalError({
           Ocurrió un error inesperado. Puedes intentar de nuevo o volver al inicio.
         </p>
       </div>
-      <div className="flex gap-3">
+      <div className="flex flex-wrap justify-center gap-3">
         <Button variant="accent" size="md" onClick={reset}>
           Reintentar
         </Button>
-        <Link href="/">
-          <Button variant="outline" size="md">
-            Ir al inicio
-          </Button>
+        <Link href="/" className={buttonClass({ variant: 'outline' })}>
+          Ir al inicio
         </Link>
       </div>
     </div>

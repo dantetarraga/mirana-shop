@@ -1,5 +1,9 @@
 # Mirana Shop — Plan de Implementación
 
+> **Documento histórico.** Describe la visión inicial y no representa por sí
+> solo el estado del código. Para instalación, variables, seguridad y operación
+> vigentes consulta el `README.md` de la raíz y `prisma/schema.prisma`.
+
 > Documento maestro de arquitectura, diseño técnico y roadmap de ejecución para el ecommerce premium **Mirana Shop**, especializado en figuras de colección, preventas, importaciones y productos exclusivos.
 >
 > **Stack base:** Next.js 16 (App Router) · TypeScript · TailwindCSS v4 · Shadcn UI · Zustand · TanStack Query · React Hook Form · Zod · Prisma · PostgreSQL · Auth.js · Culqi.

@@ -6,9 +6,10 @@ import { MediaImageGrid } from '@/shared/components/admin/MediaImageGrid'
 import { PanelHeader } from '@/shared/components/admin/PanelHeader'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmModal } from '@/shared/components/ui/ConfirmModal'
-import { Loader2 } from 'lucide-react'
+import { useServerAction } from '@/shared/hooks/useServerAction'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { Skeleton, SkeletonRegion } from '@/shared/components/ui/Skeleton'
 
 const TABS = ['all', ...ALLOWED_FOLDERS] as const
 
@@ -22,9 +23,12 @@ export function MediaLibraryClient() {
     images: MediaImage[]
     cursor: string | null
   }>({ folder: null, images: [], cursor: null })
-  const [loadingMore, setLoadingMore] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<MediaImage | null>(null)
-  const [deleting, setDeleting] = useState(false)
+  // Una instancia por acción: "Cargar más" y "Eliminar" tienen su propio spinner.
+  const loadMoreAction = useServerAction()
+  const deleteAction = useServerAction()
+  const loadingMore = loadMoreAction.isPending
+  const deleting = deleteAction.isPending
 
   useEffect(() => {
     let cancelled = false
@@ -49,35 +53,31 @@ export function MediaLibraryClient() {
 
   const loadMore = async () => {
     if (!cursor) return
-    setLoadingMore(true)
-    const result = await listImages(folder, cursor)
-    setLoadingMore(false)
-    if (result.success) {
-      setLoaded((prev) => ({
-        folder,
-        images: [...prev.images, ...result.data.images],
-        cursor: result.data.nextCursor,
-      }))
-    } else {
-      toast.error(result.error)
-    }
+    await loadMoreAction.runAsync(() => listImages(folder, cursor), {
+      errorMessage: 'No se pudieron cargar más imágenes',
+      onSuccess: (data) =>
+        setLoaded((prev) => ({
+          folder,
+          images: [...prev.images, ...data.images],
+          cursor: data.nextCursor,
+        })),
+    })
   }
 
   const handleDelete = async () => {
     if (!pendingDelete) return
-    setDeleting(true)
-    const result = await deleteImage(pendingDelete.publicId)
-    setDeleting(false)
-    if (result.success) {
-      setLoaded((prev) => ({
-        ...prev,
-        images: prev.images.filter((i) => i.publicId !== pendingDelete.publicId),
-      }))
-      toast.success('Imagen eliminada')
-      setPendingDelete(null)
-    } else {
-      toast.error(result.error)
-    }
+    const { publicId } = pendingDelete
+    await deleteAction.runAsync(() => deleteImage(publicId), {
+      successMessage: 'Imagen eliminada',
+      errorMessage: 'No se pudo eliminar la imagen',
+      onSuccess: () => {
+        setLoaded((prev) => ({
+          ...prev,
+          images: prev.images.filter((i) => i.publicId !== publicId),
+        }))
+        setPendingDelete(null)
+      },
+    })
   }
 
   return (
@@ -98,9 +98,14 @@ export function MediaLibraryClient() {
       </div>
 
       {loading && images.length === 0 ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 size={20} className="animate-spin text-muted" />
-        </div>
+        <SkeletonRegion
+          label="Cargando imágenes…"
+          className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3"
+        >
+          {Array.from({ length: 12 }, (_, i) => (
+            <Skeleton key={i} className="aspect-square w-full" />
+          ))}
+        </SkeletonRegion>
       ) : (
         <>
           <MediaImageGrid
@@ -110,8 +115,7 @@ export function MediaLibraryClient() {
           />
           {cursor && (
             <div className="flex justify-center mt-5">
-              <Button variant="outline" size="sm" onClick={loadMore} disabled={loadingMore}>
-                {loadingMore && <Loader2 size={13} className="animate-spin mr-1.5" />}
+              <Button variant="outline" size="sm" onClick={loadMore} loading={loadingMore}>
                 Cargar más
               </Button>
             </div>
