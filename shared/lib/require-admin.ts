@@ -3,7 +3,7 @@ import 'server-only'
 import { auth } from '@/auth'
 import { db } from '@/shared/lib/db'
 import { isSessionVersionValid } from '@/shared/lib/session-version'
-import { redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { cache } from 'react'
 
 // ---------------------------------------------------------------------------
@@ -63,7 +63,7 @@ export async function requireAdmin(): Promise<AdminDenied | null> {
 export const verifyAdmin = cache(async (): Promise<{ email: string }> => {
   const session = await auth()
   const email = session?.user?.email
-  if (!email || session.user.role !== 'admin') redirect('/')
+  if (!email || session.user.role !== 'admin') notFound()
 
   // Igual que requireAdmin: el rol del JWT puede haber cambiado (baja o
   // degradación) o la sesión puede estar revocada, así que se contrasta con
@@ -78,7 +78,7 @@ export const verifyAdmin = cache(async (): Promise<{ email: string }> => {
     user.role !== 'ADMIN' ||
     !isSessionVersionValid(session.sv, user.sessionVersion)
   ) {
-    redirect('/')
+    notFound()
   }
 
   return { email }

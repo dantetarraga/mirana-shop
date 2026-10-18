@@ -1,68 +1,84 @@
 import { cn } from '@/shared/lib/utils'
+import { CLAWS, KNUCKLE, LOCKUP, SWOOSH, TALON, TALON_OFFSET, WORDMARK } from './brand-paths'
 
 // ---------------------------------------------------------------------------
-// Logo de Mirana en vector puro.
+// Logo de Mirana en vector puro: las tres garras del logo original con su
+// zarpazo, y el logotipo con "MIRA" en acento y "NA" en tinta.
 //
-// Isotipo: luna creciente cruzada por una flecha (la idea del logo anterior,
-// simplificada para que se lea a 32px). Logotipo: letras propias condensadas
-// —en la familia de Barlow Condensed— con las dos A como puntas de flecha (Λ),
-// que retoman la flecha del isotipo.
-//
-// La tinta usa `currentColor` y la luna `--brand-moon`, así el mismo SVG sirve
-// en tema claro y oscuro sin el filtro `invert()` que necesitaba el PNG viejo.
-// Los paths son la fuente única: public/logo*.svg y app/icon.tsx los reutilizan
-// desde `brand-paths.ts`.
+// Colores por token para que el mismo SVG sirva en claro y oscuro (sin el
+// filtro `invert()` que necesitaba el PNG viejo):
+//   - tinta (uñas y "NA"): currentColor
+//   - acento (zarpazo y "MIRA"): --brand-moon
+//   - nudillos: --brand-slate
+// La geometría vive en brand-paths.ts (la reutilizan favicon y estáticos).
 // ---------------------------------------------------------------------------
 
-import { ARROW_HEAD, ARROW_SHAFT, CRESCENT, WORDMARK } from './brand-paths'
+function Claws() {
+  return (
+    <>
+      <path d={SWOOSH} fill="var(--brand-moon)" />
+      {CLAWS.map((c) => (
+        <g key={c.x} transform={`translate(${c.x} ${c.y}) scale(${c.s})`}>
+          <path d={KNUCKLE} fill="var(--brand-slate)" />
+          <path
+            transform={`translate(${TALON_OFFSET.x} ${TALON_OFFSET.y})`}
+            d={TALON}
+            fill="currentColor"
+          />
+        </g>
+      ))}
+    </>
+  )
+}
 
-interface MarkProps {
+interface BrandSvgProps {
   className?: string
-  /** Texto accesible. Sin él, el SVG es decorativo (aria-hidden). */
+  /** Texto accesible. Vacío (`""`) lo vuelve decorativo, p. ej. dentro de un
+   *  enlace que ya tiene su propio aria-label. */
   title?: string
 }
 
-export function MiranaMark({ className, title }: MarkProps) {
+function a11yProps(title: string | undefined) {
+  return title
+    ? ({ role: 'img', 'aria-label': title } as const)
+    : ({ 'aria-hidden': true } as const)
+}
+
+/** Solo el isotipo (las garras). Decorativo salvo que se pase `title`. */
+export function MiranaMark({ className, title }: BrandSvgProps) {
   return (
     <svg
       viewBox="0 0 100 100"
       className={cn('shrink-0', className)}
-      role={title ? 'img' : undefined}
-      aria-label={title}
-      aria-hidden={title ? undefined : true}
       focusable="false"
+      {...a11yProps(title)}
     >
-      <path d={CRESCENT} fill="var(--brand-moon)" />
-      <path d={ARROW_SHAFT} stroke="currentColor" strokeWidth={7} fill="none" />
-      <path d={ARROW_HEAD} fill="currentColor" />
+      <Claws />
     </svg>
   )
 }
 
-interface LogoProps {
-  className?: string
-  /** Texto accesible; por defecto "Mirana". `""` lo vuelve decorativo (p. ej.
-   *  dentro de un enlace que ya tiene su propio aria-label). */
-  title?: string
-}
-
 /** Isotipo + logotipo en horizontal (navbar, footer, modales). */
-export function MiranaLogo({ className, title = 'Mirana' }: LogoProps) {
+export function MiranaLogo({ className, title = 'Mirana' }: BrandSvgProps) {
   return (
     <svg
-      viewBox="0 0 420 100"
+      viewBox={`0 0 ${LOCKUP.width} 100`}
       className={cn('shrink-0', className)}
-      role={title ? 'img' : undefined}
-      aria-label={title || undefined}
-      aria-hidden={title ? undefined : true}
       focusable="false"
+      {...a11yProps(title)}
     >
-      <path d={CRESCENT} fill="var(--brand-moon)" />
-      <path d={ARROW_SHAFT} stroke="currentColor" strokeWidth={7} fill="none" />
-      <path d={ARROW_HEAD} fill="currentColor" />
-      <g transform="translate(116 22) scale(0.5625)" fill="currentColor" fillRule="evenodd">
-        {WORDMARK.map((letter) => (
-          <path key={letter.x} transform={`translate(${letter.x} 0)`} d={letter.d} />
+      <Claws />
+      <g
+        transform={`translate(${LOCKUP.wordX} ${LOCKUP.wordY}) scale(${LOCKUP.wordScale})`}
+        fillRule="evenodd"
+      >
+        {WORDMARK.map((l) => (
+          <path
+            key={l.x}
+            transform={`translate(${l.x} 0)`}
+            d={l.d}
+            fill={l.accent ? 'var(--brand-moon)' : 'currentColor'}
+          />
         ))}
       </g>
     </svg>

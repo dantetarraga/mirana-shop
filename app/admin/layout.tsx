@@ -3,14 +3,15 @@ import { getAdminAlerts } from '@/features/alerts/queries/alert.queries'
 import { AdminSidebar } from '@/shared/components/admin/AdminSidebar'
 import { AdminTopbar } from '@/shared/components/admin/AdminTopbar'
 import type { Metadata } from 'next'
-import { redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import React from 'react'
 
 export const metadata: Metadata = { robots: { index: false, follow: false } }
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()
-  if (session?.user?.role !== 'admin') redirect('/')
+  // 404 y no redirect: el panel no debe delatarse ante quien no es admin.
+  if (session?.user?.role !== 'admin') notFound()
 
   const { alerts, unreadCount } = await getAdminAlerts()
 

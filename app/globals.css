@@ -238,8 +238,10 @@
   /* Acento */
   --gold: #00c8ff; /* fills, botones, barras — NO usar como texto en claro */
   --gl: #33d4ff; /* hover del acento */
-  /* Luna del logo: un punto más profunda que --gold para que se lea sobre blanco. */
+  /* Logo: acento un punto más profundo que --gold para que se lea sobre blanco,
+     y gris pizarra para los nudillos de las garras. */
   --brand-moon: #00a6dd;
+  --brand-slate: #7d93aa;
   /* Navy de marca para franjas que deben verse navy también en tema claro. */
   --brand-navy: #0b1830;
   --gd: rgba(0, 200, 255, 0.14); /* glow / fondo de pills */
@@ -322,6 +324,7 @@
   --gold: #00c8ff;
   --gl: #50e0ff;
   --brand-moon: #00c8ff;
+  --brand-slate: #5d7389;
   --brand-navy: #07101f; /* un punto más hondo que --bg para separarse */
   --gd: rgba(0, 200, 255, 0.1);
   --accent-ink: #50e0ff; /* sobre navy el cyan claro sí es legible */

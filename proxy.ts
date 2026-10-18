@@ -42,19 +42,26 @@ function publicOrigin(req: NextRequest): string {
   return `${proto}://${host}`
 }
 
+/**
+ * Ruta inexistente a la que se reescribe /admin para quien no es admin: Next
+ * responde su 404 normal. Así el panel no se delata — ni redirect al login ni
+ * `?callbackUrl=/admin` en la URL — y desde fuera es indistinguible de
+ * cualquier página que no existe. El admin entra desde el modal de acceso
+ * como cualquier cliente y luego navega a /admin.
+ */
+const HIDDEN_ADMIN_PATH = '/__no-encontrado'
+
 const authProxy = auth((req) => {
   const { pathname } = req.nextUrl
 
-  if (req.auth) {
-    // Chequeo optimista de rol: una sesión de cliente no entra a /admin. Es
-    // solo la primera capa — el rol del JWT puede estar obsoleto, así que cada
-    // page del admin vuelve a verificarlo contra la BD (verifyAdmin) y cada
-    // action con requireAdmin().
-    if (pathname.startsWith('/admin') && req.auth.user?.role !== 'admin') {
-      return NextResponse.redirect(new URL('/', publicOrigin(req)))
-    }
-    return
+  // Chequeo optimista de rol: es solo la primera capa — el rol del JWT puede
+  // estar obsoleto, así que cada page del admin vuelve a verificarlo contra la
+  // BD (verifyAdmin) y cada action con requireAdmin().
+  if (pathname.startsWith('/admin') && req.auth?.user?.role !== 'admin') {
+    return NextResponse.rewrite(new URL(HIDDEN_ADMIN_PATH, req.url))
   }
+
+  if (req.auth) return
 
   // Ruta + query, para poder volver adonde el usuario quería ir.
   const target = `${pathname}${req.nextUrl.search}`
