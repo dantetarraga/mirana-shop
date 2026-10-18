@@ -5,7 +5,9 @@ import { isSessionVersionValid, shouldRecheckSession } from '@/shared/lib/sessio
 import bcrypt from 'bcryptjs'
 import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
-import Google from 'next-auth/providers/google'
+// Google desactivado por ahora: para reactivarlo, descomentar este import,
+// el proveedor de abajo y el botón en features/auth/components/AuthModal.tsx.
+// import Google from 'next-auth/providers/google'
 import { cache } from 'react'
 
 // Ventana y topes del login con contraseña. Se cuentan TODOS los intentos
@@ -31,7 +33,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
 
   providers: [
-    Google,
+    // Google,
     Credentials({
       credentials: {
         email: { label: 'Email', type: 'email' },
