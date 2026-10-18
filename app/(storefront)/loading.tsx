@@ -11,31 +11,13 @@ import { Skeleton, SkeletonRegion } from '@/shared/components/ui/Skeleton'
 // páginas legales llevan loading propio (antes mostraban este hero al entrar).
 //
 // Copia el orden y las medidas de app/(storefront)/page.tsx con el layout de
-// banners por defecto (CARD): accesos rápidos → marcas → carrusel de banners →
-// franja promo → categorías → secciones de productos.
+// banners por defecto (CARD): carrusel de banners → franja promo → marcas →
+// categorías → secciones de productos.
 // ---------------------------------------------------------------------------
 
 export default function StorefrontLoading() {
   return (
     <SkeletonRegion label="Cargando la tienda…">
-      {/* QuickFiltersBar: bg-surf + borde, chips h-10 con py-2.5 (60px) */}
-      <div className="bg-surf border-b border-(--bd)">
-        <div className="shell flex items-center justify-start sm:justify-center gap-2 overflow-hidden py-2.5">
-          {Array.from({ length: 8 }, (_, i) => (
-            <Skeleton key={i} className="h-10 w-24 shrink-0" />
-          ))}
-        </div>
-      </div>
-
-      {/* BrandsCarousel: celdas w-32 h-14 / sm:w-44 sm:h-18 */}
-      <div className="bg-surf border-b border-(--bd) h-14 sm:h-18 flex items-center overflow-hidden px-10">
-        {Array.from({ length: 9 }, (_, i) => (
-          <div key={i} className="shrink-0 w-32 sm:w-44 flex justify-center">
-            <Skeleton className="h-4 w-20" />
-          </div>
-        ))}
-      </div>
-
       {/* HeroBannerCarousel: 1 banner en móvil, 3 desde md, gap-1 px-1 pt-1 */}
       <div className="flex gap-1 px-1 pt-1 overflow-hidden">
         {Array.from({ length: 3 }, (_, i) => (
@@ -50,6 +32,16 @@ export default function StorefrontLoading() {
 
       {/* PromoBanner: py-2.75 + línea de 13px ≈ 42px */}
       <Skeleton className="h-10.5 w-full" />
+
+      {/* BrandsCarousel: título + placas w-36 h-18 / sm:w-44 sm:h-22 */}
+      <div className="shell pt-12 md:pt-16">
+        <Skeleton className="h-9 w-40 mb-5" />
+        <div className="flex gap-3 overflow-hidden">
+          {Array.from({ length: 8 }, (_, i) => (
+            <Skeleton key={i} className="shrink-0 w-36 h-18 sm:w-44 sm:h-22" />
+          ))}
+        </div>
+      </div>
 
       <CategoryTilesSkeleton />
       <HomeSectionSkeleton />

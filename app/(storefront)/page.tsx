@@ -1,6 +1,5 @@
 import { getActiveBanners } from '@/features/banners/queries/banner.queries'
 import { getPublicBrands } from '@/features/brands/queries/brand.queries'
-import { getMenuTree } from '@/features/categories/queries/category.queries'
 import { BrandsCarousel } from '@/features/home/components/BrandsCarousel'
 import { CTABand } from '@/features/home/components/CTABand'
 import { CategoryTiles, CategoryTilesSkeleton } from '@/features/home/components/CategoryTiles'
@@ -12,7 +11,6 @@ import { HomeSections } from '@/features/home/components/HomeSections'
 import { NewArrivals } from '@/features/home/components/NewArrivals'
 import { PreorderSection } from '@/features/home/components/PreorderSection'
 import { PromoBanner } from '@/features/home/components/PromoBanner'
-import { QuickFiltersBar } from '@/features/home/components/QuickFiltersBar'
 import { getBannerLayout } from '@/features/settings/queries/store-settings.queries'
 import { JsonLd } from '@/shared/components/JsonLd'
 import { getSiteUrl } from '@/shared/lib/env'
@@ -43,17 +41,13 @@ function buildJsonLd(siteUrl: string) {
 }
 
 export default async function HomePage() {
-  // Cabecera (banners + accesos rápidos + marcas) en el primer render: es lo
-  // que se ve sin hacer scroll. Todo sale de la caché de datos; el layout pide
-  // el mismo árbol del menú y las mismas destacadas, y `cache()` las resuelve
-  // una sola vez.
-  const [activeBanners, menuTree, featuredBrands, bannerLayout] = await Promise.all([
+  // Banners y marcas en el primer render. Todo sale de la caché de datos; el
+  // layout pide las mismas destacadas y `cache()` las resuelve una sola vez.
+  const [activeBanners, featuredBrands, bannerLayout] = await Promise.all([
     getActiveBanners(),
-    getMenuTree(),
     getPublicBrands({ featuredOnly: true }),
     getBannerLayout(),
   ])
-  const roots = menuTree.map(({ name, slug }) => ({ name, slug }))
   // Carrusel: destacadas por `position`. Si el admin aún no marcó ninguna, se
   // muestran todas las visibles para no dejar la cabecera sin marcas.
   const carouselBrands = (
@@ -72,18 +66,18 @@ export default async function HomePage() {
           principal para lectores de pantalla y buscadores. */}
       <h1 className="sr-only">MIRANA — Juguetes, figuras de colección y modelos a escala</h1>
 
-      {/* Header extendido: filtros rápidos + marcas + banners (estructura tipo
-          Entertainment Earth). El ajuste global `bannerLayout` de /admin/settings
-          decide la forma: a pantalla completa el hero abre la página pegado a la
-          navbar; como tarjetas van en su grid/carrusel debajo de las marcas. */}
-      <div>
-        {isFullscreen && <HeroBannerFade banners={activeBanners} />}
-        <QuickFiltersBar roots={roots} />
-        <BrandsCarousel brands={carouselBrands} />
-        {!isFullscreen && <HeroBannerCarousel banners={activeBanners} />}
-      </div>
+      {/* El hero abre la página pegado a la navbar: accesos rápidos y
+          categorías ya están en el navbar y el mega-menú, y repetirlos aquí
+          apilaba cuatro franjas antes del primer banner. El ajuste global
+          `bannerLayout` de /admin/settings decide la forma del hero. */}
+      {isFullscreen ? (
+        <HeroBannerFade banners={activeBanners} />
+      ) : (
+        <HeroBannerCarousel banners={activeBanners} />
+      )}
 
       <PromoBanner />
+      <BrandsCarousel brands={carouselBrands} />
       <Suspense fallback={<CategoryTilesSkeleton />}>
         <CategoryTiles />
       </Suspense>

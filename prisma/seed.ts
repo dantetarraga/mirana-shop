@@ -78,7 +78,9 @@ const IMGS = {
   bannerAnime: '1608889175123-8ee362201f81', // figura en fondo oscuro
   bannerBlack: '1608889476561-6242cfdbf622', // figuras en fondo oscuro
 
-  // Marcas (logos placeholder con color de marca real)
+  // Marcas: sin imagen a propósito. Un logo debe ser el logo real del
+  // fabricante (se sube en /admin/brands); una foto de stock recortada se veía
+  // como imagen rota. Sin logo, la tienda pinta el nombre en una placa.
   brandBandai: '1608889825205-eebdb9fc5806',
   brandLego: '1587654780291-39c9404d746b',
   brandGsc: '1578632767115-351597cf2477',
@@ -323,92 +325,92 @@ async function main() {
   // ── Brands ─────────────────────────────────────────────────────────────────
   const hasbro = await prisma.brand.upsert({
     where: { slug: 'hasbro' },
-    update: { tagline: 'MARVEL LEGENDS SERIES', imageUrl: img(IMGS.brandHasbro, 400, 400) },
+    update: { tagline: 'MARVEL LEGENDS SERIES', imageUrl: null },
     create: {
       name: 'Hasbro',
       slug: 'hasbro',
       tagline: 'MARVEL LEGENDS SERIES',
       description:
         'Fabricante estadounidense de juguetes y figuras de acción. Creadores de Marvel Legends, Star Wars Black Series y G.I. Joe.',
-      imageUrl: img(IMGS.brandHasbro, 400, 400),
+      imageUrl: null,
     },
   })
 
   const bandai = await prisma.brand.upsert({
     where: { slug: 'bandai' },
-    update: { tagline: 'TAMASHII NATIONS', imageUrl: img(IMGS.brandBandai, 400, 400) },
+    update: { tagline: 'TAMASHII NATIONS', imageUrl: null },
     create: {
       name: 'Bandai',
       slug: 'bandai',
       tagline: 'TAMASHII NATIONS',
       description:
         'Casa japonesa líder en figuras de anime y mecha. Creadores de la línea Robot Spirits, S.H.Figuarts y Dragon Stars.',
-      imageUrl: img(IMGS.brandBandai, 400, 400),
+      imageUrl: null,
     },
   })
 
   const legoGroup = await prisma.brand.upsert({
     where: { slug: 'lego-group' },
-    update: { tagline: 'OFFICIAL PARTNER', imageUrl: img(IMGS.brandLego, 400, 400) },
+    update: { tagline: 'OFFICIAL PARTNER', imageUrl: null },
     create: {
       name: 'LEGO Group',
       slug: 'lego-group',
       tagline: 'OFFICIAL PARTNER',
       description:
         'La marca de construcción más reconocida del mundo. Desde Dinamarca, con sets para todas las edades y niveles de habilidad.',
-      imageUrl: img(IMGS.brandLego, 400, 400),
+      imageUrl: null,
     },
   })
 
   const goodSmile = await prisma.brand.upsert({
     where: { slug: 'good-smile-company' },
-    update: { tagline: 'NENDOROID · FIGMA', imageUrl: img(IMGS.brandGsc, 400, 400) },
+    update: { tagline: 'NENDOROID · FIGMA', imageUrl: null },
     create: {
       name: 'Good Smile Company',
       slug: 'good-smile-company',
       tagline: 'NENDOROID · FIGMA',
       description:
         'Fabricante japonés premium de figuras de anime. Creadores de las líneas Nendoroid, Figma y Pop Up Parade.',
-      imageUrl: img(IMGS.brandGsc, 400, 400),
+      imageUrl: null,
     },
   })
 
   const kotobukiya = await prisma.brand.upsert({
     where: { slug: 'kotobukiya' },
-    update: { tagline: 'ARTFX SERIES', imageUrl: img(IMGS.brandKotobukiya, 400, 400) },
+    update: { tagline: 'ARTFX SERIES', imageUrl: null },
     create: {
       name: 'Kotobukiya',
       slug: 'kotobukiya',
       tagline: 'ARTFX SERIES',
       description:
         'Fabricante japonés especializado en kits de modelos y figuras ARTFX. Detalles escultóricos excepcionales en cada pieza.',
-      imageUrl: img(IMGS.brandKotobukiya, 400, 400),
+      imageUrl: null,
     },
   })
 
   const funko = await prisma.brand.upsert({
     where: { slug: 'funko' },
-    update: { tagline: 'POP! AUTHORIZED', imageUrl: img(IMGS.brandFunko, 400, 400) },
+    update: { tagline: 'POP! AUTHORIZED', imageUrl: null },
     create: {
       name: 'Funko',
       slug: 'funko',
       tagline: 'POP! AUTHORIZED',
       description:
         'Creadores de los icónicos Funko POP! con más de 15,000 diseños de pop culture: anime, películas, videojuegos y más.',
-      imageUrl: img(IMGS.brandFunko, 400, 400),
+      imageUrl: null,
     },
   })
 
   const hotWheels = await prisma.brand.upsert({
     where: { slug: 'hot-wheels' },
-    update: { tagline: 'PREMIUM COLLECTION', imageUrl: img(IMGS.brandHotWheels, 400, 400) },
+    update: { tagline: 'PREMIUM COLLECTION', imageUrl: null },
     create: {
       name: 'Hot Wheels',
       slug: 'hot-wheels',
       tagline: 'PREMIUM COLLECTION',
       description:
         'La marca de autos a escala más popular del mundo. Desde modelos básicos hasta la línea Premium de coleccionistas en metal fundido.',
-      imageUrl: img(IMGS.brandHotWheels, 400, 400),
+      imageUrl: null,
     },
   })
 
