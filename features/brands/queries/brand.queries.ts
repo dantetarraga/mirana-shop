@@ -222,3 +222,39 @@ export const getBrandBySlug = cache(async (slug: string): Promise<BrandPageData 
       .sort((a, b) => b.productCount - a.productCount || a.name.localeCompare(b.name, 'es')),
   }
 })
+
+// ---------------------------------------------------------------------------
+// Foto de vitrina por marca (carrusel del inicio)
+// ---------------------------------------------------------------------------
+
+async function fetchBrandCovers(): Promise<Record<string, string>> {
+  // Una sola lectura con lo mínimo: destacados primero y luego los más
+  // recientes; la primera foto que aparece por marca es su portada.
+  const products = await db.product.findMany({
+    where: {
+      ...PUBLIC_PRODUCT_WHERE,
+      brand: { deletedAt: null, isVisible: true },
+      images: { some: {} },
+    },
+    select: {
+      brandId: true,
+      images: { orderBy: { position: 'asc' }, take: 1, select: { url: true } },
+    },
+    orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }],
+  })
+  const covers: Record<string, string> = {}
+  for (const p of products) {
+    const url = p.images[0]?.url
+    if (url && !covers[p.brandId]) covers[p.brandId] = url
+  }
+  return covers
+}
+
+const fetchBrandCoversCached = cachedQuery(fetchBrandCovers, ['brand-covers'], PUBLIC_BRAND_CACHE)
+
+/**
+ * Portada de cada marca visible, por id: la foto de su producto destacado (o
+ * el más reciente). La usa el carrusel del inicio cuando la marca no tiene
+ * `heroUrl` propio. Una marca sin productos con foto no aparece en el mapa.
+ */
+export const getBrandCovers = cache(() => fetchBrandCoversCached())

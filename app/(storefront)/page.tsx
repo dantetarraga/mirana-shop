@@ -1,5 +1,5 @@
 import { getActiveBanners } from '@/features/banners/queries/banner.queries'
-import { getPublicBrands } from '@/features/brands/queries/brand.queries'
+import { getBrandCovers, getPublicBrands } from '@/features/brands/queries/brand.queries'
 import { BrandsCarousel } from '@/features/home/components/BrandsCarousel'
 import { CTABand } from '@/features/home/components/CTABand'
 import { CategoryTiles, CategoryTilesSkeleton } from '@/features/home/components/CategoryTiles'
@@ -43,16 +43,26 @@ function buildJsonLd(siteUrl: string) {
 export default async function HomePage() {
   // Banners y marcas en el primer render. Todo sale de la caché de datos; el
   // layout pide las mismas destacadas y `cache()` las resuelve una sola vez.
-  const [activeBanners, featuredBrands, bannerLayout] = await Promise.all([
+  const [activeBanners, featuredBrands, bannerLayout, brandCovers] = await Promise.all([
     getActiveBanners(),
     getPublicBrands({ featuredOnly: true }),
     getBannerLayout(),
+    getBrandCovers(),
   ])
-  // Carrusel: destacadas por `position`. Si el admin aún no marcó ninguna, se
-  // muestran todas las visibles para no dejar la cabecera sin marcas.
-  const carouselBrands = (
-    featuredBrands.length > 0 ? featuredBrands : await getPublicBrands()
-  ).filter((b) => b.productCount > 0)
+  // Vitrina de marcas: destacadas por `position`. Si el admin aún no marcó
+  // ninguna, se muestran todas las visibles para no dejar la sección vacía.
+  // La foto es el hero de la marca o, si no tiene, su producto destacado.
+  const carouselBrands = (featuredBrands.length > 0 ? featuredBrands : await getPublicBrands())
+    .filter((b) => b.productCount > 0)
+    .map((b) => ({
+      id: b.id,
+      name: b.name,
+      slug: b.slug,
+      imageUrl: b.imageUrl,
+      tagline: b.tagline,
+      productCount: b.productCount,
+      coverUrl: b.heroUrl || brandCovers[b.id] || null,
+    }))
   const { organizationJsonLd, websiteJsonLd } = buildJsonLd(getSiteUrl())
 
   const isFullscreen = bannerLayout === 'FULLSCREEN'
