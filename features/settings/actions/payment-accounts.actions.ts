@@ -4,7 +4,7 @@ import { imageUrlSchema } from '@/shared/schemas/image-url.schema'
 import { db } from '@/shared/lib/db'
 import { requireAdmin } from '@/shared/lib/require-admin'
 import type { ActionResult } from '@/shared/types/action-result.types'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { z } from 'zod'
 
 // ---------------------------------------------------------------------------
@@ -34,6 +34,8 @@ const paymentAccountSchema = z.object({
 export type PaymentAccountInput = z.infer<typeof paymentAccountSchema>
 
 function invalidatePaymentCaches() {
+  // Los acordeones de la ficha listan los bancos activos (tag settings).
+  revalidateTag('settings', 'max')
   revalidatePath('/checkout')
   revalidatePath('/admin/settings')
 }

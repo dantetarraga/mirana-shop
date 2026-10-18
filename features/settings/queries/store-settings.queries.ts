@@ -96,8 +96,9 @@ export async function getPreorderDepositPercent(): Promise<number> {
 }
 
 /**
- * Cómo debe mostrar el inicio todos sus banners: grid de tarjetas o hero a
- * ancho completo con fundido. Ajuste global de /admin/settings.
+ * Cómo debe mostrar el inicio todos sus banners: grid de tarjetas, hero a
+ * ancho completo con fundido o editorial (texto a la izquierda sobre la foto).
+ * Ajuste global de /admin/settings.
  */
 export async function getBannerLayout(): Promise<BannerLayout> {
   const { bannerLayout } = await getStoreSettings()

@@ -4,16 +4,16 @@ import { BannerImage } from '@/features/banners/components/BannerImage'
 import { bannerCardImage, bannerMobileImage } from '@/features/banners/lib/banner-image'
 import type { BannerRow } from '@/features/banners/types'
 import useEmblaCarousel from 'embla-carousel-react'
+import { HeroAutoplayToggle } from '@/features/home/components/HeroAutoplayToggle'
+import { useHeroAutoplay } from '@/features/home/components/useHeroAutoplay'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
-import { useReducedMotion } from '@/shared/hooks/useReducedMotion'
 import { safeHref } from '@/shared/schemas/safe-url.schema'
 import { useCallback, useEffect, useState } from 'react'
 
 // A partir de este número de banners reales se usa carrusel; por debajo,
 // grid estático que se acomoda al número de tarjetas disponibles.
 const CAROUSEL_THRESHOLD = 3
-const AUTOPLAY_MS = 7000
 
 interface HeroBannerCarouselProps {
   banners: BannerRow[]
@@ -119,15 +119,6 @@ function HeroBannerSlider({ cards }: { cards: SlideCard[] }) {
 
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [scrollSnaps, setScrollSnaps] = useState<number[]>([])
-  // Mismo criterio que HeroBannerFade: el avance automático se detiene con
-  // hover/foco (WCAG 2.2.2), con la pestaña oculta y si el sistema pide
-  // reducir el movimiento (la regla CSS global no puede parar un setInterval).
-  const [hovered, setHovered] = useState(false)
-  const [focused, setFocused] = useState(false)
-  const [hiddenTab, setHiddenTab] = useState(false)
-  const reducedMotion = useReducedMotion()
-  const paused = hovered || focused || hiddenTab || reducedMotion
-
   const onSelect = useCallback(() => {
     if (!emblaApi) return
     setSelectedIndex(emblaApi.selectedScrollSnap())
@@ -148,21 +139,6 @@ function HeroBannerSlider({ cards }: { cards: SlideCard[] }) {
     }
   }, [emblaApi, onSelect])
 
-  useEffect(() => {
-    if (!emblaApi || scrollSnaps.length <= 1 || paused) return
-    const id = setInterval(() => {
-      if (emblaApi.canScrollNext()) emblaApi.scrollNext()
-      else emblaApi.scrollTo(0)
-    }, AUTOPLAY_MS)
-    return () => clearInterval(id)
-  }, [emblaApi, scrollSnaps.length, paused])
-
-  useEffect(() => {
-    const onVisibility = () => setHiddenTab(document.visibilityState === 'hidden')
-    document.addEventListener('visibilitychange', onVisibility)
-    return () => document.removeEventListener('visibilitychange', onVisibility)
-  }, [])
-
   const scrollPrev = useCallback(() => {
     if (!emblaApi) return
     if (emblaApi.canScrollPrev()) emblaApi.scrollPrev()
@@ -177,21 +153,21 @@ function HeroBannerSlider({ cards }: { cards: SlideCard[] }) {
 
   const scrollTo = useCallback((i: number) => emblaApi?.scrollTo(i), [emblaApi])
   const showControls = scrollSnaps.length > 1
+  // Mismo temporizador que los otros heros (useHeroAutoplay): pausa con
+  // hover/foco, pestaña oculta, botón de pausa y prefers-reduced-motion.
+  const { canAutoplay, userPaused, togglePaused, regionProps } = useHeroAutoplay({
+    enabled: showControls,
+    onTick: scrollNext,
+  })
 
   return (
     // Pausa con mouse y con foco de teclado: solo detiene el temporizador, no
     // hay acción exclusiva del mouse (mismo razonamiento que HeroBannerFade).
-    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <section
       className="relative overflow-hidden group/hero"
       aria-roledescription="carrusel"
       aria-label="Banners"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onFocus={() => setFocused(true)}
-      onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocused(false)
-      }}
+      {...regionProps}
     >
       <div className="overflow-hidden px-1 pt-1" ref={emblaRef}>
         <div className="flex gap-1">
@@ -221,6 +197,15 @@ function HeroBannerSlider({ cards }: { cards: SlideCard[] }) {
           >
             <ChevronRight size={22} aria-hidden />
           </button>
+
+          {/* Arriba a la derecha: abajo al centro taparía el botón de la tarjeta. */}
+          {canAutoplay && (
+            <HeroAutoplayToggle
+              paused={userPaused}
+              onToggle={togglePaused}
+              className="absolute top-3 right-3 z-2"
+            />
+          )}
 
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-2 flex">
             {scrollSnaps.map((_, i) => (

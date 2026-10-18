@@ -27,6 +27,19 @@ export class Dates {
     return format(new Date(date), fmt, { locale: es })
   }
 
+  /**
+   * Formatea una fecha civil (sin hora) guardada a medianoche UTC, como las
+   * que vienen de un `<input type="date">` ("2026-11-01" → 2026-11-01T00:00Z).
+   * Se leen sus componentes UTC: con `format` a secas, en America/Lima (UTC-5)
+   * esa medianoche cae el 31 de octubre y el mes salía corrido. Así servidor y
+   * cliente pintan lo mismo sin importar la zona horaria de cada uno.
+   */
+  static formatCivil(date: Date | string, fmt = "d 'de' MMMM 'de' yyyy"): string {
+    const d = new Date(date)
+    const civil = new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
+    return format(civil, fmt, { locale: es })
+  }
+
   /** Formato corto: "04/07/2026" */
   static formatShort(date: Date | string): string {
     return Dates.format(date, 'dd/MM/yyyy')

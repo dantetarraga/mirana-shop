@@ -15,6 +15,7 @@ const TITLES: Record<string, [string, string]> = {
   '/admin/banners': ['Banners', 'Campañas y promociones visuales'],
   '/admin/users': ['Usuarios', 'Base de clientes y segmentación'],
   '/admin/complaints': ['Libro de Reclamaciones', 'Gestión de reclamos y quejas'],
+  '/admin/reviews': ['Reseñas', 'Moderación de opiniones'],
 }
 
 interface AdminTopbarProps {

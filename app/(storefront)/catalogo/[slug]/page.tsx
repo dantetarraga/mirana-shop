@@ -1,15 +1,22 @@
 import { effectivePrice } from '@/features/checkout/lib/pricing'
+import { getPricingRules } from '@/features/checkout/queries/pricing.queries'
 import { AddToCartPanel } from '@/features/products/components/AddToCartPanel'
+import { ProductInfoAccordions } from '@/features/products/components/ProductInfoAccordions'
 import { ProductImageCarousel } from '@/features/products/components/ProductImageCarousel'
 import { ProductPrice } from '@/features/products/components/ProductPrice'
 import { RelatedProducts } from '@/features/products/components/RelatedProducts'
 import { RelatedProductsSkeleton } from '@/features/products/components/RelatedProductsSkeleton'
 import { getProductBadge } from '@/features/products/lib/product-badge'
+import { getPaymentMethodNames } from '@/features/products/queries/pdp-info.queries'
 import { getProductBySlug } from '@/features/products/queries/product.queries'
 import { getPreorderDepositPercent } from '@/features/settings/queries/store-settings.queries'
 import type { CatalogProduct } from '@/features/products/types/catalog.types'
 import { getCategoryStripe } from '@/features/products/types/catalog.types'
 import { getCategoryPageData } from '@/features/categories/queries/category.queries'
+import { ProductReviewsSection } from '@/features/reviews/components/ProductReviewsSection'
+import { ProductReviewsSkeleton } from '@/features/reviews/components/ProductReviewsSkeleton'
+import { aggregateRatingJsonLd } from '@/features/reviews/lib/review-jsonld'
+import { getProductReviewSummary } from '@/features/reviews/queries/review.queries'
 import { JsonLd } from '@/shared/components/JsonLd'
 import { Breadcrumbs, breadcrumbJsonLd } from '@/shared/components/layout/Breadcrumbs'
 import { Dates } from '@/shared/lib/dates'
@@ -66,12 +73,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ProductDetailPage({ params }: PageProps) {
   const { slug } = await params
-  const [raw, defaultDepositPercent] = await Promise.all([
+  // getPricingRules ya la lee el layout (StoreOverlays): `cache()` la deduplica.
+  const [raw, defaultDepositPercent, pricingRules, paymentMethodNames] = await Promise.all([
     getProductBySlug(slug),
     getPreorderDepositPercent(),
+    getPricingRules(),
+    getPaymentMethodNames(),
   ])
 
   if (!raw) notFound()
+
+  // Solo reseñas aprobadas; sin reseñas, el JSON-LD no lleva aggregateRating.
+  const reviewSummary = await getProductReviewSummary(raw.id)
 
   // Serialize Decimal fields
   const product: CatalogProduct = {
@@ -131,6 +144,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
     sku: product.sku,
     image: product.imageUrl ? [product.imageUrl] : undefined,
     brand: { '@type': 'Brand', name: product.brand.name },
+    aggregateRating: aggregateRatingJsonLd(reviewSummary),
     offers: {
       '@type': 'Offer',
       url: `${getSiteUrl()}/catalogo/${product.slug}`,
@@ -184,14 +198,20 @@ export default async function ProductDetailPage({ params }: PageProps) {
             {/* Categoría · Marca — enlazan a sus páginas */}
             <div className="text-[11px] tracking-[3px] uppercase text-muted">
               {categoryData ? (
-                <Link href={`/categorias/${product.category.slug}`} className="hover:text-text transition-colors">
+                <Link
+                  href={`/categorias/${product.category.slug}`}
+                  className="hover:text-text transition-colors"
+                >
                   {catLabel}
                 </Link>
               ) : (
                 catLabel
               )}{' '}
               ·{' '}
-              <Link href={`/marcas/${product.brand.slug}`} className="hover:text-text transition-colors">
+              <Link
+                href={`/marcas/${product.brand.slug}`}
+                className="hover:text-text transition-colors"
+              >
                 {product.brand.name}
               </Link>
             </div>
@@ -217,7 +237,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
               <div className="text-[13px] text-muted">
                 Entrega estimada:{' '}
                 <span className="text-text font-semibold">
-                  {Dates.format(product.estimatedArrival)}
+                  {Dates.formatCivil(product.estimatedArrival)}
                 </span>
               </div>
             )}
@@ -234,9 +254,26 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
             {/* Add to cart */}
             <AddToCartPanel product={product} defaultDepositPercent={defaultDepositPercent} />
+
+            {/* Pago, envío y autenticidad — contenido real de la tienda. */}
+            <ProductInfoAccordions
+              product={product}
+              pricingRules={pricingRules}
+              paymentMethodNames={paymentMethodNames}
+            />
           </div>
         </div>
       </div>
+
+      {/* Lee la sesión (formulario de reseña): va en su propio Suspense para no
+          retrasar el resto de la ficha. */}
+      <Suspense fallback={<ProductReviewsSkeleton />}>
+        <ProductReviewsSection
+          productId={raw.id}
+          productSlug={product.slug}
+          productName={product.name}
+        />
+      </Suspense>
 
       {/* Streaming: los relacionados (3 queries) ya no retrasan el HTML de la
           ficha; llegan después con su propio esqueleto. */}

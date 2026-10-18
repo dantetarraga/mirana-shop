@@ -1,4 +1,4 @@
-﻿import { formatDate } from '@/shared/lib/utils'
+﻿import { Dates } from '@/shared/lib/dates'
 import { Clock } from 'lucide-react'
 
 interface PreorderBadgeProps {
@@ -10,7 +10,7 @@ export function PreorderBadge({ estimatedArrival, size = 'sm' }: PreorderBadgePr
   return (
     <span className="badge-preorder">
       <Clock size={size === 'sm' ? 10 : 12} className="shrink-0" aria-hidden />
-      <span>PREVENTA · {formatDate(estimatedArrival, 'MMM yyyy')}</span>
+      <span>PREVENTA · {Dates.formatCivil(estimatedArrival, 'MMM yyyy')}</span>
     </span>
   )
 }

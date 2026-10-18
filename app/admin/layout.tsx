@@ -1,5 +1,6 @@
 import { auth } from '@/auth'
 import { getAdminAlerts } from '@/features/alerts/queries/alert.queries'
+import { countPendingReviews } from '@/features/reviews/queries/admin-review.queries'
 import { AdminSidebar } from '@/shared/components/admin/AdminSidebar'
 import { AdminTopbar } from '@/shared/components/admin/AdminTopbar'
 import type { Metadata } from 'next'
@@ -13,11 +14,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // 404 y no redirect: el panel no debe delatarse ante quien no es admin.
   if (session?.user?.role !== 'admin') notFound()
 
-  const { alerts, unreadCount } = await getAdminAlerts()
+  const [{ alerts, unreadCount }, reviewsPending] = await Promise.all([
+    getAdminAlerts(),
+    countPendingReviews(),
+  ])
 
   return (
     <div className="flex min-h-screen bg-bg text-text font-sans">
-      <AdminSidebar />
+      <AdminSidebar badges={{ reviewsPending }} />
 
       <main className="flex-1 min-w-0 lg:ml-62">
         <AdminTopbar alerts={alerts} unreadCount={unreadCount} />

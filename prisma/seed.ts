@@ -1035,6 +1035,99 @@ async function main() {
 
   console.log(`Orders: ${[order1, order2, order3, order4, order5].map((o) => o.code).join(', ')}`)
 
+  // ── Reseñas ────────────────────────────────────────────────────────────────
+  // Clientes de ejemplo sin contraseña (no pueden iniciar sesión): solo firman
+  // reseñas. Carlos tiene un pedido pagado con p1 y p2 → compra verificada.
+  // `update: {}`: re-ejecutar el seed no pisa la moderación hecha a mano.
+  const reviewers = await Promise.all(
+    [
+      { email: 'lucia.ramirez@example.com', name: 'Lucía Ramírez' },
+      { email: 'jorge.quispe@example.com', name: 'Jorge Quispe Huamán' },
+      { email: 'valeria.torres@example.com', name: 'Valeria Torres' },
+    ].map((u) =>
+      prisma.user.upsert({
+        where: { email: u.email },
+        update: {},
+        create: { ...u, role: 'CUSTOMER', emailVerified: new Date() },
+      }),
+    ),
+  )
+  const [lucia, jorge, valeria] = reviewers
+  const daysAgo = (d: number) => new Date(Date.now() - d * 24 * 60 * 60 * 1000)
+
+  const reviewSeeds = [
+    {
+      product: p1, user: customer, rating: 5, verifiedPurchase: true, status: 'APPROVED', days: 3,
+      title: 'La mejor figura de Goku que tengo',
+      body: 'El cabello tiene un acabado brillante muy fiel al anime y la pose es estable sin soporte. Llegó en caja sellada y bien protegida.',
+    },
+    {
+      product: p2, user: customer, rating: 4, verifiedPurchase: true, status: 'APPROVED', days: 9,
+      title: 'Articulación excelente',
+      body: 'Muy buena articulación y los accesorios encajan bien. Le quito una estrella porque una de las manos intercambiables viene algo floja.',
+    },
+    {
+      product: p1, user: lucia, rating: 5, verifiedPurchase: false, status: 'APPROVED', days: 14,
+      title: null,
+      body: 'Se la regalé a mi hermano y quedó encantado. Los colores son idénticos a las fotos de la tienda.',
+    },
+    {
+      product: p3, user: lucia, rating: 5, verifiedPurchase: false, status: 'APPROVED', days: 21,
+      title: 'Un proyecto para todo el fin de semana',
+      body: 'Las instrucciones son claras y vienen las piezas exactas, ninguna faltante. Ahora es la pieza central de mi repisa.',
+    },
+    {
+      product: p1, user: jorge, rating: 4, verifiedPurchase: false, status: 'APPROVED', days: 30,
+      title: 'Buena relación calidad-precio',
+      body: 'Detalle muy bueno para la escala. La entrega en Lima tardó un día más de lo indicado, pero me avisaron por WhatsApp.',
+    },
+    {
+      product: p6, user: jorge, rating: 5, verifiedPurchase: false, status: 'APPROVED', days: 40,
+      title: 'Ingeniería impresionante',
+      body: 'El mecanismo del motor W16 se mueve de verdad. Es un set exigente, ideal para quien ya ha armado otros Technic.',
+    },
+    {
+      product: p4, user: valeria, rating: 5, verifiedPurchase: false, status: 'APPROVED', days: 6,
+      title: 'Preciosa',
+      body: 'La pintura del rostro es impecable y el tamaño es justo el que esperaba para mi vitrina. Volveré a comprar.',
+    },
+    {
+      product: p10, user: valeria, rating: 4, verifiedPurchase: false, status: 'APPROVED', days: 50,
+      title: null,
+      body: 'Muchísimas piezas y muy buen nivel de detalle en las torres. La caja llegó con una esquina golpeada, pero el contenido estaba perfecto.',
+    },
+    {
+      product: p3, user: jorge, rating: 3, verifiedPurchase: false, status: 'PENDING', days: 1,
+      title: 'Bien, pero esperaba más',
+      body: 'El set está completo, aunque las pegatinas se despegan con facilidad. Por el precio esperaba piezas impresas.',
+    },
+    {
+      product: p1, user: valeria, rating: 5, verifiedPurchase: false, status: 'PENDING', days: 0,
+      title: 'Me encantó',
+      body: 'Llegó rapidísimo y la figura es todavía más bonita en persona. Totalmente recomendada.',
+    },
+  ] as const
+
+  for (const r of reviewSeeds) {
+    const createdAt = daysAgo(r.days)
+    await prisma.review.upsert({
+      where: { productId_userId: { productId: r.product.id, userId: r.user.id } },
+      update: {},
+      create: {
+        productId: r.product.id,
+        userId: r.user.id,
+        rating: r.rating,
+        title: r.title,
+        body: r.body,
+        status: r.status,
+        verifiedPurchase: r.verifiedPurchase,
+        moderatedAt: r.status === 'APPROVED' ? createdAt : null,
+        createdAt,
+      },
+    })
+  }
+  console.log(`Reseñas: ${reviewSeeds.length} (${reviewSeeds.filter((r) => r.status === 'PENDING').length} pendientes)`)
+
   // ── Banners ────────────────────────────────────────────────────────────────
   await prisma.banner.upsert({
     where: { id: 'seed-banner-hero-01' },

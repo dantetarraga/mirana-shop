@@ -23,7 +23,8 @@ export function removeWithUndo(line: Pick<CartItem, 'product' | 'qty' | 'preorde
     action: {
       label: 'Deshacer',
       onClick: () => {
-        useCartStore.getState().addToCart(product, qty, preorderMode)
+        // Deshacer no es "agregar": restaura la línea sin abrir el drawer.
+        useCartStore.getState().addToCart(product, qty, preorderMode, { openDrawer: false })
       },
     },
   })
