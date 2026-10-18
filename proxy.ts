@@ -1,6 +1,7 @@
 import { authConfig } from '@/auth.config'
+import { legacyCatalogRedirect } from '@/features/products/lib/catalog-params'
 import NextAuth from 'next-auth'
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextResponse, type NextFetchEvent, type NextRequest } from 'next/server'
 
 // Instancia ligera de Auth.js: solo decodifica el JWT. Se construye desde
 // auth.config.ts (sin Prisma) para no arrastrar la BD al bundle del proxy.
@@ -41,7 +42,7 @@ function publicOrigin(req: NextRequest): string {
   return `${proto}://${host}`
 }
 
-export const proxy = auth((req) => {
+const authProxy = auth((req) => {
   const { pathname } = req.nextUrl
 
   if (req.auth) {
@@ -64,6 +65,26 @@ export const proxy = auth((req) => {
   return NextResponse.redirect(url)
 })
 
+/**
+ * /catalogo?cat=x y /catalogo?brand=x (único parámetro) → 308 a la página
+ * propia de la categoría o la marca. Se hace aquí y no solo en la page porque
+ * /catalogo tiene loading.tsx: con streaming, permanentRedirect() sale como
+ * 200 + meta refresh, y los buscadores necesitan el 308 real para trasladar
+ * la URL. No pasa por Auth.js (no decodifica el JWT).
+ */
+function catalogRedirect(req: NextRequest): NextResponse {
+  const destination = legacyCatalogRedirect(Object.fromEntries(req.nextUrl.searchParams))
+  if (!destination) return NextResponse.next()
+  return NextResponse.redirect(new URL(destination, publicOrigin(req)), 308)
+}
+
+export function proxy(req: NextRequest, event: NextFetchEvent) {
+  if (req.nextUrl.pathname === '/catalogo') return catalogRedirect(req)
+  // Mismos argumentos que Next le pasaba antes al wrapper de Auth.js; su tipo
+  // público solo declara la firma de route handler ({ params }).
+  return authProxy(req, event as unknown as Parameters<typeof authProxy>[1])
+}
+
 export const config = {
-  matcher: ['/cuenta/:path*', '/admin/:path*'],
+  matcher: ['/cuenta/:path*', '/admin/:path*', '/catalogo'],
 }

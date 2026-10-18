@@ -1,10 +1,9 @@
 import { getActiveBanners } from '@/features/banners/queries/banner.queries'
 import { getPublicBrands } from '@/features/brands/queries/brand.queries'
-import { getPublicCategories } from '@/features/categories/queries/category.queries'
-import { getPublicCollectionRows } from '@/features/collections/queries/collection.queries'
+import { getMenuTree } from '@/features/categories/queries/category.queries'
 import { BrandsCarousel } from '@/features/home/components/BrandsCarousel'
 import { CTABand } from '@/features/home/components/CTABand'
-import { CategoryStrips } from '@/features/home/components/CategoryStrips'
+import { CategoryTiles, CategoryTilesSkeleton } from '@/features/home/components/CategoryTiles'
 import { FeaturedProducts } from '@/features/home/components/FeaturedProducts'
 import { HeroBannerCarousel } from '@/features/home/components/HeroBannerCarousel'
 import { HeroBannerFade } from '@/features/home/components/HeroBannerFade'
@@ -44,16 +43,22 @@ function buildJsonLd(siteUrl: string) {
 }
 
 export default async function HomePage() {
-  // Cabecera (banners + filtros rápidos) en el primer render: es lo que se ve
-  // sin hacer scroll. Todo sale de la caché de datos; el layout pide las mismas
-  // categorías/colecciones y `cache()` las resuelve una sola vez.
-  const [activeBanners, categories, brands, bannerLayout, collections] = await Promise.all([
+  // Cabecera (banners + accesos rápidos + marcas) en el primer render: es lo
+  // que se ve sin hacer scroll. Todo sale de la caché de datos; el layout pide
+  // el mismo árbol del menú y las mismas destacadas, y `cache()` las resuelve
+  // una sola vez.
+  const [activeBanners, menuTree, featuredBrands, bannerLayout] = await Promise.all([
     getActiveBanners(),
-    getPublicCategories(),
-    getPublicBrands(),
+    getMenuTree(),
+    getPublicBrands({ featuredOnly: true }),
     getBannerLayout(),
-    getPublicCollectionRows(),
   ])
+  const roots = menuTree.map(({ name, slug }) => ({ name, slug }))
+  // Carrusel: destacadas por `position`. Si el admin aún no marcó ninguna, se
+  // muestran todas las visibles para no dejar la cabecera sin marcas.
+  const carouselBrands = (
+    featuredBrands.length > 0 ? featuredBrands : await getPublicBrands()
+  ).filter((b) => b.productCount > 0)
   const { organizationJsonLd, websiteJsonLd } = buildJsonLd(getSiteUrl())
 
   const isFullscreen = bannerLayout === 'FULLSCREEN'
@@ -73,12 +78,15 @@ export default async function HomePage() {
           navbar; como tarjetas van en su grid/carrusel debajo de las marcas. */}
       <div>
         {isFullscreen && <HeroBannerFade banners={activeBanners} />}
-        <QuickFiltersBar categories={categories} brands={brands} collections={collections} />
-        <BrandsCarousel brands={brands} />
+        <QuickFiltersBar roots={roots} />
+        <BrandsCarousel brands={carouselBrands} />
         {!isFullscreen && <HeroBannerCarousel banners={activeBanners} />}
       </div>
 
       <PromoBanner />
+      <Suspense fallback={<CategoryTilesSkeleton />}>
+        <CategoryTiles />
+      </Suspense>
       {/* Cada sección asíncrona hace streaming por su cuenta: una consulta lenta
           ya no retiene el HTML del resto de la página. */}
       <Suspense fallback={<HomeSectionSkeleton />}>
@@ -95,7 +103,6 @@ export default async function HomePage() {
       <Suspense fallback={<CTABandSkeleton />}>
         <CTABand />
       </Suspense>
-      <CategoryStrips categories={categories} />
       <Suspense fallback={<HomeSectionSkeleton cards={3} grid="auto" />}>
         <PreorderSection />
       </Suspense>

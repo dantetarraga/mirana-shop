@@ -33,6 +33,36 @@ function invalidateProductCaches() {
   revalidateTag('catalog', 'max')
 }
 
+/**
+ * La categoría y la marca de un producto deben existir y no estar en la
+ * papelera. Sin esto la FK aceptaba una categoría borrada (soft delete) y el
+ * producto quedaba colgado de algo que la tienda ya no muestra. Devuelve el
+ * mensaje de negocio, o null si todo está bien. Solo valida lo que llega.
+ */
+async function findCatalogRefError(refs: {
+  categoryId?: string
+  brandId?: string
+}): Promise<string | null> {
+  const [category, brand] = await Promise.all([
+    refs.categoryId
+      ? db.category.findUnique({ where: { id: refs.categoryId }, select: { name: true, deletedAt: true } })
+      : null,
+    refs.brandId
+      ? db.brand.findUnique({ where: { id: refs.brandId }, select: { name: true, deletedAt: true } })
+      : null,
+  ])
+  if (refs.categoryId) {
+    if (!category) return 'La categoría elegida no existe. Elige otra.'
+    if (category.deletedAt)
+      return `La categoría "${category.name}" está en la papelera. Restáurala o elige otra.`
+  }
+  if (refs.brandId) {
+    if (!brand) return 'La marca elegida no existe. Elige otra.'
+    if (brand.deletedAt) return `La marca "${brand.name}" está en la papelera. Restáurala o elige otra.`
+  }
+  return null
+}
+
 // ---------------------------------------------------------------------------
 // Resolución de categoría/marca durante la importación masiva: busca la
 // opción más cercana (ver catalog-match.ts) y, si no hay ninguna lo bastante
@@ -84,6 +114,9 @@ export async function createProduct(
     const images = input.imageUrl ? [{ url: input.imageUrl, alt: input.name, position: 0 }] : []
     const stock = input.stock ?? 0
     const slug = input.slug || slugify(input.name)
+
+    const refError = await findCatalogRefError(input)
+    if (refError) return { success: false, error: refError, code: 400 }
 
     const trashed = await findTrashedConflict('product', { slug, sku: input.sku })
     if (trashed) return { success: false, error: trashedConflictError(trashed), code: 409 }
@@ -144,6 +177,11 @@ export async function updateProduct(
   const input = parsed.data
 
   try {
+    if (input.categoryId !== undefined || input.brandId !== undefined) {
+      const refError = await findCatalogRefError(input)
+      if (refError) return { success: false, error: refError, code: 400 }
+    }
+
     if (input.slug !== undefined || input.sku !== undefined) {
       const trashed = await findTrashedConflict('product', { slug: input.slug, sku: input.sku }, id)
       if (trashed) return { success: false, error: trashedConflictError(trashed), code: 409 }

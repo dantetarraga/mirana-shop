@@ -6,7 +6,7 @@ import { removeWithUndo } from '@/features/cart/lib/remove-with-undo'
 import { useCartStore } from '@/features/cart/stores/cart.store'
 import { getProductBadge } from '@/features/products/lib/product-badge'
 import type { CatalogProduct } from '@/features/products/types/catalog.types'
-import { getCategoryLabel, getCategoryStripe } from '@/features/products/types/catalog.types'
+import { getCategoryStripe } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
 import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react'
 import Image from 'next/image'
@@ -50,7 +50,7 @@ export function ProductCard({ product, showBadge = true, sizes = DEFAULT_SIZES }
   } = useCartLine(product)
   const loading = ctaState === 'loading'
   const stripe = getCategoryStripe(p.category.slug)
-  const catLabel = getCategoryLabel(p.category.slug)
+  const catLabel = p.category.name
 
   // Una sola badge por card, misma regla que la ficha.
   const badge = getProductBadge({ ...p, isOutOfStock })

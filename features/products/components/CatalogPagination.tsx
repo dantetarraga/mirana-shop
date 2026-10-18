@@ -5,6 +5,8 @@ interface CatalogPaginationProps {
   currentPage: number
   totalPages: number
   baseParams: Omit<CatalogUrlParams, 'page'>
+  /** Página que lista (def. /catalogo). */
+  basePath?: string
 }
 
 function getPageRange(current: number, total: number): (number | '…')[] {
@@ -21,16 +23,22 @@ function getPageRange(current: number, total: number): (number | '…')[] {
   return result
 }
 
-export function CatalogPagination({ currentPage, totalPages, baseParams }: CatalogPaginationProps) {
+export function CatalogPagination({
+  currentPage,
+  totalPages,
+  baseParams,
+  basePath = '/catalogo',
+}: CatalogPaginationProps) {
   if (totalPages <= 1) return null
 
   const pageRange = getPageRange(currentPage, totalPages)
 
   return (
-    <div className="flex items-center justify-center gap-1 mt-10">
+    <nav aria-label="Paginación" className="flex items-center justify-center gap-1 mt-10">
       <Link
-        href={buildCatalogUrl({ ...baseParams, page: Math.max(1, currentPage - 1) })}
+        href={buildCatalogUrl({ ...baseParams, page: Math.max(1, currentPage - 1) }, basePath)}
         aria-disabled={currentPage === 1}
+        aria-label="Página anterior"
         className={`w-9.5 h-9.5 border border-(--bd) flex items-center justify-center font-display text-[15px] font-bold transition-colors ${
           currentPage === 1 ? 'text-muted opacity-40 pointer-events-none' : 'text-muted hover:text-text hover:border-muted'
         }`}
@@ -45,7 +53,8 @@ export function CatalogPagination({ currentPage, totalPages, baseParams }: Catal
         ) : (
           <Link
             key={p}
-            href={buildCatalogUrl({ ...baseParams, page: p })}
+            href={buildCatalogUrl({ ...baseParams, page: p }, basePath)}
+            aria-current={p === currentPage ? 'page' : undefined}
             className={`w-9.5 h-9.5 border flex items-center justify-center font-display text-[15px] font-bold transition-colors ${
               p === currentPage
                 ? 'bg-(--gold) border-(--gold) text-on-accent'
@@ -57,14 +66,15 @@ export function CatalogPagination({ currentPage, totalPages, baseParams }: Catal
         ),
       )}
       <Link
-        href={buildCatalogUrl({ ...baseParams, page: Math.min(totalPages, currentPage + 1) })}
+        href={buildCatalogUrl({ ...baseParams, page: Math.min(totalPages, currentPage + 1) }, basePath)}
         aria-disabled={currentPage === totalPages}
+        aria-label="Página siguiente"
         className={`w-9.5 h-9.5 border border-(--bd) flex items-center justify-center font-display text-[15px] font-bold transition-colors ${
           currentPage === totalPages ? 'text-muted opacity-40 pointer-events-none' : 'text-muted hover:text-text hover:border-muted'
         }`}
       >
         ›
       </Link>
-    </div>
+    </nav>
   )
 }

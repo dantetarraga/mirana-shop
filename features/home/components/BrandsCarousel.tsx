@@ -8,7 +8,8 @@ import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 
 interface BrandsCarouselProps {
-  brands: BrandRow[]
+  /** Destacadas en el orden del admin (`position`); enlazan a /marcas/[slug]. */
+  brands: Pick<BrandRow, 'id' | 'name' | 'slug' | 'imageUrl' | 'tagline'>[]
 }
 
 export function BrandsCarousel({ brands }: BrandsCarouselProps) {
@@ -36,7 +37,7 @@ export function BrandsCarousel({ brands }: BrandsCarouselProps) {
   }
 
   return (
-    <section className="bg-surf border-b border-(--bd)">
+    <section aria-label="Marcas destacadas" className="bg-surf border-b border-(--bd)">
       <div className="flex items-center">
         {hasOverflow && (
           <button
@@ -45,7 +46,7 @@ export function BrandsCarousel({ brands }: BrandsCarouselProps) {
             onClick={() => scrollByPage(-1)}
             className="shrink-0 h-14 sm:h-18 px-2 sm:px-2.5 bg-transparent border-none text-muted transition-colors duration-200 hover:text-accent-ink"
           >
-            <ChevronLeft size={26} />
+            <ChevronLeft size={26} aria-hidden />
           </button>
         )}
 
@@ -59,7 +60,7 @@ export function BrandsCarousel({ brands }: BrandsCarouselProps) {
           {brands.map((b) => (
             <Link
               key={b.id}
-              href={`/catalogo?brand=${b.slug}`}
+              href={`/marcas/${b.slug}`}
               title={b.name}
               className="brand-item relative shrink-0 w-32 h-14 sm:w-44 sm:h-18 flex items-center justify-center border-r border-(--bd) no-underline first:border-l"
             >
@@ -88,7 +89,7 @@ export function BrandsCarousel({ brands }: BrandsCarouselProps) {
             onClick={() => scrollByPage(1)}
             className="shrink-0 h-14 sm:h-18 px-2 sm:px-2.5 bg-transparent border-none text-muted transition-colors duration-200 hover:text-accent-ink"
           >
-            <ChevronRight size={26} />
+            <ChevronRight size={26} aria-hidden />
           </button>
         )}
       </div>

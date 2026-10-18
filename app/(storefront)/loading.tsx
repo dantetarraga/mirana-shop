@@ -1,3 +1,4 @@
+import { CategoryTilesSkeleton } from '@/features/home/components/CategoryTiles'
 import {
   CTABandSkeleton,
   HomeSectionSkeleton,
@@ -10,18 +11,18 @@ import { Skeleton, SkeletonRegion } from '@/shared/components/ui/Skeleton'
 // páginas legales llevan loading propio (antes mostraban este hero al entrar).
 //
 // Copia el orden y las medidas de app/(storefront)/page.tsx con el layout de
-// banners por defecto (CARD): filtros rápidos → marcas → carrusel de banners →
-// franja promo → secciones de productos.
+// banners por defecto (CARD): accesos rápidos → marcas → carrusel de banners →
+// franja promo → categorías → secciones de productos.
 // ---------------------------------------------------------------------------
 
 export default function StorefrontLoading() {
   return (
     <SkeletonRegion label="Cargando la tienda…">
-      {/* QuickFiltersBar: bg-surf + borde, pills py-3.5 de 12px (~47px) */}
+      {/* QuickFiltersBar: bg-surf + borde, chips h-10 con py-2.5 (60px) */}
       <div className="bg-surf border-b border-(--bd)">
-        <div className="shell flex items-center justify-start sm:justify-center gap-1 overflow-hidden h-[47px]">
-          {Array.from({ length: 7 }, (_, i) => (
-            <Skeleton key={i} className="h-2.5 w-20 mx-4 shrink-0" />
+        <div className="shell flex items-center justify-start sm:justify-center gap-2 overflow-hidden py-2.5">
+          {Array.from({ length: 8 }, (_, i) => (
+            <Skeleton key={i} className="h-10 w-24 shrink-0" />
           ))}
         </div>
       </div>
@@ -50,7 +51,7 @@ export default function StorefrontLoading() {
       {/* PromoBanner: py-2.75 + línea de 13px ≈ 42px */}
       <Skeleton className="h-10.5 w-full" />
 
-      <HomeSectionSkeleton />
+      <CategoryTilesSkeleton />
       <HomeSectionSkeleton />
       <CTABandSkeleton />
     </SkeletonRegion>

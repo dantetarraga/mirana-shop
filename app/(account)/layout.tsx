@@ -34,8 +34,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
       <CartHydrator initialCart={cartState.items} expired={cartState.expired} />
       <Navbar
         logoUrl={settings.footerLogoUrl || '/logo.svg'}
-        categories={nav.categories}
-        collections={nav.collections}
+        nav={nav}
       />
       {/* Las páginas de cuenta reservan el alto del navbar en su propio
           contenedor (pt-[calc(var(--nh)+48px)]), por eso aquí no va pt-(--nh). */}

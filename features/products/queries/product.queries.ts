@@ -75,7 +75,8 @@ export const PRODUCT_DETAIL_SELECT = {
   },
 } as const
 
-function buildWhere(filters: Omit<ProductFilters, 'take' | 'skip'>) {
+/** Where de Prisma de un listado de productos (también lo usan las facetas). */
+export function buildWhere(filters: Omit<ProductFilters, 'take' | 'skip'>) {
   const {
     categorySlug,
     brandSlug,

@@ -1,205 +1,63 @@
-import { getPublicBrands } from "@/features/brands/queries/brand.queries";
-import { getPublicCategories } from "@/features/categories/queries/category.queries";
-import { CollectionCard } from "@/features/collections/components/CollectionCard";
-import { getPublicCollections } from "@/features/collections/queries/collection.queries";
-import { CatalogFilters } from "@/features/products/components/CatalogFilters";
-import { CatalogPagination } from "@/features/products/components/CatalogPagination";
-import { CatalogSortSelect } from "@/features/products/components/CatalogSortSelect";
-import { ProductCard } from "@/features/products/components/ProductCard";
-import { resolveAvailability, type AvailabilityOption } from "@/features/products/lib/availability";
-import { toProductCards } from "@/features/products/lib/product-card";
+import { CollectionCard } from '@/features/collections/components/CollectionCard'
+import { getPublicCollections } from '@/features/collections/queries/collection.queries'
+import { CatalogBrowser } from '@/features/products/components/CatalogBrowser'
 import {
-  countCatalogProducts,
-  getCatalogProducts,
-} from "@/features/products/queries/product.queries";
-import { getHideOutOfStock } from "@/features/settings/queries/store-settings.queries";
-import type { ProductSort } from "@/features/products/types";
-import type { Metadata } from "next";
-import { EmptyState } from '@/shared/components/ui/EmptyState'
-import { buttonClass } from "@/shared/components/ui/Button";
-import Link from "next/link";
-import { SearchX } from 'lucide-react'
-
-const PAGE_SIZE = 24;
-const VALID_SORTS: ProductSort[] = ["relevance", "price_asc", "price_desc", "newest"];
-const VALID_AVAIL: AvailabilityOption[] = ["in_stock", "low_stock", "preorder"];
+  hasProductFilters,
+  legacyCatalogRedirect,
+  parseCatalogParams,
+  type RawCatalogSearchParams,
+} from '@/features/products/lib/catalog-params'
+import { getHideOutOfStock } from '@/features/settings/queries/store-settings.queries'
+import type { Metadata } from 'next'
+import { permanentRedirect } from 'next/navigation'
 
 interface PageProps {
-  searchParams: Promise<{
-    cat?: string;
-    brand?: string;
-    q?: string;
-    priceMin?: string;
-    priceMax?: string;
-    avail?: string;
-    oferta?: string;
-    sort?: string;
-    page?: string;
-  }>;
+  searchParams: Promise<RawCatalogSearchParams>
 }
 
-function parseCsv(value: string | undefined): string[] {
-  return value ? value.split(",").filter(Boolean) : [];
-}
-
-export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
-  const params = await searchParams;
-  // Canonical siempre apunta a /catalogo sin query params — el listado filtrado
-  // no debe indexarse como URL propia, evita duplicación por combinatoria de filtros.
-  const base: Metadata = { alternates: { canonical: "/catalogo" } };
-
-  const cats = parseCsv(params.cat);
-  const brandSlugs = parseCsv(params.brand);
-  if (brandSlugs.length === 1 && cats.length === 0) {
-    const brands = await getPublicBrands();
-    const brand = brands.find((b) => b.slug === brandSlugs[0]);
-    if (brand) return { ...base, title: `Figuras de ${brand.name}` };
-  }
-
-  return base;
+export const metadata: Metadata = {
+  title: 'Catálogo',
+  description: 'Todo el catálogo de MIRANA: figuras de colección, sets LEGO, anime y modelos a escala.',
+  // Canonical siempre a /catalogo sin query: el listado filtrado no se indexa
+  // como URL propia (combinatoria de filtros). Categoría y marca tienen ahora
+  // sus páginas indexables (/categorias/x, /marcas/x).
+  alternates: { canonical: '/catalogo' },
 }
 
 export default async function CatalogPage({ searchParams }: PageProps) {
-  const params = await searchParams;
-  const cats = parseCsv(params.cat);
-  const brandSlugs = parseCsv(params.brand);
-  const avail = parseCsv(params.avail).filter((a): a is AvailabilityOption =>
-    VALID_AVAIL.includes(a as AvailabilityOption),
-  );
-  const priceMin = params.priceMin ? Number(params.priceMin) : undefined;
-  const priceMax = params.priceMax ? Number(params.priceMax) : undefined;
-  const sort: ProductSort = VALID_SORTS.includes(params.sort as ProductSort)
-    ? (params.sort as ProductSort)
-    : "relevance";
-  const page = Math.max(1, Number(params.page) || 1);
-  const q = params.q || undefined;
-  const onSale = params.oferta === "1" || undefined;
+  const raw = await searchParams
 
-  const { status, stockFilter } = resolveAvailability(avail);
-  // Los productos dependen del ajuste de stock, las categorías y marcas no:
-  // se lanza la lectura de ajustes sin esperarla y solo las consultas que la
-  // necesitan se encadenan a ella.
-  const hideOutOfStockPromise = getHideOutOfStock();
+  // URLs antiguas `?cat=x` / `?brand=x` (enlaces externos, banners, Google):
+  // 308 a la página propia para que el valor SEO se transfiera.
+  const legacy = legacyCatalogRedirect(raw)
+  if (legacy) permanentRedirect(legacy)
 
-  const baseFilters = {
-    categorySlug: cats.length > 0 ? cats : undefined,
-    brandSlug: brandSlugs.length > 0 ? brandSlugs : undefined,
-    search: q,
-    priceMin,
-    priceMax,
-    status,
-    stockFilter,
-    onSale,
-    sort,
-  };
+  const params = parseCatalogParams(raw)
 
   // Las colecciones encabezan la primera página, pero solo sin filtros: los
-  // filtros (categoría, marca, precio, disponibilidad) son propiedades de
-  // producto y no se pueden aplicar a una colección sin mentir sobre lo que
-  // contiene. Al filtrar, el listado vuelve a ser solo de productos y el
-  // contador y la paginación siguen cuadrando.
-  const hasFilters =
-    cats.length > 0 ||
-    brandSlugs.length > 0 ||
-    avail.length > 0 ||
-    Boolean(q) ||
-    Boolean(onSale) ||
-    priceMin !== undefined ||
-    priceMax !== undefined;
-  const showCollections = !hasFilters && page === 1;
-
-  const [products, total, categories, brands, collections] = await Promise.all([
-    hideOutOfStockPromise.then((hideOutOfStock) =>
-      getCatalogProducts({
-        ...baseFilters,
-        hideOutOfStock,
-        take: PAGE_SIZE,
-        skip: (page - 1) * PAGE_SIZE,
-      }),
-    ),
-    hideOutOfStockPromise.then((hideOutOfStock) =>
-      countCatalogProducts({ ...baseFilters, hideOutOfStock }),
-    ),
-    getPublicCategories(),
-    getPublicBrands(),
-    showCollections
-      ? hideOutOfStockPromise.then((hideOutOfStock) => getPublicCollections(hideOutOfStock))
-      : Promise.resolve([]),
-  ]);
-
-  const items = toProductCards(products);
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-
-  const baseParams = { q, cat: cats, brand: brandSlugs, avail, oferta: onSale, priceMin, priceMax, sort };
+  // filtros son propiedades de producto y no se pueden aplicar a una colección
+  // sin mentir sobre lo que contiene.
+  const showCollections = !hasProductFilters(params) && params.page === 1
+  const collections = showCollections ? await getPublicCollections(await getHideOutOfStock()) : []
 
   return (
     <section className="shell pb-20 pt-9">
-      <div className="text-[10px] font-bold tracking-[3px] uppercase mb-1.5 text-accent-ink">
+      <p className="text-[10px] font-bold tracking-[3px] uppercase mb-1.5 text-accent-ink">
         Tienda completa
-      </div>
+      </p>
       <h1 className="font-display font-black uppercase tracking-[-1px] m-0 mb-6 leading-[0.95] text-[clamp(36px,5vw,64px)]">
         Catálogo
       </h1>
 
-      <div className="flex flex-col lg:grid lg:grid-cols-[260px_1fr] gap-6 lg:gap-8 lg:items-start">
-        <CatalogFilters
-          categories={categories}
-          brands={brands}
-          currentQ={q}
-          currentSort={sort}
-          currentCats={cats}
-          currentBrands={brandSlugs}
-          currentAvail={avail}
-          currentOferta={onSale}
-          priceMin={priceMin}
-          priceMax={priceMax}
-        />
-
-        <div>
-          <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-            <div className="flex items-baseline gap-2.5">
-              <span className="font-display text-[42px] font-black leading-none">{total}</span>
-              <span className="text-[12px] text-muted tracking-[1px] uppercase">productos</span>
-            </div>
-            <CatalogSortSelect
-              value={sort}
-              q={q}
-              cat={cats}
-              brand={brandSlugs}
-              avail={avail}
-              oferta={onSale}
-              priceMin={priceMin}
-              priceMax={priceMax}
-            />
-          </div>
-
-          {items.length === 0 && collections.length === 0 ? (
-            <EmptyState
-              as="h2"
-              size="page"
-              icon={SearchX}
-              title={q ? `Sin resultados para “${q}”` : "Sin resultados"}
-              description="Prueba con menos filtros o con otra búsqueda."
-              action={
-                <Link href="/catalogo" className={buttonClass({ variant: "outline", size: "md" })}>
-                  Ver todo el catálogo
-                </Link>
-              }
-            />
-          ) : (
-            <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
-              {collections.map((c) => (
-                <CollectionCard key={c.id} collection={c} />
-              ))}
-              {items.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
-          )}
-
-          <CatalogPagination currentPage={page} totalPages={totalPages} baseParams={baseParams} />
-        </div>
-      </div>
+      <CatalogBrowser
+        params={params}
+        basePath="/catalogo"
+        showCategoryFilter
+        showBrandFilter
+        leading={collections.map((c) => (
+          <CollectionCard key={c.id} collection={c} />
+        ))}
+      />
     </section>
-  );
+  )
 }

@@ -4,8 +4,15 @@ import { logout } from '@/features/auth/lib/logout'
 import { useAuthModalStore } from '@/features/auth/stores/auth-modal.store'
 import { useCartStore } from '@/features/cart/stores/cart.store'
 import { SearchBox } from '@/features/search/components/SearchBox'
+import { MegaMenu } from '@/shared/components/layout/MegaMenu'
 import { MobileNavDrawer } from '@/shared/components/layout/MobileNavDrawer'
-import { ACCOUNT_LINKS, type NavLinkItem } from '@/shared/components/layout/nav-links'
+import {
+  ACCOUNT_LINKS,
+  EMPTY_NAV,
+  QUICK_LINKS,
+  type NavData,
+  type NavLinkItem,
+} from '@/shared/components/layout/nav-links'
 import { Button } from '@/shared/components/ui/Button'
 import { ThemeToggle } from '@/shared/components/ui/ThemeToggle'
 import { useUser } from '@/shared/hooks/useUser'
@@ -28,12 +35,11 @@ export type { NavLinkItem }
 
 interface NavbarProps {
   logoUrl?: string
-  /** Categorías raíz para el menú móvil (ya recortadas en el layout). */
-  categories?: NavLinkItem[]
-  collections?: NavLinkItem[]
+  /** Mega-menú y drawer móvil (features/layout/queries/nav-links.queries.ts). */
+  nav?: NavData
 }
 
-export function Navbar({ logoUrl = '/logo.svg', categories = [], collections = [] }: NavbarProps) {
+export function Navbar({ logoUrl = '/logo.svg', nav = EMPTY_NAV }: NavbarProps) {
   // Selectores atómicos: con `useCartStore()` el navbar se re-renderizaba con
   // cualquier cambio del carrito (líneas, escrituras en vuelo…), no solo el contador.
   const cartCount = useCartStore((s) => s.cartCount)
@@ -100,7 +106,7 @@ export function Navbar({ logoUrl = '/logo.svg', categories = [], collections = [
         aria-label="Principal"
         className="fixed top-(--ab) left-0 right-0 z-200 flex items-center gap-2 sm:gap-5 md:gap-8 shell transition-[background-color] duration-300 h-(--nav-h) bg-surf/92 backdrop-blur-[28px] border-b border-(--bd)"
       >
-        <div className="flex items-center gap-1 sm:gap-4 md:gap-7 shrink-0">
+        <div className="flex items-center self-stretch gap-1 sm:gap-4 md:gap-7 shrink-0">
           {/* Menú móvil: debajo de `md` no hay espacio para Catálogo ni el
               buscador completo, así que todo eso vive en el drawer. */}
           <Button
@@ -129,15 +135,21 @@ export function Navbar({ logoUrl = '/logo.svg', categories = [], collections = [
               className="h-8 sm:h-9 md:h-10 w-auto [filter:invert(1)_hue-rotate(180deg)_saturate(1.4)] dark:[filter:none]"
             />
           </Link>
-          {/* Sin padding inferior: el `items-center` del nav centra la caja del
-              enlace, así que cualquier relleno abajo empuja el texto hacia arriba. */}
-          <Link
-            href="/catalogo"
-            aria-current={pathname === '/catalogo' ? 'page' : undefined}
-            className="hidden md:block text-[12px] font-semibold tracking-[1px] no-underline uppercase transition-[color] duration-200 text-muted hover:text-text"
-          >
-            Catálogo
-          </Link>
+          {/* Escritorio: "Tienda" abre el mega-menú; Preventas, Novedades y
+              Ofertas van sueltos desde lg (en md están dentro del panel). */}
+          <MegaMenu nav={nav} pathname={pathname} />
+          <ul className="hidden lg:flex items-center gap-6">
+            {QUICK_LINKS.filter((l) => l.bar).map((l) => (
+              <li key={l.href}>
+                <Link
+                  href={l.href}
+                  className="text-[12px] font-semibold tracking-[1px] no-underline uppercase transition-[color] duration-200 text-muted hover:text-text"
+                >
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
 
         <div className="hidden md:block flex-1 min-w-0 max-w-2xl mx-auto">
@@ -315,8 +327,7 @@ export function Navbar({ logoUrl = '/logo.svg', categories = [], collections = [
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         pathname={pathname}
-        categories={categories}
-        collections={collections}
+        nav={nav}
         user={user}
         onLogin={() => {
           setDrawerOpen(false)

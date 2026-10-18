@@ -44,17 +44,6 @@ export const CATEGORY_STRIPE: Record<string, string> = {
   anime: "stripe-fig",
 };
 
-export const CATEGORY_LABEL_MAP: Record<string, string> = {
-  "figuras-accion": "Figura de Acción",
-  lego: "Set LEGO",
-  "modelos-escala": "Modelo Escala",
-  anime: "Figura Anime",
-};
-
 export function getCategoryStripe(slug: string): string {
   return CATEGORY_STRIPE[slug] ?? "stripe-fig";
-}
-
-export function getCategoryLabel(slug: string): string {
-  return CATEGORY_LABEL_MAP[slug] ?? "Coleccionable";
 }

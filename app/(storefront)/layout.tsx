@@ -24,8 +24,7 @@ export default async function StorefrontLayout({ children }: { children: React.R
       <CartHydrator initialCart={cartState.items} expired={cartState.expired} />
       <Navbar
         logoUrl={settings.footerLogoUrl || '/logo.svg'}
-        categories={nav.categories}
-        collections={nav.collections}
+        nav={nav}
       />
       {/* El navbar es `fixed`: su alto (+ la barra de promos) se reserva UNA vez
           aquí. Antes cada página sumaba su propio `pt-(--nh)` y las que lo

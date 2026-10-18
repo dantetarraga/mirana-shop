@@ -1,6 +1,7 @@
 'use client'
 
 import type { BrandRow } from '@/features/brands/types'
+import { buildTree } from '@/features/categories/lib/category-tree'
 import type { CategoryRow } from '@/features/categories/types'
 import type { CollectionRow } from '@/features/collections/types'
 import type { HomeSectionOption } from '@/features/home-sections/types'
@@ -13,6 +14,7 @@ import { RichTextEditor } from '@/shared/components/admin/RichTextEditor'
 import { Button } from '@/shared/components/ui/Button'
 import { DateField } from '@/shared/components/ui/DateField'
 import { FormField } from '@/shared/components/ui/FormField'
+import { Select } from '@/shared/components/ui/Select'
 import { useAutoSlug } from '@/shared/hooks/admin/useAutoSlug'
 import { useFormEntity } from '@/shared/hooks/admin/useFormEntity'
 import { cls } from '@/shared/lib/admin/admin-classes'
@@ -21,7 +23,7 @@ import { productDbSchema } from '@/features/products/schemas/product.schema'
 import { toRichHtml } from '@/shared/lib/rich-text'
 import { cn } from '@/shared/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
@@ -168,6 +170,8 @@ export function ProductCrudDrawer({
   const watchedPrice = watch('price')
   const watchedSalePrice = watch('salePrice')
   useAutoSlug({ name: watch('name'), isNew, setValue })
+  // Árbol (raíces → hijas) en el orden del admin para el select agrupado.
+  const categoryGroups = useMemo(() => buildTree(categories), [categories])
 
   const discount =
     typeof watchedSalePrice === 'number' && watchedPrice > 0 && watchedSalePrice < watchedPrice
@@ -266,14 +270,28 @@ export function ProductCrudDrawer({
         {/* ── Categoría + Marca ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <FormField label="Categoría" error={errors.categoryId?.message}>
-            <FilterMultiSelect
-              singleSelect
-              label="Categoría"
-              className="w-full"
-              options={categories.map((c) => ({ label: c.name, value: c.id }))}
-              selected={watch('categoryId') ? [watch('categoryId')] : []}
-              onToggle={(val) => setValue('categoryId', val, { shouldValidate: true })}
-            />
+            {/* Select nativo agrupado por raíz: con subcategorías hay nombres
+                repetidos ("Star Wars" en LEGO y en Figuras), así que cada
+                opción dice "Padre › Hija". */}
+            <Select
+              {...register('categoryId')}
+              aria-invalid={errors.categoryId ? true : undefined}
+              className="py-2"
+            >
+              <option value="" disabled>
+                Elige una categoría
+              </option>
+              {categoryGroups.map((root) => (
+                <optgroup key={root.id} label={root.name}>
+                  <option value={root.id}>{root.name}</option>
+                  {root.children.map((child) => (
+                    <option key={child.id} value={child.id}>
+                      {root.name} › {child.name}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </Select>
           </FormField>
           <FormField label="Marca" error={errors.brandId?.message}>
             <FilterMultiSelect

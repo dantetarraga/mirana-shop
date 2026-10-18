@@ -9,7 +9,7 @@ import {
 } from '@/features/checkout/lib/preorder'
 import { effectivePrice } from '@/features/checkout/lib/pricing'
 import { maxPurchasable } from '@/features/products/lib/stock'
-import { getCategoryLabel, getCategoryStripe } from '@/features/products/types/catalog.types'
+import { getCategoryStripe } from '@/features/products/types/catalog.types'
 import { Button } from '@/shared/components/ui/Button'
 import { FadeImage } from '@/shared/components/ui/FadeImage'
 import { formatCurrency } from '@/shared/lib/utils'
@@ -196,7 +196,7 @@ function FullLine({ line, onNavigate }: { line: LineModel; onNavigate?: () => vo
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="text-[11px] tracking-[2px] uppercase text-muted mb-1">
-            {getCategoryLabel(product.category.slug)} · {product.brand.name}
+            {product.category.name} · {product.brand.name}
           </div>
           <Link
             href={line.href}

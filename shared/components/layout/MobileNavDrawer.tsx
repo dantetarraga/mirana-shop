@@ -4,20 +4,25 @@ import { logout } from '@/features/auth/lib/logout'
 import type { SessionUser } from '@/shared/hooks/useUser'
 import { useFocusTrap } from '@/shared/hooks/useFocusTrap'
 import { useScrollLock } from '@/shared/hooks/useScrollLock'
-import { ACCOUNT_LINKS, type NavLinkItem } from '@/shared/components/layout/nav-links'
+import {
+  ACCOUNT_LINKS,
+  QUICK_LINKS,
+  type NavCategory,
+  type NavData,
+  type NavLinkItem,
+} from '@/shared/components/layout/nav-links'
 import { Button, buttonClass } from '@/shared/components/ui/Button'
 import { ThemeToggle } from '@/shared/components/ui/ThemeToggle'
 import { cn } from '@/shared/lib/utils'
-import { LayoutGrid, LogOut, X } from 'lucide-react'
+import { ArrowRight, ChevronDown, LayoutGrid, LogOut, X } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
-import { useEffect, useId } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 const SHOP_LINKS: NavLinkItem[] = [
-  { label: 'Catálogo', href: '/catalogo' },
-  { label: 'Novedades', href: '/catalogo?sort=newest' },
-  { label: 'Preventas', href: '/catalogo?avail=preorder' },
-  { label: 'Ofertas', href: '/catalogo?oferta=1' },
+  { label: 'Todo el catálogo', href: '/catalogo' },
+  ...QUICK_LINKS.map(({ label, href }) => ({ label, href })),
 ]
 
 /** Regiones que quedan inertes mientras el drawer está abierto. */
@@ -27,8 +32,7 @@ interface MobileNavDrawerProps {
   open: boolean
   onClose: () => void
   pathname: string
-  categories: NavLinkItem[]
-  collections: NavLinkItem[]
+  nav: NavData
   user: SessionUser | null
   onLogin: () => void
   onRegister: () => void
@@ -49,13 +53,14 @@ export function MobileNavDrawer(props: MobileNavDrawerProps) {
 function DrawerPanel({
   onClose,
   pathname,
-  categories,
-  collections,
+  nav,
   user,
   onLogin,
   onRegister,
 }: MobileNavDrawerProps) {
   const panelRef = useFocusTrap<HTMLDivElement>(true)
+  // En móvil no hay límite de columnas: todas las raíces del menú seguidas.
+  const categories = [...nav.menu, ...nav.overflow]
   const titleId = useId()
   useScrollLock(true)
 
@@ -90,8 +95,9 @@ function DrawerPanel({
 
   const sectionTitle = 'px-5 pt-5 pb-2 text-[11px] font-bold tracking-[2px] uppercase text-muted'
 
+  // Por encima de la barra de promociones (z-500), que si no tapa el encabezado.
   return (
-    <div className="fixed inset-0 z-400 md:hidden">
+    <div className="fixed inset-0 z-550 md:hidden">
       <button
         type="button"
         aria-label="Cerrar menú"
@@ -117,7 +123,7 @@ function DrawerPanel({
 
         <div className="flex-1 overflow-y-auto overscroll-contain pb-4">
           <nav aria-label="Tienda">
-            <div className={sectionTitle}>Tienda</div>
+            <h3 className={sectionTitle}>Accesos rápidos</h3>
             <ul>
               {SHOP_LINKS.map((l) => (
                 <li key={l.href}>
@@ -135,24 +141,61 @@ function DrawerPanel({
 
             {categories.length > 0 && (
               <>
-                <div className={sectionTitle}>Categorías</div>
+                <h3 className={sectionTitle}>Categorías</h3>
                 <ul>
-                  {categories.map((l) => (
-                    <li key={l.href}>
-                      <Link href={l.href} onClick={onClose} className={linkCls(l.href)}>
-                        {l.label}
-                      </Link>
-                    </li>
+                  {categories.map((cat) => (
+                    <CategoryAccordion
+                      key={cat.slug}
+                      category={cat}
+                      pathname={pathname}
+                      onNavigate={onClose}
+                      linkCls={linkCls}
+                    />
                   ))}
                 </ul>
               </>
             )}
 
-            {collections.length > 0 && (
+            {nav.brands.length > 0 && (
               <>
-                <div className={sectionTitle}>Colecciones</div>
+                <h3 className={sectionTitle}>Marcas</h3>
+                <ul className="grid grid-cols-2 gap-2 px-5">
+                  {nav.brands.map((b) => (
+                    <li key={b.slug}>
+                      <Link
+                        href={`/marcas/${b.slug}`}
+                        onClick={onClose}
+                        title={b.name}
+                        className="relative grid place-items-center aspect-[22/9] overflow-hidden bg-card border border-(--bd) active:border-(--bdh)"
+                      >
+                        {b.imageUrl ? (
+                          <Image src={b.imageUrl} alt={b.name} fill sizes="150px" className="object-cover" />
+                        ) : (
+                          <span className="font-display text-[14px] font-black uppercase text-text px-2 text-center leading-none">
+                            {b.name}
+                          </span>
+                        )}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href="/marcas"
+                  onClick={onClose}
+                  aria-current={pathname === '/marcas' ? 'page' : undefined}
+                  className="flex items-center gap-1.5 min-h-11 px-5 text-[14px] font-semibold text-accent-ink"
+                >
+                  Todas las marcas
+                  <ArrowRight size={14} aria-hidden strokeWidth={2.5} />
+                </Link>
+              </>
+            )}
+
+            {nav.collections.length > 0 && (
+              <>
+                <h3 className={sectionTitle}>Colecciones</h3>
                 <ul>
-                  {collections.map((l) => (
+                  {nav.collections.map((l) => (
                     <li key={l.href}>
                       <Link
                         href={l.href}
@@ -170,7 +213,7 @@ function DrawerPanel({
           </nav>
 
           <div className="mt-4 border-t border-(--bd)">
-            <div className={sectionTitle}>Mi cuenta</div>
+            <h3 className={sectionTitle}>Mi cuenta</h3>
             {user ? (
               <ul>
                 {ACCOUNT_LINKS.map(({ label, icon: Icon, href }) => (
@@ -231,5 +274,97 @@ function DrawerPanel({
         </div>
       </div>
     </div>
+  )
+}
+
+/**
+ * Raíz del menú como acordeón: el botón despliega sus subcategorías y el
+ * "Ver todo". Arranca abierta la rama de la página actual. Una raíz sin hijas
+ * es un enlace directo.
+ */
+function CategoryAccordion({
+  category,
+  pathname,
+  onNavigate,
+  linkCls,
+}: {
+  category: NavCategory
+  pathname: string
+  onNavigate: () => void
+  linkCls: (href: string) => string
+}) {
+  const href = `/categorias/${category.slug}`
+  const inBranch =
+    pathname === href || category.children.some((c) => pathname === `/categorias/${c.slug}`)
+  const [open, setOpen] = useState(inBranch)
+  const regionId = useId()
+
+  if (category.children.length === 0) {
+    return (
+      <li>
+        <Link
+          href={href}
+          onClick={onNavigate}
+          aria-current={pathname === href ? 'page' : undefined}
+          className={linkCls(href)}
+        >
+          {category.name}
+        </Link>
+      </li>
+    )
+  }
+
+  return (
+    <li>
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={regionId}
+        onClick={() => setOpen((o) => !o)}
+        className={cn(
+          'flex items-center justify-between w-full min-h-11 px-5 text-[15px] font-semibold text-left transition-colors duration-150',
+          inBranch ? 'text-accent-ink' : 'text-text',
+          open ? 'bg-card' : 'hover:bg-card',
+        )}
+      >
+        {category.name}
+        <ChevronDown
+          size={16}
+          aria-hidden
+          className={cn('text-muted transition-transform duration-200', open && 'rotate-180')}
+        />
+      </button>
+      <ul id={regionId} hidden={!open} className="bg-card border-y border-(--bd) py-1">
+        {category.children.map((c) => {
+          const childHref = `/categorias/${c.slug}`
+          return (
+            <li key={c.slug}>
+              <Link
+                href={childHref}
+                onClick={onNavigate}
+                aria-current={pathname === childHref ? 'page' : undefined}
+                className={cn(
+                  'flex items-center min-h-11 pl-9 pr-5 text-[14px] no-underline transition-colors',
+                  pathname === childHref ? 'text-accent-ink font-semibold' : 'text-muted hover:text-text',
+                )}
+              >
+                {c.name}
+              </Link>
+            </li>
+          )
+        })}
+        <li>
+          <Link
+            href={href}
+            onClick={onNavigate}
+            aria-current={pathname === href ? 'page' : undefined}
+            className="flex items-center gap-1.5 min-h-11 pl-9 pr-5 text-[14px] font-semibold text-accent-ink"
+          >
+            Ver todo {category.name}
+            <ArrowRight size={14} aria-hidden strokeWidth={2.5} />
+          </Link>
+        </li>
+      </ul>
+    </li>
   )
 }

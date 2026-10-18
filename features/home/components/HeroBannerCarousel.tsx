@@ -72,7 +72,7 @@ function BannerCard({ card, priority, className }: { card: SlideCard; priority: 
           en ambos temas: usa --on-media (blanco fijo), no los tokens del tema.
           Con `text-text` el botón quedaba casi negro sobre fondo oscuro en modo
           claro y solo se leía al pasar el mouse, cuando el hover lo pinta de
-          dorado. Mismo criterio que CategoryStrips y HeroBannerFade. */}
+          dorado. Mismo criterio que CategoryTiles y HeroBannerFade. */}
       <div className="relative z-1 p-5 pb-6 sm:p-7 sm:pb-8 text-center">
         {card.title && (
           <h3 className="font-display font-black uppercase tracking-[-0.5px] leading-[0.95] text-[clamp(20px,2.2vw,34px)] mb-1.5 text-on-media">

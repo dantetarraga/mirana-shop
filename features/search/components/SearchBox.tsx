@@ -116,7 +116,7 @@ export function SearchBox({
     close()
     onNavigate?.()
     startNavigationProgress()
-    router.push(`/catalogo?cat=${slug}`)
+    router.push(`/categorias/${slug}`)
   }
 
   const showIdle = query.trim().length < 2

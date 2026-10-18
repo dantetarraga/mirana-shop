@@ -8,11 +8,12 @@ import { getProductBadge } from '@/features/products/lib/product-badge'
 import { getProductBySlug } from '@/features/products/queries/product.queries'
 import { getPreorderDepositPercent } from '@/features/settings/queries/store-settings.queries'
 import type { CatalogProduct } from '@/features/products/types/catalog.types'
-import { getCategoryLabel, getCategoryStripe } from '@/features/products/types/catalog.types'
+import { getCategoryStripe } from '@/features/products/types/catalog.types'
+import { getCategoryPageData } from '@/features/categories/queries/category.queries'
 import { JsonLd } from '@/shared/components/JsonLd'
+import { Breadcrumbs, breadcrumbJsonLd } from '@/shared/components/layout/Breadcrumbs'
 import { Dates } from '@/shared/lib/dates'
 import { stripHtml, toRichHtml } from '@/shared/lib/rich-text'
-import { ChevronRight } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -96,7 +97,22 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   const descriptionHtml = toRichHtml(raw.description)
   const stripe = getCategoryStripe(product.category.slug)
-  const catLabel = getCategoryLabel(product.category.slug)
+  const catLabel = product.category.name
+  // Migas reales (Padre › Hija) desde la lista pública cacheada de categorías:
+  // si la categoría está oculta no hay página a la que enlazar y se cae al
+  // catálogo general.
+  const categoryData = await getCategoryPageData(product.category.slug)
+  const categoryCrumbs = categoryData
+    ? [...categoryData.ancestors, categoryData.category].map((c) => ({
+        label: c.name,
+        path: `/categorias/${c.slug}`,
+      }))
+    : [{ label: 'Catálogo', path: '/catalogo' }]
+  const crumbs = [
+    { label: 'Inicio', path: '/' },
+    ...categoryCrumbs,
+    { label: product.name, path: `/catalogo/${product.slug}` },
+  ]
   // Misma regla que la card: la preventa se reserva sin stock, así
   // que no cuenta como agotada (antes esta página la marcaba AGOTADO y PREVENTA
   // a la vez, y su panel de compra la daba por no comprable).
@@ -128,73 +144,19 @@ export default async function ProductDetailPage({ params }: PageProps) {
     },
   }
 
-  const breadcrumbJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Inicio', item: getSiteUrl() },
-      { '@type': 'ListItem', position: 2, name: 'Catálogo', item: `${getSiteUrl()}/catalogo` },
-      {
-        '@type': 'ListItem',
-        position: 3,
-        name: catLabel,
-        item: `${getSiteUrl()}/catalogo?cat=${product.category.slug}`,
-      },
-      {
-        '@type': 'ListItem',
-        position: 4,
-        name: product.name,
-        item: `${getSiteUrl()}/catalogo/${product.slug}`,
-      },
-    ],
-  }
-
   return (
     <>
       <JsonLd data={productJsonLd} />
-      <JsonLd data={breadcrumbJsonLd} />
+      <JsonLd data={breadcrumbJsonLd(getSiteUrl(), crumbs)} />
 
       <div className="px-4 sm:px-6 py-8 sm:py-12 max-w-360 mx-auto">
-        {/* Breadcrumb */}
-        <nav aria-label="Migas de pan" className="mb-6 sm:mb-10">
-          <ol className="flex flex-wrap items-center gap-1.5 text-[11px] tracking-[1.5px] uppercase text-muted">
-            <li>
-              <Link href="/" className="hover:text-text transition-colors py-1">
-                Inicio
-              </Link>
-            </li>
-            <li aria-hidden>
-              <ChevronRight size={12} />
-            </li>
-            <li>
-              <Link href="/catalogo" className="hover:text-text transition-colors py-1">
-                Catálogo
-              </Link>
-            </li>
-            <li aria-hidden>
-              <ChevronRight size={12} />
-            </li>
-            <li>
-              <Link
-                href={`/catalogo?cat=${product.category.slug}`}
-                className="hover:text-text transition-colors py-1"
-              >
-                {catLabel}
-              </Link>
-            </li>
-            <li aria-hidden>
-              <ChevronRight size={12} />
-            </li>
-            <li className="min-w-0">
-              <span
-                aria-current="page"
-                className="text-text block truncate max-w-[180px] sm:max-w-none"
-              >
-                {product.name}
-              </span>
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumbs
+          className="sm:mb-10"
+          items={crumbs.map((c, i) => ({
+            label: c.label,
+            href: i < crumbs.length - 1 ? c.path : undefined,
+          }))}
+        />
 
         {/* Main grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-start">
@@ -219,9 +181,19 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
           {/* Right — info */}
           <div className="flex flex-col gap-6 pt-2">
-            {/* Category · Brand */}
+            {/* Categoría · Marca — enlazan a sus páginas */}
             <div className="text-[11px] tracking-[3px] uppercase text-muted">
-              {catLabel} · {product.brand.name}
+              {categoryData ? (
+                <Link href={`/categorias/${product.category.slug}`} className="hover:text-text transition-colors">
+                  {catLabel}
+                </Link>
+              ) : (
+                catLabel
+              )}{' '}
+              ·{' '}
+              <Link href={`/marcas/${product.brand.slug}`} className="hover:text-text transition-colors">
+                {product.brand.name}
+              </Link>
             </div>
 
             {/* Name */}

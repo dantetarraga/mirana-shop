@@ -102,14 +102,14 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
         tabIndex={-1}
         aria-label="Cerrar carrito"
         onClick={() => setCartOpen(false)}
-        className="fixed inset-0 z-400 w-full h-full bg-scrim backdrop-blur-[6px] cursor-default"
+        className="fixed inset-0 z-550 w-full h-full bg-scrim backdrop-blur-[6px] cursor-default"
       />
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="fixed top-0 right-0 bottom-0 z-401 w-full sm:w-105 bg-surf border-l border-(--bd) flex flex-col animate-slide-right"
+        className="fixed top-0 right-0 bottom-0 z-551 w-full sm:w-105 bg-surf border-l border-(--bd) flex flex-col animate-slide-right"
       >
         {/* Header */}
         <div className="px-5 sm:px-7 py-6 border-b border-(--bd) flex items-center justify-between">
