@@ -1,6 +1,7 @@
 'use client'
 
 import { CartLineItem } from '@/features/cart/components/CartLineItem'
+import { CartSkeleton } from '@/features/cart/components/CartSkeleton'
 import { cartKindOf } from '@/features/cart/lib/cart-kind'
 import { useCartStore } from '@/features/cart/stores/cart.store'
 import { eligibleDeliveryMethods } from '@/features/checkout/lib/delivery-eligibility'
@@ -20,6 +21,7 @@ interface CartViewProps {
 
 export function CartView({ pricingRules }: CartViewProps) {
   const cart = useCartStore((s) => s.cart)
+  const hydrated = useCartStore((s) => s.hydrated)
   const router = useRouter()
 
   const { subtotal, payableNow, dueTotal } = splitPreorderTotals(
@@ -43,6 +45,10 @@ export function CartView({ pricingRules }: CartViewProps) {
     pricingRules,
     { shippingCost: deliveryMethods[0]?.cost },
   )
+
+  // Antes de que CartHydrator siembre el store el carrito siempre está vacío:
+  // se muestra el esqueleto de loading.tsx en vez del estado vacío.
+  if (!hydrated) return <CartSkeleton />
 
   /* ── Empty state ─────────────────────────────────── */
   if (cart.length === 0) {

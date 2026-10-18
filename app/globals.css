@@ -69,6 +69,9 @@
   /* Borde de campos de formulario: ≥3:1 contra el fondo (WCAG 1.4.11).
      --bd (12-15 % de alfa) queda en ~1.2:1 y el campo no se distingue. */
   --color-field: var(--bd-field);
+  /* Placeholder de campos: más tenue que --mt para que un campo vacío nunca se
+     lea como uno ya relleno. Genera: placeholder:text-placeholder */
+  --color-placeholder: var(--ph);
   /* Anillo de foco por teclado — mismo color en todo el sitio */
   --color-ring: var(--ring);
   --color-gold-glow: var(--gd);
@@ -255,6 +258,7 @@
   --bdh: rgba(0, 119, 182, 0.45);
   --sub: rgba(0, 200, 255, 0.08);
   --bd-field: #7f92a6; /* 3.2:1 sobre blanco · 3.05:1 sobre --surf */
+  --ph: #74869a; /* 3.7:1 sobre blanco: legible, pero claramente más tenue que un valor */
   --ring: var(--accent-ink);
 
   /* Sobre fotografía — idénticos en ambos temas: la imagen no cambia */
@@ -334,6 +338,7 @@
   --bdh: rgba(0, 200, 255, 0.48);
   --sub: rgba(0, 200, 255, 0.06);
   --bd-field: #52709a; /* 3.5:1 sobre --bg · 3.2:1 sobre --card */
+  --ph: rgba(228, 240, 255, 0.42);
   --ring: var(--accent-ink);
 
   --on-media: #ffffff;
@@ -470,6 +475,12 @@ textarea:focus-visible,
   outline: 2px solid var(--ring);
   outline-offset: 2px;
   border-radius: 1px;
+}
+/* Destinos de foco programático (tabIndex=-1: el paso nuevo del checkout, el
+   título de la pantalla de éxito). No son controles: el lector de pantalla
+   anuncia su contenido y un anillo alrededor de toda la sección solo confunde. */
+[data-focus-target]:focus-visible {
+  outline: none;
 }
 
 /* =============================================================

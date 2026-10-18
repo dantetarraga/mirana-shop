@@ -1,6 +1,21 @@
 'use client'
 
+import { CheckoutAssurance } from '@/features/checkout/components/CheckoutAssurance'
+import { CheckoutSkeleton } from '@/features/checkout/components/CheckoutSkeleton'
 import { CheckoutSteps, type CheckoutStepInfo } from '@/features/checkout/components/CheckoutSteps'
+import {
+  CHECKOUT_ASIDE,
+  CHECKOUT_ASSURANCE_CELL,
+  CHECKOUT_BACK_LINK,
+  CHECKOUT_CONTENT_CELL,
+  CHECKOUT_GRID,
+  CHECKOUT_PAGE,
+  CHECKOUT_PANEL,
+  CHECKOUT_STEPS_CELL,
+  CHECKOUT_STICKY_BAR,
+  CHECKOUT_SUMMARY_CELL,
+  CHECKOUT_TITLE,
+} from '@/features/checkout/components/checkout-layout'
 import { CouponField } from '@/features/checkout/components/CouponField'
 import { DeliveryForm } from '@/features/checkout/components/DeliveryForm'
 import { DeliveryMethodSelector } from '@/features/checkout/components/DeliveryMethodSelector'
@@ -26,24 +41,19 @@ import {
 import { depositUnitPrice, splitPreorderTotals } from '@/features/checkout/lib/preorder'
 import type { DeliveryMethodOption } from '@/features/delivery/types'
 import type { PaymentAccountData } from '@/features/settings/queries/payment-accounts.queries'
+import { useAuthModalStore } from '@/features/auth/stores/auth-modal.store'
 import { Button, buttonClass } from '@/shared/components/ui/Button'
 import { useUser } from '@/shared/hooks/useUser'
+import { formatCurrency } from '@/shared/lib/utils'
 import {
   buildCheckoutSchema,
   type CheckoutFormRules,
   type CheckoutInput,
 } from '@/features/checkout/schemas/checkout.schema'
 import { zodResolver } from '@hookform/resolvers/zod'
-import {
-  ArrowLeft,
-  ArrowRight,
-  CreditCard,
-  ShoppingBag,
-  ShoppingCart,
-  Truck,
-  User,
-} from 'lucide-react'
+import { ArrowLeft, CreditCard, ShoppingBag, ShoppingCart, Truck, User } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   useForm,
@@ -62,13 +72,21 @@ import { EmptyState } from '@/shared/components/ui/EmptyState'
 // Cada paso declara qué campos valida para poder avanzar.
 // ---------------------------------------------------------------------------
 
-type CheckoutStep = CheckoutStepInfo & { fields: (keyof CheckoutInput)[] }
+type CheckoutStep = CheckoutStepInfo & {
+  fields: (keyof CheckoutInput)[]
+  /** CTA que lleva A este paso desde el anterior */
+  continueLabel: string
+  /** Enlace que vuelve A este paso desde el siguiente */
+  backLabel: string
+}
 
 const DELIVERY_STEP: CheckoutStep = {
   id: 'entrega',
   label: 'Entrega',
   icon: Truck,
   fields: ['deliveryMethodId', 'deliveryLocationId'],
+  continueLabel: 'Continuar a la entrega',
+  backLabel: 'Volver a la entrega',
 }
 
 const DATA_STEP: CheckoutStep = {
@@ -76,6 +94,8 @@ const DATA_STEP: CheckoutStep = {
   label: 'Tus datos',
   icon: User,
   fields: ['fullName', 'dni', 'phone', 'email', 'address', 'district', 'city', 'reference'],
+  continueLabel: 'Continuar',
+  backLabel: 'Volver a tus datos',
 }
 
 const PAYMENT_STEP: CheckoutStep = {
@@ -83,6 +103,8 @@ const PAYMENT_STEP: CheckoutStep = {
   label: 'Pago',
   icon: CreditCard,
   fields: ['paymentMethod', 'acceptTerms'],
+  continueLabel: 'Continuar al pago',
+  backLabel: 'Volver al pago',
 }
 
 // ---------------------------------------------------------------------------
@@ -98,6 +120,8 @@ interface CheckoutViewProps {
   initialProfile?: ProfileData | null
   /** Direcciones guardadas — `[]` sin sesión. Vienen del server. */
   initialAddresses?: AddressData[]
+  /** Minutos que se aparta el stock al confirmar (ORDER_RESERVATION_TTL_MINUTES) */
+  reservationMinutes: number
 }
 
 /** Sin carrito no hay nada que pagar: se invita a volver al catálogo. */
@@ -110,8 +134,8 @@ function EmptyCheckout() {
       description="Agrega productos desde el catálogo para finalizar una compra."
       className="min-h-[70vh] justify-center pt-9"
       action={
-        <Link href="/catalogo" className={buttonClass({ variant: 'accent', size: 'md' })}>
-          <ShoppingCart size={15} aria-hidden />
+        <Link href="/catalogo" className={buttonClass({ variant: 'accent', size: 'lg' })}>
+          <ShoppingCart size={16} aria-hidden />
           Ver catálogo
         </Link>
       }
@@ -125,9 +149,13 @@ export function CheckoutView({
   pricingRules,
   initialProfile = null,
   initialAddresses = [],
+  reservationMinutes,
 }: CheckoutViewProps) {
   const cart = useCartStore((s) => s.cart)
+  const cartHydrated = useCartStore((s) => s.hydrated)
   const clearCart = useCartStore((s) => s.clearCart)
+  const openAuth = useAuthModalStore((s) => s.openAuth)
+  const router = useRouter()
   const { user } = useUser()
   const [success, setSuccess] = useState<SuccessData | null>(null)
   const [loading, setLoading] = useState(false)
@@ -135,6 +163,18 @@ export function CheckoutView({
   // Con sesión el server ya mandó perfil y direcciones: el formulario nace
   // relleno en vez de saltar cuando terminaban los useEffect de antes.
   const isLoggedIn = Boolean(user) || initialProfile !== null
+  // Invitado según el servidor: el aviso de "inicia sesión" se decide con el
+  // HTML ya renderizado, sin esperar a que NextAuth resuelva la sesión.
+  const isGuest = initialProfile === null && !user
+
+  // Quien inicia sesión desde ese aviso no recarga la página (signIn con
+  // redirect:false): se vuelven a pedir perfil y direcciones al servidor, y
+  // page.tsx remonta esta vista con `key` por cuenta para que el formulario
+  // nazca relleno con los datos guardados.
+  const serverSawGuest = initialProfile === null
+  useEffect(() => {
+    if (serverSawGuest && user) router.refresh()
+  }, [serverSawGuest, user, router])
   const startAddress = defaultAddress(initialAddresses)
   const accountName = initialProfile?.name ?? user?.name ?? ''
 
@@ -267,8 +307,12 @@ export function CheckoutView({
   const isLastStep = current === steps.length - 1
 
   const stepsRef = useRef<HTMLDivElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
+  // Al cambiar de paso el contenido se reemplaza y el foco caería en <body>:
+  // se lleva al paso nuevo para que teclado y lector de pantalla sigan ahí.
   const scrollToSteps = useCallback(() => {
     stepsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    requestAnimationFrame(() => contentRef.current?.focus({ preventScroll: true }))
   }, [])
 
   /**
@@ -341,7 +385,30 @@ export function CheckoutView({
     canSave: isLoggedIn,
   })
 
-  // Redirect to cart if empty (and not in success state)
+  const assurance = (
+    <CheckoutAssurance
+      reservationMinutes={reservationMinutes}
+      hasWhatsapp={Boolean(whatsappPhone)}
+      hasDeliveryChoice={deliveryMethods.length > 0}
+    />
+  )
+
+  // Antes de que CartHydrator siembre el store el carrito está vacío aunque el
+  // cliente tenga productos: sin esto el HTML del servidor pintaba "Tu carrito
+  // está vacío" y saltaba al formulario. Se muestra el mismo esqueleto que
+  // loading.tsx, con los pasos y direcciones reales (las líneas del carrito
+  // todavía no se conocen: quedan las 2 por defecto).
+  if (!cartHydrated && !success) {
+    return (
+      <CheckoutSkeleton
+        stepCount={steps.length}
+        savedAddresses={requiresAddress && initialAddresses.length > 0}
+        requiresAddress={requiresAddress}
+        assurance={assurance}
+      />
+    )
+  }
+
   if (cart.length === 0 && !success) return <EmptyCheckout />
 
   // ---------------------------------------------------------------------------
@@ -426,24 +493,72 @@ export function CheckoutView({
     })
   }
 
+  const nextStep = steps[current + 1]
+  const prevStep = steps[current - 1]
+  const ctaLabel = isLastStep ? 'Confirmar pedido' : (nextStep?.continueLabel ?? 'Continuar')
+  const totalLabel = dueTotal > 0 ? 'Pagas hoy' : 'Total'
+
+  // CTA — solo el último paso confirma (submit → handleSubmit/zod); los
+  // anteriores avanzan con goToStep, que valida antes. Se pinta dos veces: en
+  // la columna del resumen (lg) y en la barra fija (móvil); CSS oculta una.
+  // Las `key` distintas impiden que React reutilice el mismo <button>: si no,
+  // al avanzar al último paso el botón que se acaba de pulsar pasaba a ser
+  // type="submit" antes de terminar el clic y enviaba el formulario solo.
+  const renderCta = (size: 'md' | 'lg', className: string) =>
+    isLastStep ? (
+      <Button
+        key="confirm"
+        type="submit"
+        variant="accent"
+        size={size}
+        full={size === 'lg'}
+        loading={loading}
+        loadingText="Confirmando pedido…"
+        className={className}
+      >
+        {ctaLabel}
+      </Button>
+    ) : (
+      <Button
+        key="continue"
+        type="button"
+        variant="accent"
+        size={size}
+        full={size === 'lg'}
+        onClick={() => void goToStep(current + 1)}
+        className={className}
+      >
+        {ctaLabel}
+      </Button>
+    )
+
+  const guestLead = isGuest ? (
+    <>
+      ¿Ya tienes cuenta?{' '}
+      <button
+        type="button"
+        onClick={() => openAuth('login')}
+        className="font-semibold text-accent-ink underline underline-offset-4 cursor-pointer"
+      >
+        Inicia sesión
+      </button>{' '}
+      para usar tus datos guardados.
+    </>
+  ) : undefined
+
   return (
-    <div className="max-w-275 mx-auto px-4 sm:px-6 pt-9 pb-16">
-      {/* Header */}
-      <div className="mb-8">
-        <p className="text-[11px] tracking-[3px] uppercase text-accent-ink mb-1">Tienda</p>
-        <h1 className="font-display font-black uppercase text-[28px] sm:text-[34px] tracking-tight leading-none">
-          Finalizar compra
-        </h1>
-      </div>
+    <div className={CHECKOUT_PAGE}>
+      <h1 className={CHECKOUT_TITLE}>Finalizar compra</h1>
 
       <form onSubmit={handleSubmit(onSubmit, onInvalid)} noValidate>
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 lg:gap-8 items-start">
-          {/* ── Left column — un paso por vez ─────────────── */}
-          <div className="flex flex-col gap-6">
-            <div ref={stepsRef} className="scroll-mt-[calc(var(--nh)+24px)]">
-              <CheckoutSteps steps={steps} current={current} onSelect={(i) => void goToStep(i)} />
-            </div>
+        <div className={CHECKOUT_GRID}>
+          {/* ── Progreso ─────────────────────────────────── */}
+          <div ref={stepsRef} className={`${CHECKOUT_STEPS_CELL} scroll-mt-[calc(var(--nh)+16px)]`}>
+            <CheckoutSteps steps={steps} current={current} onSelect={(i) => void goToStep(i)} />
+          </div>
 
+          {/* ── Paso actual ──────────────────────────────── */}
+          <div ref={contentRef} tabIndex={-1} data-focus-target className={CHECKOUT_CONTENT_CELL}>
             {activeStep.id === 'entrega' && (
               <DeliveryMethodSelector
                 methods={deliveryMethods}
@@ -485,6 +600,7 @@ export function CheckoutView({
                   register={register}
                   errors={errors}
                   requiresAddress={requiresAddress}
+                  lead={guestLead}
                 />
               </>
             )}
@@ -497,88 +613,82 @@ export function CheckoutView({
                 whatsappPhone={whatsappPhone}
               />
             )}
-
-            {/* En móvil el resumen queda debajo del paso: sin esto habría que
-                pasarlo entero de largo solo para avanzar. En el último paso no
-                se repite — ahí se confirma desde el resumen, que es donde están
-                el total y los términos. */}
-            {!isLastStep && (
-              <div className="flex gap-3 lg:hidden">
-                {!isFirstStep && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="md"
-                    full
-                    onClick={() => void goToStep(current - 1)}
-                  >
-                    <ArrowLeft size={14} aria-hidden />
-                    Atrás
-                  </Button>
-                )}
-                <Button
-                  type="button"
-                  variant="accent"
-                  size="md"
-                  full
-                  onClick={() => void goToStep(current + 1)}
-                >
-                  Continuar
-                  <ArrowRight size={15} aria-hidden />
-                </Button>
-              </div>
-            )}
           </div>
 
-          {/* ── Right column ───────────────────────────────── */}
-          <OrderSummary
-            summary={{
-              lines: cart,
-              subtotal,
-              payableNow,
-              dueTotal,
-              depositPercent: pricingRules.preorderDepositPercent,
-              shippingCost,
-              shippingFree,
-              discount,
-              discountName,
-              couponCode,
-              total,
-              shippingThreshold: pricingRules.freeShippingThreshold,
-              deliveryLabel: selectedMethod?.name ?? null,
-            }}
-            couponSlot={
-              <CouponField
-                coupon={coupon}
-                onApply={setCoupon}
-                onRemove={() => setCoupon(null)}
-                subtotal={payableNow}
-                disabled={loading}
+          {/* ── Resumen + CTA (columna fija en lg; repartido en móvil) ── */}
+          <div className={CHECKOUT_ASIDE}>
+            <OrderSummary
+              className={CHECKOUT_SUMMARY_CELL}
+              summary={{
+                lines: cart,
+                subtotal,
+                payableNow,
+                dueTotal,
+                depositPercent: pricingRules.preorderDepositPercent,
+                shippingCost,
+                shippingFree,
+                discount,
+                discountName,
+                couponCode,
+                total,
+                shippingThreshold: pricingRules.freeShippingThreshold,
+                deliveryLabel: selectedMethod?.name ?? null,
+              }}
+              couponSlot={
+                <CouponField
+                  coupon={coupon}
+                  onApply={setCoupon}
+                  onRemove={() => setCoupon(null)}
+                  subtotal={payableNow}
+                  disabled={loading}
+                />
+              }
+            />
+
+            <div className={CHECKOUT_PANEL}>
+              {/* Términos — solo en el último paso, junto al botón que confirma:
+                  es lo que se está aceptando al pulsarlo. Se oculta con CSS (no
+                  se desmonta) para que el registro del campo y su error sigan
+                  vivos entre pasos. */}
+              <TermsCheckbox
+                hidden={!isLastStep}
+                registration={register('acceptTerms')}
+                error={errors.acceptTerms?.message}
               />
-            }
-            footer={
-              <>
-                {/* Términos y condiciones — solo en el último paso, junto al
-                    botón que confirma: es lo que se está aceptando al pulsarlo.
-                    Se oculta con CSS (no se desmonta) para que el registro del
-                    campo y su error sigan vivos entre pasos. */}
-                <TermsCheckbox
-                  hidden={!isLastStep}
-                  registration={register('acceptTerms')}
-                  error={errors.acceptTerms?.message}
-                />
-                {/* goToStep valida los campos del paso actual antes de avanzar;
-                    "Confirmar" es type="submit" y pasa por handleSubmit/zod. */}
-                <StepActions
-                  isFirstStep={isFirstStep}
-                  isLastStep={isLastStep}
-                  loading={loading}
-                  onNext={() => void goToStep(current + 1)}
-                  onBack={() => void goToStep(current - 1)}
-                />
-              </>
-            }
-          />
+
+              {renderCta('lg', 'hidden lg:inline-flex min-h-13')}
+
+              {isFirstStep ? (
+                <Link href="/carrito" className={CHECKOUT_BACK_LINK}>
+                  <ArrowLeft size={15} aria-hidden />
+                  Volver al carrito
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => void goToStep(current - 1)}
+                  disabled={loading}
+                  className={CHECKOUT_BACK_LINK}
+                >
+                  <ArrowLeft size={15} aria-hidden />
+                  {prevStep?.backLabel ?? 'Paso anterior'}
+                </button>
+              )}
+            </div>
+
+            <div className={CHECKOUT_ASSURANCE_CELL}>{assurance}</div>
+          </div>
+        </div>
+
+        {/* Barra fija en móvil: el total y el CTA siempre a mano. */}
+        <div data-sticky-cta className={CHECKOUT_STICKY_BAR}>
+          <div className="min-w-0 flex-1">
+            <p className="text-[12px] leading-4 text-muted">{totalLabel}</p>
+            <p className="font-display font-black text-[22px] leading-none text-accent-ink tabular-nums mt-1">
+              {formatCurrency(total)}
+            </p>
+          </div>
+          {renderCta('md', 'min-h-12 px-5')}
         </div>
       </form>
     </div>
@@ -599,90 +709,44 @@ function TermsCheckbox({
   error?: string
 }) {
   return (
-    <div className={`bg-card border border-(--bd) px-4 py-3.5 ${hidden ? 'hidden' : ''}`}>
-      <label className="flex items-start gap-3 cursor-pointer select-none">
+    <div
+      className={`bg-surf border px-4 py-3 ${error ? 'border-danger' : 'border-(--bd)'} ${hidden ? 'hidden' : ''}`}
+    >
+      <label className="flex items-start gap-3 cursor-pointer select-none min-h-11 py-1">
         <input
           type="checkbox"
           {...registration}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? 'checkout-terms-error' : undefined}
-          className="mt-0.5 accent-accent-ink w-4 h-4 shrink-0"
+          className="mt-0.5 accent-accent-ink size-5 shrink-0"
         />
-        <span className="text-[12px] leading-snug">
-          He leído y acepto los{' '}
+        <span className="text-[13px] leading-5 text-text">
+          Acepto los{' '}
           <Link
             href="/terminos-y-condiciones"
             target="_blank"
-            className="text-accent-ink underline"
+            className="text-accent-ink font-semibold underline underline-offset-2"
           >
-            Términos y Condiciones
+            términos y condiciones
+            <span className="sr-only"> (se abre en una pestaña nueva)</span>
           </Link>{' '}
           y la{' '}
           <Link
             href="/politica-de-privacidad"
             target="_blank"
-            className="text-accent-ink underline"
+            className="text-accent-ink font-semibold underline underline-offset-2"
           >
-            Política de Privacidad
+            política de privacidad
+            <span className="sr-only"> (se abre en una pestaña nueva)</span>
           </Link>
           .
         </span>
       </label>
       {error && (
-        <p id="checkout-terms-error" role="alert" className="text-danger text-[12px] mt-2">
+        <p id="checkout-terms-error" role="alert" className="text-danger text-[13px] mt-1">
           {error}
         </p>
       )}
     </div>
-  )
-}
-
-/** CTA — solo el último paso confirma; los anteriores avanzan. */
-function StepActions({
-  isFirstStep,
-  isLastStep,
-  loading,
-  onNext,
-  onBack,
-}: {
-  isFirstStep: boolean
-  isLastStep: boolean
-  loading: boolean
-  onNext: () => void
-  onBack: () => void
-}) {
-  return (
-    <>
-      {isLastStep ? (
-        <Button
-          type="submit"
-          variant="accent"
-          size="lg"
-          full
-          loading={loading}
-          loadingText="Confirmando pedido…"
-        >
-          <Truck size={16} className="mr-2" />
-          Confirmar pedido
-        </Button>
-      ) : (
-        <Button type="button" variant="accent" size="lg" full onClick={onNext}>
-          Continuar
-          <ArrowRight size={16} className="ml-2" />
-        </Button>
-      )}
-
-      <Button
-        type="button"
-        variant="outline"
-        size="md"
-        full
-        onClick={() => (isFirstStep ? window.history.back() : onBack())}
-        disabled={loading}
-      >
-        <ArrowLeft size={14} className="mr-1.5" />
-        {isFirstStep ? 'Volver al carrito' : 'Paso anterior'}
-      </Button>
-    </>
   )
 }

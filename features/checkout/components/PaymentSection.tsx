@@ -6,6 +6,7 @@ import type { PaymentAccountData } from '@/features/settings/queries/payment-acc
 import { MessageCircle } from 'lucide-react'
 import type { FieldErrors, UseFormRegister } from 'react-hook-form'
 import { formatPhoneDisplay } from '../lib/whatsapp'
+import { sectionCard, sectionLead, sectionTitle } from './ui'
 
 const PAYMENT_METHODS = [
   {
@@ -29,18 +30,21 @@ export function PaymentSection({ register, errors, accounts, whatsappPhone }: Pr
   const phoneDisplay = formatPhoneDisplay(whatsappPhone)
 
   return (
-    <section className="bg-card border border-(--bd) p-6">
-      <h2 className="font-display font-black uppercase text-[14px] tracking-[2px] text-accent-ink mb-5">
-        Método de pago
+    <section className={sectionCard} aria-labelledby="payment-title">
+      <h2 id="payment-title" className={sectionTitle}>
+        Pago
       </h2>
+      <p className={sectionLead}>
+        No se cobra nada al confirmar: pagas después, por transferencia o depósito.
+      </p>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2.5 mt-6">
         {PAYMENT_METHODS.map(({ value, label, icon: Icon, available }) => (
           <label
             key={value}
-            className={`flex items-start gap-4 border p-4 cursor-pointer transition-colors duration-150 ${
+            className={`flex items-start gap-3.5 border p-4 transition-colors duration-150 ${
               available
-                ? 'border-(--bd) hover:border-(--gold)/60'
+                ? 'border-(--gold) bg-(--sub) cursor-pointer'
                 : 'border-(--bd) opacity-45 cursor-not-allowed'
             }`}
           >
@@ -49,30 +53,35 @@ export function PaymentSection({ register, errors, accounts, whatsappPhone }: Pr
               type="radio"
               value={value}
               disabled={!available}
-              className="mt-0.5 accent-accent-ink w-4 h-4 shrink-0"
+              className="mt-0.5 accent-accent-ink size-5 shrink-0"
             />
-            <Icon size={18} className="mt-0.5 shrink-0 text-accent-ink" />
+            <Icon size={18} className="hidden sm:block mt-0.5 shrink-0 text-accent-ink" aria-hidden />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="font-display font-bold text-[14px] uppercase tracking-tight">
-                  {label}
-                </span>
+                <span className="text-[15px] leading-5 font-semibold text-text">{label}</span>
                 {!available && (
-                  <span className="text-[9px] tracking-[1.5px] uppercase border border-(--bd) px-1.5 py-0.5 text-muted">
+                  <span className="text-[12px] border border-(--bd) px-1.5 py-0.5 text-muted">
                     Próximamente
                   </span>
                 )}
               </div>
-              <p className="text-[12px] text-muted mt-0.5 leading-snug">
-                Realiza el pago y envíanos tu comprobante por WhatsApp
-                {phoneDisplay ? (
-                  <>
-                    {' '}
-                    al <span className="font-semibold text-text">{phoneDisplay}</span>
-                  </>
-                ) : null}{' '}
-                para confirmar tu pedido.
-              </p>
+              <ol className="text-[13px] text-muted mt-2 leading-snug flex flex-col gap-1 list-decimal pl-4 marker:text-muted">
+                <li>Confirma tu pedido y anota el código que te damos.</li>
+                <li>
+                  Transfiere o deposita el total
+                  {accounts.length > 0 ? ' a una de las cuentas de abajo.' : ' según te indiquemos por WhatsApp.'}
+                </li>
+                <li>
+                  Envía el comprobante por WhatsApp
+                  {phoneDisplay ? (
+                    <>
+                      {' '}
+                      al <span className="font-semibold text-text whitespace-nowrap">{phoneDisplay}</span>
+                    </>
+                  ) : null}
+                  . Con eso confirmamos tu pedido.
+                </li>
+              </ol>
             </div>
           </label>
         ))}
@@ -82,7 +91,7 @@ export function PaymentSection({ register, errors, accounts, whatsappPhone }: Pr
       <PaymentAccountsPanel accounts={accounts} className="mt-4 bg-surf" />
 
       {errors.paymentMethod && (
-        <p role="alert" className="text-danger text-[12px] mt-2">{errors.paymentMethod.message}</p>
+        <p role="alert" className="text-danger text-[13px] mt-3">{errors.paymentMethod.message}</p>
       )}
     </section>
   )

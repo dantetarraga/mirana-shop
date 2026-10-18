@@ -1,6 +1,7 @@
 'use client'
 
 import { X } from 'lucide-react'
+import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 
 interface Props {
@@ -9,8 +10,11 @@ interface Props {
 
 export function WhatsAppFloatClient({ href }: Props) {
   const [hidden, setHidden] = useState(false)
+  const pathname = usePathname()
 
-  if (hidden) return null
+  // En el checkout no: tapaba campos y el botón de enviar comprobante, y ese
+  // flujo ya lleva a WhatsApp desde el bloque de ayuda y la pantalla de éxito.
+  if (hidden || pathname.startsWith('/checkout')) return null
 
   return (
     // `.wa-fab` (globals.css) fija bottom/right con el área segura del iPhone y

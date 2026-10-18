@@ -56,21 +56,22 @@ export function SuccessScreen({
 
         {/* Title */}
         <div className="text-center">
-          <p className="text-[11px] tracking-[3px] uppercase text-accent-ink mb-1">
-            ¡Pedido recibido!
-          </p>
           <h1
             ref={headingRef}
             tabIndex={-1}
-            className="font-display font-black uppercase text-[30px] tracking-tight leading-none outline-none"
+            data-focus-target
+            className="font-display font-black uppercase text-[32px] sm:text-[36px] tracking-tight leading-none outline-none"
           >
-            Gracias por tu compra
+            Recibimos tu pedido
           </h1>
+          <p className="text-[15px] leading-6 text-muted mt-3 max-w-100 mx-auto">
+            Aún no está pagado. Sigue los pasos de abajo para que lo preparemos.
+          </p>
         </div>
 
         {/* Order code */}
         <div className="bg-card border border-(--bd) w-full px-6 py-5 text-center">
-          <p className="text-[11px] tracking-[3px] uppercase text-muted mb-2">Número de pedido</p>
+          <p className="text-[13px] font-semibold text-muted mb-1">Código de pedido</p>
           <div className="flex items-center justify-center gap-2">
             <p className="font-display font-black text-[28px] tracking-[3px] text-accent-ink select-all">
               {data.code}
@@ -89,18 +90,23 @@ export function SuccessScreen({
               )}
             </Button>
           </div>
-          <p className="text-[12px] text-muted mt-1">
-            Guarda este código para hacer seguimiento de tu pedido.
+          <p className="text-[13px] text-muted mt-1">
+            Guárdalo: lo necesitas para enviar el comprobante y hacer seguimiento.
           </p>
         </div>
 
         {/* Próximos pasos — pago manual por WhatsApp */}
-        <div className="bg-surf border border-(--bd) w-full px-6 py-5">
-          <h2 className="text-[11px] tracking-[3px] uppercase text-accent-ink mb-3 font-sans font-normal">
+        <div className="bg-surf border border-(--bd) w-full px-5 sm:px-6 py-5">
+          <h2 className="font-display font-black uppercase text-[22px] leading-none tracking-tight mb-4">
             Próximos pasos
           </h2>
-          <div className="flex flex-col gap-2.5 text-[13px] leading-snug mb-5">
-            <Step n={1}>Realiza tu transferencia o depósito al número de cuenta indicado.</Step>
+          <ol className="flex flex-col gap-3 text-[14px] leading-snug mb-5">
+            <Step n={1}>
+              Realiza tu transferencia o depósito
+              {accounts.length > 0
+                ? ' a una de las cuentas de abajo.'
+                : ' según te indiquemos por WhatsApp.'}
+            </Step>
             <Step n={2}>
               Envía tu comprobante de pago por WhatsApp
               {phoneDisplay ? (
@@ -112,7 +118,7 @@ export function SuccessScreen({
               junto con tu código <span className="font-mono text-accent-ink">{data.code}</span>.
             </Step>
             <Step n={3}>Una vez confirmado el pago, prepararemos y enviaremos tu pedido.</Step>
-          </div>
+          </ol>
 
           <PaymentAccountsPanel accounts={accounts} className="mb-5 bg-card" />
 
@@ -133,29 +139,27 @@ export function SuccessScreen({
 
         {/* Resumen de productos */}
         <div className="bg-card border border-(--bd) w-full">
-          <div className="px-6 py-4 border-b border-(--bd)">
-            <h2 className="text-[11px] tracking-[3px] uppercase text-accent-ink font-sans font-normal">
+          <div className="px-5 sm:px-6 py-4 border-b border-(--bd)">
+            <h2 className="font-display font-black uppercase text-[22px] leading-none tracking-tight">
               Resumen del pedido
             </h2>
           </div>
           <ul className="flex flex-col divide-y divide-(--bd)">
             {data.items.map((item, i) => (
-              <li key={`${item.name}-${i}`} className="flex justify-between items-center px-6 py-3 gap-4">
+              <li key={`${item.name}-${i}`} className="flex justify-between items-start px-5 sm:px-6 py-3 gap-4">
                 <div className="flex-1 min-w-0">
-                  <p className="font-display font-bold text-[13px] uppercase leading-tight truncate">
-                    {item.name}
-                  </p>
-                  <p className="text-[11px] text-muted">
+                  <p className="text-[14px] leading-5 font-semibold line-clamp-2">{item.name}</p>
+                  <p className="text-[13px] text-muted tabular-nums">
                     {item.qty} × {formatCurrency(item.unitPrice)}
                   </p>
                 </div>
-                <span className="font-semibold text-[13px] shrink-0">
+                <span className="font-semibold text-[14px] leading-5 shrink-0 tabular-nums">
                   {formatCurrency(item.unitPrice * item.qty)}
                 </span>
               </li>
             ))}
           </ul>
-          <div className="px-6 py-4 border-t border-(--bd) flex flex-col gap-2">
+          <div className="px-5 sm:px-6 py-4 border-t border-(--bd) flex flex-col gap-2.5 text-[14px]">
             <div className="flex justify-between text-[13px]">
               <span className="text-muted">
                 {data.dueTotal > 0 ? 'Subtotal a pagar hoy' : 'Subtotal'}
@@ -171,11 +175,10 @@ export function SuccessScreen({
             {data.discount > 0 && (
               <div className="flex justify-between text-[13px] gap-3">
                 <span className="text-muted min-w-0">
-                  Descuento{data.discountName ? ` — ${data.discountName}` : ''}
+                  Descuento{data.discountName ? `: ${data.discountName}` : ''}
                   {data.couponCode && (
-                    <span className="font-mono text-[11px] text-accent-ink">
-                      {' '}
-                      · {data.couponCode}
+                    <span className="ml-1.5 font-mono text-[12px] text-accent-ink">
+                      {data.couponCode}
                     </span>
                   )}
                 </span>
@@ -187,7 +190,7 @@ export function SuccessScreen({
             <div className="flex justify-between text-[13px] gap-3">
               <span className="text-muted min-w-0 truncate">{data.deliveryLabel ?? 'Envío'}</span>
               {data.shippingCost === 0 ? (
-                <span className="text-success font-semibold text-[12px] uppercase shrink-0">
+                <span className="text-success font-semibold shrink-0">
                   Gratis
                 </span>
               ) : (
@@ -199,9 +202,13 @@ export function SuccessScreen({
                 Retiro en: <span className="text-text">{data.deliveryLocation}</span>
               </p>
             )}
-            <div className="flex justify-between font-display font-black text-[17px] uppercase tracking-tight border-t border-(--bd) pt-2 mt-1">
-              <span>{data.dueTotal > 0 ? 'Pagas hoy' : 'Total pagado'}</span>
-              <span className="text-accent-ink">{formatCurrency(data.total)}</span>
+            <div className="flex justify-between items-end border-t border-(--bd) pt-3 mt-1">
+              <span className="text-[16px] font-semibold">
+                {data.dueTotal > 0 ? 'Por pagar hoy' : 'Total por pagar'}
+              </span>
+              <span className="font-display font-black text-[28px] leading-none tracking-tight text-accent-ink tabular-nums">
+                {formatCurrency(data.total)}
+              </span>
             </div>
             {data.dueTotal > 0 && (
               <div className="flex justify-between text-[12px] border border-(--bd) px-3 py-2 mt-1">

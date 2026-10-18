@@ -1,8 +1,10 @@
 'use client'
 
 import type { CheckoutInput } from '@/features/checkout/schemas/checkout.schema'
+import type { ReactNode } from 'react'
 import type { FieldErrors, UseFormRegister } from 'react-hook-form'
-import { Field, input } from './ui'
+import { DELIVERY_FIELD_HINTS } from './checkout-layout'
+import { Field, fieldGrid, input, sectionCard, sectionLead, sectionTitle } from './ui'
 
 type Props = {
   register: UseFormRegister<CheckoutInput>
@@ -12,47 +14,52 @@ type Props = {
    * solo se piden los datos de contacto.
    */
   requiresAddress: boolean
+  /**
+   * Bajada bajo el título. CheckoutView manda el aviso de "inicia sesión" a los
+   * invitados; ocupa el mismo alto que el texto de quien ya tiene sesión, así
+   * el formulario no salta.
+   */
+  lead?: ReactNode
 }
 
+// Sin placeholders con datos de ejemplo ("Juan García", "12345678"): con un
+// valor real al lado (Ciudad = "Lima") no se distinguía qué estaba lleno. La
+// ayuda de formato va en el hint, debajo del campo.
+//
 // `autoComplete` con los tokens estándar: el navegador y los gestores de
 // contraseñas rellenan nombre, correo, teléfono y dirección de un toque — en
 // móvil es la diferencia entre escribir 7 campos o ninguno. En Perú:
 // address-level1 = departamento/ciudad, address-level2 = provincia/ciudad,
 // address-level3 = distrito.
-export function DeliveryForm({ register, errors, requiresAddress }: Props) {
+export function DeliveryForm({ register, errors, requiresAddress, lead }: Props) {
   return (
-    <section className="bg-card border border-(--bd) p-6" aria-labelledby="delivery-form-title">
-      <h2
-        id="delivery-form-title"
-        className="font-display font-black uppercase text-[14px] tracking-[2px] text-accent-ink mb-2"
-      >
-        Datos de entrega
+    <section className={sectionCard} aria-labelledby="delivery-form-title">
+      <h2 id="delivery-form-title" className={sectionTitle}>
+        Tus datos
       </h2>
-      <p className="text-[12px] text-muted mb-5">
-        Los campos marcados con <span className="text-danger">*</span> son obligatorios.
+      <p className={`${sectionLead} min-h-10 sm:min-h-5`}>
+        {lead ?? 'Los usamos para confirmar tu pedido y coordinar la entrega.'}
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className={fieldGrid}>
         <Field label="Nombre y apellido" error={errors.fullName?.message} span={2} required>
           {(a11y) => (
             <input
               {...a11y}
               {...register('fullName')}
               className={input}
-              placeholder="Juan García"
               autoComplete="name"
               autoCapitalize="words"
             />
           )}
         </Field>
 
-        <Field label="DNI" error={errors.dni?.message} required>
+        <Field label="DNI" hint={DELIVERY_FIELD_HINTS.dni} error={errors.dni?.message} required>
           {(a11y) => (
             <input
               {...a11y}
               {...register('dni')}
               className={input}
-              placeholder="12345678"
               inputMode="numeric"
               pattern="[0-9]*"
               maxLength={8}
@@ -61,7 +68,12 @@ export function DeliveryForm({ register, errors, requiresAddress }: Props) {
           )}
         </Field>
 
-        <Field label="Teléfono / Celular" error={errors.phone?.message} required>
+        <Field
+          label="Celular"
+          hint={DELIVERY_FIELD_HINTS.phone}
+          error={errors.phone?.message}
+          required
+        >
           {(a11y) => (
             <input
               {...a11y}
@@ -70,7 +82,6 @@ export function DeliveryForm({ register, errors, requiresAddress }: Props) {
               inputMode="tel"
               autoComplete="tel"
               className={input}
-              placeholder="+51 999 999 999"
             />
           )}
         </Field>
@@ -86,7 +97,6 @@ export function DeliveryForm({ register, errors, requiresAddress }: Props) {
               autoCapitalize="none"
               spellCheck={false}
               className={input}
-              placeholder="tu@correo.com"
             />
           )}
         </Field>
@@ -100,7 +110,6 @@ export function DeliveryForm({ register, errors, requiresAddress }: Props) {
                   {...register('address')}
                   autoComplete="street-address"
                   className={input}
-                  placeholder="Av. Principal 123, Dpto. 4B"
                 />
               )}
             </Field>
@@ -112,7 +121,6 @@ export function DeliveryForm({ register, errors, requiresAddress }: Props) {
                   {...register('district')}
                   autoComplete="address-level3"
                   className={input}
-                  placeholder="Miraflores"
                 />
               )}
             </Field>
@@ -124,20 +132,18 @@ export function DeliveryForm({ register, errors, requiresAddress }: Props) {
                   {...register('city')}
                   autoComplete="address-level2"
                   className={input}
-                  placeholder="Lima"
                 />
               )}
             </Field>
 
-            <Field label="Referencia (opcional)" error={errors.reference?.message} span={2}>
+            <Field
+              label="Referencia"
+              hint={DELIVERY_FIELD_HINTS.reference}
+              error={errors.reference?.message}
+              span={2}
+            >
               {(a11y) => (
-                <input
-                  {...a11y}
-                  {...register('reference')}
-                  autoComplete="off"
-                  className={input}
-                  placeholder="Frente al parque, puerta roja..."
-                />
+                <input {...a11y} {...register('reference')} autoComplete="off" className={input} />
               )}
             </Field>
           </>
@@ -145,8 +151,8 @@ export function DeliveryForm({ register, errors, requiresAddress }: Props) {
       </div>
 
       {!requiresAddress && (
-        <p className="text-[12px] text-muted mt-4 leading-snug">
-          Con esta forma de entrega no necesitamos tu dirección. Te contactaremos al teléfono y
+        <p className="text-[13px] text-muted mt-5 leading-snug">
+          Con esta forma de entrega no necesitamos tu dirección. Te contactaremos al celular y
           correo que dejaste para coordinar.
         </p>
       )}

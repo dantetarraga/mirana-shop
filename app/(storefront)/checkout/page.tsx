@@ -1,6 +1,7 @@
 import { CheckoutView } from '@/features/checkout/components/CheckoutView'
 import { getPricingRules } from '@/features/checkout/queries/pricing.queries'
 import { getMyAddresses, getMyProfile } from '@/features/profile/actions/account-profile.actions'
+import { orderReservationTtlMinutes } from '@/features/orders/lib/reservation'
 import { getActivePaymentAccounts } from '@/features/settings/queries/payment-accounts.queries'
 import { getWhatsappPhone } from '@/features/settings/queries/store-settings.queries'
 import type { Metadata } from 'next'
@@ -22,12 +23,17 @@ export default async function CheckoutPage() {
   ])
 
   return (
+    // `key` por cuenta: al iniciar sesión desde el checkout, CheckoutView pide
+    // router.refresh() y se remonta con el perfil y las direcciones guardadas
+    // (useForm solo lee sus defaultValues al montar).
     <CheckoutView
+      key={profile?.email ?? 'guest'}
       paymentAccounts={paymentAccounts}
       whatsappPhone={whatsappPhone}
       pricingRules={pricingRules}
       initialProfile={profile}
       initialAddresses={addresses}
+      reservationMinutes={orderReservationTtlMinutes()}
     />
   )
 }
