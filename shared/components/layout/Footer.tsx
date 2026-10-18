@@ -1,4 +1,5 @@
 ﻿import { providerLine } from '@/features/complaints/lib/complaint-sheet'
+import { MiranaLogo } from '@/shared/components/brand/MiranaLogo'
 import { getStoreSettings } from '@/features/settings/queries/store-settings.queries'
 import { BookOpen } from 'lucide-react'
 import Image from 'next/image'
@@ -113,13 +114,17 @@ export async function Footer() {
   return (
     <footer className="border-t border-(--bd) pt-12 md:pt-16 pb-8 shell grid gap-10 grid-cols-2 sm:grid-cols-3 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
       <div className="col-span-2 sm:col-span-3 md:col-span-1">
-        <Image
-          src={settings.footerLogoUrl || '/logo.svg'}
-          alt="Mirana"
-          width={150}
-          height={50}
-          className="h-9 sm:h-10 w-auto mb-3.5 [filter:invert(1)_hue-rotate(180deg)_saturate(1.4)] dark:[filter:none]"
-        />
+        {settings.footerLogoUrl ? (
+          <Image
+            src={settings.footerLogoUrl}
+            alt="Mirana"
+            width={150}
+            height={50}
+            className="h-9 sm:h-10 w-auto mb-3.5"
+          />
+        ) : (
+          <MiranaLogo className="h-8 w-auto mb-4 text-text" />
+        )}
         <p className="text-[13px] text-muted leading-[1.75] max-w-sm md:max-w-55">
           Mirana Shop es tu tienda en Arequipa de juguetes, figuras de colección y modelos a escala
           100% originales. Importación directa, calidad garantizada y novedades para todos los

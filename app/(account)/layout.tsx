@@ -33,7 +33,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
       <PromoAnnouncementBar />
       <CartHydrator initialCart={cartState.items} expired={cartState.expired} />
       <Navbar
-        logoUrl={settings.footerLogoUrl || '/logo.svg'}
+        logoUrl={settings.footerLogoUrl || undefined}
         nav={nav}
       />
       {/* Las páginas de cuenta reservan el alto del navbar en su propio

@@ -1,27 +1,15 @@
+import { BRAND_COLORS, markSvg, svgDataUri } from '@/shared/components/brand/brand-paths'
 import { ImageResponse } from 'next/og'
 
 export const size = { width: 32, height: 32 }
 export const contentType = 'image/png'
 
+// Isotipo del logo (luna + flecha) sobre navy; mismo path que el navbar.
+const MARK = svgDataUri(
+  markSvg({ ink: BRAND_COLORS.white, moon: BRAND_COLORS.moonOnDark, bg: BRAND_COLORS.navy }),
+)
+
 export default function Icon() {
-  return new ImageResponse(
-    (
-      <div
-        style={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: '#0b1830',
-          color: '#00c8ff',
-          fontSize: 22,
-          fontWeight: 900,
-        }}
-      >
-        M
-      </div>
-    ),
-    size,
-  )
+  // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
+  return new ImageResponse(<img src={MARK} width={32} height={32} />, size)
 }

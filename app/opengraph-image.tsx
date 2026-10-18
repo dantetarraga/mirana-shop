@@ -1,7 +1,10 @@
+import { BRAND_COLORS, logoSvg, svgDataUri } from '@/shared/components/brand/brand-paths'
 import { ImageResponse } from 'next/og'
 
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
+
+const LOGO = svgDataUri(logoSvg({ ink: BRAND_COLORS.white, moon: BRAND_COLORS.moonOnDark }))
 
 export default function OpengraphImage() {
   return new ImageResponse(
@@ -14,32 +17,13 @@ export default function OpengraphImage() {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#0b1830',
+          background: BRAND_COLORS.navy,
         }}
       >
-        <div
-          style={{
-            display: 'flex',
-            fontSize: 120,
-            fontWeight: 900,
-            letterSpacing: 10,
-            textTransform: 'uppercase',
-            color: '#ffffff',
-          }}
-        >
-          MIRA<span style={{ color: '#00c8ff' }}>NA</span>
-        </div>
-        <div
-          style={{
-            display: 'flex',
-            marginTop: 24,
-            fontSize: 28,
-            letterSpacing: 4,
-            textTransform: 'uppercase',
-            color: '#8a94a6',
-          }}
-        >
-          Juguetes &amp; Figuras de Colección
+        {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
+        <img src={LOGO} width={672} height={160} />
+        <div style={{ display: 'flex', marginTop: 36, fontSize: 32, color: '#a9b8cc' }}>
+          Figuras de colección, LEGO y modelos a escala originales
         </div>
       </div>
     ),

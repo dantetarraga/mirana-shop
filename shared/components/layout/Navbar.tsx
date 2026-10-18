@@ -1,5 +1,6 @@
 'use client'
 
+import { MiranaLogo } from '@/shared/components/brand/MiranaLogo'
 import { logout } from '@/features/auth/lib/logout'
 import { useAuthModalStore } from '@/features/auth/stores/auth-modal.store'
 import { useCartStore } from '@/features/cart/stores/cart.store'
@@ -39,7 +40,7 @@ interface NavbarProps {
   nav?: NavData
 }
 
-export function Navbar({ logoUrl = '/logo.svg', nav = EMPTY_NAV }: NavbarProps) {
+export function Navbar({ logoUrl, nav = EMPTY_NAV }: NavbarProps) {
   // Selectores atómicos: con `useCartStore()` el navbar se re-renderizaba con
   // cualquier cambio del carrito (líneas, escrituras en vuelo…), no solo el contador.
   const cartCount = useCartStore((s) => s.cartCount)
@@ -122,18 +123,20 @@ export function Navbar({ logoUrl = '/logo.svg', nav = EMPTY_NAV }: NavbarProps) 
           </Button>
 
           <Link href="/" className="flex items-center shrink-0" aria-label="Mirana — inicio">
-            {/* El logo es un PNG rasterizado dentro del SVG (el color está horneado
-                en un feColorMatrix, no hay `fill` editable), así que el tema claro
-                se resuelve con un filtro CSS: `invert(1) hue-rotate(180deg)`
-                conserva la estructura clara/oscura y devuelve el tono del cyan. */}
-            <Image
-              src={logoUrl}
-              alt=""
-              width={150}
-              height={90}
-              priority
-              className="h-8 sm:h-9 md:h-10 w-auto [filter:invert(1)_hue-rotate(180deg)_saturate(1.4)] dark:[filter:none]"
-            />
+            {/* Logo vectorial por defecto (se adapta al tema con currentColor);
+                si el admin subió uno propio en Ajustes, se usa esa imagen. */}
+            {logoUrl ? (
+              <Image
+                src={logoUrl}
+                alt=""
+                width={150}
+                height={90}
+                priority
+                className="h-8 sm:h-9 md:h-10 w-auto"
+              />
+            ) : (
+              <MiranaLogo title="" className="h-7 sm:h-8 w-auto text-text" />
+            )}
           </Link>
           {/* Escritorio: "Tienda" abre el mega-menú; Preventas, Novedades y
               Ofertas van sueltos desde lg (en md están dentro del panel). */}

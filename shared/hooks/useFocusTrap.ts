@@ -12,6 +12,7 @@ import { useEffect, useRef } from 'react'
 // Uso:
 //   const ref = useFocusTrap<HTMLDivElement>(open)
 //   <div ref={ref} role="dialog" aria-modal="true"> … </div>
+//   Marca con `data-autofocus` el elemento que debe recibir el foco inicial.
 //
 // Antes ningún diálogo del sitio atrapaba el foco (`tabIndex` no aparecía ni
 // una vez en el repo): con Tab se salía del modal hacia el fondo inerte.
@@ -35,8 +36,10 @@ export function useFocusTrap<T extends HTMLElement>(active = true) {
         (el) => el.offsetParent !== null || el === document.activeElement,
       )
 
-    // Foco inicial: primer focusable, o el contenedor mismo.
-    const first = focusables()[0]
+    // Foco inicial: el marcado con `data-autofocus` (p. ej. el primer campo de
+    // un formulario), si no el primer focusable, o el contenedor mismo.
+    const first =
+      container.querySelector<HTMLElement>('[data-autofocus]') ?? focusables()[0]
     if (first) first.focus()
     else {
       container.setAttribute('tabindex', '-1')

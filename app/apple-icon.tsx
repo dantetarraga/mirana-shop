@@ -1,9 +1,13 @@
+import { BRAND_COLORS, markSvg, svgDataUri } from '@/shared/components/brand/brand-paths'
 import { ImageResponse } from 'next/og'
 
 export const size = { width: 180, height: 180 }
 export const contentType = 'image/png'
 
+const MARK = svgDataUri(markSvg({ ink: BRAND_COLORS.white, moon: BRAND_COLORS.moonOnDark }))
+
 export default function AppleIcon() {
+  // iOS recorta las esquinas: el isotipo va con aire alrededor sobre navy.
   return new ImageResponse(
     (
       <div
@@ -13,13 +17,11 @@ export default function AppleIcon() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#0b1830',
-          color: '#00c8ff',
-          fontSize: 100,
-          fontWeight: 900,
+          background: BRAND_COLORS.navy,
         }}
       >
-        M
+        {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
+        <img src={MARK} width={124} height={124} />
       </div>
     ),
     size,
