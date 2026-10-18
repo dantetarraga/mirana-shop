@@ -36,8 +36,15 @@ export const PUBLIC_PRODUCT_WHERE = {
   status: { in: DEFAULT_CATALOG_STATUSES },
 }
 
-/** Reseña publicable: aprobada y de una cuenta activa. */
-const APPROVED_WHERE = { status: 'APPROVED' as const, user: { deletedAt: null } }
+/**
+ * Reseña publicable: aprobada, de una cuenta activa y de un producto visible en
+ * la tienda (un producto borrado o archivado no expone sus reseñas).
+ */
+const APPROVED_WHERE = {
+  status: 'APPROVED' as const,
+  user: { deletedAt: null },
+  product: PUBLIC_PRODUCT_WHERE,
+}
 
 const PUBLIC_REVIEW_SELECT = {
   id: true,
@@ -134,7 +141,7 @@ export function getProductReviews(
 
 async function fetchHomeReviews(limit: number): Promise<HomeReview[]> {
   const rows = await db.review.findMany({
-    where: { ...APPROVED_WHERE, rating: { gte: 4 }, product: PUBLIC_PRODUCT_WHERE },
+    where: { ...APPROVED_WHERE, rating: { gte: 4 } },
     select: {
       ...PUBLIC_REVIEW_SELECT,
       product: {
@@ -171,7 +178,7 @@ export const getHomeReviews = cache((limit: number = 6) =>
 
 async function fetchStoreReviewSummary(): Promise<StoreReviewSummary> {
   const agg = await db.review.aggregate({
-    where: { ...APPROVED_WHERE, product: PUBLIC_PRODUCT_WHERE },
+    where: APPROVED_WHERE,
     _avg: { rating: true },
     _count: { _all: true },
   })

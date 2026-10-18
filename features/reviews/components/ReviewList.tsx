@@ -20,22 +20,50 @@ interface ReviewListProps {
  * Al cargar, el foco pasa a la primera reseña nueva para que el teclado y el
  * lector de pantalla sigan donde estaban.
  */
+/** Firma de la primera página que manda el servidor: ids en orden + total. */
+function firstPageSignature(reviews: SerializedPublicReview[], total: number): string {
+  return `${total}:${reviews.map((r) => r.id).join(',')}`
+}
+
 export function ReviewList({ productId, initialReviews, initialHasMore, total }: ReviewListProps) {
+  const signature = firstPageSignature(initialReviews, total)
+  const [seed, setSeed] = useState(signature)
   const [reviews, setReviews] = useState(initialReviews)
   const [hasMore, setHasMore] = useState(initialHasMore)
   const [page, setPage] = useState(1)
   const [focusId, setFocusId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const firstNewRef = useRef<HTMLElement>(null)
+  // Firma vigente para descartar un "Ver más" que vuelve después de un reinicio.
+  const seedRef = useRef(signature)
+
+  // La primera página cambió en el servidor (moderación, revalidación,
+  // router.refresh): se reinicia la lista y la paginación. Ajuste de estado
+  // durante el render, el patrón que recomienda React para derivar de props
+  // (https://react.dev/learn/you-might-not-need-an-effect).
+  if (seed !== signature) {
+    setSeed(signature)
+    setReviews(initialReviews)
+    setHasMore(initialHasMore)
+    setPage(1)
+    setFocusId(null)
+  }
+
+  useEffect(() => {
+    seedRef.current = signature
+  }, [signature])
 
   useEffect(() => {
     if (focusId) firstNewRef.current?.focus()
   }, [focusId])
 
   const loadMore = () => {
+    const startedWith = signature
     startTransition(async () => {
       const next = page + 1
       const result = await loadProductReviews(productId, next).catch(() => null)
+      // Si la lista se reinició mientras tanto, esta página ya no encaja.
+      if (seedRef.current !== startedWith) return
       if (!result || !result.success) {
         toast.error(result && !result.success ? result.error : 'No se pudieron cargar más opiniones.')
         return

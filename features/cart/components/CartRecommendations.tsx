@@ -3,6 +3,11 @@
 import { getCartRecommendationsAction } from '@/features/cart/actions/recommendations.actions'
 import { useCartLine } from '@/features/cart/hooks/useCartLine'
 import { productCartKind } from '@/features/cart/lib/cart-kind'
+import {
+  createTtlCache,
+  RECOMMENDATIONS_TTL_MS,
+  recommendationsCacheKey,
+} from '@/features/cart/lib/recommendations-cache'
 import { useCartStore } from '@/features/cart/stores/cart.store'
 import type { CatalogProduct } from '@/features/products/types/catalog.types'
 import { getCategoryStripe } from '@/features/products/types/catalog.types'
@@ -23,31 +28,34 @@ import { useEffect, useId, useState } from 'react'
 // ---------------------------------------------------------------------------
 
 /**
- * Caché de sesión por producto ancla: reabrir el drawer tras agregar el mismo
- * producto no vuelve a llamar a la action. Se guarda la promesa (no el
- * resultado) para que dos montajes seguidos compartan la misma petición.
+ * Caché de sesión: reabrir el drawer tras agregar el mismo producto con el
+ * mismo carrito no vuelve a llamar a la action. La clave incluye tipo de
+ * carrito y lo excluido, y las entradas caducan (ver `recommendations-cache`).
  */
-const recommendationsCache = new Map<string, Promise<CatalogProduct[]>>()
+const recommendationsCache = createTtlCache<Promise<CatalogProduct[]>>(RECOMMENDATIONS_TTL_MS)
 
 function loadRecommendations(anchor: CatalogProduct): Promise<CatalogProduct[]> {
-  const cached = recommendationsCache.get(anchor.id)
+  // Lo que había en el carrito al pedirlas. Lo que se agregue después desde
+  // el propio panel se queda en la lista marcado como "Agregado".
+  const excludeIds = useCartStore.getState().cart.map((i) => i.product.id)
+  const kind = productCartKind(anchor)
+  const key = recommendationsCacheKey(anchor.id, kind, excludeIds)
+  const cached = recommendationsCache.get(key)
   if (cached) return cached
 
   const promise = getCartRecommendationsAction({
     productId: anchor.id,
     categorySlug: anchor.category.slug,
     brandSlug: anchor.brand.slug,
-    // Lo que había en el carrito al pedirlas. Lo que se agregue después desde
-    // el propio panel se queda en la lista marcado como "Agregado".
-    excludeIds: useCartStore.getState().cart.map((i) => i.product.id),
-    kind: productCartKind(anchor),
+    excludeIds,
+    kind,
   }).catch(() => {
     // Sin recomendaciones no se rompe nada: el panel simplemente no aparece.
     // Se saca de la caché para reintentar en la próxima apertura.
-    recommendationsCache.delete(anchor.id)
+    recommendationsCache.delete(key)
     return []
   })
-  recommendationsCache.set(anchor.id, promise)
+  recommendationsCache.set(key, promise)
   return promise
 }
 

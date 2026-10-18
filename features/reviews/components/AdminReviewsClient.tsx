@@ -22,6 +22,8 @@ export interface SerializedAdminReview {
   verifiedPurchase: boolean
   createdLabel: string
   moderatedLabel: string | null
+  /** ISO de la versión mostrada: se reenvía al moderar (bloqueo optimista). */
+  updatedAt: string
   product: { name: string; slug: string; deleted: boolean }
   author: { name: string | null; email: string }
 }
@@ -82,7 +84,10 @@ export function AdminReviewsClient({
   const columns = useMemo<Column<SerializedAdminReview>[]>(() => {
     const act = (review: SerializedAdminReview, action: 'approve' | 'reject') => {
       setBusy({ id: review.id, action })
-      run(() => (action === 'approve' ? approveReview : rejectReview)({ reviewId: review.id }), {
+      // Se envía el updatedAt mostrado: si el autor editó la reseña mientras
+      // tanto, el servidor rechaza la moderación en lugar de publicar texto no visto.
+      const input = { reviewId: review.id, seenUpdatedAt: review.updatedAt }
+      run(() => (action === 'approve' ? approveReview : rejectReview)(input), {
         successMsg: action === 'approve' ? 'Opinión publicada' : 'Opinión rechazada',
         refresh: true,
         onSuccess: () => setBusy(null),

@@ -1,6 +1,10 @@
 'use server'
 
-import { reviewIdSchema, type ReviewStatusValue } from '@/features/reviews/schemas/review.schema'
+import {
+  reviewIdSchema,
+  reviewModerationSchema,
+  type ReviewStatusValue,
+} from '@/features/reviews/schemas/review.schema'
 import { db } from '@/shared/lib/db'
 import { prismaFailure } from '@/shared/lib/prisma-errors'
 import { requireAdmin } from '@/shared/lib/require-admin'
@@ -14,6 +18,7 @@ import { revalidatePath, revalidateTag } from 'next/cache'
 
 const MESSAGES = {
   notFound: 'La reseña ya no existe. Recarga la página.',
+  stale: 'La reseña cambió mientras la revisabas; recarga para ver la versión nueva',
   fallback: 'No se pudo actualizar la reseña. Inténtalo de nuevo.',
 }
 
@@ -31,13 +36,27 @@ async function moderate(
   const denied = await requireAdmin()
   if (denied) return denied
 
-  const parsed = reviewIdSchema.safeParse(rawInput)
+  const parsed = reviewModerationSchema.safeParse(rawInput)
   if (!parsed.success) return { success: false, error: 'Reseña inválida', code: 400 }
+  const { reviewId, seenUpdatedAt } = parsed.data
 
   try {
-    const review = await db.review.update({
-      where: { id: parsed.data.reviewId },
+    // Bloqueo optimista: solo se modera la versión que el admin tenía en
+    // pantalla. Si el autor la editó mientras tanto (updatedAt distinto), no se
+    // publica un texto que nadie revisó.
+    const { count } = await db.review.updateMany({
+      where: { id: reviewId, updatedAt: seenUpdatedAt },
       data: { status, moderatedAt: new Date() },
+    })
+    if (count === 0) {
+      const exists = await db.review.findUnique({ where: { id: reviewId }, select: { id: true } })
+      return exists
+        ? { success: false, error: MESSAGES.stale, code: 409 }
+        : { success: false, error: MESSAGES.notFound, code: 404 }
+    }
+
+    const review = await db.review.findUniqueOrThrow({
+      where: { id: reviewId },
       select: { id: true, status: true, product: { select: { slug: true } } },
     })
     revalidateReview(review.product.slug)
@@ -48,11 +67,13 @@ async function moderate(
   }
 }
 
-export async function approveReview(input: { reviewId: string }) {
+type ModerationInput = { reviewId: string; seenUpdatedAt: string }
+
+export async function approveReview(input: ModerationInput) {
   return moderate(input, 'APPROVED')
 }
 
-export async function rejectReview(input: { reviewId: string }) {
+export async function rejectReview(input: ModerationInput) {
   return moderate(input, 'REJECTED')
 }
 

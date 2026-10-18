@@ -43,6 +43,13 @@ export interface CartMixConflict {
   cartKind: CartKind
   /** Si al resolverlo con 'replace' se abre el drawer (ver `AddToCartOptions`). */
   openDrawer: boolean
+  /**
+   * El drawer estaba abierto cuando surgió el choque (p. ej. "Agregar" de una
+   * recomendación o "Deshacer" un borrado). Se cierra para que el modal quede
+   * encima —el drawer va en una capa superior y atrapa el foco— y se vuelve a
+   * abrir al resolver o descartar el conflicto.
+   */
+  drawerWasOpen: boolean
 }
 
 export interface AddToCartOptions {
@@ -218,7 +225,19 @@ export const useCartStore = create<CartState>()((set, get) => ({
     const current = get().cart.map((i) => i.product)
     const currentKind = cartKindOf(current)
     if (currentKind !== null && conflictsWithCart(current, product)) {
-      set({ mixConflict: { product, qty, preorderMode, cartKind: currentKind, openDrawer } })
+      // Se cierra el drawer (sin limpiar `lastAdded`, se reabre igual al
+      // resolver): si no, quedaría encima del modal con el foco atrapado.
+      set({
+        mixConflict: {
+          product,
+          qty,
+          preorderMode,
+          cartKind: currentKind,
+          openDrawer,
+          drawerWasOpen: get().cartOpen,
+        },
+        cartOpen: false,
+      })
       return 0
     }
 
@@ -254,15 +273,21 @@ export const useCartStore = create<CartState>()((set, get) => ({
     return toAdd
   },
 
-  dismissMixConflict: () => set({ mixConflict: null }),
+  dismissMixConflict: () => {
+    const pending = get().mixConflict
+    // Descartar devuelve al cliente a donde estaba: si venía del drawer, se reabre.
+    set({ mixConflict: null, ...(pending?.drawerWasOpen ? { cartOpen: true } : {}) })
+  },
 
   resolveMixConflict: (resolution) => {
     const pending = get().mixConflict
     set({ mixConflict: null })
     if (!pending) return
+    const reopen = pending.drawerWasOpen ? { cartOpen: true } : {}
 
     if (resolution === 'empty') {
       get().clearCart()
+      set(reopen)
       return
     }
 
@@ -277,6 +302,7 @@ export const useCartStore = create<CartState>()((set, get) => ({
       // que pidió) y se avisa por qué el producto no entró.
       toast.warning(stockLimitMessage(product.name))
       get().clearCart()
+      set(reopen)
       return
     }
 
@@ -286,6 +312,7 @@ export const useCartStore = create<CartState>()((set, get) => ({
     set({
       cart: [{ product, qty: toAdd, preorderMode: mode }],
       cartCount: toAdd,
+      ...reopen,
       ...(openDrawer ? { cartOpen: true, lastAdded: product } : {}),
     })
     // Vaciar y agregar van encadenados dentro de la MISMA escritura: lanzados

@@ -82,17 +82,8 @@ export async function submitReview(rawInput: unknown): Promise<SubmitReviewResul
   const session = await requireUser()
   if (session.denied) return session.denied
 
-  const parsed = reviewInputSchema.safeParse(rawInput)
-  if (!parsed.success) {
-    const fieldErrors: Record<string, string> = {}
-    for (const issue of parsed.error.issues) {
-      const key = issue.path.join('.')
-      if (key && !fieldErrors[key]) fieldErrors[key] = issue.message
-    }
-    return { success: false, error: 'Revisa los campos marcados.', code: 400, fieldErrors }
-  }
-  const { productId, rating, title, body } = parsed.data
-
+  // El rate limit se consume ANTES de validar/transformar el cuerpo: así un
+  // cliente no puede forzar trabajo de saneado sin gastar su cupo.
   try {
     await consumeRateLimits([
       { scope: 'review-user', subject: session.id, limit: REVIEW_LIMIT_PER_USER, windowMs: REVIEW_WINDOW_MS },
@@ -104,6 +95,17 @@ export async function submitReview(rawInput: unknown): Promise<SubmitReviewResul
     return { success: false, error: 'No se pudo enviar tu reseña. Inténtalo de nuevo.', code: 500 }
   }
 
+  const parsed = reviewInputSchema.safeParse(rawInput)
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string> = {}
+    for (const issue of parsed.error.issues) {
+      const key = issue.path.join('.')
+      if (key && !fieldErrors[key]) fieldErrors[key] = issue.message
+    }
+    return { success: false, error: 'Revisa los campos marcados.', code: 400, fieldErrors }
+  }
+  const { productId, rating, title, body } = parsed.data
+
   const product = await db.product.findFirst({
     where: { id: productId, ...PUBLIC_PRODUCT_WHERE },
     select: { id: true, slug: true },
@@ -113,13 +115,7 @@ export async function submitReview(rawInput: unknown): Promise<SubmitReviewResul
   }
 
   try {
-    const [verifiedPurchase, previous] = await Promise.all([
-      hasPurchased(session.id, product.id),
-      db.review.findUnique({
-        where: { productId_userId: { productId: product.id, userId: session.id } },
-        select: { status: true },
-      }),
-    ])
+    const verifiedPurchase = await hasPurchased(session.id, product.id)
 
     const review = await db.review.upsert({
       where: { productId_userId: { productId: product.id, userId: session.id } },
@@ -144,8 +140,10 @@ export async function submitReview(rawInput: unknown): Promise<SubmitReviewResul
       select: MY_REVIEW_SELECT,
     })
 
-    // Si estaba publicada deja de estarlo hasta la nueva aprobación.
-    if (previous?.status === 'APPROVED') revalidateProductReviews(product.slug)
+    // Siempre se invalida: leer el estado previo aparte es una carrera (otra
+    // pestaña o el admin pudo aprobarla entre la lectura y el upsert) y una
+    // reseña que estaba publicada debe dejar de mostrarse hasta re-aprobarse.
+    revalidateProductReviews(product.slug)
 
     return { success: true, data: { status: 'PENDING', review: toMyReview(review) } }
   } catch (err) {

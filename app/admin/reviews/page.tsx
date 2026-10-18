@@ -55,6 +55,7 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
     verifiedPurchase: r.verifiedPurchase,
     createdLabel: Dates.format(r.createdAt, 'd MMM yyyy'),
     moderatedLabel: r.moderatedAt ? Dates.format(r.moderatedAt, 'd MMM yyyy') : null,
+    updatedAt: r.updatedAt.toISOString(),
     product: { name: r.product.name, slug: r.product.slug, deleted: r.product.deletedAt !== null },
     author: { name: r.user.name, email: r.user.email },
   }))

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { reviewInputSchema, toPlainText } from './review.schema'
+import { reviewInputSchema, reviewModerationSchema, toPlainText } from './review.schema'
 
 const valid = {
   productId: 'prod_123',
@@ -58,5 +58,46 @@ describe('reviewInputSchema', () => {
   it('devuelve el texto saneado', () => {
     const r = reviewInputSchema.parse({ ...valid, body: '<img src=x onerror=alert(1)>Muy buena figura' })
     expect(r.body).toBe('Muy buena figura')
+  })
+})
+
+describe('toPlainText — robustez', () => {
+  it('conserva un "<" sin cerrar y el texto que le sigue', () => {
+    expect(toPlainText('3 < 5 y <b>ok</b>')).toBe('3 ok')
+    expect(toPlainText('precio < 100 soles')).toBe('precio < 100 soles')
+  })
+
+  it('procesa en tiempo lineal muchos "<" sin cerrar', () => {
+    const evil = '<'.repeat(200_000)
+    const t0 = performance.now()
+    expect(toPlainText(evil)).toBe(evil)
+    // Con la regex anterior (/<[^>]*>/g) esto tardaba segundos.
+    expect(performance.now() - t0).toBeLessThan(500)
+  })
+})
+
+describe('reviewInputSchema — tope crudo', () => {
+  it('rechaza el cuerpo crudo de más de 4× el máximo sin transformarlo', () => {
+    const r = reviewInputSchema.safeParse({ ...valid, body: '<'.repeat(8001) })
+    expect(r.success).toBe(false)
+  })
+
+  it('acepta marcado que, ya saneado, entra en el límite', () => {
+    const body = `<p>${'a'.repeat(1990)}</p>`.padEnd(2100, ' ')
+    expect(reviewInputSchema.safeParse({ ...valid, body }).success).toBe(true)
+  })
+
+  it('rechaza un título crudo de más de 4× el máximo', () => {
+    expect(reviewInputSchema.safeParse({ ...valid, title: ' '.repeat(481) }).success).toBe(false)
+  })
+})
+
+describe('reviewModerationSchema', () => {
+  it('exige el updatedAt visto en ISO y lo convierte a Date', () => {
+    const iso = '2026-10-18T15:04:05.123Z'
+    const r = reviewModerationSchema.safeParse({ reviewId: 'r1', seenUpdatedAt: iso })
+    expect(r.success && r.data.seenUpdatedAt.toISOString()).toBe(iso)
+    expect(reviewModerationSchema.safeParse({ reviewId: 'r1' }).success).toBe(false)
+    expect(reviewModerationSchema.safeParse({ reviewId: 'r1', seenUpdatedAt: 'ayer' }).success).toBe(false)
   })
 })

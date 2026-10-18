@@ -57,6 +57,7 @@ export interface AdminReviewRow {
   verifiedPurchase: boolean
   createdAt: Date
   moderatedAt: Date | null
+  updatedAt: Date
   product: { id: string; name: string; slug: string; deletedAt: Date | null }
   user: { id: string; name: string | null; email: string }
 }

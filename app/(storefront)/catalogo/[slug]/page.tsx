@@ -237,7 +237,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
               <div className="text-[13px] text-muted">
                 Entrega estimada:{' '}
                 <span className="text-text font-semibold">
-                  {Dates.format(product.estimatedArrival)}
+                  {Dates.formatCivil(product.estimatedArrival)}
                 </span>
               </div>
             )}

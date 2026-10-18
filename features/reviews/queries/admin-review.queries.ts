@@ -47,6 +47,7 @@ export async function getAdminReviews(
         verifiedPurchase: true,
         createdAt: true,
         moderatedAt: true,
+        updatedAt: true,
         product: { select: { id: true, name: true, slug: true, deletedAt: true } },
         user: { select: { id: true, name: true, email: true } },
       },
