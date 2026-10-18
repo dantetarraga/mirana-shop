@@ -1,20 +1,18 @@
 'use client'
 
 import { FadeImage } from '@/shared/components/ui/FadeImage'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
-import Image from 'next/image'
+import { cn } from '@/shared/lib/utils'
 import Link from 'next/link'
-import { useEffect, useRef, useState } from 'react'
 
 export interface BrandShowcaseItem {
   id: string
   name: string
   slug: string
-  /** Logo del fabricante (opcional): va en una placa blanca sobre la foto. */
+  /** Imagen de la marca subida en el admin: si existe, llena el círculo. */
   imageUrl: string | null
   tagline: string | null
   productCount: number
-  /** Foto de la tarjeta: heroUrl de la marca o su producto destacado. */
+  /** Foto de respaldo: heroUrl de la marca o su producto destacado. */
   coverUrl: string | null
 }
 
@@ -23,147 +21,102 @@ interface BrandsCarouselProps {
   brands: BrandShowcaseItem[]
 }
 
-const productsLabel = (n: number) => (n === 1 ? '1 producto' : `${n} productos`)
+/** Mínimo de círculos por vuelta: con pocas marcas la fila se repite para
+ *  que el bucle no deje un hueco en pantallas anchas. */
+const MIN_PER_LOOP = 10
+/** Segundos por marca: la velocidad es la misma con 4 o con 20 marcas. */
+const SECONDS_PER_ITEM = 3.5
+
+function BrandCircle({ brand, hidden }: { brand: BrandShowcaseItem; hidden?: boolean }) {
+  // Siempre a sangre: la imagen ocupa el círculo entero. Para que un logo no
+  // se recorte, conviene subirlo cuadrado y con el fondo ya incluido.
+  const src = brand.imageUrl || brand.coverUrl
+  return (
+    <li className="shrink-0 px-3 sm:px-4" aria-hidden={hidden || undefined}>
+      <Link
+        href={`/marcas/${brand.slug}`}
+        tabIndex={hidden ? -1 : undefined}
+        className="group flex flex-col items-center gap-3 w-28 sm:w-36 no-underline focus-visible:outline-none"
+      >
+        <span
+          className={cn(
+            'relative block w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden',
+            'ring-1 ring-(--bd) ring-offset-4 ring-offset-bg transition-[box-shadow,transform] duration-300',
+            'group-hover:ring-2 group-hover:ring-(--brand-moon) group-hover:-translate-y-1',
+            'group-focus-visible:ring-2 group-focus-visible:ring-ring',
+            'motion-reduce:transition-none motion-reduce:group-hover:translate-y-0',
+            'bg-(--brand-navy)',
+          )}
+        >
+          {src ? (
+            <FadeImage
+              src={src}
+              alt=""
+              fill
+              sizes="144px"
+              className="object-cover transition-transform duration-500 group-hover:scale-110 motion-reduce:transition-none"
+            />
+          ) : (
+            <span className="absolute inset-0 grid place-items-center px-3 text-center font-display font-black uppercase leading-none text-on-media text-[18px]">
+              {brand.name}
+            </span>
+          )}
+        </span>
+        <span className="text-center font-display font-bold uppercase tracking-[0.3px] text-[14px] sm:text-[15px] leading-tight text-text group-hover:text-accent-ink transition-colors">
+          {brand.name}
+        </span>
+      </Link>
+    </li>
+  )
+}
 
 /**
- * Vitrina de marcas del inicio: cada marca se presenta con una foto real de lo
- * que vende, a sangre, y su nombre encima. No depende de que el admin suba
- * logos (si lo hace, el logo se suma en una placa blanca).
+ * Marcas del inicio: círculos en una fila que avanza sola en bucle infinito.
+ * Se detiene con el mouse o el foco (WCAG 2.2.2) y, con movimiento reducido,
+ * queda quieta y se recorre deslizando. La segunda copia de la fila solo
+ * existe para cerrar el bucle: es invisible para lectores y teclado.
  */
 export function BrandsCarousel({ brands }: BrandsCarouselProps) {
-  const trackRef = useRef<HTMLUListElement>(null)
-  const [canPrev, setCanPrev] = useState(false)
-  const [canNext, setCanNext] = useState(false)
-
-  useEffect(() => {
-    const track = trackRef.current
-    if (!track) return
-    const update = () => {
-      setCanPrev(track.scrollLeft > 4)
-      setCanNext(track.scrollLeft + track.clientWidth < track.scrollWidth - 4)
-    }
-    update()
-    // ResizeObserver dispara al observar y en cada cambio de tamaño.
-    const ro = new ResizeObserver(update)
-    ro.observe(track)
-    track.addEventListener('scroll', update, { passive: true })
-    return () => {
-      ro.disconnect()
-      track.removeEventListener('scroll', update)
-    }
-  }, [])
-
   if (brands.length === 0) return null
 
-  const scrollByPage = (dir: 1 | -1) => {
-    const track = trackRef.current
-    if (!track) return
-    track.scrollBy({ left: dir * track.clientWidth * 0.9, behavior: 'smooth' })
-  }
-
-  const arrowCls =
-    'grid place-items-center w-11 h-11 border border-(--bd) bg-card text-text transition-colors hover:border-(--bdh) hover:text-accent-ink disabled:opacity-35 disabled:pointer-events-none focus-visible:outline-2 focus-visible:outline-ring'
+  const repeats = Math.max(1, Math.ceil(MIN_PER_LOOP / brands.length))
+  const loop = Array.from({ length: repeats }, () => brands).flat()
+  const duration = `${loop.length * SECONDS_PER_ITEM}s`
 
   return (
-    <section aria-labelledby="home-brands-title" className="shell pt-12 md:pt-16">
-      <div className="flex items-end justify-between gap-4 mb-5">
+    <section aria-labelledby="home-brands-title" className="pt-12 md:pt-16">
+      <div className="shell flex items-end justify-between gap-4 mb-6">
         <h2
           id="home-brands-title"
           className="font-display font-black uppercase tracking-[-0.5px] leading-none text-[clamp(26px,3.4vw,40px)]"
         >
           Marcas
         </h2>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/marcas"
-            className="text-[13px] font-semibold text-accent-ink underline underline-offset-2 hover:no-underline"
-          >
-            Ver todas
-          </Link>
-          {(canPrev || canNext) && (
-            <div className="hidden sm:flex gap-1.5">
-              <button
-                type="button"
-                aria-label="Marcas anteriores"
-                onClick={() => scrollByPage(-1)}
-                disabled={!canPrev}
-                className={arrowCls}
-              >
-                <ChevronLeft size={20} aria-hidden />
-              </button>
-              <button
-                type="button"
-                aria-label="Más marcas"
-                onClick={() => scrollByPage(1)}
-                disabled={!canNext}
-                className={arrowCls}
-              >
-                <ChevronRight size={20} aria-hidden />
-              </button>
-            </div>
-          )}
-        </div>
+        <Link
+          href="/marcas"
+          className="text-[13px] font-semibold text-accent-ink underline underline-offset-2 hover:no-underline"
+        >
+          Ver todas
+        </Link>
       </div>
 
-      {/* Deslizable con el dedo; en móvil asoma la siguiente tarjeta para que
-          se entienda que hay más. */}
-      <ul
-        ref={trackRef}
-        className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      <div
+        data-brand-marquee
+        className="relative overflow-hidden motion-reduce:overflow-x-auto py-2 [mask-image:linear-gradient(to_right,transparent,black_6%,black_94%,transparent)] motion-reduce:[mask-image:none]"
       >
-        {brands.map((b) => (
-          <li
-            key={b.id}
-            className="snap-start shrink-0 w-[68%] min-[480px]:w-[45%] md:w-[calc((100%-2rem)/3)] lg:w-[calc((100%-3rem)/4)]"
-          >
-            <Link
-              href={`/marcas/${b.slug}`}
-              className="group relative block aspect-[4/5] overflow-hidden bg-(--brand-navy) no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-            >
-              {b.coverUrl && (
-                <FadeImage
-                  src={b.coverUrl}
-                  alt=""
-                  fill
-                  sizes="(max-width: 480px) 68vw, (max-width: 768px) 45vw, (max-width: 1024px) 33vw, 25vw"
-                  className="object-cover transition-transform duration-500 group-hover:scale-[1.05] motion-reduce:transition-none"
-                />
-              )}
-              {/* Degradado solo en la mitad inferior: la foto se ve entera y el
-                  texto blanco conserva contraste sobre cualquier imagen. */}
-              <span
-                aria-hidden
-                className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-black/85 via-black/45 to-transparent"
-              />
-
-              {b.imageUrl && (
-                <span className="absolute top-3 left-3 w-24 h-12 bg-white p-2 shadow-sm">
-                  <span className="relative block w-full h-full">
-                    <Image src={b.imageUrl} alt="" fill sizes="96px" className="object-contain" />
-                  </span>
-                </span>
-              )}
-
-              <span className="absolute inset-x-0 bottom-0 p-4 sm:p-5 text-on-media">
-                <span className="flex items-center justify-between gap-2">
-                  <span className="font-display font-black uppercase leading-none tracking-[-0.2px] text-[clamp(22px,2.2vw,28px)]">
-                    {b.name}
-                  </span>
-                  <ChevronRight
-                    size={22}
-                    aria-hidden
-                    className="shrink-0 transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transition-none"
-                  />
-                </span>
-                <span className="block mt-1.5 text-[13px] text-on-media/80">
-                  {b.tagline ? `${b.tagline} · ` : ''}
-                  {productsLabel(b.productCount)}
-                </span>
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
+        <ul
+          className="flex w-max animate-marquee motion-reduce:animate-none"
+          style={{ animationDuration: duration }}
+        >
+          {loop.map((b, i) => (
+            <BrandCircle key={`a-${i}-${b.id}`} brand={b} hidden={i >= brands.length} />
+          ))}
+          {/* Copia para el bucle: el marquee se desplaza -50%. */}
+          {loop.map((b, i) => (
+            <BrandCircle key={`b-${i}-${b.id}`} brand={b} hidden />
+          ))}
+        </ul>
+      </div>
     </section>
   )
 }

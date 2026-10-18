@@ -33,15 +33,15 @@ export default function StorefrontLoading() {
       {/* PromoBanner: py-2.75 + línea de 13px ≈ 42px */}
       <Skeleton className="h-10.5 w-full" />
 
-      {/* BrandsCarousel: título + tarjetas 4:5 (1.5 en móvil, 4 en escritorio) */}
+      {/* BrandsCarousel: título + círculos w-28 / sm:w-36 con su nombre */}
       <div className="shell pt-12 md:pt-16">
-        <Skeleton className="h-9 w-40 mb-5" />
-        <div className="flex gap-4 overflow-hidden">
-          {Array.from({ length: 4 }, (_, i) => (
-            <Skeleton
-              key={i}
-              className="shrink-0 aspect-[4/5] w-[68%] min-[480px]:w-[45%] md:w-[calc((100%-2rem)/3)] lg:w-[calc((100%-3rem)/4)]"
-            />
+        <Skeleton className="h-9 w-40 mb-6" />
+        <div className="flex gap-6 sm:gap-8 overflow-hidden py-2">
+          {Array.from({ length: 8 }, (_, i) => (
+            <div key={i} className="shrink-0 flex flex-col items-center gap-3">
+              <Skeleton className="w-28 h-28 sm:w-36 sm:h-36 rounded-full" />
+              <Skeleton className="h-4 w-20" />
+            </div>
           ))}
         </div>
       </div>
