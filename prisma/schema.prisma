@@ -110,6 +110,7 @@ model User {
   orders    Order[]
   preorders Preorder[]
   addresses UserAddress[]
+  reviews   Review[]
   cart      Cart?
 
   createdAt DateTime  @default(now())
@@ -280,6 +281,7 @@ model Product {
   preorders   Preorder[]
   collections  ProductCollection[]
   homeSections ProductHomeSection[]
+  reviews      Review[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -860,6 +862,9 @@ model HomeCta {
 enum BannerLayout {
   CARD
   FULLSCREEN
+  /// Un banner a todo el ancho con el texto (título, subtítulo y botón) a la
+  /// izquierda sobre un degradado, y la imagen a la derecha.
+  EDITORIAL
 }
 
 model StoreSettings {
@@ -1054,4 +1059,45 @@ model ComplaintResponse {
   /// Email del admin que respondió (snapshot)
   respondedBy     String?
   createdAt       DateTime  @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Reseñas de producto
+//
+// Las escribe un cliente con sesión (una por producto y cuenta) y se publican
+// solo después de que el admin las aprueba: así no se cuelan spam ni reseñas
+// falsas, que en Perú pueden ser publicidad engañosa (Ley 29571). La tienda
+// muestra solo las APPROVED; si no hay ninguna, la sección no se pinta.
+// ---------------------------------------------------------------------------
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Review {
+  id        String @id @default(cuid())
+  productId String
+  userId    String
+
+  /// 1 a 5 estrellas.
+  rating Int
+  title  String? @db.VarChar(120)
+  body   String  @db.Text
+
+  status           ReviewStatus @default(PENDING)
+  /// El autor tenía un pedido pagado con este producto al escribirla.
+  verifiedPurchase Boolean      @default(false)
+  moderatedAt      DateTime?
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, userId])
+  @@index([productId, status, createdAt])
+  @@index([status, createdAt])
 }
