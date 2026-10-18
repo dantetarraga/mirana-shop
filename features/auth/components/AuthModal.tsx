@@ -10,7 +10,7 @@ import {
 } from '@/features/auth/schemas/auth.schema'
 import { mergeCartOnLoginAction } from '@/features/cart/actions/cart.actions'
 import { useCartStore } from '@/features/cart/stores/cart.store'
-import { MiranaMark } from '@/shared/components/brand/MiranaLogo'
+import { MiranaLogo } from '@/shared/components/brand/MiranaLogo'
 import { Button } from '@/shared/components/ui/Button'
 import { Field } from '@/shared/components/ui/Field'
 import { Modal } from '@/shared/components/ui/Modal'
@@ -18,85 +18,44 @@ import { Spinner } from '@/shared/components/ui/Spinner'
 import { inputCls } from '@/shared/lib/ui-classes'
 import { cn } from '@/shared/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { CalendarClock, Eye, EyeOff, MapPin, Package, X } from 'lucide-react'
+import { Eye, EyeOff, X } from 'lucide-react'
 import { signIn } from 'next-auth/react'
-import { useId, useState, type KeyboardEvent } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 
-// ---------------------------------------------------------------------------
-// Modal de acceso. Se arma como la caja de una figura: una vitrina navy con la
-// ranura del blíster y las garras de la marca, y el formulario al lado (en
-// móvil la vitrina se reduce a una franja). La personalidad vive en la
-// vitrina; el formulario es sobrio a propósito.
-//
-// Todo el texto habla al cliente: el mismo modal sirve para cualquier cuenta y
-// no debe insinuar que existen otros roles.
-// ---------------------------------------------------------------------------
-
 // 16px en móvil: con 14px Safari iOS hace zoom al enfocar el campo.
-const fieldCls = cn(inputCls, 'text-base sm:text-[14px]')
-// Rótulos en minúscula y en tinta de texto: en un formulario corto se leen
-// mejor que los rótulos en mayúsculas espaciadas del admin.
+const fieldCls = cn(
+  inputCls,
+  'h-12 rounded-md text-base sm:text-[14px] focus:ring-2 focus:ring-ring/15',
+)
 const labelCls = 'block text-[13px] font-semibold text-text mb-1.5'
 
 type AuthMode = 'login' | 'register'
 type FormValues = LoginInput & Partial<Pick<RegisterInput, 'name' | 'confirm'>>
 
-const COPY: Record<AuthMode, { tab: string; title: string; lead: string; submit: string }> = {
+const COPY: Record<AuthMode, { title: string; lead: string; submit: string }> = {
   login: {
-    tab: 'Iniciar sesión',
     title: 'Inicia sesión',
-    lead: 'Con tu correo o tu cuenta de Google.',
+    lead: 'Tus pedidos y preventas, en un solo lugar.',
     submit: 'Iniciar sesión',
   },
   register: {
-    tab: 'Crear cuenta',
     title: 'Crea tu cuenta',
-    lead: 'Es gratis y toma menos de un minuto.',
+    lead: 'Guarda tus datos y sigue cada pedido de tu colección.',
     submit: 'Crear cuenta',
   },
 }
 
-/** Lo que gana un cliente con su cuenta (funciones reales de la tienda). */
-const PERKS = [
-  { Icon: Package, text: 'Sigues cada pedido, del pago a la entrega.' },
-  { Icon: CalendarClock, text: 'Reservas preventas pagando solo el adelanto.' },
-  { Icon: MapPin, text: 'Guardas tus direcciones para pagar más rápido.' },
-] as const
-
-const MODES: AuthMode[] = ['login', 'register']
-
-// La vitrina es navy en ambos temas: fija los tokens del logo para fondo oscuro.
+// La cabecera conserva el navy y los colores del logo en ambos temas.
 const ON_NAVY_BRAND = '[--brand-moon:#00c8ff] [--brand-slate:#5d7389]'
-
-/** Ranura para colgar del blíster: detalle de empaque, sin función. */
-function BlisterSlot({ className }: { className?: string }) {
-  return (
-    <span
-      aria-hidden
-      className={cn('block w-12 h-2 rounded-full bg-black/45 ring-1 ring-white/15', className)}
-    />
-  )
-}
 
 export function AuthModal() {
   const authOpen = useAuthModalStore((s) => s.authOpen)
   const authMode = useAuthModalStore((s) => s.authMode)
   const closeAuth = useAuthModalStore((s) => s.closeAuth)
   const openAuth = useAuthModalStore((s) => s.openAuth)
-  const tabsId = useId()
-  const titleId = useId()
   const copy = COPY[authMode]
-
-  // Pestañas con flechas ←/→ (patrón ARIA tablist con activación automática).
-  const onTabsKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return
-    e.preventDefault()
-    const next = authMode === 'login' ? 'register' : 'login'
-    openAuth(next)
-    document.getElementById(`${tabsId}-${next}`)?.focus()
-  }
 
   return (
     <Modal
@@ -104,107 +63,34 @@ export function AuthModal() {
       onClose={closeAuth}
       size="md"
       bare
-      label={copy.tab}
-      className="md:max-w-[820px] overflow-hidden"
+      label={copy.title}
+      className="overflow-hidden rounded-xl shadow-premium"
     >
-      <div className="relative flex flex-col md:flex-row min-h-0 overflow-y-auto">
+      <div className="relative shrink-0 bg-(--brand-navy) px-14 py-5 text-on-media">
+        <MiranaLogo className={cn('mx-auto h-12 w-auto max-w-full', ON_NAVY_BRAND)} />
         <button
           type="button"
           onClick={closeAuth}
           aria-label="Cerrar"
-          className="absolute top-2 right-2 z-10 grid place-items-center w-11 h-11 text-on-media/75 hover:text-on-media md:text-muted md:hover:text-text focus-visible:outline-2 focus-visible:outline-ring transition-colors"
+          className="absolute right-2 top-2 grid h-11 w-11 place-items-center rounded-md text-on-media/70 transition-colors hover:bg-white/10 hover:text-on-media focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
         >
           <X size={20} aria-hidden />
         </button>
+      </div>
 
-        {/* ── Vitrina (escritorio) / franja (móvil) ── */}
-        <aside className="relative isolate overflow-hidden bg-(--brand-navy) text-on-media md:w-[42%] md:shrink-0 px-6 pt-8 pb-6 md:px-8 md:pt-10 md:pb-9 flex flex-col">
-          <BlisterSlot className="absolute top-3 left-1/2 -translate-x-1/2" />
-
-          {/* Las garras en grande, saliendo por el borde: el único gesto audaz
-              del modal. Solo en escritorio, donde hay espacio. */}
-          <MiranaMark
-            className={cn(
-              'hidden md:block absolute -right-16 -bottom-12 w-80 h-80 opacity-20 -z-10 text-on-media',
-              ON_NAVY_BRAND,
-            )}
-          />
-
-          <div className="flex items-center gap-3.5 pr-10 md:pr-0 md:block">
-            <MiranaMark className={cn('w-11 h-11 md:w-14 md:h-14 text-on-media', ON_NAVY_BRAND)} />
-            <div className="min-w-0 md:mt-6">
-              <h2
-                id={titleId}
-                className="font-display text-[28px] md:text-[38px] font-black uppercase leading-[0.95] tracking-[-0.3px]"
-              >
-                {copy.title}
-              </h2>
-              <p className="mt-1.5 md:mt-3 text-[13px] md:text-[14px] leading-snug text-on-media/75">
-                {copy.lead}
-              </p>
-            </div>
-          </div>
-
-          <ul
-            className={cn(
-              'hidden md:flex flex-col gap-4 mt-auto pt-10 text-[14px] leading-snug text-on-media/85',
-              ON_NAVY_BRAND,
-            )}
-          >
-            {PERKS.map(({ Icon, text }) => (
-              <li key={text} className="flex items-start gap-3">
-                <Icon size={18} aria-hidden className="mt-0.5 shrink-0 text-(--brand-moon)" />
-                {text}
-              </li>
-            ))}
-          </ul>
-        </aside>
-
-        {/* ── Formulario ── */}
-        <div className="flex-1 min-w-0 px-6 sm:px-8 pt-5 md:pt-8 pb-7">
-          {/* El foco va a cada pestaña (roving tabindex), no al contenedor. */}
-          {/* eslint-disable-next-line jsx-a11y/interactive-supports-focus */}
-          <div
-            role="tablist"
-            aria-label="Tipo de acceso"
-            onKeyDown={onTabsKeyDown}
-            className="grid grid-cols-2 border border-(--bd) p-1 mb-6 md:mr-10"
-          >
-            {MODES.map((m) => {
-              const active = authMode === m
-              return (
-                <button
-                  key={m}
-                  id={`${tabsId}-${m}`}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  aria-controls={`${tabsId}-panel`}
-                  tabIndex={active ? 0 : -1}
-                  onClick={() => openAuth(m)}
-                  className={cn(
-                    'h-10 font-display text-[14px] font-bold uppercase tracking-[1px] transition-colors',
-                    'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring',
-                    active ? 'bg-(--brand-navy) text-on-media' : 'text-muted hover:text-text',
-                  )}
-                >
-                  {COPY[m].tab}
-                </button>
-              )
-            })}
-          </div>
-
-          {/* El form se remonta con `key={authMode}`: cambiar de pestaña resetea
-              el formulario y los checkboxes sin efectos ni refs (idioma del repo). */}
-          <div
-            id={`${tabsId}-panel`}
-            role="tabpanel"
-            aria-labelledby={`${tabsId}-${authMode}`}
-            aria-describedby={titleId}
-          >
-            <AuthForm key={authMode} mode={authMode} onClose={closeAuth} onSwitch={openAuth} />
-          </div>
+      <div className="min-h-0 overflow-y-auto overscroll-contain px-6 pb-6 pt-6 sm:px-9 sm:pb-8">
+        <div className="mb-6 text-center">
+          <h2 className="font-display text-[34px] font-bold leading-tight tracking-[-0.4px] text-text">
+            {copy.title}
+          </h2>
+          <p className="mx-auto mt-2 max-w-[30ch] text-[13px] leading-relaxed text-muted">
+            {copy.lead}
+          </p>
         </div>
+
+        {/* El enlace al pie es el único selector de modo. La key limpia los
+            campos y el consentimiento al cambiar entre acceso y registro. */}
+        <AuthForm key={authMode} mode={authMode} onClose={closeAuth} onSwitch={openAuth} />
       </div>
     </Modal>
   )
@@ -231,11 +117,17 @@ function AuthForm({
     register,
     handleSubmit,
     reset,
+    setFocus,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(mode === 'login' ? loginSchema : registerSchema),
     defaultValues: { name: '', email: '', password: '', confirm: '' },
   })
+
+  // Al cambiar de modo, el enlace que tenía foco se desmonta con el formulario.
+  useEffect(() => {
+    setFocus(mode === 'login' ? 'email' : 'name')
+  }, [mode, setFocus])
 
   const onSubmit = async (data: FormValues) => {
     setFormError(null)
@@ -298,7 +190,7 @@ function AuthForm({
         onClick={continueWithGoogle}
         disabled={busy}
         aria-busy={googlePending || undefined}
-        className="w-full h-12 inline-flex items-center justify-center gap-3 border border-field bg-card text-text text-[14px] font-semibold hover:bg-card-hover transition-colors disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        className="inline-flex h-12 w-full items-center justify-center gap-3 rounded-md border border-field bg-card text-[14px] font-semibold text-text transition-colors hover:bg-card-hover disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       >
         {googlePending ? <Spinner size={18} /> : <GoogleIcon />}
         Continuar con Google
@@ -378,7 +270,7 @@ function AuthForm({
                 onClick={() => setShowPassword((v) => !v)}
                 aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 aria-pressed={showPassword}
-                className="absolute inset-y-0 right-0 w-11 grid place-items-center text-muted hover:text-text focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+                className="absolute inset-y-0 right-0 grid w-11 place-items-center rounded-r-md text-muted hover:text-text focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
               >
                 {showPassword ? <EyeOff size={18} aria-hidden /> : <Eye size={18} aria-hidden />}
               </button>
@@ -453,18 +345,19 @@ function AuthForm({
           full
           loading={isSubmitting}
           disabled={googlePending}
-          className="mt-1"
+          className="mt-1 h-12 rounded-md font-sans text-[14px] font-bold normal-case tracking-normal"
         >
           {copy.submit}
         </Button>
       </form>
 
-      <p className="text-center text-[13px] text-muted">
+      <p className="border-t border-border pt-4 text-center text-[13px] leading-relaxed text-muted">
         {mode === 'login' ? '¿Primera vez en Mirana? ' : '¿Ya tienes cuenta? '}
         <button
           type="button"
           onClick={() => onSwitch(mode === 'login' ? 'register' : 'login')}
-          className="font-semibold text-accent-ink underline underline-offset-2 hover:no-underline"
+          disabled={busy}
+          className="inline-flex min-h-9 items-center rounded-sm font-semibold text-accent-ink underline underline-offset-4 hover:no-underline disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         >
           {mode === 'login' ? 'Crea tu cuenta' : 'Inicia sesión'}
         </button>

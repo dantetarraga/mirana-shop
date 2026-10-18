@@ -45,8 +45,9 @@ export const WORDMARK: ReadonlyArray<{ x: number; d: string; accent: boolean }> 
   { x: 350, accent: false, d: 'M0,100 L24,0 H42 L66,100 H48 L33,36 L18,100 Z' },
 ]
 
-/** Ancho del lockup horizontal y posición del logotipo dentro de él. */
-export const LOCKUP = { width: 430, wordX: 118, wordY: 22, wordScale: 0.5625 } as const
+/** El logotipo termina en x=352: el viewBox deja un margen similar a ambos
+ * lados para centrar la marca sin espacio vacío a la derecha. */
+export const LOCKUP = { width: 354, wordX: 118, wordY: 22, wordScale: 0.5625 } as const
 
 /** Colores fijos para los SVG estáticos (correos, JSON-LD, OG, favicon). */
 export const BRAND_COLORS = {
