@@ -10,6 +10,7 @@ import {
   FileText,
   Images,
   Megaphone,
+  MessageSquareText,
   Settings,
   FolderTree,
   Image,
@@ -44,8 +45,16 @@ type NavLink = {
   href: string
   label: string
   icon: React.ComponentType<{ size?: number; className?: string }>
+  /** Clave en `badges` cuyo conteo se muestra junto al enlace. */
+  badge?: AdminSidebarBadge
+  /** Cómo se lee el conteo: "3 pendientes". */
+  badgeLabel?: string
 }
 type NavItem = NavSection | NavLink
+
+/** Contadores que el layout puede pasar al sidebar (p. ej. reseñas por moderar). */
+export type AdminSidebarBadge = 'reviewsPending'
+export type AdminSidebarBadges = Partial<Record<AdminSidebarBadge, number>>
 
 const NAV_ITEMS: NavItem[] = [
   { section: 'Principal' },
@@ -67,6 +76,13 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/admin/legal', label: 'Páginas legales', icon: FileText },
   { section: 'Clientes' },
   { href: '/admin/users', label: 'Usuarios', icon: Users },
+  {
+    href: '/admin/reviews',
+    label: 'Reseñas',
+    icon: MessageSquareText,
+    badge: 'reviewsPending',
+    badgeLabel: 'por revisar',
+  },
   { href: '/admin/complaints', label: 'Libro de Reclamaciones', icon: BookText },
   { section: 'Configuración' },
   { href: '/admin/settings', label: 'Tienda', icon: Settings },
@@ -74,7 +90,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/admin/trash', label: 'Papelera', icon: Trash2 },
 ]
 
-export function AdminSidebar() {
+export function AdminSidebar({ badges }: { badges?: AdminSidebarBadges } = {}) {
   const pathname = usePathname()
   const isOpen = useAdminSidebarStore((s) => s.isOpen)
   const close = useAdminSidebarStore((s) => s.close)
@@ -161,6 +177,12 @@ export function AdminSidebar() {
               )}
               <link.icon size={17} className="shrink-0" aria-hidden />
               {link.label}
+              {link.badge && (badges?.[link.badge] ?? 0) > 0 && (
+                <span className="ml-auto min-w-5 px-1.5 py-0.5 text-center text-[10px] font-bold leading-none tabular-nums bg-(--gold) text-on-accent">
+                  {badges![link.badge]}
+                  <span className="sr-only"> {link.badgeLabel}</span>
+                </span>
+              )}
             </Link>
           )
         })}
