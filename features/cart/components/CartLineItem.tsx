@@ -1,5 +1,6 @@
 'use client'
 
+import { PreorderArrival } from '@/features/cart/components/CartPreorderNotice'
 import { removeWithUndo } from '@/features/cart/lib/remove-with-undo'
 import { useCartStore, type CartItem } from '@/features/cart/stores/cart.store'
 import {
@@ -134,6 +135,7 @@ function CompactLine({ line, onNavigate }: { line: LineModel; onNavigate?: () =>
             {formatCurrency(line.fullUnit)}
           </div>
         )}
+        <PreorderArrival product={product} />
         <OutOfStockNotice line={line} />
         <div className="flex items-center gap-1 mt-1.5 -ml-1">
           <Button
@@ -208,6 +210,7 @@ function FullLine({ line, onNavigate }: { line: LineModel; onNavigate?: () => vo
           <div className="text-accent-ink font-display text-[15px] font-bold mt-0.5">
             {formatCurrency(line.unitPrice)} c/u
           </div>
+          <PreorderArrival product={product} className="mt-0.5 text-[12px]" />
           <OutOfStockNotice line={line} />
 
           {/* Preventa: se puede alternar entre pagar todo y pagar solo el

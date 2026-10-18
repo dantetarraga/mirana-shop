@@ -41,6 +41,19 @@ export interface CartMixConflict {
   preorderMode: PreorderMode
   /** Tipo de lo que ya hay en el carrito — lo que produce el choque. */
   cartKind: CartKind
+  /** Si al resolverlo con 'replace' se abre el drawer (ver `AddToCartOptions`). */
+  openDrawer: boolean
+}
+
+export interface AddToCartOptions {
+  /**
+   * Abrir el drawer al agregar (def. `true`) y tomar el producto como ancla de
+   * las recomendaciones. Lo apagan las altas que no son "agregar al carrito"
+   * para el cliente: el "Deshacer" de un borrado y el "Agregar" de las
+   * recomendaciones, que ya ocurre con el drawer abierto y no debe reordenar
+   * la lista que el cliente está mirando.
+   */
+  openDrawer?: boolean
 }
 
 /** Qué hacer con el carrito actual cuando choca con lo que se quiso agregar. */
@@ -62,6 +75,12 @@ interface CartState {
    * "0 unidades" durante el primer pintado.
    */
   hydrated: boolean
+  /**
+   * Último producto agregado con `openDrawer`. Ancla de "También te puede
+   * gustar" en el drawer; se limpia al cerrarlo, así que abrir el carrito desde
+   * el navbar no muestra recomendaciones de una visita anterior.
+   */
+  lastAdded: CatalogProduct | null
   /** Escrituras en vuelo. Mientras haya alguna no se acepta una siembra externa. */
   pendingWrites: number
   /**
@@ -78,7 +97,12 @@ interface CartState {
    * 0 = no entró nada (llegó al tope de stock, o chocó con el tipo del carrito
    * y quedó un `mixConflict` abierto). Quien llama solo confirma si entró algo.
    */
-  addToCart: (product: CatalogProduct, qty?: number, preorderMode?: PreorderMode) => number
+  addToCart: (
+    product: CatalogProduct,
+    qty?: number,
+    preorderMode?: PreorderMode,
+    options?: AddToCartOptions,
+  ) => number
   /** Cierra el modal de conflicto dejando el carrito como está. */
   dismissMixConflict: () => void
   /** Resuelve el conflicto abierto. Ver `CartMixResolution`. */
@@ -158,6 +182,7 @@ export const useCartStore = create<CartState>()((set, get) => ({
   cartCount: 0,
   cartOpen: false,
   hydrated: false,
+  lastAdded: null,
   pendingWrites: 0,
   mixConflict: null,
 
@@ -183,7 +208,8 @@ export const useCartStore = create<CartState>()((set, get) => ({
       .catch(() => {})
   },
 
-  addToCart: (product, qty = 1, preorderMode = 'FULL') => {
+  addToCart: (product, qty = 1, preorderMode = 'FULL', options = {}) => {
+    const openDrawer = options.openDrawer ?? true
     // Preventa y entrega inmediata no viajan en el mismo pedido. En vez de
     // rechazar con un aviso, se abre el modal: el cliente decide si paga lo que
     // ya tenía, lo reemplaza o lo vacía. Los botones de compra recién se
@@ -192,7 +218,7 @@ export const useCartStore = create<CartState>()((set, get) => ({
     const current = get().cart.map((i) => i.product)
     const currentKind = cartKindOf(current)
     if (currentKind !== null && conflictsWithCart(current, product)) {
-      set({ mixConflict: { product, qty, preorderMode, cartKind: currentKind } })
+      set({ mixConflict: { product, qty, preorderMode, cartKind: currentKind, openDrawer } })
       return 0
     }
 
@@ -217,7 +243,11 @@ export const useCartStore = create<CartState>()((set, get) => ({
             i.product.id === product.id ? { ...i, qty: i.qty + toAdd, preorderMode: mode } : i,
           )
         : [...s.cart, { product, qty: toAdd, preorderMode: mode }]
-      return { cart, cartCount: countCart(cart) }
+      // Agregar abre el drawer: es la confirmación (antes era solo un toast)
+      // y donde aparecen las recomendaciones del producto recién agregado.
+      return openDrawer
+        ? { cart, cartCount: countCart(cart), cartOpen: true, lastAdded: product }
+        : { cart, cartCount: countCart(cart) }
     })
     runWrite(set, () => addCartItemAction(product.id, toAdd, mode))
 
@@ -238,7 +268,7 @@ export const useCartStore = create<CartState>()((set, get) => ({
 
     // 'replace': el carrito queda con una sola línea, así que el tope es el
     // stock completo del producto y no lo que le faltaba por agregar.
-    const { product, qty, preorderMode } = pending
+    const { product, qty, preorderMode, openDrawer } = pending
     const max = maxPurchasable(product)
     const toAdd = max === null ? qty : Math.min(qty, max)
 
@@ -253,7 +283,11 @@ export const useCartStore = create<CartState>()((set, get) => ({
     const mode: PreorderMode =
       preorderMode === 'PARTIAL' && canPartialPreorder(product) ? 'PARTIAL' : 'FULL'
 
-    set({ cart: [{ product, qty: toAdd, preorderMode: mode }], cartCount: toAdd })
+    set({
+      cart: [{ product, qty: toAdd, preorderMode: mode }],
+      cartCount: toAdd,
+      ...(openDrawer ? { cartOpen: true, lastAdded: product } : {}),
+    })
     // Vaciar y agregar van encadenados dentro de la MISMA escritura: lanzados
     // por separado, el vaciado podía resolverse después del alta y dejar el
     // carrito sin el producto nuevo.
@@ -309,7 +343,8 @@ export const useCartStore = create<CartState>()((set, get) => ({
         // adelanto es una decisión por producto, en su ficha.
         else cart.push({ product, qty: 1, preorderMode: 'FULL' })
       }
-      return { cart, cartCount: countCart(cart) }
+      // Igual que addToCart: se abre el drawer, anclado al primero agregado.
+      return { cart, cartCount: countCart(cart), cartOpen: true, lastAdded: toAdd[0] }
     })
 
     runWrite(set, () => addCartItemsAction(toAdd.map((p) => ({ productId: p.id, qty: 1 }))))
@@ -357,5 +392,5 @@ export const useCartStore = create<CartState>()((set, get) => ({
     })
   },
 
-  setCartOpen: (open) => set({ cartOpen: open }),
+  setCartOpen: (open) => set(open ? { cartOpen: true } : { cartOpen: false, lastAdded: null }),
 }))

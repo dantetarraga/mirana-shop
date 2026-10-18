@@ -1,6 +1,12 @@
 'use client'
 
 import { CartLineItem } from '@/features/cart/components/CartLineItem'
+import { CartPreorderNotice } from '@/features/cart/components/CartPreorderNotice'
+import {
+  CartRecommendationsColumn,
+  CartRecommendationsStrip,
+  useCartRecommendations,
+} from '@/features/cart/components/CartRecommendations'
 import { cartKindOf } from '@/features/cart/lib/cart-kind'
 import { useCartStore } from '@/features/cart/stores/cart.store'
 import { eligibleDeliveryMethods } from '@/features/checkout/lib/delivery-eligibility'
@@ -60,6 +66,10 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
   )
   const panelRef = useFocusTrap<HTMLDivElement>(true)
   const titleId = useId()
+  // "También te puede gustar" del último producto agregado (solo tras agregar:
+  // abrir el carrito desde el navbar no trae ancla).
+  const recommendations = useCartRecommendations()
+  const closeDrawer = () => setCartOpen(false)
 
   useScrollLock(true)
 
@@ -109,147 +119,161 @@ function CartDrawerContent({ pricingRules }: CartDrawerProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="fixed top-0 right-0 bottom-0 z-551 w-full sm:w-105 bg-surf border-l border-(--bd) flex flex-col animate-slide-right"
+        // `flex-row-reverse`: el carrito va primero en el DOM (foco inicial y
+        // orden de lectura) pero se pinta a la derecha; las recomendaciones de
+        // escritorio quedan como columna a su izquierda y ensanchan el drawer.
+        className="fixed top-0 right-0 bottom-0 z-551 w-full sm:w-auto bg-surf border-l border-(--bd) flex flex-row-reverse animate-slide-right"
       >
-        {/* Header */}
-        <div className="px-5 sm:px-7 py-6 border-b border-(--bd) flex items-center justify-between">
-          <h2 id={titleId} className="font-display text-[26px] font-black uppercase tracking-[1px]">
-            Carrito{' '}
-            <span className="text-accent-ink" aria-live="polite">
-              ({cartCount})
-            </span>
-          </h2>
-          <div className="flex items-center gap-2">
-            {/* Los controles no se deshabilitan mientras se guarda: la UI es
+        <div className="w-full sm:w-105 min-w-0 flex flex-col">
+          {/* Header */}
+          <div className="px-5 sm:px-7 py-6 border-b border-(--bd) flex items-center justify-between">
+            <h2
+              id={titleId}
+              className="font-display text-[26px] font-black uppercase tracking-[1px]"
+            >
+              Carrito{' '}
+              <span className="text-accent-ink" aria-live="polite">
+                ({cartCount})
+              </span>
+            </h2>
+            <div className="flex items-center gap-2">
+              {/* Los controles no se deshabilitan mientras se guarda: la UI es
                 optimista y bloquearlos rompería el +/− rápido. El estado se
                 comunica en su lugar. */}
-            <span
-              className={`text-[10px] tracking-[1px] uppercase text-muted transition-opacity duration-200 ${busy ? 'opacity-100' : 'opacity-0'}`}
-              aria-live="polite"
-            >
-              {busy ? 'Guardando…' : ''}
-            </span>
-            <Button
-              variant="icon"
-              size="md"
-              aria-label="Cerrar carrito"
-              onClick={() => setCartOpen(false)}
-            >
-              <X size={18} aria-hidden />
-            </Button>
-          </div>
-        </div>
-
-        {/* Items */}
-        <div className="flex-1 overflow-y-auto px-5 sm:px-7 py-5 flex flex-col gap-3.5">
-          {cart.length === 0 ? (
-            <div className="text-center py-16 px-5 text-muted">
-              {/* Icono de lucide, no emoji: el emoji lo dibuja el sistema
-                  operativo y cambia de estilo y color entre plataformas. */}
-              <ShoppingCart
-                size={52}
-                strokeWidth={1}
-                className="mx-auto mb-4 opacity-25"
-                aria-hidden
-              />
-              <div className="font-display text-[22px] font-black uppercase mb-2">
-                Carrito vacío
-              </div>
-              <div className="text-[13px] mb-6">Agrega productos para continuar</div>
-              <Link
-                href="/catalogo"
-                onClick={() => setCartOpen(false)}
-                className="ui-btn ui-btn--accent ui-btn--md"
+              <span
+                className={`text-[10px] tracking-[1px] uppercase text-muted transition-opacity duration-200 ${busy ? 'opacity-100' : 'opacity-0'}`}
+                aria-live="polite"
               >
-                Ver catálogo
-              </Link>
+                {busy ? 'Guardando…' : ''}
+              </span>
+              <Button
+                variant="icon"
+                size="md"
+                aria-label="Cerrar carrito"
+                onClick={() => setCartOpen(false)}
+              >
+                <X size={18} aria-hidden />
+              </Button>
             </div>
-          ) : (
-            cart.map((item) => (
-              <CartLineItem
-                key={item.product.id}
-                item={item}
-                depositPercent={pricingRules.preorderDepositPercent}
-                variant="compact"
-                onNavigate={() => setCartOpen(false)}
-              />
-            ))
+          </div>
+
+          {/* Items */}
+          <div className="flex-1 overflow-y-auto overscroll-contain px-5 sm:px-7 py-5 flex flex-col gap-3.5">
+            {cart.length === 0 ? (
+              <div className="text-center py-16 px-5 text-muted">
+                {/* Icono de lucide, no emoji: el emoji lo dibuja el sistema
+                  operativo y cambia de estilo y color entre plataformas. */}
+                <ShoppingCart
+                  size={52}
+                  strokeWidth={1}
+                  className="mx-auto mb-4 opacity-25"
+                  aria-hidden
+                />
+                <div className="font-display text-[22px] font-black uppercase mb-2">
+                  Carrito vacío
+                </div>
+                <div className="text-[13px] mb-6">Agrega productos para continuar</div>
+                <Link
+                  href="/catalogo"
+                  onClick={() => setCartOpen(false)}
+                  className="ui-btn ui-btn--accent ui-btn--md"
+                >
+                  Ver catálogo
+                </Link>
+              </div>
+            ) : (
+              <>
+                <CartPreorderNotice cart={cart} />
+                {cart.map((item) => (
+                  <CartLineItem
+                    key={item.product.id}
+                    item={item}
+                    depositPercent={pricingRules.preorderDepositPercent}
+                    variant="compact"
+                    onNavigate={closeDrawer}
+                  />
+                ))}
+                <CartRecommendationsStrip state={recommendations} onNavigate={closeDrawer} />
+              </>
+            )}
+          </div>
+
+          {/* Footer */}
+          {cart.length > 0 && (
+            <div className="px-5 sm:px-7 py-6 border-t border-(--bd)">
+              {/* computeTotals mete el envío dentro de `total`. Antes solo se veían
+                Descuento y Total, así que el número no cuadraba con las líneas a
+                la vista ni con el desglose de /carrito. */}
+              <div className="flex flex-col gap-2 mb-4 text-[13px]">
+                <div className="flex justify-between items-baseline">
+                  <span className="text-muted">
+                    {dueTotal > 0 ? 'Subtotal a pagar hoy' : 'Subtotal'}
+                  </span>
+                  <span className="font-semibold">{formatCurrency(payableNow)}</span>
+                </div>
+                {dueTotal > 0 && (
+                  <div className="flex justify-between items-baseline text-[12px] text-muted">
+                    <span>Valor total del pedido</span>
+                    <span>{formatCurrency(subtotal)}</span>
+                  </div>
+                )}
+                {discount > 0 && (
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-muted">
+                      Descuento{discountName ? ` — ${discountName}` : ''}
+                    </span>
+                    <span className="text-success font-semibold">−{formatCurrency(discount)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-baseline">
+                  <span className="text-muted">Envío</span>
+                  {shippingFree || shippingCost === 0 ? (
+                    <span className="text-success font-semibold">Gratis</span>
+                  ) : (
+                    <span className="font-semibold">{formatCurrency(shippingCost)}</span>
+                  )}
+                </div>
+              </div>
+              <div className="flex justify-between items-baseline mb-1 border-t border-(--bd) pt-3.5">
+                <span className="text-[12px] uppercase tracking-[1px] text-muted">
+                  {dueTotal > 0 ? 'Pagas hoy' : 'Total'}
+                </span>
+                <span
+                  className="font-display text-[38px] font-black text-accent-ink"
+                  aria-live="polite"
+                >
+                  {formatCurrency(total)}
+                </span>
+              </div>
+              {dueTotal > 0 && (
+                <div className="flex justify-between items-baseline mb-4 text-[12px]">
+                  <span className="text-muted">Saldo pendiente</span>
+                  <span className="text-info font-semibold">{formatCurrency(dueTotal)}</span>
+                </div>
+              )}
+              <div className="mb-5" />
+              {/* Link con estilo de botón — antes era <Button><Link/></Button>,
+                que genera un <a> dentro de un <button> (HTML inválido, doble tab). */}
+              <Link
+                href="/carrito"
+                onClick={() => setCartOpen(false)}
+                className="ui-btn ui-btn--accent ui-btn--lg ui-btn--full"
+              >
+                Ver carrito y pagar
+                <ArrowRight size={14} className="ml-1" strokeWidth={3} aria-hidden />
+              </Link>
+              {pricingRules.freeShippingThreshold != null && (
+                <div className="text-center mt-3 text-[12px] text-muted">
+                  {shippingFree
+                    ? '¡Envío gratis aplicado!'
+                    : `Envío gratis en pedidos +${formatCurrency(pricingRules.freeShippingThreshold)}`}
+                </div>
+              )}
+            </div>
           )}
         </div>
 
-        {/* Footer */}
-        {cart.length > 0 && (
-          <div className="px-5 sm:px-7 py-6 border-t border-(--bd)">
-            {/* computeTotals mete el envío dentro de `total`. Antes solo se veían
-                Descuento y Total, así que el número no cuadraba con las líneas a
-                la vista ni con el desglose de /carrito. */}
-            <div className="flex flex-col gap-2 mb-4 text-[13px]">
-              <div className="flex justify-between items-baseline">
-                <span className="text-muted">
-                  {dueTotal > 0 ? 'Subtotal a pagar hoy' : 'Subtotal'}
-                </span>
-                <span className="font-semibold">{formatCurrency(payableNow)}</span>
-              </div>
-              {dueTotal > 0 && (
-                <div className="flex justify-between items-baseline text-[12px] text-muted">
-                  <span>Valor total del pedido</span>
-                  <span>{formatCurrency(subtotal)}</span>
-                </div>
-              )}
-              {discount > 0 && (
-                <div className="flex justify-between items-baseline">
-                  <span className="text-muted">
-                    Descuento{discountName ? ` — ${discountName}` : ''}
-                  </span>
-                  <span className="text-success font-semibold">−{formatCurrency(discount)}</span>
-                </div>
-              )}
-              <div className="flex justify-between items-baseline">
-                <span className="text-muted">Envío</span>
-                {shippingFree || shippingCost === 0 ? (
-                  <span className="text-success font-semibold">Gratis</span>
-                ) : (
-                  <span className="font-semibold">{formatCurrency(shippingCost)}</span>
-                )}
-              </div>
-            </div>
-            <div className="flex justify-between items-baseline mb-1 border-t border-(--bd) pt-3.5">
-              <span className="text-[12px] uppercase tracking-[1px] text-muted">
-                {dueTotal > 0 ? 'Pagas hoy' : 'Total'}
-              </span>
-              <span
-                className="font-display text-[38px] font-black text-accent-ink"
-                aria-live="polite"
-              >
-                {formatCurrency(total)}
-              </span>
-            </div>
-            {dueTotal > 0 && (
-              <div className="flex justify-between items-baseline mb-4 text-[12px]">
-                <span className="text-muted">Saldo pendiente</span>
-                <span className="text-info font-semibold">{formatCurrency(dueTotal)}</span>
-              </div>
-            )}
-            <div className="mb-5" />
-            {/* Link con estilo de botón — antes era <Button><Link/></Button>,
-                que genera un <a> dentro de un <button> (HTML inválido, doble tab). */}
-            <Link
-              href="/carrito"
-              onClick={() => setCartOpen(false)}
-              className="ui-btn ui-btn--accent ui-btn--lg ui-btn--full"
-            >
-              Ver carrito y pagar
-              <ArrowRight size={14} className="ml-1" strokeWidth={3} aria-hidden />
-            </Link>
-            {pricingRules.freeShippingThreshold != null && (
-              <div className="text-center mt-3 text-[12px] text-muted">
-                {shippingFree
-                  ? '¡Envío gratis aplicado!'
-                  : `Envío gratis en pedidos +${formatCurrency(pricingRules.freeShippingThreshold)}`}
-              </div>
-            )}
-          </div>
-        )}
+        <CartRecommendationsColumn state={recommendations} onNavigate={closeDrawer} />
       </div>
     </>
   )

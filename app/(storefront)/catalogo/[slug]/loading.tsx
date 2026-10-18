@@ -38,6 +38,15 @@ export default function ProductDetailLoading() {
             <Skeleton className="h-11 w-36" />
           </div>
           <Skeleton className="h-12 w-full" />
+          {/* Acordeones (ProductInfoAccordions): filas min-h-14 con borde */}
+          <div className="border-t border-(--bd)">
+            {[40, 36, 48].map((w) => (
+              <div key={w} className="flex items-center gap-3 min-h-14 border-b border-(--bd)">
+                <Skeleton className="size-4.5 shrink-0" />
+                <Skeleton className="h-3.5" style={{ width: `${w * 4}px` }} />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </SkeletonRegion>

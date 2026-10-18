@@ -1,6 +1,7 @@
 'use client'
 
 import { CartLineItem } from '@/features/cart/components/CartLineItem'
+import { CartPreorderNotice } from '@/features/cart/components/CartPreorderNotice'
 import { CartSkeleton } from '@/features/cart/components/CartSkeleton'
 import { cartKindOf } from '@/features/cart/lib/cart-kind'
 import { useCartStore } from '@/features/cart/stores/cart.store'
@@ -89,6 +90,7 @@ export function CartView({ pricingRules }: CartViewProps) {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 lg:gap-8 items-start">
           {/* ── Items list ──────────────────────────────── */}
           <div className="flex flex-col gap-4">
+            <CartPreorderNotice cart={cart} />
             {cart.map((item) => (
               <CartLineItem
                 key={item.product.id}

@@ -94,9 +94,10 @@ export function AddToCartPanel({ product, defaultDepositPercent }: Props) {
           ? { text: '¡Últimas unidades disponibles!', tone: 'warn' as const, Icon: TriangleAlert }
           : null
 
-  // Al tocar el selector con el producto ya en el carrito se está escribiendo en
-  // el servidor, así que se confirma con un toast — mismo texto que la card.
-  // Antes de agregar no hay nada que confirmar: solo se elige un número.
+  // Con el producto ya en el carrito el selector escribe en el servidor; el
+  // número a la vista (y "Se actualiza en tu carrito al instante") es la
+  // confirmación. Cambiar cantidad no abre el drawer — eso es solo al agregar.
+  // El store avisa con un toast si se llegó al tope de stock.
   const increase = () => {
     if (atLimit) {
       toast.warning(stockLimitMessage(p.name))
@@ -106,7 +107,7 @@ export function AddToCartPanel({ product, defaultDepositPercent }: Props) {
       setQty(qty + 1)
       return
     }
-    if (updateQty(p.id, 1)) toast.success(`"${p.name}" agregado — ${qty + 1} en el carrito`)
+    updateQty(p.id, 1)
   }
 
   const decrease = () => {
@@ -115,7 +116,7 @@ export function AddToCartPanel({ product, defaultDepositPercent }: Props) {
       setQty(qty - 1)
       return
     }
-    if (updateQty(p.id, -1)) toast.success(`"${p.name}" — ${qty - 1} en el carrito`)
+    updateQty(p.id, -1)
   }
 
   return (
@@ -247,12 +248,9 @@ export function AddToCartPanel({ product, defaultDepositPercent }: Props) {
           className={ctaState === 'in-cart' ? 'cursor-default' : undefined}
           onClick={() => {
             if (ctaState !== 'idle') return
-            // El store vuelve a aplicar el tope y avisa si ya no cabe nada.
-            if (addToCart(p, qty, mode) > 0) {
-              toast.success(
-                isPreorder ? `"${p.name}" reservado` : `"${p.name}" agregado al carrito`,
-              )
-            }
+            // El store vuelve a aplicar el tope (y avisa si ya no cabe nada) y
+            // abre el drawer al agregar: esa es la confirmación, no un toast.
+            addToCart(p, qty, mode)
           }}
         >
           {ctaState === 'out-of-stock' ? (
@@ -311,11 +309,7 @@ export function AddToCartPanel({ product, defaultDepositPercent }: Props) {
               disabled={ctaState === 'capped'}
               onClick={() => {
                 if (ctaState !== 'idle') return
-                if (addToCart(p, qty, mode) > 0) {
-                  toast.success(
-                    isPreorder ? `"${p.name}" reservado` : `"${p.name}" agregado al carrito`,
-                  )
-                }
+                addToCart(p, qty, mode)
               }}
             >
               {isPreorder ? 'Reservar' : 'Agregar'}

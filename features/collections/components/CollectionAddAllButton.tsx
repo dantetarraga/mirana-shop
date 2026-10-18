@@ -58,7 +58,7 @@ export function CollectionAddAllButton({ products, collectionName }: CollectionA
       return
     }
 
-    toast.success(`${added} producto${added !== 1 ? 's' : ''} de "${collectionName}" en el carrito`)
+    // Sin toast de éxito: agregar abre el drawer del carrito (cart.store).
     if (skipped.length > 0) {
       toast.warning(
         `${skipped.length} producto${skipped.length !== 1 ? 's' : ''} sin disponibilidad: ${skipped.join(', ')}`,

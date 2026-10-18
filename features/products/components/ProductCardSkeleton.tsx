@@ -28,13 +28,12 @@ export function ProductCardSkeleton({ className }: { className?: string }) {
           <Skeleton className="h-[0.8em] w-3/5" />
         </div>
       </div>
-      <div className="px-4 pb-3.5">
-        {/* Precio: text-[20px] sm:text-[26px] · mb-3 */}
-        <div className="font-display text-[20px] sm:text-[26px] mb-3">
+      {/* Precio: text-[20px] sm:text-[26px] · pb-4. El botón del carrito va
+          sobre la foto (no suma alto), así que no tiene hueco propio. */}
+      <div className="px-4 pb-4">
+        <div className="font-display text-[20px] sm:text-[26px]">
           <Skeleton className={cn(BAR, 'h-[0.8em] w-28')} />
         </div>
-        {/* Botón: mismas clases que el real → mismo alto */}
-        <div className="ui-btn ui-btn--md ui-btn--full min-h-11 skeleton">&nbsp;</div>
       </div>
     </div>
   )
