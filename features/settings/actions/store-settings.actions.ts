@@ -26,7 +26,7 @@ const storeSettingsSchema = z.object({
     .regex(/^\d*$/, 'Solo dígitos, con código de país (ej: 51987654321)')
     .max(15, 'Número demasiado largo'),
   baseShippingCost: z.number().min(0, 'Debe ser mayor o igual a 0'),
-  bannerLayout: z.enum(['CARD', 'FULLSCREEN']).optional().default('CARD'),
+  bannerLayout: z.enum(['CARD', 'FULLSCREEN', 'EDITORIAL']).optional().default('CARD'),
   preorderDepositPercent: z
     .number()
     .int()

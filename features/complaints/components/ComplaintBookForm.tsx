@@ -79,16 +79,36 @@ function FormRow({
       error={error}
       hint={hint}
       persistentHint
-      className={span === 2 ? 'sm:col-span-2' : undefined}
+      className={span === 2 ? 'md:col-span-2' : undefined}
     >
       {children}
     </Field>
   )
 }
 
-const sectionCls = 'bg-card border border-(--bd) p-5 sm:p-6'
+const sectionCls = 'bg-card border border-(--bd) p-4 sm:p-5'
 const sectionTitleCls =
-  'font-display font-black uppercase text-[14px] tracking-[2px] text-accent-ink mb-5'
+  'flex items-center gap-2.5 font-display font-black uppercase text-[14px] tracking-[1.5px] text-text mb-4'
+/** Campos cortos en pares desde md; en móvil, una sola columna. */
+const gridCls = 'grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3.5'
+
+/**
+ * Título de sección numerado: el orden 1-2-3 es el de la Hoja de Reclamación
+ * del Anexo I, así que la numeración informa (no decora).
+ */
+function SectionTitle({ id, step, children }: { id: string; step?: number; children: React.ReactNode }) {
+  return (
+    <h2 id={id} className={sectionTitleCls}>
+      {step !== undefined && (
+        <span className="w-7 h-7 shrink-0 flex items-center justify-center bg-(--gold) text-on-accent text-[14px] leading-none">
+          {step}
+          <span className="sr-only">.</span>
+        </span>
+      )}
+      {children}
+    </h2>
+  )
+}
 
 type SuccessState = { sheet: ComplaintSheetData; emailSent: boolean }
 
@@ -237,13 +257,11 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
   const guardianHint = guardianDocType ? DOC_HINTS[guardianDocType] : undefined
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-6" aria-describedby="lr-required-legend">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4" aria-describedby="lr-required-legend">
       {/* Cabecera de la hoja: datos del proveedor, fecha y número */}
       <section className={sectionCls} aria-labelledby="lr-sheet-title">
-        <h2 id="lr-sheet-title" className={sectionTitleCls}>
-          Hoja de Reclamación
-        </h2>
-        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-[13px]">
+        <SectionTitle id="lr-sheet-title">Hoja de Reclamación</SectionTitle>
+        <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1.5 text-[13px]">
           {[{ label: 'Nombre comercial', value: STORE_DISPLAY_NAME }, ...providerRows(provider)].map(
             (r) => (
               <div key={r.label} className="flex gap-2">
@@ -263,23 +281,32 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
             <dd className="font-semibold">Se asigna al enviar</dd>
           </div>
         </dl>
-        <p id="lr-required-legend" className="text-[12px] text-muted mt-4">
+        <p id="lr-required-legend" className="text-[12px] text-muted mt-3">
           Los campos marcados con <span className="text-danger" aria-hidden="true">*</span>
           <span className="sr-only">asterisco</span> son obligatorios.
         </p>
       </section>
 
       <section className={sectionCls} aria-labelledby="lr-s1">
-        <h2 id="lr-s1" className={sectionTitleCls}>
-          1. Identificación del consumidor reclamante
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <FormRow name="fullName" label="Nombre completo" required error={errors.fullName?.message} span={2}>
+        <SectionTitle id="lr-s1" step={1}>
+          Identificación del consumidor reclamante
+        </SectionTitle>
+        <div className={gridCls}>
+          <FormRow name="fullName" label="Nombre completo" required error={errors.fullName?.message}>
             <input
               {...register('fullName')}
               autoComplete="name"
               className={input}
               placeholder="Juan García Pérez"
+            />
+          </FormRow>
+
+          <FormRow name="address" label="Domicilio" required error={errors.address?.message}>
+            <input
+              {...register('address')}
+              autoComplete="street-address"
+              className={input}
+              placeholder="Av. Principal 123, Dpto. 4B, Arequipa"
             />
           </FormRow>
 
@@ -310,15 +337,6 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
             />
           </FormRow>
 
-          <FormRow name="address" label="Domicilio" required error={errors.address?.message} span={2}>
-            <input
-              {...register('address')}
-              autoComplete="street-address"
-              className={input}
-              placeholder="Av. Principal 123, Dpto. 4B, Arequipa"
-            />
-          </FormRow>
-
           <FormRow name="phone" label="Teléfono" required error={errors.phone?.message}>
             <input
               {...register('phone')}
@@ -339,15 +357,15 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
             />
           </FormRow>
 
-          <div className="sm:col-span-2">
-            <label className="flex items-center gap-2 text-[13px] cursor-pointer">
+          <div className="md:col-span-2">
+            <label className="flex items-center gap-2 text-[13px] cursor-pointer min-h-11 md:min-h-0">
               <input {...register('isMinor')} id={fieldId('isMinor')} type="checkbox" className="accent-accent-ink" />
               Soy menor de edad
             </label>
           </div>
 
           {isMinor && (
-            <fieldset className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 border border-(--bd) p-4">
+            <fieldset className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3.5 border border-(--bd) p-4">
               <legend className="px-1 text-[11px] tracking-[1.5px] uppercase text-muted">
                 Datos del padre, madre o apoderado
               </legend>
@@ -403,12 +421,12 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
       </section>
 
       <section className={sectionCls} aria-labelledby="lr-s2">
-        <h2 id="lr-s2" className={sectionTitleCls}>
-          2. Identificación del bien contratado
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <SectionTitle id="lr-s2" step={2}>
+          Identificación del bien contratado
+        </SectionTitle>
+        <div className={gridCls}>
           <fieldset
-            className="sm:col-span-2"
+            className="md:col-span-2"
             aria-invalid={errors.goodType ? true : undefined}
             aria-describedby={errors.goodType ? 'lr-goodType-error' : undefined}
           >
@@ -483,10 +501,10 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
       </section>
 
       <section className={sectionCls} aria-labelledby="lr-s3">
-        <h2 id="lr-s3" className={sectionTitleCls}>
-          3. Detalle de la reclamación y pedido del consumidor
-        </h2>
-        <div className="grid grid-cols-1 gap-4">
+        <SectionTitle id="lr-s3" step={3}>
+          Detalle de la reclamación y pedido del consumidor
+        </SectionTitle>
+        <div className="grid grid-cols-1 gap-3.5">
           <fieldset
             aria-invalid={errors.type ? true : undefined}
             aria-describedby={errors.type ? 'lr-type-error' : undefined}
@@ -497,9 +515,12 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
                 *
               </span>
             </legend>
-            <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
               {(['RECLAMO', 'QUEJA'] as const).map((v) => (
-                <label key={v} className="flex items-start gap-2 text-[13px] cursor-pointer">
+                <label
+                  key={v}
+                  className="flex items-start gap-2 text-[13px] cursor-pointer border border-(--bd) p-3 has-checked:border-(--gold) has-checked:bg-(--sub) transition-colors duration-200"
+                >
                   <input
                     {...register('type')}
                     type="radio"
@@ -526,8 +547,10 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
           <FormRow name="detail" label="Detalle" required error={errors.detail?.message}>
             <textarea
               {...register('detail')}
-              rows={5}
-              className={input}
+              rows={4}
+              // `input` fija h-12 (pensado para una línea): sin esto el
+              // textarea quedaba de una sola línea pese a `rows`.
+              className={cn(input, 'h-auto py-3 resize-y')}
               placeholder="Describe lo ocurrido con el mayor detalle posible..."
             />
           </FormRow>
@@ -536,14 +559,15 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
             <textarea
               {...register('request')}
               rows={3}
-              className={input}
+              className={cn(input, 'h-auto py-3 resize-y')}
               placeholder="Ej. Solicito el cambio del producto / la devolución de mi dinero..."
             />
           </FormRow>
         </div>
       </section>
 
-      <section className={cn(sectionCls, 'flex flex-col gap-3')} aria-label="Declaraciones">
+      <section className={cn(sectionCls, 'flex flex-col gap-3')} aria-labelledby="lr-s4">
+        <SectionTitle id="lr-s4">Declaraciones</SectionTitle>
         <div>
           <label className="flex items-start gap-2 text-[13px] cursor-pointer">
             <input

@@ -1,7 +1,8 @@
-﻿import { providerLine } from '@/features/complaints/lib/complaint-sheet'
+import { providerLine } from '@/features/complaints/lib/complaint-sheet'
+import { getPickupStores } from '@/features/delivery/queries/delivery.queries'
 import { MiranaLogo } from '@/shared/components/brand/MiranaLogo'
-import { getStoreSettings } from '@/features/settings/queries/store-settings.queries'
-import { BookOpen } from 'lucide-react'
+import { getStoreSettings, getWhatsappPhone } from '@/features/settings/queries/store-settings.queries'
+import { ArrowRight, BookOpen, MapPin } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { safeHref } from '@/shared/schemas/safe-url.schema'
@@ -86,34 +87,46 @@ function WhatsAppIcon({ size = 18 }: { size?: number }) {
   )
 }
 
+/**
+ * Número de WhatsApp tal como se lee: el texto de NEXT_PUBLIC_WHATSAPP_PHONE_DISPLAY
+ * si corresponde al número en uso; si no, "+51 987 654 321" armado de los dígitos.
+ */
+function whatsappDisplay(phone: string): string {
+  const envDisplay = process.env.NEXT_PUBLIC_WHATSAPP_PHONE_DISPLAY
+  if (envDisplay && phone === process.env.NEXT_PUBLIC_WHATSAPP_PHONE) return envDisplay
+  const peru = /^51(\d{3})(\d{3})(\d{3})$/.exec(phone)
+  return peru ? `+51 ${peru[1]} ${peru[2]} ${peru[3]}` : `+${phone}`
+}
+
+const HEADING_CLS = 'text-[10px] font-bold tracking-[2px] uppercase text-muted mb-4'
+
 export async function Footer() {
-  const settings = await getStoreSettings()
+  const [settings, whatsappPhone, stores] = await Promise.all([
+    getStoreSettings(),
+    getWhatsappPhone(),
+    getPickupStores(),
+  ])
   // Razón social · RUC · domicilio fiscal del proveedor (se configura en /admin/settings)
   const legalLine = providerLine(settings)
 
+  // Solo las redes que el admin configuró en /admin/settings. WhatsApp no va
+  // aquí: es un canal de contacto y tiene su propio bloque.
   const socialLinks = [
     { name: 'Instagram', url: settings.instagramUrl, Icon: InstagramIcon, color: 'text-[#E1306C]' },
-    {
-      name: 'TikTok',
-      url: settings.tiktokUrl,
-      Icon: TikTokIcon,
-      color: 'text-text',
-    },
+    { name: 'TikTok', url: settings.tiktokUrl, Icon: TikTokIcon, color: 'text-text' },
     { name: 'YouTube', url: settings.youtubeUrl, Icon: YouTubeIcon, color: 'text-[#FF0000]' },
     { name: 'Facebook', url: settings.facebookUrl, Icon: FacebookIcon, color: 'text-[#1877F2]' },
-    {
-      name: 'WhatsApp',
-      url: settings.whatsappNumber ? `https://wa.me/${settings.whatsappNumber}` : '',
-      Icon: WhatsAppIcon,
-      color: 'text-[#128C7E] dark:text-whatsapp',
-    },
   ]
     .map((social) => ({ ...social, url: safeHref(social.url) }))
     .filter((social) => social.url)
 
+  // Mismo número que el botón flotante (ajustes → env legacy).
+  const whatsappHref = whatsappPhone ? safeHref(`https://wa.me/${whatsappPhone}`) : ''
+  const hasContactColumn = Boolean(whatsappHref) || socialLinks.length > 0
+
   return (
-    <footer className="border-t border-(--bd) pt-12 md:pt-16 pb-8 shell grid gap-10 grid-cols-2 sm:grid-cols-3 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
-      <div className="col-span-2 sm:col-span-3 md:col-span-1">
+    <footer className="border-t border-(--bd) pt-12 md:pt-16 pb-8 shell grid gap-10 grid-cols-2 sm:grid-cols-3 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1.2fr]">
+      <div className="col-span-2 sm:col-span-3 lg:col-span-1">
         {settings.footerLogoUrl ? (
           <Image
             src={settings.footerLogoUrl}
@@ -125,7 +138,7 @@ export async function Footer() {
         ) : (
           <MiranaLogo className="h-8 w-auto mb-4 text-text" />
         )}
-        <p className="text-[13px] text-muted leading-[1.75] max-w-sm md:max-w-55">
+        <p className="text-[13px] text-muted leading-[1.75] max-w-sm lg:max-w-55">
           Mirana Shop es tu tienda en Arequipa de juguetes, figuras de colección y modelos a escala
           100% originales. Importación directa, calidad garantizada y novedades para todos los
           fanáticos del coleccionismo.
@@ -142,10 +155,8 @@ export async function Footer() {
       </div>
 
       {FOOTER_NAVIGATION.map(({ title, links }) => (
-        <div key={title}>
-          <h4 className="text-[10px] font-bold tracking-[2px] uppercase text-muted mb-4">
-            {title}
-          </h4>
+        <nav key={title} aria-label={title}>
+          <h2 className={HEADING_CLS}>{title}</h2>
 
           <ul className="list-none flex flex-col gap-2.5">
             {links.map(({ label, href }) => (
@@ -156,30 +167,95 @@ export async function Footer() {
               </li>
             ))}
           </ul>
-        </div>
+        </nav>
       ))}
 
-      <div className="col-span-full pt-7 border-t border-(--bd) flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-[12px] text-muted">
-        <div className="flex flex-col gap-1">
-          <span>© 2026 MIRANA. Todos los derechos reservados.</span>
-          {legalLine && <span>{legalLine}</span>}
-        </div>
-        {socialLinks.length > 0 && (
-          <div className="flex gap-4 flex-wrap items-center">
-            {socialLinks.map(({ name, url, Icon, color }) => (
+      {hasContactColumn && (
+        <div className="col-span-2 sm:col-span-3 lg:col-span-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 content-start gap-10 lg:gap-8">
+          {whatsappHref && (
+            <div>
+              <h2 className={HEADING_CLS}>Contacto</h2>
               <a
-                key={name}
-                href={url}
+                href={whatsappHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`${color} hover:opacity-75 no-underline transition-opacity duration-200 block`}
-                title={name}
+                className="group inline-flex items-center gap-2.5 py-1 text-[14px] text-text no-underline"
               >
-                <Icon size={22} />
+                <span className="w-11 h-11 rounded-full border border-(--bd) bg-card flex items-center justify-center text-[#128C7E] dark:text-whatsapp shrink-0 transition-colors duration-200 group-hover:border-(--bdh)">
+                  <WhatsAppIcon size={19} />
+                </span>
+                <span className="flex flex-col leading-tight">
+                  <span className="text-[12px] text-muted">WhatsApp</span>
+                  <span className="font-semibold transition-colors duration-200 group-hover:text-accent-ink">
+                    {whatsappDisplay(whatsappPhone)}
+                  </span>
+                </span>
+                <span className="sr-only"> (se abre en una pestaña nueva)</span>
               </a>
+            </div>
+          )}
+
+          {socialLinks.length > 0 && (
+            <div className={whatsappHref ? 'sm:col-span-2 lg:col-span-1' : 'col-span-2 sm:col-span-3 lg:col-span-1'}>
+              <h2 className={HEADING_CLS}>Síguenos</h2>
+              <ul className="list-none flex flex-wrap gap-2.5">
+                {socialLinks.map(({ name, url, Icon, color }) => (
+                  <li key={name}>
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`${name} (se abre en una pestaña nueva)`}
+                      title={name}
+                      className={`${color} w-11 h-11 rounded-full border border-(--bd) bg-card flex items-center justify-center no-underline transition-[border-color,transform] duration-200 hover:border-(--bdh) hover:-translate-y-0.5`}
+                    >
+                      <Icon size={19} />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Sedes de retiro en tienda (métodos PICKUP activos de /admin/delivery) */}
+      {stores.length > 0 && (
+        <section aria-labelledby="footer-stores" className="col-span-full pt-8 border-t border-(--bd)">
+          <h2 id="footer-stores" className={HEADING_CLS}>
+            Nuestras tiendas
+          </h2>
+          <ul className="list-none grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {stores.map((store) => (
+              <li key={store.id} className="flex gap-3 border border-(--bd) bg-card p-4">
+                <MapPin size={20} aria-hidden="true" className="text-accent-ink shrink-0 mt-0.5" />
+                <div className="min-w-0 flex flex-col gap-1">
+                  <p className="font-display font-bold uppercase text-[15px] tracking-[1px] leading-tight">
+                    {store.label}
+                  </p>
+                  <p className="text-[13px] text-muted leading-snug">{store.address}</p>
+                  <a
+                    href={safeHref(store.mapUrl)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-1 inline-flex items-center gap-1.5 self-start py-1.5 text-[13px] font-semibold text-accent-ink no-underline hover:underline underline-offset-2"
+                  >
+                    Cómo llegar
+                    <ArrowRight size={14} aria-hidden="true" />
+                    <span className="sr-only">
+                      {` a ${store.label} (Google Maps, se abre en una pestaña nueva)`}
+                    </span>
+                  </a>
+                </div>
+              </li>
             ))}
-          </div>
-        )}
+          </ul>
+        </section>
+      )}
+
+      <div className="col-span-full pt-7 border-t border-(--bd) flex flex-col gap-1 text-[12px] text-muted">
+        <span>© 2026 MIRANA. Todos los derechos reservados.</span>
+        {legalLine && <span>{legalLine}</span>}
       </div>
     </footer>
   )

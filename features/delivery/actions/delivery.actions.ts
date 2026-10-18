@@ -5,12 +5,14 @@ import { deliveryMethodSchema } from '@/features/delivery/schemas/delivery.schem
 import { db } from '@/shared/lib/db'
 import { requireAdmin } from '@/shared/lib/require-admin'
 import type { ActionResult } from '@/shared/types/action-result.types'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 
 function invalidateDeliveryCaches() {
   revalidatePath('/checkout')
   revalidatePath('/carrito')
   revalidatePath('/admin/delivery')
+  // "Nuestras tiendas" del footer (getPickupStores, caché de datos)
+  revalidateTag('delivery', 'max')
 }
 
 export async function saveDeliveryMethod(

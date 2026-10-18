@@ -7,13 +7,11 @@ import {
   hasBannerImage,
 } from '@/features/banners/lib/banner-image'
 import type { BannerRow } from '@/features/banners/types'
-import { useReducedMotion } from '@/shared/hooks/useReducedMotion'
+import { HeroAutoplayToggle } from '@/features/home/components/HeroAutoplayToggle'
+import { useHeroAutoplay } from '@/features/home/components/useHeroAutoplay'
 import Link from 'next/link'
 import { safeHref } from '@/shared/schemas/safe-url.schema'
-import { useCallback, useEffect, useState } from 'react'
-
-/** Tiempo que permanece visible cada banner antes de fundirse al siguiente. */
-const INTERVAL_MS = 6000
+import { useCallback, useState } from 'react'
 
 /** Debe coincidir con la `duration-[900ms]` de las diapositivas. */
 const FADE_MS = 900
@@ -36,30 +34,18 @@ interface HeroBannerFadeProps {
  */
 export function HeroBannerFade({ banners: allBanners }: HeroBannerFadeProps) {
   const [index, setIndex] = useState(0)
-  const [paused, setPaused] = useState(false)
-  const reducedMotion = useReducedMotion()
 
   // Un banner sin ninguna imagen no se puede pintar: se descarta aunque esté
   // activo. getActiveBanners ya lo hace; esto cubre a cualquier otro llamador.
   const banners = allBanners.filter(hasBannerImage)
   const total = banners.length
+
+  // Cada banner queda visible HERO_AUTOPLAY_MS antes de fundirse al siguiente.
   // Con un solo banner no hay nada que alternar: ni intervalo ni controles.
-  const isStatic = total <= 1 || reducedMotion
-
-  useEffect(() => {
-    if (isStatic || paused) return
-    const id = setInterval(() => setIndex((i) => (i + 1) % total), INTERVAL_MS)
-    return () => clearInterval(id)
-  }, [isStatic, paused, total])
-
-  // En una pestaña oculta el intervalo seguiría corriendo y al volver se vería
-  // un salto brusco: se congela mientras no está visible.
-  useEffect(() => {
-    if (isStatic) return
-    const onVisibility = () => setPaused(document.visibilityState === 'hidden')
-    document.addEventListener('visibilitychange', onVisibility)
-    return () => document.removeEventListener('visibilitychange', onVisibility)
-  }, [isStatic])
+  const { canAutoplay, userPaused, togglePaused, regionProps } = useHeroAutoplay({
+    enabled: total > 1,
+    onTick: () => setIndex((i) => (i + 1) % total),
+  })
 
   const goTo = useCallback((i: number) => setIndex(i), [])
 
@@ -70,15 +56,11 @@ export function HeroBannerFade({ banners: allBanners }: HeroBannerFadeProps) {
     // La regla avisa de interacción sobre un elemento no interactivo, pero aquí
     // no hay ninguna acción exclusiva del mouse: solo detiene el temporizador,
     // y onFocus/onBlur cubren el equivalente de teclado.
-    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <section
       className="relative w-full overflow-hidden h-[clamp(420px,70vh,760px)] bg-card"
       aria-roledescription="carrusel"
       aria-label="Banners destacados"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocus={() => setPaused(true)}
-      onBlur={() => setPaused(false)}
+      {...regionProps}
     >
       {banners.map((banner, i) => {
         const isActive = i === index
@@ -145,19 +127,28 @@ export function HeroBannerFade({ banners: allBanners }: HeroBannerFadeProps) {
       })}
 
       {total > 1 && (
-        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-2 flex gap-2">
-          {banners.map((banner, i) => (
-            <button
-              key={banner.id}
-              type="button"
-              aria-label={banner.title ? `Ir al banner ${i + 1}: ${banner.title}` : `Ir al banner ${i + 1}`}
-              aria-current={i === index}
-              onClick={() => goTo(i)}
-              className={`h-1.5 border-none transition-[width,background-color] duration-300 ${
-                i === index ? 'w-8 bg-(--gold)' : 'w-3 bg-on-media/40 hover:bg-on-media/70'
-              }`}
-            />
-          ))}
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-2 flex items-center gap-2">
+          {canAutoplay && <HeroAutoplayToggle paused={userPaused} onToggle={togglePaused} />}
+          <div className="flex">
+            {banners.map((banner, i) => (
+              <button
+                key={banner.id}
+                type="button"
+                aria-label={banner.title ? `Ir al banner ${i + 1}: ${banner.title}` : `Ir al banner ${i + 1}`}
+                aria-current={i === index ? 'true' : undefined}
+                onClick={() => goTo(i)}
+                // Área táctil de 44px; la barrita visible sigue siendo fina.
+                className="group/dot h-11 px-1 flex items-center border-none bg-transparent"
+              >
+                <span
+                  aria-hidden
+                  className={`block h-1.5 transition-[width,background-color] duration-300 ${
+                    i === index ? 'w-8 bg-(--gold)' : 'w-3 bg-on-media/40 group-hover/dot:bg-on-media/70'
+                  }`}
+                />
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </section>

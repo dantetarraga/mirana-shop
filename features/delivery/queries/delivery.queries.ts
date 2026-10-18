@@ -1,6 +1,7 @@
 import 'server-only'
-import type { DeliveryMethodOption } from '@/features/delivery/types'
+import { deliveryMapUrl, type DeliveryMethodOption } from '@/features/delivery/types'
 import { db } from '@/shared/lib/db'
+import { cachedQuery, CACHE_TAGS, REVALIDATE_LONG } from '@/shared/lib/data-cache'
 import { cache } from 'react'
 
 // ---------------------------------------------------------------------------
@@ -73,3 +74,48 @@ export async function getActiveDeliveryMethodById(
 
 /** Deduplicada por request con `cache()`. */
 export const getActiveDeliveryMethods = cache(getActiveDeliveryMethodsImpl)
+
+/** Sede pública para el footer ("Nuestras tiendas"). */
+export interface PickupStore {
+  id: string
+  label: string
+  address: string
+  /** Siempre presente: si el admin no cargó uno, búsqueda de Google Maps. */
+  mapUrl: string
+}
+
+async function fetchPickupStores(): Promise<PickupStore[]> {
+  const rows = await db.deliveryMethod.findMany({
+    where: { active: true, kind: 'PICKUP' },
+    select: { locations: SELECT.locations },
+    orderBy: { position: 'asc' },
+  })
+  // Una misma sede puede figurar en dos métodos de retiro: se muestra una vez.
+  const seen = new Set<string>()
+  return rows
+    .flatMap((r) => r.locations)
+    .filter((loc) => {
+      const key = `${loc.label}|${loc.address}`.toLowerCase()
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+    .map((loc) => ({
+      id: loc.id,
+      label: loc.label,
+      address: loc.address,
+      mapUrl: deliveryMapUrl(loc),
+    }))
+}
+
+/**
+ * Sedes de retiro en tienda de los métodos PICKUP activos. Se lee en el footer
+ * de cada página pública, así que va a la caché de datos (tag `delivery`, que
+ * invalidan las actions de /admin/delivery).
+ */
+export const getPickupStores = cache(
+  cachedQuery(fetchPickupStores, ['pickup-stores'], {
+    tags: [CACHE_TAGS.delivery],
+    revalidate: REVALIDATE_LONG,
+  }),
+)

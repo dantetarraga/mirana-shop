@@ -122,6 +122,11 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
                     title: 'Pantalla completa',
                     desc: 'Hero a ancho completo. Con varios banners se cruzan con un fundido.',
                   },
+                  {
+                    value: 'EDITORIAL',
+                    title: 'Editorial: texto a la izquierda sobre la imagen',
+                    desc: 'Foto a todo el ancho con el título, el subtítulo y el botón del banner a la izquierda. En móvil el texto va abajo. Con varios banners se desliza solo.',
+                  },
                 ] as const
               ).map((opt) => {
                 const isActive = form.bannerLayout === opt.value
@@ -151,6 +156,14 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
           <p className="text-[12px] text-muted -mt-3">
             Aplica a todos los banners activos por igual. Se gestionan en Banners.
           </p>
+          {form.bannerLayout === 'EDITORIAL' && (
+            <p className="text-[12px] text-muted -mt-3 border-l-2 border-(--gold) pl-3">
+              Para el modo editorial sube en cada banner la imagen de pantalla completa de
+              1920×800 px con el motivo en la mitad derecha (la izquierda queda bajo el texto) y la
+              de móvil de 1080×1350 px con el motivo en la mitad de arriba. Sin imagen de pantalla
+              completa se usa la de tarjeta.
+            </p>
+          )}
 
           <FormField label="Costo de envío base (S/)">
             <input

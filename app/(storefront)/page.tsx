@@ -1,3 +1,4 @@
+import { ReviewsSection } from '@/features/reviews/components/ReviewsSection'
 import { getActiveBanners } from '@/features/banners/queries/banner.queries'
 import { getBrandCovers, getPublicBrands } from '@/features/brands/queries/brand.queries'
 import { BrandsCarousel } from '@/features/home/components/BrandsCarousel'
@@ -5,8 +6,12 @@ import { CTABand } from '@/features/home/components/CTABand'
 import { CategoryTiles, CategoryTilesSkeleton } from '@/features/home/components/CategoryTiles'
 import { FeaturedProducts } from '@/features/home/components/FeaturedProducts'
 import { HeroBannerCarousel } from '@/features/home/components/HeroBannerCarousel'
+import { HeroBannerEditorial } from '@/features/home/components/HeroBannerEditorial'
 import { HeroBannerFade } from '@/features/home/components/HeroBannerFade'
-import { CTABandSkeleton, HomeSectionSkeleton } from '@/features/home/components/HomeSectionSkeleton'
+import {
+  CTABandSkeleton,
+  HomeSectionSkeleton,
+} from '@/features/home/components/HomeSectionSkeleton'
 import { HomeSections } from '@/features/home/components/HomeSections'
 import { NewArrivals } from '@/features/home/components/NewArrivals'
 import { PreorderSection } from '@/features/home/components/PreorderSection'
@@ -65,8 +70,6 @@ export default async function HomePage() {
     }))
   const { organizationJsonLd, websiteJsonLd } = buildJsonLd(getSiteUrl())
 
-  const isFullscreen = bannerLayout === 'FULLSCREEN'
-
   return (
     <>
       <JsonLd data={organizationJsonLd} />
@@ -80,8 +83,10 @@ export default async function HomePage() {
           categorías ya están en el navbar y el mega-menú, y repetirlos aquí
           apilaba cuatro franjas antes del primer banner. El ajuste global
           `bannerLayout` de /admin/settings decide la forma del hero. */}
-      {isFullscreen ? (
+      {bannerLayout === 'FULLSCREEN' ? (
         <HeroBannerFade banners={activeBanners} />
+      ) : bannerLayout === 'EDITORIAL' ? (
+        <HeroBannerEditorial banners={activeBanners} />
       ) : (
         <HeroBannerCarousel banners={activeBanners} />
       )}
@@ -103,6 +108,10 @@ export default async function HomePage() {
           fijas y entre ellas se ordenan por su propia posición. */}
       <Suspense fallback={null}>
         <HomeSections />
+      </Suspense>
+      {/* Opiniones reales y aprobadas; sin ninguna, la sección no se pinta. */}
+      <Suspense fallback={null}>
+        <ReviewsSection />
       </Suspense>
       <Suspense fallback={<CTABandSkeleton />}>
         <CTABand />

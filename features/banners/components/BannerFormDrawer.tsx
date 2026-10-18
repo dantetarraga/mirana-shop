@@ -96,7 +96,9 @@ export function BannerFormDrawer({
         <FormField label="Título (opcional)" error={errors.title?.message}>
           <input {...register('title')} className={cls.input} placeholder="Título del banner" />
           <p className="text-[11px] text-muted mt-1.5">
-            Déjalo vacío para un banner que sea solo imagen.
+            Déjalo vacío para un banner que sea solo imagen. En los modos pantalla completa y
+            editorial el título, el subtítulo y el botón se escriben sobre la foto: no repitas el
+            texto dentro de la imagen.
           </p>
         </FormField>
 
@@ -128,7 +130,8 @@ export function BannerFormDrawer({
           />
           <p className="text-[11px] text-muted mt-1.5">
             Opcional — formato vertical/cuadrado para pantallas &lt; 1024px. Si se deja vacío se
-            usa la de desktop. Recomendado 900×1100 (1080×1350 a pantalla completa).
+            usa la de desktop. Recomendado 900×1100 (1080×1350 a pantalla completa y editorial, con
+            el motivo en la mitad de arriba: abajo va el texto).
           </p>
         </FormField>
 
@@ -139,9 +142,9 @@ export function BannerFormDrawer({
             folder="banners"
           />
           <p className="text-[11px] text-muted mt-1.5">
-            Opcional — solo se usa si en Configuración los banners están a pantalla completa.
-            Más alta que la de tarjeta: recomendado 1920×900. Si se deja vacía se usa la de
-            desktop.
+            Opcional — se usa si en Configuración los banners están a pantalla completa
+            (recomendado 1920×900) o en modo editorial (1920×800, con el motivo en la mitad derecha:
+            a la izquierda va el texto). Si se deja vacía se usa la de desktop.
           </p>
         </FormField>
 

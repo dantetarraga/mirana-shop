@@ -39,6 +39,8 @@ export const CACHE_TAGS = {
   banners: 'banners',
   settings: 'settings',
   homeCta: 'home-cta',
+  delivery: 'delivery',
+  reviews: 'reviews',
 } as const
 
 type CacheTag = (typeof CACHE_TAGS)[keyof typeof CACHE_TAGS]
