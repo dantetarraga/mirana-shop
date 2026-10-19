@@ -1177,3 +1177,15 @@ html.promo-dismissed [data-promo-bar] {
 .sticky-cta {
   padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
 }
+
+/* =============================================================
+   Cambio de tema (ThemeToggle): el tema nuevo se revela en un
+   círculo que crece desde el botón. Se quita el fundido por defecto
+   de la View Transition para que solo se vea el círculo; la
+   animación del clip-path la hace el componente con Web Animations.
+   ============================================================= */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
