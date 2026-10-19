@@ -10,6 +10,7 @@ import {
 import { deletePaymentAccount } from '@/features/settings/actions/payment-accounts.actions'
 import { saveStoreSettings } from '@/features/settings/actions/store-settings.actions'
 import { PaymentAccountDrawer } from '@/features/settings/components/PaymentAccountDrawer'
+import { SocialLinksEditor } from '@/features/settings/components/SocialLinksEditor'
 import type { PaymentAccountData } from '@/features/settings/queries/payment-accounts.queries'
 import type { StoreSettingsData } from '@/features/settings/queries/store-settings.queries'
 import { ImageUploadField } from '@/shared/components/admin/ImageUploadField'
@@ -158,10 +159,10 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
           </p>
           {form.bannerLayout === 'EDITORIAL' && (
             <p className="text-[12px] text-muted -mt-3 border-l-2 border-(--gold) pl-3">
-              Para el modo editorial sube en cada banner la imagen de pantalla completa de
-              1920×800 px con el motivo en la mitad derecha (la izquierda queda bajo el texto) y la
-              de móvil de 1080×1350 px con el motivo en la mitad de arriba. Sin imagen de pantalla
-              completa se usa la de tarjeta.
+              Para el modo editorial sube en cada banner la imagen de pantalla completa de 1920×800
+              px con el motivo en la mitad derecha (la izquierda queda bajo el texto) y la de móvil
+              de 1080×1350 px con el motivo en la mitad de arriba. Sin imagen de pantalla completa
+              se usa la de tarjeta.
             </p>
           )}
 
@@ -200,8 +201,13 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
           </p>
 
           <div>
-            <Button variant="accent" size="md" onClick={saveGeneral} loading={general.isPending}
-          loadingText="Guardando…">
+            <Button
+              variant="accent"
+              size="md"
+              onClick={saveGeneral}
+              loading={general.isPending}
+              loadingText="Guardando…"
+            >
               <Save size={15} className="mr-1.5" />
               Guardar cambios
             </Button>
@@ -243,7 +249,9 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
             <input
               id="settings-ruc"
               value={form.ruc ?? ''}
-              onChange={(e) => setForm({ ...form, ruc: e.target.value.replace(/\D/g, '').slice(0, 11) })}
+              onChange={(e) =>
+                setForm({ ...form, ruc: e.target.value.replace(/\D/g, '').slice(0, 11) })
+              }
               className={cls.input}
               placeholder="20123456789"
               inputMode="numeric"
@@ -266,8 +274,70 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
           </div>
 
           <div>
-            <Button variant="accent" size="md" onClick={saveGeneral} loading={general.isPending}
-          loadingText="Guardando…">
+            <Button
+              variant="accent"
+              size="md"
+              onClick={saveGeneral}
+              loading={general.isPending}
+              loadingText="Guardando…"
+            >
+              <Save size={15} className="mr-1.5" />
+              Guardar cambios
+            </Button>
+          </div>
+        </div>
+
+        {/* ── Bloques del inicio ───────────────────────────── */}
+        <HomeSectionBlocksPanel
+          hiddenHomeBlocks={form.hiddenHomeBlocks}
+          onChange={(val) => setForm({ ...form, hiddenHomeBlocks: val })}
+          onSave={saveGeneral}
+          isPending={general.isPending}
+        />
+
+        {/* ── Footer ──────────────────────────────────────── */}
+        <div className="bg-card border border-(--bd) p-5 flex flex-col gap-5">
+          <div className="flex items-center gap-2">
+            <Link2 size={15} className="text-accent-ink" />
+            <span className="text-[10px] font-bold tracking-[2px] uppercase text-muted">
+              Footer
+            </span>
+          </div>
+
+          <FormField label="Logo (navbar y footer)">
+            <ImageUploadField
+              value={form.footerLogoUrl}
+              onChange={(url) => setForm({ ...form, footerLogoUrl: url })}
+              folder="settings"
+              placeholder="https://..."
+            />
+          </FormField>
+          <p className="text-[12px] text-muted -mt-3">
+            Se muestra en el footer de la tienda. Si se deja vacío, aparece el texto MIRANA.
+          </p>
+
+          <div className="border-t border-(--bd) pt-4 flex flex-col gap-4">
+            <span className="text-[10px] font-bold tracking-[2px] uppercase text-muted">
+              Redes sociales
+            </span>
+
+            <p className="text-[12px] text-muted -mt-2">
+              Elige qué redes aparecen en el footer, en qué orden y con qué enlace.
+            </p>
+            <SocialLinksEditor
+              value={form.socialLinks}
+              onChange={(socialLinks) => setForm({ ...form, socialLinks })}
+            />
+          </div>
+
+          <div>
+            <Button
+              variant="accent"
+              size="md"
+              onClick={saveGeneral}
+              loading={general.isPending}
+              loadingText="Guardando…"
+            >
               <Save size={15} className="mr-1.5" />
               Guardar cambios
             </Button>
@@ -346,8 +416,13 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
           </div>
 
           <div>
-            <Button variant="accent" size="md" onClick={saveGeneral} loading={general.isPending}
-          loadingText="Guardando…">
+            <Button
+              variant="accent"
+              size="md"
+              onClick={saveGeneral}
+              loading={general.isPending}
+              loadingText="Guardando…"
+            >
               <Save size={15} className="mr-1.5" />
               Guardar cambios
             </Button>
@@ -561,8 +636,13 @@ function HomeSectionBlocksPanel({
       </ul>
 
       <div>
-        <Button variant="accent" size="md" onClick={onSave} loading={isPending}
-          loadingText="Guardando…">
+        <Button
+          variant="accent"
+          size="md"
+          onClick={onSave}
+          loading={isPending}
+          loadingText="Guardando…"
+        >
           <Save size={15} className="mr-1.5" />
           Guardar cambios
         </Button>
