@@ -1,13 +1,13 @@
 'use client'
 
 import { registerUser } from '@/features/auth/actions/register.actions'
-import { useAuthModalStore } from '@/features/auth/stores/auth-modal.store'
 import {
   loginSchema,
   registerSchema,
   type LoginInput,
   type RegisterInput,
 } from '@/features/auth/schemas/auth.schema'
+import { useAuthModalStore } from '@/features/auth/stores/auth-modal.store'
 import { mergeCartOnLoginAction } from '@/features/cart/actions/cart.actions'
 import { useCartStore } from '@/features/cart/stores/cart.store'
 import { MiranaLogo } from '@/shared/components/brand/MiranaLogo'
@@ -314,7 +314,7 @@ function AuthForm({
                 }}
                 aria-invalid={termsError || undefined}
                 aria-describedby={termsError ? 'auth-terms-error' : undefined}
-                className="mt-0.5 w-4 h-4 shrink-0 accent-(--accent-ink)"
+                className="mt-0.5 w-4 h-4 shrink-0 accent-accent-ink"
               />
               <span>
                 Acepto los{' '}
