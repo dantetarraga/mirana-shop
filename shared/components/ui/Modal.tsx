@@ -125,13 +125,22 @@ export function Modal({
 
         {/* Body — scrollable */}
         {!bare && children && (
-          <div className={cn('flex-1 overflow-y-auto px-5 sm:px-8 pb-6', label || title ? 'pt-6' : 'pt-6 sm:pt-8')}>
+          <div
+            className={cn(
+              'flex-1 overflow-y-auto px-5 sm:px-8 pb-6',
+              label || title ? 'pt-6' : 'pt-6 sm:pt-8',
+            )}
+          >
             {children}
           </div>
         )}
 
         {/* Footer */}
-        {!bare && footer && <div className="px-5 sm:px-8 pb-6 sm:pb-8 pt-0 shrink-0 flex flex-wrap gap-2.5">{footer}</div>}
+        {!bare && footer && (
+          <div className="px-5 sm:px-8 pb-6 sm:pb-8 pt-0 shrink-0 flex flex-wrap gap-2.5">
+            {footer}
+          </div>
+        )}
       </div>
     </div>,
     document.body,

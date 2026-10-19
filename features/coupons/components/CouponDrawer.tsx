@@ -7,7 +7,7 @@ import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { Button } from '@/shared/components/ui/Button'
 import { DateField } from '@/shared/components/ui/DateField'
 import { FormField } from '@/shared/components/ui/FormField'
-import { Select } from '@/shared/components/ui/Select'
+import { FormSelectMenu } from '@/shared/components/ui/FormSelectMenu'
 import { useFormEntity } from '@/shared/hooks/admin/useFormEntity'
 import { useServerAction } from '@/shared/hooks/admin/useServerAction'
 import { cls } from '@/shared/lib/admin/admin-classes'
@@ -45,6 +45,7 @@ export function CouponDrawer({ coupon, isNew, promotions, onClose }: Props) {
     handleSubmit,
     reset,
     watch,
+    control,
     formState: { errors },
   } = useForm<CouponFormValues>({
     resolver: zodResolver(couponDbSchema),
@@ -96,14 +97,15 @@ export function CouponDrawer({ coupon, isNew, promotions, onClose }: Props) {
         </p>
 
         <FormField label="Promoción que desbloquea" error={errors.promotionId?.message}>
-          <Select {...register('promotionId')}>
-            <option value="">Selecciona una promoción…</option>
-            {promotions.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name} — {PROMO_TYPE_LABELS[p.type] ?? p.type}
-              </option>
-            ))}
-          </Select>
+          <FormSelectMenu
+            control={control}
+            name="promotionId"
+            placeholder="Selecciona una promoción…"
+            options={promotions.map((p) => ({
+              value: p.id,
+              label: `${p.name} — ${PROMO_TYPE_LABELS[p.type] ?? p.type}`,
+            }))}
+          />
         </FormField>
 
         {selected && !selected.requiresCoupon && (
@@ -153,7 +155,14 @@ export function CouponDrawer({ coupon, isNew, promotions, onClose }: Props) {
         </label>
 
         <div className="flex gap-2.5 pt-1">
-          <Button type="submit" variant="accent" size="md" full loading={isPending} loadingText="Guardando…">
+          <Button
+            type="submit"
+            variant="accent"
+            size="md"
+            full
+            loading={isPending}
+            loadingText="Guardando…"
+          >
             {isNew ? 'Crear cupón' : 'Guardar cambios'}
           </Button>
           <Button type="button" variant="outline" size="md" full onClick={onClose}>

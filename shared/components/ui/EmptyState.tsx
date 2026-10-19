@@ -64,7 +64,9 @@ export function EmptyState({
         <Heading
           className={cn(
             'font-display font-black uppercase tracking-tight text-text',
-            page ? 'text-[28px] sm:text-[32px] leading-none mb-2' : 'text-[18px] leading-tight mb-1',
+            page
+              ? 'text-[28px] sm:text-[32px] leading-none mb-2'
+              : 'text-[18px] leading-tight mb-1',
           )}
         >
           {title}

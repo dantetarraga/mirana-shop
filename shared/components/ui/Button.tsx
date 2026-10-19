@@ -124,7 +124,9 @@ function LoadingContent({ label, children }: { label?: string; children: ReactNo
       <span className="absolute inset-0 flex items-center justify-center">
         <Spinner size={16} />
       </span>
-      <span className="sr-only">{label ?? (typeof children === 'string' ? children : 'Procesando…')}</span>
+      <span className="sr-only">
+        {label ?? (typeof children === 'string' ? children : 'Procesando…')}
+      </span>
     </>
   )
 }

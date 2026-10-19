@@ -4,7 +4,7 @@ import { useState } from "react";
 import { X, Search, Loader2, AlertCircle } from "lucide-react";
 import { AdminDrawer } from "@/shared/components/admin/AdminDrawer";
 import { Button } from "@/shared/components/ui/Button";
-import { Select } from "@/shared/components/ui/Select";
+import { SelectMenu } from "@/shared/components/ui/SelectMenu";
 import { StockBadge } from "@/features/inventory/components/StockBadge";
 import { PRODUCT_STATUS_LABELS } from "@/features/products/lib/product-status";
 import { useEntityProducts, type EntityType } from "@/shared/hooks/admin/useEntityProducts";
@@ -162,20 +162,17 @@ export function EntityProductsDrawer({
                     {(entityType === "brand" || entityType === "category") && (
                       <div className="relative">
                         {reassigningId === p.id ? (
-                          <Select
+                          <SelectMenu
                             autoFocus
-                            className="text-[12px] py-1.5 px-2 min-w-[130px]"
-                            defaultValue=""
-                            onChange={(e) => {
-                              if (e.target.value) handleReassign(p.id, e.target.value);
-                            }}
+                            value=""
+                            placeholder="Seleccionar…"
+                            aria-label="Reasignar a"
+                            className="min-w-[160px]"
+                            buttonClassName="text-[12px] py-1.5 px-2"
+                            options={reassignOptions.map((opt) => ({ value: opt.id, label: opt.name }))}
+                            onChange={(value) => handleReassign(p.id, value)}
                             onBlur={() => setReassigningId(null)}
-                          >
-                            <option value="" disabled>Seleccionar...</option>
-                            {reassignOptions.map((opt) => (
-                              <option key={opt.id} value={opt.id}>{opt.name}</option>
-                            ))}
-                          </Select>
+                          />
                         ) : (
                           <Button
                             variant="outline"

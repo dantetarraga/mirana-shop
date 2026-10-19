@@ -1,12 +1,15 @@
 'use client'
 
 import { saveDeliveryMethod } from '@/features/delivery/actions/delivery.actions'
-import { deliveryMethodSchema, type DeliveryMethodFormValues } from '@/features/delivery/schemas/delivery.schema'
+import {
+  deliveryMethodSchema,
+  type DeliveryMethodFormValues,
+} from '@/features/delivery/schemas/delivery.schema'
 import { DELIVERY_KIND_LABELS, type DeliveryMethodOption } from '@/features/delivery/types'
 import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { Button } from '@/shared/components/ui/Button'
 import { FormField } from '@/shared/components/ui/FormField'
-import { Select } from '@/shared/components/ui/Select'
+import { FormSelectMenu } from '@/shared/components/ui/FormSelectMenu'
 import { useFormEntity } from '@/shared/hooks/admin/useFormEntity'
 import { useServerAction } from '@/shared/hooks/admin/useServerAction'
 import { cls } from '@/shared/lib/admin/admin-classes'
@@ -100,13 +103,14 @@ export function DeliveryMethodDrawer({ method, isNew, onClose }: Props) {
         </FormField>
 
         <FormField label="Tipo" error={errors.kind?.message}>
-          <Select {...register('kind')}>
-            {Object.entries(DELIVERY_KIND_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </Select>
+          <FormSelectMenu
+            control={control}
+            name="kind"
+            options={Object.entries(DELIVERY_KIND_LABELS).map(([value, label]) => ({
+              value,
+              label,
+            }))}
+          />
         </FormField>
 
         <FormField label="Costo (S/) — 0 se muestra como «Gratis»" error={errors.cost?.message}>
@@ -237,7 +241,14 @@ export function DeliveryMethodDrawer({ method, isNew, onClose }: Props) {
         </label>
 
         <div className="flex gap-2.5 pt-1">
-          <Button type="submit" variant="accent" size="md" full loading={isPending} loadingText="Guardando…">
+          <Button
+            type="submit"
+            variant="accent"
+            size="md"
+            full
+            loading={isPending}
+            loadingText="Guardando…"
+          >
             {isNew ? 'Crear forma de entrega' : 'Guardar cambios'}
           </Button>
           <Button type="button" variant="outline" size="md" full onClick={onClose}>

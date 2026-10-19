@@ -33,7 +33,12 @@ interface SkeletonRegionProps {
   as?: ElementType
 }
 
-export function SkeletonRegion({ label, className, children, as: Tag = 'div' }: SkeletonRegionProps) {
+export function SkeletonRegion({
+  label,
+  className,
+  children,
+  as: Tag = 'div',
+}: SkeletonRegionProps) {
   return (
     <Tag role="status" aria-busy="true" aria-live="polite" className={className}>
       <span className="sr-only">{label}</span>

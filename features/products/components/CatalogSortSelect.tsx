@@ -3,7 +3,7 @@
 import { buildCatalogUrl, type CatalogUrlParams } from '@/features/products/lib/catalog-url'
 import type { ProductSort } from '@/features/products/types'
 import { startNavigationProgress } from '@/shared/components/layout/NavigationProgress'
-import { Select } from '@/shared/components/ui/Select'
+import { SelectMenu } from '@/shared/components/ui/SelectMenu'
 import { useRouter } from 'next/navigation'
 
 const SORT_OPTIONS: { value: ProductSort; label: string }[] = [
@@ -20,26 +20,24 @@ interface CatalogSortSelectProps {
   basePath?: string
 }
 
-export function CatalogSortSelect({ value, baseParams, basePath = '/catalogo' }: CatalogSortSelectProps) {
+export function CatalogSortSelect({
+  value,
+  baseParams,
+  basePath = '/catalogo',
+}: CatalogSortSelectProps) {
   const router = useRouter()
 
   return (
-    <Select
+    <SelectMenu<ProductSort>
       value={value}
       aria-label="Ordenar productos"
-      onChange={(e) => {
+      options={SORT_OPTIONS}
+      onChange={(sort) => {
         startNavigationProgress()
-        router.push(buildCatalogUrl({ ...baseParams, sort: e.target.value }, basePath), {
-          scroll: false,
-        })
+        router.push(buildCatalogUrl({ ...baseParams, sort }, basePath), { scroll: false })
       }}
-      className="font-display text-[14px] font-bold uppercase tracking-[0.5px] px-3.5 py-2.25 focus:border-accent-ink"
-    >
-      {SORT_OPTIONS.map((opt) => (
-        <option key={opt.value} value={opt.value}>
-          {opt.label}
-        </option>
-      ))}
-    </Select>
+      className="min-w-56"
+      buttonClassName="font-display text-[14px] font-bold uppercase tracking-[0.5px] px-3.5 py-2.25"
+    />
   )
 }

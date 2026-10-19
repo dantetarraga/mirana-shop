@@ -4,14 +4,14 @@ import { Modal } from '@/shared/components/ui/Modal'
 import { Button } from '@/shared/components/ui/Button'
 
 interface ConfirmModalProps {
-  open:           boolean
-  onClose:        () => void
-  onConfirm:      () => void
-  title:          string
-  description?:   string
-  confirmLabel?:  string
-  cancelLabel?:   string
-  isPending?:     boolean
+  open: boolean
+  onClose: () => void
+  onConfirm: () => void
+  title: string
+  description?: string
+  confirmLabel?: string
+  cancelLabel?: string
+  isPending?: boolean
 }
 
 export function ConfirmModal({
@@ -21,17 +21,11 @@ export function ConfirmModal({
   title,
   description,
   confirmLabel = 'Eliminar',
-  cancelLabel  = 'Cancelar',
-  isPending    = false,
+  cancelLabel = 'Cancelar',
+  isPending = false,
 }: ConfirmModalProps) {
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title={title}
-      description={description}
-      size="sm"
-    >
+    <Modal open={open} onClose={onClose} title={title} description={description} size="sm">
       <div className="flex flex-col gap-2.5 mt-2">
         <Button
           variant="accent"
