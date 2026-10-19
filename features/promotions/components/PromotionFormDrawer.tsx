@@ -5,7 +5,7 @@ import { AdminDrawer } from '@/shared/components/admin/AdminDrawer'
 import { Button } from '@/shared/components/ui/Button'
 import { DateField } from '@/shared/components/ui/DateField'
 import { FormField } from '@/shared/components/ui/FormField'
-import { Select } from '@/shared/components/ui/Select'
+import { FormSelectMenu } from '@/shared/components/ui/FormSelectMenu'
 import { useFormEntity } from '@/shared/hooks/admin/useFormEntity'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { promotionDbSchema } from '@/features/promotions/schemas/promotion.schema'
@@ -48,6 +48,7 @@ export function PromotionFormDrawer({ promotion, isNew, onClose, onSubmit, isPen
     handleSubmit,
     reset,
     watch,
+    control,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(promotionDbSchema),
@@ -98,13 +99,11 @@ export function PromotionFormDrawer({ promotion, isNew, onClose, onSubmit, isPen
         </FormField>
 
         <FormField label="Tipo de promoción" error={errors.type?.message}>
-          <Select {...register('type')}>
-            {Object.entries(TYPE_LABELS).map(([val, label]) => (
-              <option key={val} value={val}>
-                {label}
-              </option>
-            ))}
-          </Select>
+          <FormSelectMenu
+            control={control}
+            name="type"
+            options={Object.entries(TYPE_LABELS).map(([value, label]) => ({ value, label }))}
+          />
         </FormField>
 
         {/* Monto mínimo — aplica a todos los tipos */}
@@ -187,7 +186,14 @@ export function PromotionFormDrawer({ promotion, isNew, onClose, onSubmit, isPen
         </div>
 
         <div className="flex flex-wrap gap-3 pt-2">
-          <Button type="submit" variant="accent" size="md" full loading={isPending} loadingText="Guardando…">
+          <Button
+            type="submit"
+            variant="accent"
+            size="md"
+            full
+            loading={isPending}
+            loadingText="Guardando…"
+          >
             {isNew ? 'Crear promoción' : 'Guardar cambios'}
           </Button>
           <Button type="button" variant="outline" size="md" onClick={onClose} disabled={isPending}>

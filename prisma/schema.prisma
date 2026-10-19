@@ -887,6 +887,10 @@ model StoreSettings {
   tiktokUrl        String @default("")
   youtubeUrl       String @default("")
   facebookUrl      String @default("")
+  /// Redes del footer elegidas en /admin/settings, en orden: [{ network, url }].
+  /// network es un id de features/settings/lib/social-networks.ts. Si es null,
+  /// el footer usa los campos *Url de arriba (datos anteriores a esta lista).
+  socialLinks      Json?
 
   /// Datos del proveedor exigidos en la Hoja de Reclamación (Anexo I del
   /// D.S. 011-2011-PCM) y visibles en el footer. null = aún sin configurar.

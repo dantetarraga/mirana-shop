@@ -1,5 +1,6 @@
 'use client'
 
+import { SelectMenu } from '@/shared/components/ui/SelectMenu'
 import { cn } from '@/shared/lib/utils'
 import { ChevronDown } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
@@ -11,9 +12,46 @@ export interface FilterMultiSelectProps {
   onToggle: (value: string) => void
   singleSelect?: boolean
   className?: string
+  /** Los inyecta FormField; se pasan al control en modo singleSelect. */
+  id?: string
+  'aria-invalid'?: boolean
+  'aria-describedby'?: string
 }
 
-export function FilterMultiSelect({
+export function FilterMultiSelect(props: FilterMultiSelectProps) {
+  const {
+    label,
+    options,
+    selected,
+    onToggle,
+    singleSelect = false,
+    className,
+    id,
+    'aria-invalid': ariaInvalid,
+    'aria-describedby': ariaDescribedBy,
+  } = props
+  // Una sola opción = campo de formulario: se pinta con SelectMenu, el select
+  // de toda la interfaz. El modo de varias opciones sigue siendo el botón de
+  // filtro de las tablas del admin.
+  if (singleSelect) {
+    return (
+      <SelectMenu
+        id={id}
+        aria-invalid={ariaInvalid}
+        aria-describedby={ariaDescribedBy}
+        aria-label={id ? undefined : label}
+        value={selected[0] ?? ''}
+        onChange={onToggle}
+        options={options}
+        placeholder={label}
+        className={className}
+      />
+    )
+  }
+  return <MultiFilter {...props} />
+}
+
+function MultiFilter({
   label,
   options,
   selected,

@@ -10,6 +10,12 @@ import {
 import { deletePaymentAccount } from '@/features/settings/actions/payment-accounts.actions'
 import { saveStoreSettings } from '@/features/settings/actions/store-settings.actions'
 import { PaymentAccountDrawer } from '@/features/settings/components/PaymentAccountDrawer'
+import {
+  SettingsTabs,
+  useSettingsTab,
+  type SettingsTabId,
+} from '@/features/settings/components/SettingsTabs'
+import { SocialLinksEditor } from '@/features/settings/components/SocialLinksEditor'
 import type { PaymentAccountData } from '@/features/settings/queries/payment-accounts.queries'
 import type { StoreSettingsData } from '@/features/settings/queries/store-settings.queries'
 import { ImageUploadField } from '@/shared/components/admin/ImageUploadField'
@@ -59,6 +65,9 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
     (a) => `"${a.name}" eliminado`,
   )
 
+  const [tab, setTab] = useSettingsTab()
+  const selectTab = (next: SettingsTabId) => setTab(next)
+
   const saveGeneral = () =>
     general.run(() => saveStoreSettings(form), {
       successMsg: 'Configuración guardada',
@@ -69,387 +78,410 @@ export function StoreSettingsClient({ initial, initialAccounts }: StoreSettingsC
     <div className="px-8 pt-7 pb-12">
       <PanelHeader label="Configuración" title="Tienda" align="center" />
 
-      <div className="max-w-175 flex flex-col gap-6">
+      <SettingsTabs active={tab} onChange={selectTab} />
+
+      <div
+        id="settings-panel"
+        role="tabpanel"
+        aria-labelledby={`settings-tab-${tab}`}
+        className="max-w-175 flex flex-col gap-6"
+      >
         {/* ── General ─────────────────────────────────────── */}
-        <div className="bg-card border border-(--bd) p-5 flex flex-col gap-5">
-          <div className="text-[10px] font-bold tracking-[2px] uppercase text-muted">General</div>
+        {tab === 'general' && (
+          <>
+            <div className="bg-card border border-(--bd) p-5 flex flex-col gap-5">
+              <div className="text-[10px] font-bold tracking-[2px] uppercase text-muted">
+                General
+              </div>
 
-          <label className="flex items-start gap-3 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={form.showOutOfStock}
-              onChange={(e) => setForm({ ...form, showOutOfStock: e.target.checked })}
-              className="mt-1 accent-accent-ink"
-            />
-            <span>
-              <span className="block text-[14px] font-semibold">
-                Mostrar productos sin stock en la tienda
-              </span>
-              <span className="block text-[12px] text-muted mt-1">
-                Si lo desactivas, los productos con stock 0 desaparecen del catálogo, el buscador,
-                las novedades y los relacionados. Siempre seguirán visibles en el admin y las
-                preventas no se ven afectadas.
-              </span>
-            </span>
-          </label>
+              <label className="flex items-start gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={form.showOutOfStock}
+                  onChange={(e) => setForm({ ...form, showOutOfStock: e.target.checked })}
+                  className="mt-1 accent-accent-ink"
+                />
+                <span>
+                  <span className="block text-[14px] font-semibold">
+                    Mostrar productos sin stock en la tienda
+                  </span>
+                  <span className="block text-[12px] text-muted mt-1">
+                    Si lo desactivas, los productos con stock 0 desaparecen del catálogo, el
+                    buscador, las novedades y los relacionados. Siempre seguirán visibles en el
+                    admin y las preventas no se ven afectadas.
+                  </span>
+                </span>
+              </label>
 
-          <FormField label="WhatsApp de la tienda (código de país + número, solo dígitos)">
-            <input
-              value={form.whatsappNumber}
-              onChange={(e) =>
-                setForm({ ...form, whatsappNumber: e.target.value.replace(/\D/g, '') })
-              }
-              className={cls.input}
-              placeholder="51987654321"
-              inputMode="numeric"
-            />
-          </FormField>
-          <p className="text-[12px] text-muted -mt-3">
-            Se usa en el botón flotante de WhatsApp y en el envío de comprobantes del checkout.
-          </p>
+              <FormField label="WhatsApp de la tienda (código de país + número, solo dígitos)">
+                <input
+                  value={form.whatsappNumber}
+                  onChange={(e) =>
+                    setForm({ ...form, whatsappNumber: e.target.value.replace(/\D/g, '') })
+                  }
+                  className={cls.input}
+                  placeholder="51987654321"
+                  inputMode="numeric"
+                />
+              </FormField>
+              <p className="text-[12px] text-muted -mt-3">
+                Se usa en el botón flotante de WhatsApp y en el envío de comprobantes del checkout.
+              </p>
 
-          <FormField label="Cómo se muestran los banners del inicio">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {(
-                [
-                  {
-                    value: 'CARD',
-                    title: 'Tarjetas',
-                    desc: 'Grid de tarjetas; a partir de 4 se convierte en carrusel.',
-                  },
-                  {
-                    value: 'FULLSCREEN',
-                    title: 'Pantalla completa',
-                    desc: 'Hero a ancho completo. Con varios banners se cruzan con un fundido.',
-                  },
-                  {
-                    value: 'EDITORIAL',
-                    title: 'Editorial: texto a la izquierda sobre la imagen',
-                    desc: 'Foto a todo el ancho con el título, el subtítulo y el botón del banner a la izquierda. En móvil el texto va abajo. Con varios banners se desliza solo.',
-                  },
-                ] as const
-              ).map((opt) => {
-                const isActive = form.bannerLayout === opt.value
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    aria-pressed={isActive}
-                    onClick={() => setForm({ ...form, bannerLayout: opt.value })}
-                    className={cn(
-                      'text-left p-3.5 border transition-colors duration-200',
-                      isActive
-                        ? 'border-(--gold) bg-(--sub)'
-                        : 'border-(--bd) hover:border-(--bdh)',
-                    )}
-                  >
-                    <span className="flex items-center gap-2 text-[14px] font-semibold">
-                      {isActive && <Check size={14} className="text-accent-ink shrink-0" />}
-                      {opt.title}
-                    </span>
-                    <span className="block text-[12px] text-muted mt-1">{opt.desc}</span>
-                  </button>
-                )
-              })}
+              <FormField label="Cómo se muestran los banners del inicio">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {(
+                    [
+                      {
+                        value: 'CARD',
+                        title: 'Tarjetas',
+                        desc: 'Grid de tarjetas; a partir de 4 se convierte en carrusel.',
+                      },
+                      {
+                        value: 'FULLSCREEN',
+                        title: 'Pantalla completa',
+                        desc: 'Hero a ancho completo. Con varios banners se cruzan con un fundido.',
+                      },
+                      {
+                        value: 'EDITORIAL',
+                        title: 'Editorial: texto a la izquierda sobre la imagen',
+                        desc: 'Foto a todo el ancho con el título, el subtítulo y el botón del banner a la izquierda. En móvil el texto va abajo. Con varios banners se desliza solo.',
+                      },
+                    ] as const
+                  ).map((opt) => {
+                    const isActive = form.bannerLayout === opt.value
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        aria-pressed={isActive}
+                        onClick={() => setForm({ ...form, bannerLayout: opt.value })}
+                        className={cn(
+                          'text-left p-3.5 border transition-colors duration-200',
+                          isActive
+                            ? 'border-(--gold) bg-(--sub)'
+                            : 'border-(--bd) hover:border-(--bdh)',
+                        )}
+                      >
+                        <span className="flex items-center gap-2 text-[14px] font-semibold">
+                          {isActive && <Check size={14} className="text-accent-ink shrink-0" />}
+                          {opt.title}
+                        </span>
+                        <span className="block text-[12px] text-muted mt-1">{opt.desc}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </FormField>
+              <p className="text-[12px] text-muted -mt-3">
+                Aplica a todos los banners activos por igual. Se gestionan en Banners.
+              </p>
+              {form.bannerLayout === 'EDITORIAL' && (
+                <p className="text-[12px] text-muted -mt-3 border-l-2 border-(--gold) pl-3">
+                  Para el modo editorial sube en cada banner la imagen de pantalla completa de
+                  1920×800 px con el motivo en la mitad derecha (la izquierda queda bajo el texto) y
+                  la de móvil de 1080×1350 px con el motivo en la mitad de arriba. Sin imagen de
+                  pantalla completa se usa la de tarjeta.
+                </p>
+              )}
+
+              <FormField label="Costo de envío base (S/)">
+                <input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={form.baseShippingCost}
+                  onChange={(e) => setForm({ ...form, baseShippingCost: Number(e.target.value) })}
+                  className={cls.input}
+                  placeholder="15.00"
+                  inputMode="decimal"
+                />
+              </FormField>
+              <p className="text-[12px] text-muted -mt-3">
+                Se cobra en el checkout salvo que una promoción de envío gratis lo anule.
+              </p>
+
+              <FormField label="Adelanto de preventa parcial (%)">
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  step={1}
+                  value={form.preorderDepositPercent}
+                  onChange={(e) =>
+                    setForm({ ...form, preorderDepositPercent: Number(e.target.value) })
+                  }
+                  className={cls.input}
+                  placeholder="50"
+                  inputMode="numeric"
+                />
+              </FormField>
+              <p className="text-[12px] text-muted -mt-3">
+                Cuánto paga el cliente por adelantado al reservar. Cada producto puede definir su
+                propio porcentaje; este es el que se usa cuando no lo hace.
+              </p>
+
+              <div>
+                <Button
+                  variant="accent"
+                  size="md"
+                  onClick={saveGeneral}
+                  loading={general.isPending}
+                  loadingText="Guardando…"
+                >
+                  <Save size={15} className="mr-1.5" />
+                  Guardar cambios
+                </Button>
+              </div>
             </div>
-          </FormField>
-          <p className="text-[12px] text-muted -mt-3">
-            Aplica a todos los banners activos por igual. Se gestionan en Banners.
-          </p>
-          {form.bannerLayout === 'EDITORIAL' && (
-            <p className="text-[12px] text-muted -mt-3 border-l-2 border-(--gold) pl-3">
-              Para el modo editorial sube en cada banner la imagen de pantalla completa de
-              1920×800 px con el motivo en la mitad derecha (la izquierda queda bajo el texto) y la
-              de móvil de 1080×1350 px con el motivo en la mitad de arriba. Sin imagen de pantalla
-              completa se usa la de tarjeta.
-            </p>
-          )}
-
-          <FormField label="Costo de envío base (S/)">
-            <input
-              type="number"
-              min={0}
-              step="0.01"
-              value={form.baseShippingCost}
-              onChange={(e) => setForm({ ...form, baseShippingCost: Number(e.target.value) })}
-              className={cls.input}
-              placeholder="15.00"
-              inputMode="decimal"
-            />
-          </FormField>
-          <p className="text-[12px] text-muted -mt-3">
-            Se cobra en el checkout salvo que una promoción de envío gratis lo anule.
-          </p>
-
-          <FormField label="Adelanto de preventa parcial (%)">
-            <input
-              type="number"
-              min={1}
-              max={100}
-              step={1}
-              value={form.preorderDepositPercent}
-              onChange={(e) => setForm({ ...form, preorderDepositPercent: Number(e.target.value) })}
-              className={cls.input}
-              placeholder="50"
-              inputMode="numeric"
-            />
-          </FormField>
-          <p className="text-[12px] text-muted -mt-3">
-            Cuánto paga el cliente por adelantado al reservar. Cada producto puede definir su propio
-            porcentaje; este es el que se usa cuando no lo hace.
-          </p>
-
-          <div>
-            <Button variant="accent" size="md" onClick={saveGeneral} loading={general.isPending}
-          loadingText="Guardando…">
-              <Save size={15} className="mr-1.5" />
-              Guardar cambios
-            </Button>
-          </div>
-        </div>
+          </>
+        )}
 
         {/* ── Datos del proveedor ─────────────────────────── */}
-        <div className="bg-card border border-(--bd) p-5 flex flex-col gap-5">
-          <div className="flex items-center gap-2">
-            <Scale size={15} className="text-accent-ink" />
-            <span className="text-[10px] font-bold tracking-[2px] uppercase text-muted">
-              Datos del proveedor (Libro de Reclamaciones)
-            </span>
-          </div>
-          <p className="text-[12px] text-muted -mt-2">
-            Obligatorios por el Reglamento del Libro de Reclamaciones (D.S. 011-2011-PCM): se
-            imprimen en cada hoja de reclamación, en la constancia que recibe el consumidor por
-            correo y en el footer de todas las páginas.
-          </p>
+        {tab === 'proveedor' && (
+          <>
+            <div className="bg-card border border-(--bd) p-5 flex flex-col gap-5">
+              <div className="flex items-center gap-2">
+                <Scale size={15} className="text-accent-ink" />
+                <span className="text-[10px] font-bold tracking-[2px] uppercase text-muted">
+                  Datos del proveedor (Libro de Reclamaciones)
+                </span>
+              </div>
+              <p className="text-[12px] text-muted -mt-2">
+                Obligatorios por el Reglamento del Libro de Reclamaciones (D.S. 011-2011-PCM): se
+                imprimen en cada hoja de reclamación, en la constancia que recibe el consumidor por
+                correo y en el footer de todas las páginas.
+              </p>
 
-          <div>
-            <label htmlFor="settings-legal-name" className={`${cls.label} block`}>
-              Razón social
-            </label>
-            <input
-              id="settings-legal-name"
-              value={form.legalName ?? ''}
-              onChange={(e) => setForm({ ...form, legalName: e.target.value })}
-              className={cls.input}
-              placeholder="MIRANA S.A.C. / Nombre del titular"
-              maxLength={191}
-            />
-          </div>
+              <div>
+                <label htmlFor="settings-legal-name" className={`${cls.label} block`}>
+                  Razón social
+                </label>
+                <input
+                  id="settings-legal-name"
+                  value={form.legalName ?? ''}
+                  onChange={(e) => setForm({ ...form, legalName: e.target.value })}
+                  className={cls.input}
+                  placeholder="MIRANA S.A.C. / Nombre del titular"
+                  maxLength={191}
+                />
+              </div>
 
-          <div>
-            <label htmlFor="settings-ruc" className={`${cls.label} block`}>
-              RUC
-            </label>
-            <input
-              id="settings-ruc"
-              value={form.ruc ?? ''}
-              onChange={(e) => setForm({ ...form, ruc: e.target.value.replace(/\D/g, '').slice(0, 11) })}
-              className={cls.input}
-              placeholder="20123456789"
-              inputMode="numeric"
-              maxLength={11}
-            />
-          </div>
+              <div>
+                <label htmlFor="settings-ruc" className={`${cls.label} block`}>
+                  RUC
+                </label>
+                <input
+                  id="settings-ruc"
+                  value={form.ruc ?? ''}
+                  onChange={(e) =>
+                    setForm({ ...form, ruc: e.target.value.replace(/\D/g, '').slice(0, 11) })
+                  }
+                  className={cls.input}
+                  placeholder="20123456789"
+                  inputMode="numeric"
+                  maxLength={11}
+                />
+              </div>
 
-          <div>
-            <label htmlFor="settings-fiscal-address" className={`${cls.label} block`}>
-              Domicilio fiscal
-            </label>
-            <input
-              id="settings-fiscal-address"
-              value={form.fiscalAddress ?? ''}
-              onChange={(e) => setForm({ ...form, fiscalAddress: e.target.value })}
-              className={cls.input}
-              placeholder="Av. Ejemplo 123, Cercado, Arequipa"
-              maxLength={300}
-            />
-          </div>
+              <div>
+                <label htmlFor="settings-fiscal-address" className={`${cls.label} block`}>
+                  Domicilio fiscal
+                </label>
+                <input
+                  id="settings-fiscal-address"
+                  value={form.fiscalAddress ?? ''}
+                  onChange={(e) => setForm({ ...form, fiscalAddress: e.target.value })}
+                  className={cls.input}
+                  placeholder="Av. Ejemplo 123, Cercado, Arequipa"
+                  maxLength={300}
+                />
+              </div>
 
-          <div>
-            <Button variant="accent" size="md" onClick={saveGeneral} loading={general.isPending}
-          loadingText="Guardando…">
-              <Save size={15} className="mr-1.5" />
-              Guardar cambios
-            </Button>
-          </div>
-        </div>
+              <div>
+                <Button
+                  variant="accent"
+                  size="md"
+                  onClick={saveGeneral}
+                  loading={general.isPending}
+                  loadingText="Guardando…"
+                >
+                  <Save size={15} className="mr-1.5" />
+                  Guardar cambios
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* ── Bloques del inicio ───────────────────────────── */}
-        <HomeSectionBlocksPanel
-          hiddenHomeBlocks={form.hiddenHomeBlocks}
-          onChange={(val) => setForm({ ...form, hiddenHomeBlocks: val })}
-          onSave={saveGeneral}
-          isPending={general.isPending}
-        />
+        {tab === 'inicio' && (
+          <>
+            <HomeSectionBlocksPanel
+              hiddenHomeBlocks={form.hiddenHomeBlocks}
+              onChange={(val) => setForm({ ...form, hiddenHomeBlocks: val })}
+              onSave={saveGeneral}
+              isPending={general.isPending}
+            />
+          </>
+        )}
 
         {/* ── Footer ──────────────────────────────────────── */}
-        <div className="bg-card border border-(--bd) p-5 flex flex-col gap-5">
-          <div className="flex items-center gap-2">
-            <Link2 size={15} className="text-accent-ink" />
-            <span className="text-[10px] font-bold tracking-[2px] uppercase text-muted">
-              Footer
-            </span>
-          </div>
+        {tab === 'footer' && (
+          <>
+            <div className="bg-card border border-(--bd) p-5 flex flex-col gap-5">
+              <div className="flex items-center gap-2">
+                <Link2 size={15} className="text-accent-ink" />
+                <span className="text-[10px] font-bold tracking-[2px] uppercase text-muted">
+                  Footer
+                </span>
+              </div>
 
-          <FormField label="Logo (navbar y footer)">
-            <ImageUploadField
-              value={form.footerLogoUrl}
-              onChange={(url) => setForm({ ...form, footerLogoUrl: url })}
-              folder="settings"
-              placeholder="https://..."
-            />
-          </FormField>
-          <p className="text-[12px] text-muted -mt-3">
-            Se muestra en el footer de la tienda. Si se deja vacío, aparece el texto MIRANA.
-          </p>
+              <FormField label="Logo (navbar y footer)">
+                <ImageUploadField
+                  value={form.footerLogoUrl}
+                  onChange={(url) => setForm({ ...form, footerLogoUrl: url })}
+                  folder="settings"
+                  placeholder="https://..."
+                />
+              </FormField>
+              <p className="text-[12px] text-muted -mt-3">
+                Se muestra en el footer de la tienda. Si se deja vacío, aparece el texto MIRANA.
+              </p>
 
-          <div className="border-t border-(--bd) pt-4 flex flex-col gap-4">
-            <span className="text-[10px] font-bold tracking-[2px] uppercase text-muted">
-              Redes sociales
-            </span>
+              <div className="border-t border-(--bd) pt-4 flex flex-col gap-4">
+                <span className="text-[10px] font-bold tracking-[2px] uppercase text-muted">
+                  Redes sociales
+                </span>
 
-            <FormField label="Instagram">
-              <input
-                value={form.instagramUrl}
-                onChange={(e) => setForm({ ...form, instagramUrl: e.target.value })}
-                className={cls.input}
-                placeholder="https://www.instagram.com/mirana.shop"
-              />
-            </FormField>
+                <p className="text-[12px] text-muted -mt-2">
+                  Elige qué redes aparecen en el footer, en qué orden y con qué enlace.
+                </p>
+                <SocialLinksEditor
+                  value={form.socialLinks}
+                  onChange={(socialLinks) => setForm({ ...form, socialLinks })}
+                />
+              </div>
 
-            <FormField label="TikTok">
-              <input
-                value={form.tiktokUrl}
-                onChange={(e) => setForm({ ...form, tiktokUrl: e.target.value })}
-                className={cls.input}
-                placeholder="https://www.tiktok.com/@mirana.shop"
-              />
-            </FormField>
-
-            <FormField label="YouTube">
-              <input
-                value={form.youtubeUrl}
-                onChange={(e) => setForm({ ...form, youtubeUrl: e.target.value })}
-                className={cls.input}
-                placeholder="https://www.youtube.com/@miranashop"
-              />
-            </FormField>
-
-            <FormField label="Facebook">
-              <input
-                value={form.facebookUrl}
-                onChange={(e) => setForm({ ...form, facebookUrl: e.target.value })}
-                className={cls.input}
-                placeholder="https://www.facebook.com/mirana.shop"
-              />
-            </FormField>
-          </div>
-
-          <div>
-            <Button variant="accent" size="md" onClick={saveGeneral} loading={general.isPending}
-          loadingText="Guardando…">
-              <Save size={15} className="mr-1.5" />
-              Guardar cambios
-            </Button>
-          </div>
-        </div>
+              <div>
+                <Button
+                  variant="accent"
+                  size="md"
+                  onClick={saveGeneral}
+                  loading={general.isPending}
+                  loadingText="Guardando…"
+                >
+                  <Save size={15} className="mr-1.5" />
+                  Guardar cambios
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* ── Métodos de pago ─────────────────────────────── */}
-        <div className="bg-card border border-(--bd) p-5 flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div className="flex items-center gap-2">
-              <Landmark size={15} className="text-accent-ink" />
-              <span className="text-[10px] font-bold tracking-[2px] uppercase text-muted">
-                Métodos de pago del checkout
-              </span>
-            </div>
-            <Button variant="accent" size="sm" onClick={crud.openNew}>
-              <Plus size={13} className="mr-1.5" /> Agregar método
-            </Button>
-          </div>
+        {tab === 'pagos' && (
+          <>
+            <div className="bg-card border border-(--bd) p-5 flex flex-col gap-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Landmark size={15} className="text-accent-ink" />
+                  <span className="text-[10px] font-bold tracking-[2px] uppercase text-muted">
+                    Métodos de pago del checkout
+                  </span>
+                </div>
+                <Button variant="accent" size="sm" onClick={crud.openNew}>
+                  <Plus size={13} className="mr-1.5" /> Agregar método
+                </Button>
+              </div>
 
-          {initialAccounts.length === 0 ? (
-            <div className="text-center py-8 text-muted text-[13px] border border-dashed border-(--bd)">
-              Sin métodos de pago. Agrega el primero — ej: Yape, BCP Soles, BBVA.
-            </div>
-          ) : (
-            <ul className="flex flex-col divide-y divide-(--bd) border border-(--bd)">
-              {initialAccounts.map((acc) => {
-                const Icon = acc.cci ? Landmark : Smartphone
-                return (
-                  <li
-                    key={acc.id}
-                    className={cn('flex items-center gap-4 px-4 py-3', !acc.active && 'opacity-50')}
-                  >
-                    <div className="w-9 h-9 shrink-0 bg-surf border border-(--bd) flex items-center justify-center overflow-hidden">
-                      {acc.logoUrl ? (
-                        <Image
-                          src={acc.logoUrl}
-                          alt=""
-                          width={36}
-                          height={36}
-                          className="w-full h-full object-contain"
-                        />
-                      ) : (
-                        <Icon size={16} className="text-accent-ink" />
-                      )}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className={cls.rowName}>{acc.name}</span>
-                        {!acc.active && (
-                          <span className="text-[9px] tracking-[1.5px] uppercase border border-(--bd) px-1.5 py-0.5 text-muted">
-                            Oculto
-                          </span>
+              {initialAccounts.length === 0 ? (
+                <div className="text-center py-8 text-muted text-[13px] border border-dashed border-(--bd)">
+                  Sin métodos de pago. Agrega el primero — ej: Yape, BCP Soles, BBVA.
+                </div>
+              ) : (
+                <ul className="flex flex-col divide-y divide-(--bd) border border-(--bd)">
+                  {initialAccounts.map((acc) => {
+                    const Icon = acc.cci ? Landmark : Smartphone
+                    return (
+                      <li
+                        key={acc.id}
+                        className={cn(
+                          'flex items-center gap-4 px-4 py-3',
+                          !acc.active && 'opacity-50',
                         )}
-                      </div>
-                      <div className="flex items-center gap-3 text-[12px] text-muted mt-0.5 min-w-0">
-                        <span className="font-mono truncate">{acc.number}</span>
-                        {acc.cci && (
-                          <span className="shrink-0 inline-flex items-center gap-0.5 text-[10px] tracking-[1px] uppercase text-accent-ink/80">
-                            CCI <Check size={10} />
-                          </span>
-                        )}
-                        {acc.qrImageUrl && (
-                          <span className="shrink-0 inline-flex items-center gap-0.5 text-[10px] tracking-[1px] uppercase text-accent-ink/80">
-                            <QrCode size={11} /> QR
-                          </span>
-                        )}
-                        {acc.holder && <span className="truncate">· {acc.holder}</span>}
-                      </div>
-                    </div>
-
-                    <div className="flex gap-1.5 shrink-0">
-                      <Button
-                        variant="icon"
-                        size="sm"
-                        title="Editar"
-                        onClick={() => crud.openEdit(acc)}
                       >
-                        <Pencil size={14} />
-                      </Button>
-                      <Button
-                        variant="icon"
-                        size="sm"
-                        destructive
-                        title="Eliminar"
-                        disabled={crud.isPending}
-                        onClick={() => crud.openDelete(acc)}
-                      >
-                        <Trash2 size={14} />
-                      </Button>
-                    </div>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
+                        <div className="w-9 h-9 shrink-0 bg-surf border border-(--bd) flex items-center justify-center overflow-hidden">
+                          {acc.logoUrl ? (
+                            <Image
+                              src={acc.logoUrl}
+                              alt=""
+                              width={36}
+                              height={36}
+                              className="w-full h-full object-contain"
+                            />
+                          ) : (
+                            <Icon size={16} className="text-accent-ink" />
+                          )}
+                        </div>
 
-          <p className="text-[12px] text-muted">
-            Estas cuentas se muestran al cliente en el checkout para que realice su pago.
-          </p>
-        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className={cls.rowName}>{acc.name}</span>
+                            {!acc.active && (
+                              <span className="text-[9px] tracking-[1.5px] uppercase border border-(--bd) px-1.5 py-0.5 text-muted">
+                                Oculto
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3 text-[12px] text-muted mt-0.5 min-w-0">
+                            <span className="font-mono truncate">{acc.number}</span>
+                            {acc.cci && (
+                              <span className="shrink-0 inline-flex items-center gap-0.5 text-[10px] tracking-[1px] uppercase text-accent-ink/80">
+                                CCI <Check size={10} />
+                              </span>
+                            )}
+                            {acc.qrImageUrl && (
+                              <span className="shrink-0 inline-flex items-center gap-0.5 text-[10px] tracking-[1px] uppercase text-accent-ink/80">
+                                <QrCode size={11} /> QR
+                              </span>
+                            )}
+                            {acc.holder && <span className="truncate">· {acc.holder}</span>}
+                          </div>
+                        </div>
+
+                        <div className="flex gap-1.5 shrink-0">
+                          <Button
+                            variant="icon"
+                            size="sm"
+                            title="Editar"
+                            onClick={() => crud.openEdit(acc)}
+                          >
+                            <Pencil size={14} />
+                          </Button>
+                          <Button
+                            variant="icon"
+                            size="sm"
+                            destructive
+                            title="Eliminar"
+                            disabled={crud.isPending}
+                            onClick={() => crud.openDelete(acc)}
+                          >
+                            <Trash2 size={14} />
+                          </Button>
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+
+              <p className="text-[12px] text-muted">
+                Estas cuentas se muestran al cliente en el checkout para que realice su pago.
+              </p>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Confirmación de eliminación */}
@@ -561,8 +593,13 @@ function HomeSectionBlocksPanel({
       </ul>
 
       <div>
-        <Button variant="accent" size="md" onClick={onSave} loading={isPending}
-          loadingText="Guardando…">
+        <Button
+          variant="accent"
+          size="md"
+          onClick={onSave}
+          loading={isPending}
+          loadingText="Guardando…"
+        >
           <Save size={15} className="mr-1.5" />
           Guardar cambios
         </Button>

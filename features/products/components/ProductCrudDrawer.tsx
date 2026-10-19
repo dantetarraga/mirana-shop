@@ -14,7 +14,7 @@ import { RichTextEditor } from '@/shared/components/admin/RichTextEditor'
 import { Button } from '@/shared/components/ui/Button'
 import { DateField } from '@/shared/components/ui/DateField'
 import { FormField } from '@/shared/components/ui/FormField'
-import { Select } from '@/shared/components/ui/Select'
+import { FormSelectMenu } from '@/shared/components/ui/FormSelectMenu'
 import { useAutoSlug } from '@/shared/hooks/admin/useAutoSlug'
 import { useFormEntity } from '@/shared/hooks/admin/useFormEntity'
 import { cls } from '@/shared/lib/admin/admin-classes'
@@ -98,6 +98,7 @@ export function ProductCrudDrawer({
     reset,
     watch,
     setValue,
+    control,
     formState: { errors },
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productDbSchema),
@@ -270,37 +271,31 @@ export function ProductCrudDrawer({
         {/* ── Categoría + Marca ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <FormField label="Categoría" error={errors.categoryId?.message}>
-            {/* Select nativo agrupado por raíz: con subcategorías hay nombres
-                repetidos ("Star Wars" en LEGO y en Figuras), así que cada
-                opción dice "Padre › Hija". */}
-            <Select
-              {...register('categoryId')}
+            {/* Agrupado por raíz: con subcategorías hay nombres repetidos
+                ("Star Wars" en LEGO y en Figuras), así que cada opción dice
+                "Padre › Hija". */}
+            <FormSelectMenu
+              control={control}
+              name="categoryId"
+              placeholder="Elige una categoría"
               aria-invalid={errors.categoryId ? true : undefined}
-              className="py-2"
-            >
-              <option value="" disabled>
-                Elige una categoría
-              </option>
-              {categoryGroups.map((root) => (
-                <optgroup key={root.id} label={root.name}>
-                  <option value={root.id}>{root.name}</option>
-                  {root.children.map((child) => (
-                    <option key={child.id} value={child.id}>
-                      {root.name} › {child.name}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </Select>
+              options={categoryGroups.flatMap((root) => [
+                { value: root.id, label: root.name, group: root.name },
+                ...root.children.map((child) => ({
+                  value: child.id,
+                  label: `${root.name} › ${child.name}`,
+                  group: root.name,
+                })),
+              ])}
+            />
           </FormField>
           <FormField label="Marca" error={errors.brandId?.message}>
-            <FilterMultiSelect
-              singleSelect
-              label="Marca"
-              className="w-full"
-              options={brands.map((b) => ({ label: b.name, value: b.id }))}
-              selected={watch('brandId') ? [watch('brandId')] : []}
-              onToggle={(val) => setValue('brandId', val, { shouldValidate: true })}
+            <FormSelectMenu
+              control={control}
+              name="brandId"
+              placeholder="Elige una marca"
+              aria-invalid={errors.brandId ? true : undefined}
+              options={brands.map((b) => ({ value: b.id, label: b.name }))}
             />
           </FormField>
         </div>
@@ -489,7 +484,14 @@ export function ProductCrudDrawer({
         </FormField>
 
         <div className="flex gap-2.5">
-          <Button type="submit" variant="accent" size="md" full loading={isPending} loadingText="Guardando…">
+          <Button
+            type="submit"
+            variant="accent"
+            size="md"
+            full
+            loading={isPending}
+            loadingText="Guardando…"
+          >
             {'Guardar'}
           </Button>
           <Button type="button" variant="outline" size="md" full onClick={onClose}>

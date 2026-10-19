@@ -25,6 +25,7 @@ import {
 import { input } from '@/features/checkout/components/ui'
 import { Button } from '@/shared/components/ui/Button'
 import { Field } from '@/shared/components/ui/Field'
+import { FormSelectMenu } from '@/shared/components/ui/FormSelectMenu'
 import { cn } from '@/shared/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { BadgeCheck, Printer, Send } from 'lucide-react'
@@ -96,7 +97,15 @@ const gridCls = 'grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3.5'
  * Título de sección numerado: el orden 1-2-3 es el de la Hoja de Reclamación
  * del Anexo I, así que la numeración informa (no decora).
  */
-function SectionTitle({ id, step, children }: { id: string; step?: number; children: React.ReactNode }) {
+function SectionTitle({
+  id,
+  step,
+  children,
+}: {
+  id: string
+  step?: number
+  children: React.ReactNode
+}) {
   return (
     <h2 id={id} className={sectionTitleCls}>
       {step !== undefined && (
@@ -257,19 +266,25 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
   const guardianHint = guardianDocType ? DOC_HINTS[guardianDocType] : undefined
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4" aria-describedby="lr-required-legend">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      noValidate
+      className="flex flex-col gap-4"
+      aria-describedby="lr-required-legend"
+    >
       {/* Cabecera de la hoja: datos del proveedor, fecha y número */}
       <section className={sectionCls} aria-labelledby="lr-sheet-title">
         <SectionTitle id="lr-sheet-title">Hoja de Reclamación</SectionTitle>
         <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1.5 text-[13px]">
-          {[{ label: 'Nombre comercial', value: STORE_DISPLAY_NAME }, ...providerRows(provider)].map(
-            (r) => (
-              <div key={r.label} className="flex gap-2">
-                <dt className="text-muted shrink-0">{r.label}:</dt>
-                <dd className="font-semibold">{r.value}</dd>
-              </div>
-            ),
-          )}
+          {[
+            { label: 'Nombre comercial', value: STORE_DISPLAY_NAME },
+            ...providerRows(provider),
+          ].map((r) => (
+            <div key={r.label} className="flex gap-2">
+              <dt className="text-muted shrink-0">{r.label}:</dt>
+              <dd className="font-semibold">{r.value}</dd>
+            </div>
+          ))}
           <div className="flex gap-2">
             <dt className="text-muted shrink-0">Fecha:</dt>
             <dd className="font-semibold">
@@ -282,7 +297,10 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
           </div>
         </dl>
         <p id="lr-required-legend" className="text-[12px] text-muted mt-3">
-          Los campos marcados con <span className="text-danger" aria-hidden="true">*</span>
+          Los campos marcados con{' '}
+          <span className="text-danger" aria-hidden="true">
+            *
+          </span>
           <span className="sr-only">asterisco</span> son obligatorios.
         </p>
       </section>
@@ -292,7 +310,12 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
           Identificación del consumidor reclamante
         </SectionTitle>
         <div className={gridCls}>
-          <FormRow name="fullName" label="Nombre completo" required error={errors.fullName?.message}>
+          <FormRow
+            name="fullName"
+            label="Nombre completo"
+            required
+            error={errors.fullName?.message}
+          >
             <input
               {...register('fullName')}
               autoComplete="name"
@@ -310,14 +333,18 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
             />
           </FormRow>
 
-          <FormRow name="docType" label="Tipo de documento" required error={errors.docType?.message}>
-            <select {...register('docType')} className={input}>
-              {DOC_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {DOC_TYPE_LABELS[t]}
-                </option>
-              ))}
-            </select>
+          <FormRow
+            name="docType"
+            label="Tipo de documento"
+            required
+            error={errors.docType?.message}
+          >
+            <FormSelectMenu
+              control={control}
+              name="docType"
+              buttonClassName={input}
+              options={DOC_TYPES.map((t) => ({ value: t, label: DOC_TYPE_LABELS[t] }))}
+            />
           </FormRow>
 
           <FormRow
@@ -359,7 +386,12 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
 
           <div className="md:col-span-2">
             <label className="flex items-center gap-2 text-[13px] cursor-pointer min-h-11 md:min-h-0">
-              <input {...register('isMinor')} id={fieldId('isMinor')} type="checkbox" className="accent-accent-ink" />
+              <input
+                {...register('isMinor')}
+                id={fieldId('isMinor')}
+                type="checkbox"
+                className="accent-accent-ink"
+              />
               Soy menor de edad
             </label>
           </div>
@@ -376,10 +408,7 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
                 error={errors.guardianName?.message}
                 span={2}
               >
-                <input
-                  {...register('guardianName')}
-                  className={input}
-                />
+                <input {...register('guardianName')} className={input} />
               </FormRow>
               <FormRow
                 name="guardianDocType"
@@ -387,20 +416,13 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
                 required
                 error={errors.guardianDocType?.message}
               >
-                <select
-                  {...register('guardianDocType', { setValueAs: (v) => (v === '' ? undefined : v) })}
-                  className={input}
-                  defaultValue=""
-                >
-                  <option value="" disabled>
-                    Elige…
-                  </option>
-                  {DOC_TYPES.map((t) => (
-                    <option key={t} value={t}>
-                      {DOC_TYPE_LABELS[t]}
-                    </option>
-                  ))}
-                </select>
+                <FormSelectMenu
+                  control={control}
+                  name="guardianDocType"
+                  placeholder="Elige…"
+                  buttonClassName={input}
+                  options={DOC_TYPES.map((t) => ({ value: t, label: DOC_TYPE_LABELS[t] }))}
+                />
               </FormRow>
               <FormRow
                 name="guardianDocNumber"
@@ -409,11 +431,7 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
                 error={errors.guardianDocNumber?.message}
                 hint={guardianHint}
               >
-                <input
-                  {...register('guardianDocNumber')}
-                  maxLength={12}
-                  className={input}
-                />
+                <input {...register('guardianDocNumber')} maxLength={12} className={input} />
               </FormRow>
             </fieldset>
           )}
@@ -439,7 +457,12 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
             <div className="flex gap-5 flex-wrap">
               {(['PRODUCTO', 'SERVICIO'] as const).map((v) => (
                 <label key={v} className="flex items-center gap-2 text-[13px] cursor-pointer">
-                  <input {...register('goodType')} type="radio" value={v} className="accent-accent-ink" />
+                  <input
+                    {...register('goodType')}
+                    type="radio"
+                    value={v}
+                    className="accent-accent-ink"
+                  />
                   {v === 'PRODUCTO' ? 'Producto' : 'Servicio'}
                 </label>
               ))}
@@ -555,7 +578,12 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
             />
           </FormRow>
 
-          <FormRow name="request" label="Pedido del consumidor" required error={errors.request?.message}>
+          <FormRow
+            name="request"
+            label="Pedido del consumidor"
+            required
+            error={errors.request?.message}
+          >
             <textarea
               {...register('request')}
               rows={3}
@@ -584,7 +612,11 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
             </span>
           </label>
           {errors.truthDeclarationAccepted && (
-            <p id="lr-truthDeclarationAccepted-error" role="alert" className="text-danger text-[12px] mt-1">
+            <p
+              id="lr-truthDeclarationAccepted-error"
+              role="alert"
+              className="text-danger text-[12px] mt-1"
+            >
               {errors.truthDeclarationAccepted.message}
             </p>
           )}
@@ -601,7 +633,11 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
             <span>
               Autorizo el tratamiento de mis datos personales para registrar y atender esta hoja,
               conforme a la Ley 29733 y la{' '}
-              <Link href="/politica-de-privacidad" target="_blank" className="underline text-accent-ink">
+              <Link
+                href="/politica-de-privacidad"
+                target="_blank"
+                className="underline text-accent-ink"
+              >
                 Política de Privacidad
               </Link>
               .
@@ -624,13 +660,25 @@ export function ComplaintBookForm({ provider, todayIso }: ComplaintBookFormProps
       </section>
 
       {/* Honeypot: invisible para personas y lectores de pantalla; los bots lo rellenan */}
-      <div aria-hidden="true" className="absolute -left-[9999px] top-auto w-px h-px overflow-hidden">
+      <div
+        aria-hidden="true"
+        className="absolute -left-[9999px] top-auto w-px h-px overflow-hidden"
+      >
         <label htmlFor={fieldId('extraInfo')}>No completar este campo</label>
-        <input {...register('extraInfo')} id={fieldId('extraInfo')} type="text" tabIndex={-1} autoComplete="off" />
+        <input
+          {...register('extraInfo')}
+          id={fieldId('extraInfo')}
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+        />
       </div>
 
       {serverError && (
-        <div role="alert" className="border border-danger/40 bg-danger/5 text-danger text-[13px] px-4 py-3">
+        <div
+          role="alert"
+          className="border border-danger/40 bg-danger/5 text-danger text-[13px] px-4 py-3"
+        >
           {serverError}
         </div>
       )}

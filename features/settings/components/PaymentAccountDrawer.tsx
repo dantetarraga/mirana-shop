@@ -143,7 +143,14 @@ export function PaymentAccountDrawer({ account, isNew, onClose }: PaymentAccount
         </label>
 
         <div className="flex gap-2.5 pt-1">
-          <Button type="submit" variant="accent" size="md" full loading={isPending} loadingText="Guardando…">
+          <Button
+            type="submit"
+            variant="accent"
+            size="md"
+            full
+            loading={isPending}
+            loadingText="Guardando…"
+          >
             {isNew ? 'Crear método' : 'Guardar cambios'}
           </Button>
           <Button type="button" variant="outline" size="md" full onClick={onClose}>

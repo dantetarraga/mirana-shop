@@ -1,5 +1,11 @@
 'use server'
 
+import {
+  SOCIAL_NETWORK_IDS,
+  SOCIAL_NETWORKS,
+  urlMatchesNetwork,
+  type SocialNetworkId,
+} from '@/features/settings/lib/social-networks'
 import { DEFAULT_DEPOSIT_PERCENT } from '@/features/checkout/lib/preorder'
 import { STORE_SETTINGS_ID } from '@/features/settings/queries/store-settings.queries'
 import { db } from '@/shared/lib/db'
@@ -19,6 +25,33 @@ const optionalText = (max: number) =>
     .nullish()
     .transform((v) => (v ? v : null))
 
+/** Redes del footer: red del catálogo + enlace de su dominio, sin repetir. */
+const socialLinksSchema = z
+  .array(
+    z.object({
+      network: z.enum(SOCIAL_NETWORK_IDS as [SocialNetworkId, ...SocialNetworkId[]]),
+      url: httpUrlSchema().refine((v) => v.length > 0, 'Escribe el enlace'),
+    }),
+  )
+  .max(SOCIAL_NETWORK_IDS.length)
+  .superRefine((links, ctx) => {
+    const seen = new Set<string>()
+    links.forEach((link, i) => {
+      const label = SOCIAL_NETWORKS[link.network].label
+      if (seen.has(link.network)) {
+        ctx.addIssue({ code: 'custom', path: [i, 'network'], message: `${label} está repetida` })
+      }
+      seen.add(link.network)
+      if (link.url && !urlMatchesNetwork(link.url, link.network)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: [i, 'url'],
+          message: `El enlace de ${label} debe ser de ${SOCIAL_NETWORKS[link.network].hosts[0]}`,
+        })
+      }
+    })
+  })
+
 const storeSettingsSchema = z.object({
   showOutOfStock: z.boolean(),
   whatsappNumber: z
@@ -34,11 +67,15 @@ const storeSettingsSchema = z.object({
     .max(100, 'Máximo 100%')
     .optional()
     .default(DEFAULT_DEPOSIT_PERCENT),
-  footerLogoUrl: z.union([imageUrlSchema(), z.literal('')]).optional().default(''),
+  footerLogoUrl: z
+    .union([imageUrlSchema(), z.literal('')])
+    .optional()
+    .default(''),
   instagramUrl: httpUrlSchema().optional().default(''),
   tiktokUrl: httpUrlSchema().optional().default(''),
   youtubeUrl: httpUrlSchema().optional().default(''),
   facebookUrl: httpUrlSchema().optional().default(''),
+  socialLinks: socialLinksSchema.optional().default([]),
   hiddenHomeBlocks: z.string().optional().default(''),
   // Datos del proveedor para el Libro de Reclamaciones y el footer
   legalName: optionalText(191),
@@ -47,7 +84,10 @@ const storeSettingsSchema = z.object({
     .trim()
     .nullish()
     .transform((v) => (v ? v : null))
-    .refine((v) => v === null || /^(10|15|17|20)\d{9}$/.test(v), 'El RUC debe tener 11 dígitos y empezar con 10, 15, 17 o 20'),
+    .refine(
+      (v) => v === null || /^(10|15|17|20)\d{9}$/.test(v),
+      'El RUC debe tener 11 dígitos y empezar con 10, 15, 17 o 20',
+    ),
   fiscalAddress: optionalText(300),
 })
 

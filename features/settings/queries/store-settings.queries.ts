@@ -1,5 +1,6 @@
 import { DEFAULT_DEPOSIT_PERCENT } from '@/features/checkout/lib/preorder'
 import { BASE_SHIPPING_COST } from '@/features/checkout/lib/pricing'
+import { resolveSocialLinks, type SocialLink } from '@/features/settings/lib/social-networks'
 import type { BannerLayout } from '@/generated/prisma/client'
 import { db } from '@/shared/lib/db'
 import { cachedQuery, CACHE_TAGS, REVALIDATE_LONG } from '@/shared/lib/data-cache'
@@ -24,6 +25,8 @@ export interface StoreSettingsData {
   tiktokUrl: string
   youtubeUrl: string
   facebookUrl: string
+  /** Redes del footer en el orden elegido (lista nueva o, si no existe, los campos *Url). */
+  socialLinks: SocialLink[]
   /** CSV de claves de bloques fijos del inicio que están ocultos */
   hiddenHomeBlocks: string
   /** Datos del proveedor (Libro de Reclamaciones y footer). null = sin configurar */
@@ -43,6 +46,7 @@ const DEFAULTS: StoreSettingsData = {
   tiktokUrl: '',
   youtubeUrl: '',
   facebookUrl: '',
+  socialLinks: [],
   hiddenHomeBlocks: '',
   legalName: null,
   ruc: null,
@@ -63,13 +67,20 @@ async function fetchStoreSettings(): Promise<StoreSettingsData> {
       tiktokUrl: true,
       youtubeUrl: true,
       facebookUrl: true,
+      socialLinks: true,
       hiddenHomeBlocks: true,
       legalName: true,
       ruc: true,
       fiscalAddress: true,
     },
   })
-  return row ? { ...row, baseShippingCost: Number(row.baseShippingCost) } : DEFAULTS
+  return row
+    ? {
+        ...row,
+        baseShippingCost: Number(row.baseShippingCost),
+        socialLinks: resolveSocialLinks(row.socialLinks, row),
+      }
+    : DEFAULTS
 }
 
 /**

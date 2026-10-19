@@ -37,7 +37,12 @@ export function ChipLink({ href, children, active, accent, count, className }: C
     >
       {children}
       {count != null && (
-        <span className={cn('font-sans text-[11px] font-semibold tabular-nums', !active && 'text-muted')}>
+        <span
+          className={cn(
+            'font-sans text-[11px] font-semibold tabular-nums',
+            !active && 'text-muted',
+          )}
+        >
           {count}
         </span>
       )}
