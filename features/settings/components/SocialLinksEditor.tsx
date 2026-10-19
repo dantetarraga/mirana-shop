@@ -7,12 +7,12 @@ import {
   type SocialLink,
   type SocialNetworkId,
 } from '@/features/settings/lib/social-networks'
-import { Select } from '@/shared/components/ui/Select'
+import { SelectMenu } from '@/shared/components/ui/SelectMenu'
 import { SocialIcon } from '@/shared/components/ui/SocialIcon'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { cn } from '@/shared/lib/utils'
-import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react'
-import { useId, useState } from 'react'
+import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react'
+import { useId } from 'react'
 
 interface SocialLinksEditorProps {
   value: SocialLink[]
@@ -43,7 +43,6 @@ export function SocialLinksEditor({ value, onChange }: SocialLinksEditorProps) {
   const baseId = useId()
   const used = new Set(value.map((l) => l.network))
   const available = SOCIAL_NETWORK_IDS.filter((id) => !used.has(id))
-  const [toAdd, setToAdd] = useState<SocialNetworkId | ''>('')
 
   const update = (index: number, patch: Partial<SocialLink>) =>
     onChange(value.map((link, i) => (i === index ? { ...link, ...patch } : link)))
@@ -55,11 +54,10 @@ export function SocialLinksEditor({ value, onChange }: SocialLinksEditorProps) {
     onChange(next)
   }
 
-  const add = () => {
-    const network = toAdd || available[0]
-    if (!network) return
+  // Elegir una red en la lista la agrega y lleva el foco a su enlace.
+  const add = (network: SocialNetworkId) => {
     onChange([...value, { network, url: '' }])
-    setToAdd('')
+    requestAnimationFrame(() => document.getElementById(`${baseId}-url-${value.length}`)?.focus())
   }
 
   return (
@@ -138,33 +136,17 @@ export function SocialLinksEditor({ value, onChange }: SocialLinksEditorProps) {
       )}
 
       {available.length > 0 && (
-        <div className="flex gap-2">
-          <label htmlFor={`${baseId}-add`} className="sr-only">
-            Red social para agregar
-          </label>
-          <Select
-            id={`${baseId}-add`}
-            value={toAdd}
-            onChange={(e) => setToAdd(e.target.value as SocialNetworkId | '')}
-            wrapperClassName="flex-1"
-          >
-            <option value="">Elige una red…</option>
-            {available.map((id) => (
-              <option key={id} value={id}>
-                {SOCIAL_NETWORKS[id].label}
-              </option>
-            ))}
-          </Select>
-          <button
-            type="button"
-            onClick={add}
-            disabled={!toAdd}
-            className="inline-flex items-center gap-1.5 h-10 px-3.5 border border-(--bd) text-[13px] font-semibold text-text hover:border-(--bdh) disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-2 focus-visible:outline-ring"
-          >
-            <Plus size={16} aria-hidden />
-            Agregar
-          </button>
-        </div>
+        <SelectMenu
+          value=""
+          onChange={add}
+          aria-label="Agregar una red social"
+          placeholder="Agregar una red…"
+          options={available.map((id) => ({
+            value: id,
+            label: SOCIAL_NETWORKS[id].label,
+            icon: <SocialIcon network={id} size={16} />,
+          }))}
+        />
       )}
     </div>
   )
