@@ -7,6 +7,7 @@ import {
   type SocialLink,
   type SocialNetworkId,
 } from '@/features/settings/lib/social-networks'
+import { Select } from '@/shared/components/ui/Select'
 import { SocialIcon } from '@/shared/components/ui/SocialIcon'
 import { cls } from '@/shared/lib/admin/admin-classes'
 import { cn } from '@/shared/lib/utils'
@@ -141,11 +142,11 @@ export function SocialLinksEditor({ value, onChange }: SocialLinksEditorProps) {
           <label htmlFor={`${baseId}-add`} className="sr-only">
             Red social para agregar
           </label>
-          <select
+          <Select
             id={`${baseId}-add`}
             value={toAdd}
             onChange={(e) => setToAdd(e.target.value as SocialNetworkId | '')}
-            className={cn(cls.input, 'flex-1')}
+            wrapperClassName="flex-1"
           >
             <option value="">Elige una red…</option>
             {available.map((id) => (
@@ -153,7 +154,7 @@ export function SocialLinksEditor({ value, onChange }: SocialLinksEditorProps) {
                 {SOCIAL_NETWORKS[id].label}
               </option>
             ))}
-          </select>
+          </Select>
           <button
             type="button"
             onClick={add}

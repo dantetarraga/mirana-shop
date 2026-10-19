@@ -84,7 +84,7 @@ export function SettingsTabs({
       role="tablist"
       aria-label="Secciones de configuración"
       onKeyDown={onKeyDown}
-      className="max-w-175 mb-6 flex gap-1 overflow-x-auto border-b border-(--bd) [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="mb-6 flex gap-1 overflow-x-auto border-b border-(--bd) [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {SETTINGS_TABS.map(({ id, label, Icon }) => {
         const selected = id === active
