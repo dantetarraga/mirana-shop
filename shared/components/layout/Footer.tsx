@@ -243,14 +243,14 @@ export async function Footer() {
           {/* Acceso visible al Libro de Reclamaciones Virtual (D.S. 011-2011-PCM) */}
           <Link
             href="/libro-de-reclamaciones"
-            className="group inline-flex shrink-0 items-center gap-3 self-start bg-white text-[#0b1830] pl-2 pr-4 py-2 no-underline shadow-sm transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--brand-moon) motion-reduce:hover:translate-y-0"
+            className="group inline-flex shrink-0 items-center gap-3 self-start h-14 pl-2 pr-5 rounded-full bg-white/8 ring-1 ring-white/15 text-on-media no-underline transition-colors hover:bg-white/14 hover:ring-white/25 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--brand-moon)"
           >
-            <span className="grid place-items-center w-10 h-10 bg-[#0b1830] text-white">
-              <BookOpen size={22} aria-hidden="true" />
+            <span className="grid place-items-center w-10 h-10 rounded-full bg-(--brand-moon)/15 text-(--brand-moon) ring-1 ring-(--brand-moon)/30">
+              <BookOpen size={20} aria-hidden="true" />
             </span>
-            <span className="flex flex-col leading-none">
-              <span className="text-[11px] font-medium">Libro de</span>
-              <span className="text-[15px] font-bold tracking-[-0.1px]">Reclamaciones</span>
+            <span className="flex flex-col leading-tight">
+              <span className="text-[14px] font-semibold">Libro de Reclamaciones</span>
+              <span className="text-[12px] text-on-media/65">Registra tu queja o reclamo</span>
             </span>
           </Link>
           <div className="flex flex-col gap-1 text-[12px] text-on-media/60">
