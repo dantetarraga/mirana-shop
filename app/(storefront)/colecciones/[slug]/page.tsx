@@ -182,7 +182,7 @@ export default async function CollectionDetailPage({ params }: PageProps) {
             <div className="text-[14px]">Vuelve a revisar pronto.</div>
           </div>
         ) : (
-          <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
+          <div className="grid gap-3.5 grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
             {items.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}

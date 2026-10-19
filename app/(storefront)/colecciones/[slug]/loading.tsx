@@ -36,7 +36,7 @@ export default function CollectionDetailLoading() {
 
       {/* Grid de productos */}
       <Skeleton className="h-7 w-72 mb-5" />
-      <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
+      <div className="grid gap-3.5 grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
         {Array.from({ length: 4 }, (_, i) => (
           <ProductCardSkeleton key={i} className={i >= 2 ? 'max-sm:hidden' : undefined} />
         ))}
