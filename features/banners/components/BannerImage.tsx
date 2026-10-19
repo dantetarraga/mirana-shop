@@ -38,7 +38,10 @@ export function BannerImage({
   desktopSize = DEFAULT_DESKTOP,
   mobileSize = DEFAULT_MOBILE,
 }: BannerImageProps) {
-  const common = { alt, sizes, priority, quality: 80 }
+  // Calidad por defecto (75): Next 16 solo acepta las de images.qualities, y
+  // con f_auto (WebP/AVIF) la diferencia con 80 no se nota. `preload` reemplaza
+  // a `priority`, obsoleto en Next 16.
+  const common = { alt, sizes, preload: priority }
 
   const { props: desktop } = getImageProps({
     ...common,

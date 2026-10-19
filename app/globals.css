@@ -1134,19 +1134,6 @@ textarea:focus-visible,
   margin: 16px 0;
 }
 
-/* =============================================================
-   Barra de promociones — cierre sin salto de layout.
-   Un script inline (PromoAnnouncementBarClient) marca <html> con
-   `promo-dismissed` ANTES del primer pintado si el cliente ya la cerró, así
-   el navbar y el contenido nacen sin el hueco de la barra en vez de
-   saltar al hidratar. (0,1,1) le gana al `:root { --ab }` del SSR.
-   ============================================================= */
-html.promo-dismissed {
-  --ab: 0px;
-}
-html.promo-dismissed [data-promo-bar] {
-  display: none;
-}
 /* Marquee: se detiene con hover/foco (WCAG 2.2.2) */
 [data-promo-bar]:hover .animate-marquee,
 [data-promo-bar]:focus-within .animate-marquee,

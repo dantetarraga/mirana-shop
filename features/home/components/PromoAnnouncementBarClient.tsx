@@ -1,7 +1,9 @@
 'use client'
 
 import type { PromoBarItem } from '@/features/promotions/queries/promo-bar.queries'
+import { PROMO_BAR_COOKIE, PROMO_BAR_COOKIE_MAX_AGE } from '@/features/home/lib/promo-bar-cookie'
 import { Gift, Tag, Truck, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 const ICONS = {
   free_shipping: Truck,
@@ -9,30 +11,39 @@ const ICONS = {
   coupon: Gift,
 } as const
 
-const STORAGE_KEY = 'mirana-promo-bar-v1'
-const DISMISSED_CLASS = 'promo-dismissed'
-
-/**
- * Corre ANTES del primer pintado (script inline en el HTML del SSR): si el
- * cliente ya cerró la barra, marca <html> y el CSS (globals.css) pone
- * `--ab: 0px` y oculta la barra. Antes se leía localStorage al hidratar y el
- * navbar y el contenido saltaban 36px hacia arriba en cada carga.
- */
-const NO_FLASH_SCRIPT = `try{if(localStorage.getItem(${JSON.stringify(STORAGE_KEY)})==='1')document.documentElement.classList.add(${JSON.stringify(DISMISSED_CLASS)})}catch(e){}`
+/** Clave de la versión anterior (localStorage); se migra a la cookie. */
+const LEGACY_STORAGE_KEY = 'mirana-promo-bar-v1'
 
 interface Props {
   items: PromoBarItem[]
 }
 
 export function PromoAnnouncementBarClient({ items }: Props) {
+  const [hidden, setHidden] = useState(false)
+
   const dismiss = () => {
-    try {
-      localStorage.setItem(STORAGE_KEY, '1')
-    } catch {
-      // Modo privado / almacenamiento bloqueado: se cierra solo por esta visita.
-    }
-    document.documentElement.classList.add(DISMISSED_CLASS)
+    // La cookie la lee el servidor en la próxima carga; aquí se oculta ya y se
+    // quita el alto reservado (--ab) que dejó el <style> del SSR.
+    document.cookie = `${PROMO_BAR_COOKIE}=1; path=/; max-age=${PROMO_BAR_COOKIE_MAX_AGE}; samesite=lax`
+    document.documentElement.style.setProperty('--ab', '0px')
+    setHidden(true)
   }
+
+  // Quien la cerró con la versión anterior (localStorage) no debe volver a
+  // verla: se pasa a la cookie y se oculta (solo ocurre una vez por visitante).
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(LEGACY_STORAGE_KEY) === '1') {
+        localStorage.removeItem(LEGACY_STORAGE_KEY)
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- migración única desde localStorage
+        dismiss()
+      }
+    } catch {
+      // Almacenamiento bloqueado: nada que migrar.
+    }
+  }, [])
+
+  if (hidden) return null
 
   const renderItems = (hidden: boolean) =>
     items.map((item, i) => {
@@ -64,7 +75,6 @@ export function PromoAnnouncementBarClient({ items }: Props) {
 
   return (
     <>
-      <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
       {/* role="region" y no "banner": el sitio ya tiene un landmark banner y
           dos confunden la navegación por landmarks. */}
       <div
